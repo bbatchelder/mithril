@@ -1,0 +1,340 @@
+/* =============================================================================
+ * analyst-ui design tokens
+ * -----------------------------------------------------------------------------
+ * Ported from Palantir Blueprint v6.15 (Apache-2.0). Values are sourced from
+ * Blueprint's DTCG token set (packages/core/src/design-tokens) and its SCSS
+ * variables. Structure follows the shadcn + Tailwind v4 convention:
+ *
+ *   1. @theme            — static primitives (palette, type, radius, motion).
+ *                          These generate Tailwind utilities (e.g. `bg-blue-3`).
+ *   2. :root / .dark     — semantic variables that swap per theme.
+ *   3. @theme inline     — maps the semantic vars onto Tailwind color/shadow
+ *                          tokens (e.g. `bg-background`, `text-foreground`).
+ *
+ * Intents (primary/success/warning/danger) are theme-independent in Blueprint,
+ * so they live in @theme as static tokens.
+ * ========================================================================== */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    /* --- Palette: grays -------------------------------------------------- */
+    --color-black: #111418;
+    --color-white: #ffffff;
+
+    --color-dark-gray-1: #1c2127;
+    --color-dark-gray-2: #252a31;
+    --color-dark-gray-3: #2f343c;
+    --color-dark-gray-4: #383e47;
+    --color-dark-gray-5: #404854;
+
+    --color-gray-1: #5f6b7c;
+    --color-gray-2: #738091;
+    --color-gray-3: #8f99a8;
+    --color-gray-4: #abb3bf;
+    --color-gray-5: #c5cbd3;
+
+    --color-light-gray-1: #d3d8de;
+    --color-light-gray-2: #dce0e5;
+    --color-light-gray-3: #e5e8eb;
+    --color-light-gray-4: #edeff2;
+    --color-light-gray-5: #f6f7f9;
+
+    /* --- Palette: core intents ------------------------------------------ */
+    --color-blue-1: #184a90;
+    --color-blue-2: #215db0;
+    --color-blue-3: #2d72d2;
+    --color-blue-4: #4c90f0;
+    --color-blue-5: #8abbff;
+
+    --color-green-1: #165a36;
+    --color-green-2: #1c6e42;
+    --color-green-3: #238551;
+    --color-green-4: #32a467;
+    --color-green-5: #72ca9b;
+
+    --color-orange-1: #77450d;
+    --color-orange-2: #935610;
+    --color-orange-3: #c87619;
+    --color-orange-4: #ec9a3c;
+    --color-orange-5: #fbb360;
+
+    --color-red-1: #8e292c;
+    --color-red-2: #ac2f33;
+    --color-red-3: #cd4246;
+    --color-red-4: #e76a6e;
+    --color-red-5: #fa999c;
+
+    /* --- Palette: extended ---------------------------------------------- */
+    --color-cerulean-1: #0c5174;
+    --color-cerulean-2: #0f6894;
+    --color-cerulean-3: #147eb3;
+    --color-cerulean-4: #3fa6da;
+    --color-cerulean-5: #68c1ee;
+
+    --color-forest-1: #1d7324;
+    --color-forest-2: #238c2c;
+    --color-forest-3: #29a634;
+    --color-forest-4: #43bf4d;
+    --color-forest-5: #62d96b;
+
+    --color-gold-1: #5c4405;
+    --color-gold-2: #866103;
+    --color-gold-3: #d1980b;
+    --color-gold-4: #f0b726;
+    --color-gold-5: #fbd065;
+
+    --color-indigo-1: #5642a6;
+    --color-indigo-2: #634dbf;
+    --color-indigo-3: #7961db;
+    --color-indigo-4: #9881f3;
+    --color-indigo-5: #bdadff;
+
+    --color-lime-1: #43501b;
+    --color-lime-2: #5a701a;
+    --color-lime-3: #8eb125;
+    --color-lime-4: #b6d94c;
+    --color-lime-5: #d4f17e;
+
+    --color-rose-1: #a82255;
+    --color-rose-2: #c22762;
+    --color-rose-3: #db2c6f;
+    --color-rose-4: #f5498b;
+    --color-rose-5: #ff66a1;
+
+    --color-sepia-1: #5e4123;
+    --color-sepia-2: #7a542e;
+    --color-sepia-3: #946638;
+    --color-sepia-4: #af855a;
+    --color-sepia-5: #d0b090;
+
+    --color-turquoise-1: #004d46;
+    --color-turquoise-2: #007067;
+    --color-turquoise-3: #00a396;
+    --color-turquoise-4: #13c9ba;
+    --color-turquoise-5: #7ae1d8;
+
+    --color-vermilion-1: #96290d;
+    --color-vermilion-2: #b83211;
+    --color-vermilion-3: #d33d17;
+    --color-vermilion-4: #eb6847;
+    --color-vermilion-5: #ff9980;
+
+    --color-violet-1: #5c255c;
+    --color-violet-2: #7c327c;
+    --color-violet-3: #9d3f9d;
+    --color-violet-4: #bd6bbd;
+    --color-violet-5: #d69fd6;
+
+    /* --- Intents (theme-independent) ------------------------------------
+     * Each intent: rest / hover / active / disabled fills + a foreground
+     * color for text/icons placed on top of the fill. Mirrors Blueprint's
+     * intent.tokens.json (BP6 pattern: darker on hover). */
+    --color-primary: #2d72d2; /* blue-3 */
+    --color-primary-hover: #215db0; /* blue-2 */
+    --color-primary-active: #184a90; /* blue-1 */
+    --color-primary-disabled: #4c90f0; /* blue-4 */
+    --color-primary-foreground: #ffffff;
+
+    --color-success: #238551; /* green-3 */
+    --color-success-hover: #1c6e42; /* green-2 */
+    --color-success-active: #165a36; /* green-1 */
+    --color-success-disabled: #32a467; /* green-4 */
+    --color-success-foreground: #ffffff;
+
+    --color-warning: #c87619; /* orange-3 */
+    --color-warning-hover: #935610; /* orange-2 */
+    --color-warning-active: #77450d; /* orange-1 */
+    --color-warning-disabled: #ec9a3c; /* orange-4 */
+    --color-warning-foreground: #111418; /* black — orange needs dark text */
+
+    --color-danger: #cd4246; /* red-3 */
+    --color-danger-hover: #ac2f33; /* red-2 */
+    --color-danger-active: #8e292c; /* red-1 */
+    --color-danger-disabled: #e76a6e; /* red-4 */
+    --color-danger-foreground: #ffffff;
+
+    /* --- Typography ------------------------------------------------------ */
+    --font-sans:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+        "Helvetica Neue", sans-serif;
+    --font-mono: monospace;
+
+    /* Blueprint font scale (px values; base body = 14px). */
+    --text-body-xs: 10px;
+    --text-body-sm: 12px;
+    --text-body: 14px;
+    --text-body-lg: 16px;
+    --text-heading-sm: 16px;
+    --text-heading: 20px;
+    --text-heading-lg: 24px;
+    --text-heading-xl: 28px;
+    --text-heading-display: 46px;
+    --text-code-sm: 12px;
+    --text-code: 13px;
+    --text-code-lg: 14px;
+
+    --leading-bp: 1.28581; /* Blueprint default line-height (~18px @ 14px) */
+    --leading-bp-large: 1.5;
+
+    --font-weight-normal: 400;
+    --font-weight-bold: 600;
+
+    /* --- Radius ---------------------------------------------------------- */
+    --radius-bp-sm: 2px;
+    --radius-bp: 4px; /* Blueprint's single canonical radius */
+    --radius-bp-lg: 6px;
+
+    /* --- Spacing & control sizing ---------------------------------------
+     * Tailwind v4's spacing unit is already 4px (0.25rem @ 16px root), which
+     * matches Blueprint's 4px grid — so `h-7.5` == 30px == default button.
+     * These named tokens make control heights explicit. */
+    --spacing: 0.25rem; /* 4px base, documented for clarity */
+
+    --height-control-sm: 24px; /* 4 * 6  */
+    --height-control-smaller: 20px; /* 4 * 5  */
+    --height-control: 30px; /* 4 * 7.5 — default button/input */
+    --height-control-lg: 40px; /* 4 * 10 */
+    --height-navbar: 50px; /* 4 * 12.5 */
+
+    --size-icon: 16px; /* standard icon */
+    --size-icon-lg: 20px; /* large icon */
+
+    /* --- Motion ---------------------------------------------------------- */
+    --ease-bp: cubic-bezier(0.4, 1, 0.75, 0.9);
+    --ease-bp-bounce: cubic-bezier(0.54, 1.12, 0.38, 1.11);
+    --duration-bp: 100ms;
+
+    /* --- Z-index --------------------------------------------------------- */
+    --z-base: 0;
+    --z-content: 10;
+    --z-overlay: 20;
+    --z-dialog-header: 30;
+    --z-max: 40;
+}
+
+/* =============================================================================
+ * Semantic tokens — light theme (default)
+ * ========================================================================== */
+:root {
+    /* Surfaces (back → front): app background, surface (cards/menus/dialogs),
+     * elevated (raised panels). */
+    --background: var(--color-light-gray-5); /* #f6f7f9 */
+    --surface: var(--color-white); /* #ffffff */
+    --elevated: var(--color-light-gray-4); /* #edeff2 */
+
+    /* Minimal/ghost interaction backgrounds (transparent at rest). */
+    --interactive-hover: rgba(143, 153, 168, 0.15); /* gray-3 @ 15% */
+    --interactive-active: rgba(143, 153, 168, 0.3); /* gray-3 @ 30% */
+
+    /* Text */
+    --foreground: var(--color-dark-gray-1); /* #1c2127 */
+    --foreground-muted: var(--color-gray-1); /* #5f6b7c */
+    --foreground-disabled: rgba(95, 107, 124, 0.6);
+    --heading: var(--foreground);
+    --link: var(--color-blue-2); /* #215db0 */
+    --selection: rgba(125, 188, 255, 0.6);
+
+    /* Borders & dividers */
+    --border: rgba(95, 107, 124, 0.12); /* gray-1 @ 12% (surface border) */
+    --border-strong: rgba(95, 107, 124, 0.25); /* gray-1 @ 25% */
+    --divider: rgba(17, 20, 24, 0.15); /* black @ 15% */
+    --divider-muted: rgba(17, 20, 24, 0.1); /* black @ 10% */
+
+    /* Focus */
+    --ring: rgba(33, 93, 176, 0.752); /* blue-2 @ 75.2% (WCAG AA) */
+    --ring-width: 2px;
+    --ring-offset: 2px;
+
+    /* Code */
+    --code-foreground: var(--color-gray-1);
+    --code-background: rgba(255, 255, 255, 0.7);
+
+    /* Form input inset shadow */
+    --input-shadow: inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+
+    /* Elevation (light) — Blueprint shadows 0–4 */
+    --elevation-0: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 0 5px 0 rgba(0, 0, 0, 0.02);
+    --elevation-1: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --elevation-2: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --elevation-3: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --elevation-4: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+
+/* =============================================================================
+ * Semantic tokens — dark theme
+ * Dark surface colors verified against Blueprint's OKLCH-derived card/surface
+ * values (card dark = oklch(from gray-1 calc(l*0.54) calc(c*0.481) h) → #252a31).
+ * ========================================================================== */
+.dark {
+    --background: var(--color-dark-gray-1); /* #1c2127 */
+    --surface: var(--color-dark-gray-2); /* #252a31 (derived card bg) */
+    --elevated: var(--color-dark-gray-3); /* #2f343c */
+
+    --interactive-hover: rgba(255, 255, 255, 0.1);
+    --interactive-active: rgba(255, 255, 255, 0.16);
+
+    --foreground: var(--color-light-gray-5); /* #f6f7f9 */
+    --foreground-muted: var(--color-gray-4); /* #abb3bf */
+    --foreground-disabled: rgba(171, 179, 191, 0.6);
+    --heading: var(--foreground);
+    --link: var(--color-blue-5); /* #8abbff */
+    --selection: rgba(125, 188, 255, 0.6);
+
+    --border: rgba(255, 255, 255, 0.2);
+    --border-strong: rgba(255, 255, 255, 0.3);
+    --divider: rgba(255, 255, 255, 0.2);
+    --divider-muted: rgba(255, 255, 255, 0.1);
+
+    --ring: rgba(138, 187, 255, 0.752); /* blue-5 @ 75.2% */
+
+    --code-foreground: var(--color-gray-4);
+    --code-background: rgba(17, 20, 24, 0.3);
+
+    --input-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+
+    /* Elevation (dark) — inset white border + deeper shadows */
+    --elevation-0: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 10px 0 rgba(0, 0, 0, 0.2);
+    --elevation-1: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 10px 0 rgba(0, 0, 0, 0.2),
+        0 1px 10px -1px rgba(0, 0, 0, 0.2);
+    --elevation-2: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.5),
+        0 10px 30px -5px rgba(0, 0, 0, 0.5);
+    --elevation-3: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        0 10px 30px -5px rgba(0, 0, 0, 0.3);
+    --elevation-4: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 25px 60px -12px rgba(0, 0, 0, 0.85);
+}
+
+/* =============================================================================
+ * Map semantic vars onto Tailwind tokens so utilities resolve them.
+ * `@theme inline` keeps the var() reference live (so .dark overrides apply).
+ * ========================================================================== */
+@theme inline {
+    --color-background: var(--background);
+    --color-surface: var(--surface);
+    --color-elevated: var(--elevated);
+
+    --color-interactive-hover: var(--interactive-hover);
+    --color-interactive-active: var(--interactive-active);
+
+    --color-foreground: var(--foreground);
+    --color-foreground-muted: var(--foreground-muted);
+    --color-foreground-disabled: var(--foreground-disabled);
+    --color-link: var(--link);
+
+    --color-border: var(--border);
+    --color-border-strong: var(--border-strong);
+    --color-divider: var(--divider);
+    --color-divider-muted: var(--divider-muted);
+
+    --color-ring: var(--ring);
+
+    --color-code-foreground: var(--code-foreground);
+    --color-code-background: var(--code-background);
+
+    --shadow-elevation-0: var(--elevation-0);
+    --shadow-elevation-1: var(--elevation-1);
+    --shadow-elevation-2: var(--elevation-2);
+    --shadow-elevation-3: var(--elevation-3);
+    --shadow-elevation-4: var(--elevation-4);
+    --shadow-input: var(--input-shadow);
+}

@@ -1,0 +1,11 @@
+analyst-ui
+Copyright 2026 the analyst-ui authors
+
+This product includes design tokens and visual design ported from
+Palantir Blueprint (https://github.com/palantir/blueprint),
+Copyright Palantir Technologies, Inc., licensed under the Apache License, 2.0.
+
+Color palette, intent colors, typographic scale, spacing/density, elevation
+shadows, and motion curves are derived from Blueprint's design-token set and
+SCSS variables. Component implementations are original work built on Radix UI,
+Tailwind CSS, and class-variance-authority.
