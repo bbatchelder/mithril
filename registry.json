@@ -1,0 +1,19 @@
+{
+    "$schema": "https://ui.shadcn.com/schema/registry.json",
+    "name": "analyst-ui",
+    "homepage": "https://github.com/bbatchelder/analyst-ui",
+    "items": [
+        {
+            "name": "tokens",
+            "type": "registry:style",
+            "description": "Blueprint-faithful design tokens (palette, intents, surfaces, elevation, type, motion) as Tailwind v4 @theme + light/dark CSS variables.",
+            "files": [
+                {
+                    "path": "src/styles/tokens.css",
+                    "type": "registry:file",
+                    "target": "src/styles/tokens.css"
+                }
+            ]
+        }
+    ]
+}
