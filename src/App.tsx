@@ -8,6 +8,7 @@ import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
 import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Radio, RadioGroup } from "@/components/ui/radio";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -880,6 +881,101 @@ function CheckboxGallery() {
     );
 }
 
+/**
+ * Radio + RadioGroup showcase. `data-compare` is placed via `indicatorProps` on the indicator span
+ * (the `.bp6-control-indicator` equivalent). The harness diffs: width, height, border-radius,
+ * background-color, and box-shadow of that element.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx RadioGallery exactly.
+ */
+function RadioGallery() {
+    const [groupValue, setGroupValue] = useState<string>("option-b");
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        label="Unchecked"
+                        name="radio-states"
+                        value="unchecked"
+                        indicatorProps={{ "data-compare": "radio-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Checked"
+                        name="radio-states"
+                        value="checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "radio-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Disabled"
+                        name="radio-disabled-states"
+                        value="disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "radio-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Disabled checked"
+                        name="radio-disabled-states"
+                        value="disabled-checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "radio-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        label="Large unchecked"
+                        name="radio-large"
+                        value="large-unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "radio-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio label="Large checked" name="radio-large" value="large-checked" large defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="RadioGroup via options (controlled)">
+                <RadioGroup
+                    name="radio-group-opts"
+                    selectedValue={groupValue}
+                    onChange={(val) => setGroupValue(val)}
+                    label="Pick one"
+                    options={[
+                        { value: "option-a", label: "Option A" },
+                        { value: "option-b", label: "Option B (default selected)" },
+                        { value: "option-c", label: "Option C" },
+                    ]}
+                />
+            </Section>
+
+            <Section title="RadioGroup via children">
+                <RadioGroup name="radio-group-children" selectedValue={groupValue} onChange={(val) => setGroupValue(val)}>
+                    <Radio
+                        value="option-a"
+                        label="Option A"
+                        indicatorProps={{ "data-compare": "radio-group-selected" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio value="option-b" label="Option B (selected when groupValue=option-b)" />
+                    <Radio value="option-c" label="Option C" />
+                </RadioGroup>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Radio label="Option A" name="radio-inline" value="a" inline />
+                    <Radio label="Option B" name="radio-inline" value="b" inline defaultChecked />
+                    <Radio label="Option C" name="radio-inline" value="c" inline />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -895,6 +991,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
     { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
+    { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, Divider, Icon, InputGroup, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -912,6 +912,82 @@ function CheckboxGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Radio + RadioGroup.
+ * Blueprint's Radio renders `.bp6-control-indicator` inside the label.
+ * We use a ref + querySelector to set data-compare on the indicator span
+ * (same pattern as TaggedCheckbox).
+ *
+ * The harness diffs: width, height, borderRadius, backgroundColor, boxShadow of the indicator.
+ * Keys MUST match analyst-ui's RadioGallery exactly.
+ */
+function TaggedRadio({
+    dataCompare,
+    ...props
+}: { dataCompare: string } & React.ComponentProps<typeof Radio>) {
+    const ref = useRef<HTMLLabelElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const indicator = ref.current.querySelector(".bp6-control-indicator");
+        if (indicator) indicator.setAttribute("data-compare", dataCompare);
+    }, [dataCompare]);
+    return <Radio ref={ref} {...props} />;
+}
+
+function RadioGallery() {
+    const [groupValue, setGroupValue] = useState<string>("option-b");
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="States">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedRadio dataCompare="radio-unchecked" label="Unchecked" name="radio-states" value="unchecked" />
+                    <TaggedRadio dataCompare="radio-checked" label="Checked" name="radio-states" value="checked" defaultChecked={true} />
+                    <TaggedRadio dataCompare="radio-disabled" label="Disabled" name="radio-disabled-states" value="disabled" disabled={true} />
+                    <TaggedRadio dataCompare="radio-checked-disabled" label="Disabled checked" name="radio-disabled-states" value="disabled-checked" disabled={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedRadio dataCompare="radio-large" label="Large unchecked" name="radio-large" value="large-unchecked" large={true} />
+                    <Radio label="Large checked" name="radio-large" value="large-checked" large={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="RadioGroup via options (controlled)">
+                <RadioGroup
+                    name="radio-group-opts"
+                    selectedValue={groupValue}
+                    onChange={(e) => setGroupValue(e.currentTarget.value)}
+                    label="Pick one"
+                    options={[
+                        { value: "option-a", label: "Option A" },
+                        { value: "option-b", label: "Option B (default selected)" },
+                        { value: "option-c", label: "Option C" },
+                    ]}
+                />
+            </Section>
+
+            <Section title="RadioGroup via children">
+                <RadioGroup name="radio-group-children" selectedValue={groupValue} onChange={(e) => setGroupValue(e.currentTarget.value)}>
+                    <TaggedRadio dataCompare="radio-group-selected" value="option-a" label="Option A" />
+                    <Radio value="option-b" label="Option B (selected when groupValue=option-b)" />
+                    <Radio value="option-c" label="Option C" />
+                </RadioGroup>
+            </Section>
+
+            <Section title="Inline">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                    <Radio label="Option A" name="radio-inline" value="a" inline={true} />
+                    <Radio label="Option B" name="radio-inline" value="b" inline={true} defaultChecked={true} />
+                    <Radio label="Option C" name="radio-inline" value="c" inline={true} />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -927,6 +1003,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
     { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
+    { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
