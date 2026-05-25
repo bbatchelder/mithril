@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, Divider, Icon, InputGroup, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, Divider, Icon, InputGroup, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -988,6 +988,65 @@ function RadioGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Switch.
+ * Blueprint's Switch renders `.bp6-control-indicator` inside the label.
+ * We use a ref + querySelector to set data-compare on the indicator span
+ * (same pattern as TaggedCheckbox / TaggedRadio).
+ *
+ * The harness diffs: backgroundColor, borderRadius, height, minWidth, boxShadow, color.
+ * Keys MUST match analyst-ui's SwitchGallery exactly.
+ */
+function TaggedSwitch({
+    dataCompare,
+    ...props
+}: { dataCompare: string } & React.ComponentProps<typeof Switch>) {
+    const ref = useRef<HTMLLabelElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const indicator = ref.current.querySelector(".bp6-control-indicator");
+        if (indicator) indicator.setAttribute("data-compare", dataCompare);
+    }, [dataCompare]);
+    return <Switch ref={ref} {...props} />;
+}
+
+function SwitchGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="States">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedSwitch dataCompare="switch-unchecked" label="Unchecked" />
+                    <TaggedSwitch dataCompare="switch-checked" label="Checked" defaultChecked={true} />
+                    <TaggedSwitch dataCompare="switch-disabled" label="Disabled" disabled={true} />
+                    <TaggedSwitch dataCompare="switch-checked-disabled" label="Disabled checked" disabled={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedSwitch dataCompare="switch-large" label="Large unchecked" large={true} />
+                    <Switch label="Large checked" large={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="Inner labels">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedSwitch dataCompare="switch-inner-labels" label="With inner labels" innerLabel="OFF" innerLabelChecked="ON" />
+                    <Switch label="Checked with inner labels" innerLabel="OFF" innerLabelChecked="ON" defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                    <Switch label="Option A" inline={true} />
+                    <Switch label="Option B" inline={true} defaultChecked={true} />
+                    <Switch label="Option C" inline={true} disabled={true} />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1004,6 +1063,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
     { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
     { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
+    { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

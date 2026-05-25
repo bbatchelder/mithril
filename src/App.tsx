@@ -9,6 +9,7 @@ import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
 import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio, RadioGroup } from "@/components/ui/radio";
+import { Switch } from "@/components/ui/switch";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -976,6 +977,73 @@ function RadioGallery() {
     );
 }
 
+/**
+ * Switch showcase. `data-compare` is placed via `indicatorProps` on the track span.
+ * The harness diffs: backgroundColor, borderRadius, height, minWidth, boxShadow, color.
+ * Keys MUST match tools/blueprint-reference/src/App.tsx SwitchGallery exactly.
+ */
+function SwitchGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="Unchecked"
+                        indicatorProps={{ "data-compare": "switch-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "switch-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "switch-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Disabled checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "switch-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="Large unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "switch-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch label="Large checked" large defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="Inner labels">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="With inner labels"
+                        innerLabel="OFF"
+                        innerLabelChecked="ON"
+                        indicatorProps={{ "data-compare": "switch-inner-labels" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch label="Checked with inner labels" innerLabel="OFF" innerLabelChecked="ON" defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Switch label="Option A" inline />
+                    <Switch label="Option B" inline defaultChecked />
+                    <Switch label="Option C" inline disabled />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -992,6 +1060,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
     { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
     { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
+    { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
