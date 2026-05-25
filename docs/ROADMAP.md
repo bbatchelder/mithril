@@ -45,7 +45,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
       `ReactNode`, so not a hard build-blocker, but most look incomplete without it.
 - [x] **Text** — `text/`
-- [ ] **Divider** — `divider/`
+- [x] **Divider** — `divider/`
 - [ ] **Spinner** — `spinner/`
 - [ ] **ProgressBar** — `progress-bar/`
 - [ ] **Skeleton** — `skeleton/` (loading-state modifier)

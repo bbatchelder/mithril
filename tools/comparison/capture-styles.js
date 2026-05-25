@@ -17,10 +17,18 @@
         "backgroundColor",
         "borderTopColor",
         "borderTopWidth",
+        "borderBottomColor",
+        "borderBottomWidth",
+        "borderRightColor",
+        "borderRightWidth",
         "borderRadius",
         "boxShadow",
         "fontSize",
         "fontWeight",
+        "marginTop",
+        "marginBottom",
+        "marginLeft",
+        "marginRight",
         "paddingLeft",
         "paddingRight",
         "height",
@@ -80,6 +88,8 @@
         rec.boxShadow = cleanShadow(rec.boxShadow);
         // A zero-width border's color is invisible — comparing it is pure noise.
         if (parseFloat(s.borderTopWidth) === 0) delete rec.borderTopColor;
+        if (parseFloat(s.borderBottomWidth) === 0) delete rec.borderBottomColor;
+        if (parseFloat(s.borderRightWidth) === 0) delete rec.borderRightColor;
         out[el.getAttribute("data-compare")] = rec;
     }
     return JSON.stringify(out);

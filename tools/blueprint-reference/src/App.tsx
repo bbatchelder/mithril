@@ -1,4 +1,4 @@
-import { Button, Card, Classes, Icon, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, Classes, Divider, Icon, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -238,12 +238,52 @@ function TextGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Divider. `data-compare` keys MUST match analyst-ui's DividerGallery.
+ * Container layout (flexDirection, height, width) MUST be identical to the analyst side.
+ * Blueprint's bp6-divider: border-bottom + border-right 1px solid rgba(black,0.15);
+ * margin: 10px; dark: rgba(white,0.2). compact: margin 0.
+ */
+function DividerGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Horizontal (flex-column container)</h2>
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div>Above</div>
+                    <Divider data-compare="divider-default" />
+                    <div>Below</div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Vertical (flex-row container)</h2>
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", height: 32 }}>
+                    <div>Left</div>
+                    <Divider data-compare="divider-vertical" />
+                    <div>Right</div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Compact (no margin)</h2>
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div>Above</div>
+                    <Divider compact={true} data-compare="divider-compact" />
+                    <div>Below</div>
+                </div>
+            </section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
+    { id: "divider", title: "Divider", render: () => <DividerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
+import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 
@@ -259,12 +260,54 @@ function TextGallery() {
     );
 }
 
+/**
+ * Divider showcase. Three specimens paired with Blueprint reference by key:
+ *   divider-default  — horizontal divider in a flex-column container (bottom border visible)
+ *   divider-vertical — vertical divider in a flex-row container (right border visible)
+ *   divider-compact  — compact divider (no margin)
+ *
+ * The harness diffs borderBottomWidth/borderBottomColor, borderRightWidth/borderRightColor,
+ * marginTop/marginBottom/marginLeft/marginRight. Container layout must be identical on
+ * both sides per key.
+ */
+function DividerGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Horizontal (flex-column container)">
+                {/* The divider element itself carries data-compare; container provides flex context */}
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div className="text-body text-foreground">Above</div>
+                    <Divider data-compare="divider-default" />
+                    <div className="text-body text-foreground">Below</div>
+                </div>
+            </Section>
+
+            <Section title="Vertical (flex-row container)">
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", height: 32 }}>
+                    <div className="text-body text-foreground">Left</div>
+                    <Divider data-compare="divider-vertical" />
+                    <div className="text-body text-foreground">Right</div>
+                </div>
+            </Section>
+
+            <Section title="Compact (no margin)">
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div className="text-body text-foreground">Above</div>
+                    <Divider compact data-compare="divider-compact" />
+                    <div className="text-body text-foreground">Below</div>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
+    { id: "divider", title: "Divider", render: () => <DividerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
