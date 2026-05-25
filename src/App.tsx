@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Icon, type IconIntent } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -192,11 +193,78 @@ function CardGallery() {
     );
 }
 
+/**
+ * Text showcase. Paired specimens carry `data-compare` keys that mirror the Blueprint
+ * reference gallery. Content and fixed widths on `text-ellipsize` must match.
+ *
+ * The harness compares: color, fontSize, fontWeight, backgroundColor, height, minWidth,
+ * paddingLeft, paddingRight (lineHeight is deliberately omitted from harness capture).
+ */
+function TextGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Body tiers">
+                <div className="flex flex-col gap-2">
+                    <Text data-compare="text-body">
+                        Body text — the default Blueprint body style (14px / 1.28581 / 400).
+                    </Text>
+                    <Text variant="large" data-compare="text-large">
+                        Large text — bp6-text-large (16px / 1.28581 / 400).
+                    </Text>
+                    <Text variant="small" data-compare="text-small">
+                        Small text — bp6-text-small (12px / 1.28581 / 400).
+                    </Text>
+                </div>
+            </Section>
+
+            <Section title="Color modifiers">
+                <div className="flex flex-col gap-2">
+                    <Text variant="muted" data-compare="text-muted">
+                        Muted text — bp6-text-muted (gray-1 / gray-4).
+                    </Text>
+                    <Text variant="disabled" data-compare="text-disabled">
+                        Disabled text — bp6-text-disabled (gray-1@60% / gray-4@60%).
+                    </Text>
+                </div>
+            </Section>
+
+            <Section title="Monospace / code">
+                <Text variant="code" data-compare="text-code">
+                    monospace code text — bp6-monospace-text (font-family: monospace).
+                </Text>
+            </Section>
+
+            <Section title="Headings (h1–h6)">
+                <div className="flex flex-col gap-0">
+                    <Text variant="h1" data-compare="text-heading-1">Heading 1 (36px / 40px)</Text>
+                    <Text variant="h2" data-compare="text-heading-2">Heading 2 (28px / 32px)</Text>
+                    <Text variant="h3" data-compare="text-heading-3">Heading 3 (22px / 25px)</Text>
+                    <Text variant="h4" data-compare="text-heading-4">Heading 4 (18px / 21px)</Text>
+                    <Text variant="h5" data-compare="text-heading-5">Heading 5 (16px / 19px)</Text>
+                    <Text variant="h6" data-compare="text-heading-6">Heading 6 (14px / 16px)</Text>
+                </div>
+            </Section>
+
+            <Section title="Ellipsize">
+                {/* Fixed width so both sides trigger overflow identically */}
+                <Text
+                    ellipsize
+                    style={{ width: 200 }}
+                    data-compare="text-ellipsize"
+                >
+                    This text is long enough to overflow and be truncated with an ellipsis.
+                </Text>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
+    { id: "text", title: "Text", render: () => <TextGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -1,4 +1,4 @@
-import { Button, Card, Icon, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, Classes, Icon, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -168,11 +168,82 @@ function IconGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Text. Uses Blueprint's canonical typography classes.
+ * `data-compare` keys MUST match analyst-ui's TextGallery one-for-one.
+ *
+ * Blueprint body/muted/disabled/large/small: class-based (no Text component needed).
+ * Blueprint headings: h1–h6 with .bp6-heading class.
+ * Blueprint ellipsize: <Text ellipsize> component.
+ * Content and widths must be identical to analyst-ui side.
+ */
+function TextGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Body tiers">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* Default Blueprint body text: inherits from bp6-ui-text on body */}
+                    <div data-compare="text-body">
+                        Body text — the default Blueprint body style (14px / 1.28581 / 400).
+                    </div>
+                    {/* bp6-text-large */}
+                    <div className={Classes.TEXT_LARGE} data-compare="text-large">
+                        Large text — bp6-text-large (16px / 1.28581 / 400).
+                    </div>
+                    {/* bp6-text-small */}
+                    <div className={Classes.TEXT_SMALL} data-compare="text-small">
+                        Small text — bp6-text-small (12px / 1.28581 / 400).
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Color modifiers">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* bp6-text-muted */}
+                    <div className={Classes.TEXT_MUTED} data-compare="text-muted">
+                        Muted text — bp6-text-muted (gray-1 / gray-4).
+                    </div>
+                    {/* bp6-text-disabled */}
+                    <div className={Classes.TEXT_DISABLED} data-compare="text-disabled">
+                        Disabled text — bp6-text-disabled (gray-1@60% / gray-4@60%).
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Monospace / code">
+                {/* bp6-monospace-text — renders as a div with monospace font */}
+                <div className={Classes.MONOSPACE_TEXT} data-compare="text-code">
+                    monospace code text — bp6-monospace-text (font-family: monospace).
+                </div>
+            </Section>
+
+            <Section title="Headings (h1–h6)">
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    <h1 className={Classes.HEADING} data-compare="text-heading-1">Heading 1 (36px / 40px)</h1>
+                    <h2 className={Classes.HEADING} data-compare="text-heading-2">Heading 2 (28px / 32px)</h2>
+                    <h3 className={Classes.HEADING} data-compare="text-heading-3">Heading 3 (22px / 25px)</h3>
+                    <h4 className={Classes.HEADING} data-compare="text-heading-4">Heading 4 (18px / 21px)</h4>
+                    <h5 className={Classes.HEADING} data-compare="text-heading-5">Heading 5 (16px / 19px)</h5>
+                    <h6 className={Classes.HEADING} data-compare="text-heading-6">Heading 6 (14px / 16px)</h6>
+                </div>
+            </Section>
+
+            <Section title="Ellipsize">
+                {/* Fixed width so overflow triggers identically on both sides */}
+                <Text ellipsize={true} style={{ width: 200 }} data-compare="text-ellipsize">
+                    This text is long enough to overflow and be truncated with an ellipsis.
+                </Text>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
+    { id: "text", title: "Text", render: () => <TextGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
