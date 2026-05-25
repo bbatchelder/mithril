@@ -5,6 +5,7 @@ import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/b
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
+import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -686,6 +687,72 @@ function CalloutGallery() {
     );
 }
 
+const IG_INTENTS: InputGroupIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * InputGroup showcase. All keyed specimens use a fixed width of 200px so the harness
+ * captures identical element widths on both sides.
+ *
+ * `data-compare` is placed on the `<input>` element (Blueprint's `.bp6-input`).
+ * The harness diffs: height, paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting / unfocused state only).
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx InputGroupGallery exactly.
+ */
+function InputGroupGallery() {
+    const w: React.CSSProperties = { width: 200 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Sizes">
+                <div className="flex flex-col gap-3">
+                    <InputGroup size="small" placeholder="Small (24px)" style={w} data-compare="ig-small" />
+                    <InputGroup size="medium" placeholder="Medium (30px)" style={w} data-compare="ig-medium" />
+                    <InputGroup size="large" placeholder="Large (40px)" style={w} data-compare="ig-large" />
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {IG_INTENTS.map((intent) => (
+                        <InputGroup
+                            key={intent}
+                            intent={intent}
+                            placeholder={`${intent} intent`}
+                            style={w}
+                            data-compare={`ig-intent-${intent}`}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <InputGroup round placeholder="Round input" style={w} data-compare="ig-round" />
+            </Section>
+
+            <Section title="Disabled">
+                <InputGroup disabled placeholder="Disabled input" style={w} data-compare="ig-disabled" />
+            </Section>
+
+            <Section title="Left icon">
+                <InputGroup leftIcon="search" placeholder="Search…" style={w} data-compare="ig-left-icon" />
+            </Section>
+
+            <Section title="Right element">
+                <InputGroup
+                    placeholder="With right element"
+                    style={w}
+                    data-compare="ig-right-element"
+                    rightElement={
+                        <Button size="small" variant="minimal" aria-label="Clear">
+                            <Icon icon="cross" size={12} />
+                        </Button>
+                    }
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -698,6 +765,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
+    { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

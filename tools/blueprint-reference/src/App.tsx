@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Classes, Divider, Icon, ProgressBar, Spinner, SpinnerSize, Tag, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -704,6 +704,104 @@ function CalloutGallery() {
     );
 }
 
+const IG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for InputGroup. `data-compare` keys MUST match analyst-ui's InputGroupGallery.
+ * Blueprint's InputGroup wraps an <input> inside a div; data-compare must go on the <input>
+ * (the .bp6-input element). Blueprint does not directly forward arbitrary props to the inner input,
+ * so we use a ref + useEffect approach to add the data-compare attribute after mount.
+ *
+ * Fixed width of 200px on all specimens (identical to analyst-ui side).
+ */
+
+/** Helper: attaches data-compare to the first .bp6-input inside a wrapper ref. */
+function useInputCompare(
+    wrapperRef: React.RefObject<HTMLDivElement | null>,
+    key: string,
+) {
+    useEffect(() => {
+        const input = wrapperRef.current?.querySelector(".bp6-input");
+        if (input) input.setAttribute("data-compare", key);
+    }, [wrapperRef, key]);
+}
+
+function InputGroupGallery() {
+    const w: React.CSSProperties = { width: 200 };
+
+    const smRef = useRef<HTMLDivElement>(null);
+    const mdRef = useRef<HTMLDivElement>(null);
+    const lgRef = useRef<HTMLDivElement>(null);
+    const noneRef = useRef<HTMLDivElement>(null);
+    const primaryRef = useRef<HTMLDivElement>(null);
+    const successRef = useRef<HTMLDivElement>(null);
+    const warningRef = useRef<HTMLDivElement>(null);
+    const dangerRef = useRef<HTMLDivElement>(null);
+    const roundRef = useRef<HTMLDivElement>(null);
+    const disabledRef = useRef<HTMLDivElement>(null);
+    const leftIconRef = useRef<HTMLDivElement>(null);
+    const rightElRef = useRef<HTMLDivElement>(null);
+
+    useInputCompare(smRef, "ig-small");
+    useInputCompare(mdRef, "ig-medium");
+    useInputCompare(lgRef, "ig-large");
+    useInputCompare(noneRef, "ig-intent-none");
+    useInputCompare(primaryRef, "ig-intent-primary");
+    useInputCompare(successRef, "ig-intent-success");
+    useInputCompare(warningRef, "ig-intent-warning");
+    useInputCompare(dangerRef, "ig-intent-danger");
+    useInputCompare(roundRef, "ig-round");
+    useInputCompare(disabledRef, "ig-disabled");
+    useInputCompare(leftIconRef, "ig-left-icon");
+    useInputCompare(rightElRef, "ig-right-element");
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Sizes">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div ref={smRef}><InputGroup size="small" placeholder="Small (24px)" style={w} /></div>
+                    <div ref={mdRef}><InputGroup size="medium" placeholder="Medium (30px)" style={w} /></div>
+                    <div ref={lgRef}><InputGroup size="large" placeholder="Large (40px)" style={w} /></div>
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div ref={noneRef}><InputGroup intent="none" placeholder="none intent" style={w} /></div>
+                    <div ref={primaryRef}><InputGroup intent="primary" placeholder="primary intent" style={w} /></div>
+                    <div ref={successRef}><InputGroup intent="success" placeholder="success intent" style={w} /></div>
+                    <div ref={warningRef}><InputGroup intent="warning" placeholder="warning intent" style={w} /></div>
+                    <div ref={dangerRef}><InputGroup intent="danger" placeholder="danger intent" style={w} /></div>
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <div ref={roundRef}><InputGroup round={true} placeholder="Round input" style={w} /></div>
+            </Section>
+
+            <Section title="Disabled">
+                <div ref={disabledRef}><InputGroup disabled={true} placeholder="Disabled input" style={w} /></div>
+            </Section>
+
+            <Section title="Left icon">
+                <div ref={leftIconRef}><InputGroup leftIcon="search" placeholder="Search…" style={w} /></div>
+            </Section>
+
+            <Section title="Right element">
+                <div ref={rightElRef}>
+                    <InputGroup
+                        placeholder="With right element"
+                        style={w}
+                        rightElement={
+                            <Button minimal={true} small={true} aria-label="Clear" icon="cross" />
+                        }
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -716,6 +814,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
+    { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
