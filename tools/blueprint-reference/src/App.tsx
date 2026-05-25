@@ -1,4 +1,4 @@
-import { Button, Card, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, Icon, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -114,10 +114,65 @@ function CardGallery() {
     );
 }
 
+const ICON_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for Icon. `data-compare` keys MUST match analyst-ui's gallery.
+ * Blueprint's Icon wraps a <span> + <svg>; intent sets fill color via CSS class.
+ */
+function IconGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default (16px)">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+                    <Icon icon="add" data-compare="icon-add-16" />
+                    <Icon icon="cross" data-compare="icon-cross-16" />
+                    <Icon icon="tick" data-compare="icon-tick-16" />
+                    <Icon icon="search" data-compare="icon-search-16" />
+                    <Icon icon="chevron-down" data-compare="icon-chevron-down-16" />
+                    <Icon icon="cog" data-compare="icon-cog-16" />
+                    <Icon icon="more" data-compare="icon-more-16" />
+                </div>
+            </Section>
+
+            <Section title="Large (20px)">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+                    <Icon icon="add" size={20} data-compare="icon-add-20" />
+                    <Icon icon="search" size={20} data-compare="icon-search-20" />
+                    <Icon icon="cog" size={20} data-compare="icon-cog-20" />
+                </div>
+            </Section>
+
+            <Section title="Intents (16px)">
+                <Row label="">
+                    {ICON_INTENTS.map((intent) => (
+                        <Icon
+                            key={intent}
+                            icon="info-sign"
+                            intent={intent}
+                            data-compare={`icon-intent-${intent}`}
+                        />
+                    ))}
+                </Row>
+            </Section>
+
+            <Section title="Intent glyphs">
+                <Row label="">
+                    <Icon icon="tick-circle" intent="success" data-compare="icon-tick-circle-success" />
+                    <Icon icon="warning-sign" intent="warning" data-compare="icon-warning-sign-warning" />
+                    <Icon icon="error" intent="danger" data-compare="icon-error-danger" />
+                    <Icon icon="info-sign" intent="primary" data-compare="icon-info-sign-primary" />
+                </Row>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
+    { id: "icon", title: "Icon", render: () => <IconGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -42,7 +42,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 1 — Primitives & simple display
 
-- [ ] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
+- [x] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
       `ReactNode`, so not a hard build-blocker, but most look incomplete without it.
 - [ ] **Text** — `text/`
 - [ ] **Divider** — `divider/`
