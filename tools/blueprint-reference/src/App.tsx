@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -802,6 +802,57 @@ function InputGroupGallery() {
     );
 }
 
+const TA_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for TextArea. `data-compare` keys MUST match analyst-ui's TextAreaGallery.
+ * Blueprint's TextArea renders a `<textarea class="bp6-input bp6-text-area">` directly,
+ * so we can place data-compare directly on the component (it forwards to the textarea element).
+ *
+ * Fixed width of 240px and rows=3 on all specimens (identical to analyst-ui side).
+ */
+function TextAreaGallery() {
+    const w: React.CSSProperties = { width: 240 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Sizes">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TextArea size="medium" rows={3} placeholder="Medium (default)" style={w} data-compare="ta-medium" />
+                    <TextArea size="small" rows={3} placeholder="Small" style={w} data-compare="ta-small" />
+                    <TextArea size="large" rows={3} placeholder="Large" style={w} data-compare="ta-large" />
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {TA_INTENTS.map((intent) => (
+                        <TextArea
+                            key={intent}
+                            intent={intent}
+                            rows={3}
+                            placeholder={`${intent} intent`}
+                            style={w}
+                            data-compare={`ta-intent-${intent}`}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <TextArea disabled={true} rows={3} placeholder="Disabled textarea" style={w} data-compare="ta-disabled" />
+            </Section>
+
+            <Section title="Fill">
+                <TextArea fill={true} rows={3} placeholder="Fill textarea (full width)" />
+            </Section>
+
+            <Section title="Auto-resize (visual only)">
+                <TextArea autoResize={true} placeholder="Type to auto-resize…" style={w} />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -815,6 +866,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
+    { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

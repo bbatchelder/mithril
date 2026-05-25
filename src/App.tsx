@@ -6,6 +6,7 @@ import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
+import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -753,6 +754,61 @@ function InputGroupGallery() {
     );
 }
 
+const TA_INTENTS: TextAreaIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * TextArea showcase. All keyed specimens use a fixed width of 240px and rows=3 so the
+ * harness captures identical element widths and computed heights on both sides.
+ *
+ * `data-compare` is placed directly on the `<textarea>` element (Blueprint's `.bp6-input.bp6-text-area`).
+ * The harness diffs: paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting / unfocused state only).
+ * `height` is also compared — with rows=3 and matching font-size, heights should match.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx TextAreaGallery exactly.
+ */
+function TextAreaGallery() {
+    const w: React.CSSProperties = { width: 240 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Sizes">
+                <div className="flex flex-col gap-3">
+                    <TextArea size="medium" rows={3} placeholder="Medium (default)" style={w} data-compare="ta-medium" />
+                    <TextArea size="small" rows={3} placeholder="Small" style={w} data-compare="ta-small" />
+                    <TextArea size="large" rows={3} placeholder="Large" style={w} data-compare="ta-large" />
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {TA_INTENTS.map((intent) => (
+                        <TextArea
+                            key={intent}
+                            intent={intent}
+                            rows={3}
+                            placeholder={`${intent} intent`}
+                            style={w}
+                            data-compare={`ta-intent-${intent}`}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <TextArea disabled rows={3} placeholder="Disabled textarea" style={w} data-compare="ta-disabled" />
+            </Section>
+
+            <Section title="Fill">
+                <TextArea fill rows={3} placeholder="Fill textarea (full width)" />
+            </Section>
+
+            <Section title="Auto-resize (visual only)">
+                <TextArea autoResize placeholder="Type to auto-resize…" style={w} />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -766,6 +822,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
+    { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
