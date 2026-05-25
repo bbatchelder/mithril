@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, Divider, Icon, InputGroup, ProgressBar, Spinner, SpinnerSize, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -853,6 +853,65 @@ function TextAreaGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Checkbox. `data-compare` keys MUST match analyst-ui's CheckboxGallery.
+ * Blueprint's Checkbox renders `.bp6-control-indicator` inside the label. We use a ref +
+ * querySelector to set data-compare on the indicator span (same pattern as TaggedSpinner/Tag).
+ *
+ * The harness diffs: width, height, borderRadius, backgroundColor, boxShadow of the indicator.
+ */
+function TaggedCheckbox({
+    dataCompare,
+    ...props
+}: { dataCompare: string } & React.ComponentProps<typeof Checkbox>) {
+    const ref = useRef<HTMLLabelElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const indicator = ref.current.querySelector(".bp6-control-indicator");
+        if (indicator) indicator.setAttribute("data-compare", dataCompare);
+    }, [dataCompare]);
+    return <Checkbox ref={ref} {...props} />;
+}
+
+function CheckboxGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="States">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedCheckbox dataCompare="cb-unchecked" label="Unchecked" />
+                    <TaggedCheckbox dataCompare="cb-checked" label="Checked" defaultChecked={true} />
+                    <TaggedCheckbox dataCompare="cb-indeterminate" label="Indeterminate" indeterminate={true} />
+                    <TaggedCheckbox dataCompare="cb-disabled" label="Disabled" disabled={true} />
+                    <TaggedCheckbox dataCompare="cb-checked-disabled" label="Disabled checked" disabled={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <TaggedCheckbox dataCompare="cb-large" label="Large unchecked" large={true} />
+                    <Checkbox label="Large checked" large={true} defaultChecked={true} />
+                    <Checkbox label="Large indeterminate" large={true} indeterminate={true} />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+                    <Checkbox label="Option A" inline={true} />
+                    <Checkbox label="Option B" inline={true} defaultChecked={true} />
+                    <Checkbox label="Option C" inline={true} />
+                </div>
+            </Section>
+
+            <Section title="Align right">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 192 }}>
+                    <Checkbox label="Right aligned" alignIndicator="right" />
+                    <Checkbox label="Right checked" alignIndicator="right" defaultChecked={true} />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -867,6 +926,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
+    { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

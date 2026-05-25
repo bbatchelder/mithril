@@ -57,7 +57,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **InputGroup** (text input) — `forms/inputGroup.tsx`. `--input-shadow` already tokenized. Intent
       validation states, sizes matching button heights (24/30/40), measured focus ring. First form control.
 - [x] **TextArea** — `forms/textArea.tsx`
-- [ ] **Checkbox** — `forms/controls.tsx`
+- [x] **Checkbox** — `forms/controls.tsx`
 - [ ] **Radio / RadioGroup** — `forms/controls.tsx`, `forms/radioGroup.tsx`
 - [ ] **Switch** — `forms/controls.tsx`
 - [ ] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`

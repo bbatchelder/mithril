@@ -7,6 +7,7 @@ import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
 import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -809,6 +810,76 @@ function TextAreaGallery() {
     );
 }
 
+/**
+ * Checkbox showcase. `data-compare` is placed via `indicatorProps` on the indicator span
+ * (`.bp6-control-indicator` equivalent) — the harness diffs width, height, border-radius,
+ * background-color, and box-shadow of that element.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx CheckboxGallery exactly.
+ */
+function CheckboxGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Checkbox
+                        label="Unchecked"
+                        indicatorProps={{ "data-compare": "cb-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "cb-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Indeterminate"
+                        indeterminate
+                        indicatorProps={{ "data-compare": "cb-indeterminate" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "cb-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Disabled checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "cb-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Checkbox
+                        label="Large unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "cb-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox label="Large checked" large defaultChecked />
+                    <Checkbox label="Large indeterminate" large indeterminate />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Checkbox label="Option A" inline />
+                    <Checkbox label="Option B" inline defaultChecked />
+                    <Checkbox label="Option C" inline />
+                </div>
+            </Section>
+
+            <Section title="Align right">
+                <div className="flex flex-col gap-3 w-48">
+                    <Checkbox label="Right aligned" alignIndicator="right" />
+                    <Checkbox label="Right checked" alignIndicator="right" defaultChecked />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -823,6 +894,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
+    { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
