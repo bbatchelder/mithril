@@ -4,18 +4,23 @@
 > No need to ask "what's next" — this list *is* the answer. Scope = the full Blueprint surface across
 > all three packages (`core`, `select`, `datetime`), ~54 fidelity targets.
 
-## The loop (per component)
+## The loop (autonomous — see CLAUDE.md "The development loop")
 
-For each unchecked item, in order:
+**Branch per phase** (`phase-N-<slug>` off fresh `main`). For each unchecked item, in order:
 
 1. **Build** the component in `src/components/ui/<name>.tsx` with CVA (+ Radix where a primitive fits).
-   Match Blueprint v6.15 visuals; design a clean modern API (not drop-in compatible).
+   Match Blueprint v6.15 visuals; design a clean modern API (not drop-in compatible). Auto-install any
+   needed deps.
 2. **Register in BOTH galleries** — add to the `COMPONENTS` array in `src/App.tsx` *and*
    `tools/blueprint-reference/src/App.tsx` under the **same `id`**, and tag key specimens with matching
    `data-compare` keys.
-3. **Verify** — `tools/compare.sh <id> both` → confirm light + dark (computed-style diff + screenshots).
-   Don't call it done until the measured diff is clean (small intentional deltas noted in the handoff).
-4. **Check the box** here, then **write a handoff** in `docs/handoffs/` and commit.
+3. **Verify** — `pnpm build` green, then `tools/compare.sh <id> both` → confirm light + dark
+   (computed-style diff + screenshots). Aim for exact; accept + document small sub-perceptual deltas.
+4. **Check the box** here, **write the next numbered handoff** in `docs/handoffs/`, then **one commit + push.**
+
+**When a phase's last box is checked** → open a PR → merge to `main` (merge commit) → sync `main`, delete the
+phase branch → cut the next phase branch → keep going. **Pause only on hard blockers** (build can't go green,
+harness can't reach it after real effort, or a dependency component fails).
 
 Ordering is **dependency-first**: a component is only listed after everything it builds on. Entries marked
 *(infra)* are behavioral helpers, not standalone fidelity targets — build them inline when the first
@@ -37,15 +42,15 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 1 — Primitives & simple display
 
-- [ ] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
+- [x] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
       `ReactNode`, so not a hard build-blocker, but most look incomplete without it.
-- [ ] **Text** — `text/`
-- [ ] **Divider** — `divider/`
-- [ ] **Spinner** — `spinner/`
-- [ ] **ProgressBar** — `progress-bar/`
-- [ ] **Skeleton** — `skeleton/` (loading-state modifier)
-- [ ] **Tag** — `tag/`
-- [ ] **Callout** — `callout/` (uses Icon)
+- [x] **Text** — `text/`
+- [x] **Divider** — `divider/`
+- [x] **Spinner** — `spinner/`
+- [x] **ProgressBar** — `progress-bar/`
+- [x] **Skeleton** — `skeleton/` (loading-state modifier)
+- [x] **Tag** — `tag/`
+- [x] **Callout** — `callout/` (uses Icon)
 
 ## Phase 2 — Form controls
 

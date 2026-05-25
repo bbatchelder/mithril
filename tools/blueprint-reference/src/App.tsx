@@ -1,5 +1,5 @@
-import { Button, Card, type ButtonVariant, type Intent } from "@blueprintjs/core";
-import { useState } from "react";
+import { Button, Callout, Card, Classes, Divider, Icon, ProgressBar, Spinner, SpinnerSize, Tag, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
@@ -114,10 +114,608 @@ function CardGallery() {
     );
 }
 
+const ICON_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for Icon. `data-compare` keys MUST match analyst-ui's gallery.
+ * Blueprint's Icon wraps a <span> + <svg>; intent sets fill color via CSS class.
+ */
+function IconGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default (16px)">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+                    <Icon icon="add" data-compare="icon-add-16" />
+                    <Icon icon="cross" data-compare="icon-cross-16" />
+                    <Icon icon="tick" data-compare="icon-tick-16" />
+                    <Icon icon="search" data-compare="icon-search-16" />
+                    <Icon icon="chevron-down" data-compare="icon-chevron-down-16" />
+                    <Icon icon="cog" data-compare="icon-cog-16" />
+                    <Icon icon="more" data-compare="icon-more-16" />
+                </div>
+            </Section>
+
+            <Section title="Large (20px)">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16 }}>
+                    <Icon icon="add" size={20} data-compare="icon-add-20" />
+                    <Icon icon="search" size={20} data-compare="icon-search-20" />
+                    <Icon icon="cog" size={20} data-compare="icon-cog-20" />
+                </div>
+            </Section>
+
+            <Section title="Intents (16px)">
+                <Row label="">
+                    {ICON_INTENTS.map((intent) => (
+                        <Icon
+                            key={intent}
+                            icon="info-sign"
+                            intent={intent}
+                            data-compare={`icon-intent-${intent}`}
+                        />
+                    ))}
+                </Row>
+            </Section>
+
+            <Section title="Intent glyphs">
+                <Row label="">
+                    <Icon icon="tick-circle" intent="success" data-compare="icon-tick-circle-success" />
+                    <Icon icon="warning-sign" intent="warning" data-compare="icon-warning-sign-warning" />
+                    <Icon icon="error" intent="danger" data-compare="icon-error-danger" />
+                    <Icon icon="info-sign" intent="primary" data-compare="icon-info-sign-primary" />
+                </Row>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Text. Uses Blueprint's canonical typography classes.
+ * `data-compare` keys MUST match analyst-ui's TextGallery one-for-one.
+ *
+ * Blueprint body/muted/disabled/large/small: class-based (no Text component needed).
+ * Blueprint headings: h1–h6 with .bp6-heading class.
+ * Blueprint ellipsize: <Text ellipsize> component.
+ * Content and widths must be identical to analyst-ui side.
+ */
+function TextGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Body tiers">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* Default Blueprint body text: inherits from bp6-ui-text on body */}
+                    <div data-compare="text-body">
+                        Body text — the default Blueprint body style (14px / 1.28581 / 400).
+                    </div>
+                    {/* bp6-text-large */}
+                    <div className={Classes.TEXT_LARGE} data-compare="text-large">
+                        Large text — bp6-text-large (16px / 1.28581 / 400).
+                    </div>
+                    {/* bp6-text-small */}
+                    <div className={Classes.TEXT_SMALL} data-compare="text-small">
+                        Small text — bp6-text-small (12px / 1.28581 / 400).
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Color modifiers">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {/* bp6-text-muted */}
+                    <div className={Classes.TEXT_MUTED} data-compare="text-muted">
+                        Muted text — bp6-text-muted (gray-1 / gray-4).
+                    </div>
+                    {/* bp6-text-disabled */}
+                    <div className={Classes.TEXT_DISABLED} data-compare="text-disabled">
+                        Disabled text — bp6-text-disabled (gray-1@60% / gray-4@60%).
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Monospace / code">
+                {/* bp6-monospace-text — renders as a div with monospace font */}
+                <div className={Classes.MONOSPACE_TEXT} data-compare="text-code">
+                    monospace code text — bp6-monospace-text (font-family: monospace).
+                </div>
+            </Section>
+
+            <Section title="Headings (h1–h6)">
+                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    <h1 className={Classes.HEADING} data-compare="text-heading-1">Heading 1 (36px / 40px)</h1>
+                    <h2 className={Classes.HEADING} data-compare="text-heading-2">Heading 2 (28px / 32px)</h2>
+                    <h3 className={Classes.HEADING} data-compare="text-heading-3">Heading 3 (22px / 25px)</h3>
+                    <h4 className={Classes.HEADING} data-compare="text-heading-4">Heading 4 (18px / 21px)</h4>
+                    <h5 className={Classes.HEADING} data-compare="text-heading-5">Heading 5 (16px / 19px)</h5>
+                    <h6 className={Classes.HEADING} data-compare="text-heading-6">Heading 6 (14px / 16px)</h6>
+                </div>
+            </Section>
+
+            <Section title="Ellipsize">
+                {/* Fixed width so overflow triggers identically on both sides */}
+                <Text ellipsize={true} style={{ width: 200 }} data-compare="text-ellipsize">
+                    This text is long enough to overflow and be truncated with an ellipsis.
+                </Text>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Divider. `data-compare` keys MUST match analyst-ui's DividerGallery.
+ * Container layout (flexDirection, height, width) MUST be identical to the analyst side.
+ * Blueprint's bp6-divider: border-bottom + border-right 1px solid rgba(black,0.15);
+ * margin: 10px; dark: rgba(white,0.2). compact: margin 0.
+ */
+function DividerGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Horizontal (flex-column container)</h2>
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div>Above</div>
+                    <Divider data-compare="divider-default" />
+                    <div>Below</div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Vertical (flex-row container)</h2>
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", height: 32 }}>
+                    <div>Left</div>
+                    <Divider data-compare="divider-vertical" />
+                    <div>Right</div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Compact (no margin)</h2>
+                <div style={{ display: "flex", flexDirection: "column", width: 200 }}>
+                    <div>Above</div>
+                    <Divider compact={true} data-compare="divider-compact" />
+                    <div>Below</div>
+                </div>
+            </section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint Spinner reference gallery.
+ *
+ * Blueprint's Spinner doesn't expose data-* props for internal path elements, so
+ * we use useRef + useEffect to add data-compare to the track/head paths after mount.
+ * The harness runs after networkidle, so the attributes will be present.
+ *
+ * Value=0.5 on all compared specimens (50% arc → dashoffset=140). Keys must match
+ * analyst-ui's SpinnerGallery exactly.
+ */
+const BP_SPINNER_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
+
+function TaggedSpinner({
+    size,
+    value,
+    intent,
+    trackKey,
+    headKey,
+}: {
+    size?: number;
+    value?: number;
+    intent?: Intent;
+    trackKey?: string;
+    headKey?: string;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const track = ref.current.querySelector(".bp6-spinner-track");
+        const head = ref.current.querySelector(".bp6-spinner-head");
+        if (track && trackKey) track.setAttribute("data-compare", trackKey);
+        if (head && headKey) head.setAttribute("data-compare", headKey);
+    });
+    return (
+        <div ref={ref}>
+            <Spinner size={size} value={value} intent={intent} />
+        </div>
+    );
+}
+
+function SpinnerGallery() {
+    const VALUE = 0.5;
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Sizes (determinate, value=0.5)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    <TaggedSpinner
+                        size={SpinnerSize.SMALL}
+                        value={VALUE}
+                        trackKey="spinner-sm-track"
+                        headKey="spinner-sm-head"
+                    />
+                    <TaggedSpinner
+                        size={SpinnerSize.STANDARD}
+                        value={VALUE}
+                        trackKey="spinner-std-track"
+                        headKey="spinner-std-head"
+                    />
+                    <TaggedSpinner
+                        size={SpinnerSize.LARGE}
+                        value={VALUE}
+                        headKey="spinner-lg-head"
+                    />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Intents (standard, value=0.5)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    {BP_SPINNER_INTENTS.map((intent) => (
+                        <TaggedSpinner
+                            key={intent}
+                            size={SpinnerSize.STANDARD}
+                            value={VALUE}
+                            intent={intent}
+                            headKey={`spinner-${intent}-head`}
+                        />
+                    ))}
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Indeterminate (visual only — not diff&apos;d)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    <Spinner size={SpinnerSize.SMALL} />
+                    <Spinner size={SpinnerSize.STANDARD} />
+                    <Spinner size={SpinnerSize.LARGE} />
+                </div>
+            </section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint ProgressBar reference gallery.
+ *
+ * Blueprint's ProgressBar doesn't expose data-* props for internal meter/track elements,
+ * so we use useRef + useEffect to add data-compare to the track (.bp6-progress-bar) and
+ * meter (.bp6-progress-meter) after mount. The harness runs after networkidle.
+ *
+ * Value=0.6 on intent specimens, 0.5/0.25/0.75 on default specimens.
+ * All are wrapped in 200px containers to match analyst-ui side exactly.
+ * Keys must match analyst-ui's ProgressBarGallery exactly.
+ */
+const BP_PB_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
+
+/**
+ * Wraps Blueprint's ProgressBar and tags the track + meter divs via useEffect.
+ * trackKey tags the outer .bp6-progress-bar; meterKey tags the inner .bp6-progress-meter.
+ */
+function TaggedProgressBar({
+    value,
+    intent,
+    trackKey,
+    meterKey,
+}: {
+    value?: number;
+    intent?: Intent;
+    trackKey?: string;
+    meterKey?: string;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        // The track is the first child element (the .bp6-progress-bar div itself)
+        const track = ref.current.querySelector(".bp6-progress-bar");
+        const meter = ref.current.querySelector(".bp6-progress-meter");
+        if (track && trackKey) track.setAttribute("data-compare", trackKey);
+        if (meter && meterKey) meter.setAttribute("data-compare", meterKey);
+    });
+    return (
+        <div ref={ref}>
+            <ProgressBar value={value} intent={intent} />
+        </div>
+    );
+}
+
+function ProgressBarGallery() {
+    const containerStyle: React.CSSProperties = { width: 200 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Default (determinate, fixed 200px)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.5} trackKey="pb-track-50" meterKey="pb-meter-50" />
+                    </div>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.25} meterKey="pb-meter-25" />
+                    </div>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.75} meterKey="pb-meter-75" />
+                    </div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Intent (value=0.6, fixed 200px)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {BP_PB_INTENTS.map((intent) => (
+                        <div key={intent} style={containerStyle}>
+                            <TaggedProgressBar value={0.6} intent={intent} meterKey={`pb-meter-${intent}`} />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>No stripes / no animation (visual only)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 200 }}>
+                    <ProgressBar value={0.4} stripes={false} />
+                    <ProgressBar value={0.4} animate={false} />
+                    <ProgressBar value={0.4} stripes={false} animate={false} />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Indeterminate (visual only — not diff&apos;d)</h2>
+                <div style={{ width: 200, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <ProgressBar />
+                    <ProgressBar intent="primary" />
+                </div>
+            </section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint Skeleton reference gallery.
+ *
+ * Blueprint's skeleton is a CSS modifier class (.bp6-skeleton) applied to elements.
+ * For the keyed diff specimens, we use animation:none inline so the background
+ * is frozen at the start color (rgba(211,216,222,0.2)) — deterministically comparable.
+ *
+ * Keys match analyst-ui's SkeletonGallery exactly:
+ *   skeleton-box  — 120×16px (h-4/w-[120px])
+ *   skeleton-line — 200×12px (h-3/w-[200px])
+ *
+ * Blueprint skeleton colors (same in light and dark, no dark SCSS override):
+ *   start = rgba($light-gray1, 0.2) = rgba(211, 216, 222, 0.2)
+ *   end   = rgba($gray1, 0.2)       = rgba(95, 107, 124, 0.2)
+ */
+function SkeletonGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Static specimens (animation off — diff&apos;d)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {/* skeleton-box: 120×16px, animation off for deterministic diff */}
+                    <div
+                        className="bp6-skeleton"
+                        data-compare="skeleton-box"
+                        style={{ width: 120, height: 16, animation: "none" }}
+                    />
+                    {/* skeleton-line: 200×12px, animation off for deterministic diff */}
+                    <div
+                        className="bp6-skeleton"
+                        data-compare="skeleton-line"
+                        style={{ width: 200, height: 12, animation: "none" }}
+                    />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Animated (visual only — not diff&apos;d)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div className="bp6-skeleton" style={{ width: 200, height: 16 }} />
+                    <div className="bp6-skeleton" style={{ width: 160, height: 16 }} />
+                    <div className="bp6-skeleton" style={{ width: 120, height: 16 }} />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Modifier pattern (existing elements skeletonized)</h2>
+                {/* Blueprint canonical example: .bp6-card with skeletonized children */}
+                <div className="bp6-card" style={{ width: 240, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <h5 className="bp6-heading bp6-skeleton" style={{ animation: "none" }}>Card heading</h5>
+                    <p className="bp6-skeleton" style={{ animation: "none" }}>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                    <button type="button" className="bp6-button bp6-skeleton" style={{ animation: "none" }}>
+                        Submit
+                    </button>
+                </div>
+            </section>
+        </div>
+    );
+}
+
+const TAG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for Tag. `data-compare` keys MUST match analyst-ui's TagGallery.
+ *
+ * Blueprint's Tag doesn't forward data-* to the outer span, so we use useRef+useEffect
+ * to set data-compare on the .bp6-tag element after mount — same pattern as TaggedSpinner.
+ */
+function TaggedTag({
+    intent,
+    minimal,
+    size,
+    round,
+    icon,
+    onRemove,
+    dataCompare,
+    children,
+}: {
+    intent?: Intent;
+    minimal?: boolean;
+    size?: "medium" | "large";
+    round?: boolean;
+    icon?: React.ReactElement;
+    onRemove?: () => void;
+    dataCompare: string;
+    children?: React.ReactNode;
+}) {
+    const ref = useRef<HTMLSpanElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const tag = ref.current.querySelector(".bp6-tag");
+        if (tag) tag.setAttribute("data-compare", dataCompare);
+    });
+    return (
+        <span ref={ref}>
+            <Tag intent={intent} minimal={minimal} size={size} round={round} icon={icon} onRemove={onRemove}>
+                {children}
+            </Tag>
+        </span>
+    );
+}
+
+function TagGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Solid intents">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    {TAG_INTENTS.map((intent) => (
+                        <TaggedTag key={intent} intent={intent} dataCompare={`tag-solid-${intent}`}>
+                            {intent}
+                        </TaggedTag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Minimal intents">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    {TAG_INTENTS.map((intent) => (
+                        <TaggedTag key={intent} intent={intent} minimal dataCompare={`tag-minimal-${intent}`}>
+                            {intent}
+                        </TaggedTag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag size="large" dataCompare="tag-large">Large tag</TaggedTag>
+                    <Tag size="large" intent="primary">Large primary</Tag>
+                    <Tag size="large" minimal intent="success">Large minimal</Tag>
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag round dataCompare="tag-round">Round</TaggedTag>
+                    <Tag round intent="primary">Round primary</Tag>
+                    <Tag round size="large" intent="success">Round large</Tag>
+                </div>
+            </Section>
+
+            <Section title="With icon">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag icon={<Icon icon="tick" size={12} />} dataCompare="tag-icon">With icon</TaggedTag>
+                    <Tag icon={<Icon icon="tick" size={12} />} intent="success">Success icon</Tag>
+                    <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">End icon</Tag>
+                </div>
+            </Section>
+
+            <Section title="Removable">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag onRemove={() => {}} dataCompare="tag-removable">Removable</TaggedTag>
+                    <Tag onRemove={() => {}} intent="primary">Primary removable</Tag>
+                    <Tag onRemove={() => {}} size="large" intent="success">Large removable</Tag>
+                </div>
+            </Section>
+
+            <Section title="Interactive">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <Tag interactive>Interactive</Tag>
+                    <Tag interactive intent="primary">Primary interactive</Tag>
+                    <Tag interactive active intent="success">Active</Tag>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+const CALLOUT_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for Callout. `data-compare` keys MUST match analyst-ui's CalloutGallery.
+ * Blueprint's Callout spreads htmlProps on the outer div, so data-compare is forwarded directly.
+ * All keyed specimens use a fixed width of 320px identical to the analyst-ui side.
+ *
+ * The harness diffs: backgroundColor, color, paddingTop, paddingBottom, paddingLeft,
+ * paddingRight, borderRadius, fontSize, lineHeight.
+ */
+function CalloutGallery() {
+    const w: React.CSSProperties = { width: 320 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Intent (with default icon + title + body)">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {CALLOUT_INTENTS.map((intent) => (
+                        <Callout
+                            key={intent}
+                            intent={intent}
+                            title={intent === "none" ? "Default callout" : `${intent.charAt(0).toUpperCase() + intent.slice(1)} callout`}
+                            style={w}
+                            data-compare={`callout-${intent}`}
+                        >
+                            This is the callout body content for {intent} intent.
+                        </Callout>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Compact">
+                <Callout
+                    intent="primary"
+                    title="Compact callout"
+                    compact={true}
+                    style={w}
+                    data-compare="callout-compact"
+                >
+                    Compact reduces padding from 16px to 8px.
+                </Callout>
+            </Section>
+
+            <Section title="Minimal (no background)">
+                <Callout
+                    intent="warning"
+                    title="Minimal callout"
+                    minimal={true}
+                    style={w}
+                    data-compare="callout-minimal"
+                >
+                    Minimal removes the background color fill.
+                </Callout>
+            </Section>
+
+            <Section title="No icon (icon={null} with intent)">
+                <Callout
+                    intent="danger"
+                    title="No icon callout"
+                    icon={null}
+                    style={w}
+                    data-compare="callout-no-icon"
+                >
+                    Explicitly suppressed icon with intent set.
+                </Callout>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
+    { id: "icon", title: "Icon", render: () => <IconGallery /> },
+    { id: "text", title: "Text", render: () => <TextGallery /> },
+    { id: "divider", title: "Divider", render: () => <DividerGallery /> },
+    { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
+    { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
+    { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
+    { id: "tag", title: "Tag", render: () => <TagGallery /> },
+    { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
