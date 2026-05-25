@@ -465,6 +465,68 @@ function ProgressBarGallery() {
     );
 }
 
+/**
+ * Blueprint Skeleton reference gallery.
+ *
+ * Blueprint's skeleton is a CSS modifier class (.bp6-skeleton) applied to elements.
+ * For the keyed diff specimens, we use animation:none inline so the background
+ * is frozen at the start color (rgba(211,216,222,0.2)) — deterministically comparable.
+ *
+ * Keys match analyst-ui's SkeletonGallery exactly:
+ *   skeleton-box  — 120×16px (h-4/w-[120px])
+ *   skeleton-line — 200×12px (h-3/w-[200px])
+ *
+ * Blueprint skeleton colors (same in light and dark, no dark SCSS override):
+ *   start = rgba($light-gray1, 0.2) = rgba(211, 216, 222, 0.2)
+ *   end   = rgba($gray1, 0.2)       = rgba(95, 107, 124, 0.2)
+ */
+function SkeletonGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Static specimens (animation off — diff&apos;d)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {/* skeleton-box: 120×16px, animation off for deterministic diff */}
+                    <div
+                        className="bp6-skeleton"
+                        data-compare="skeleton-box"
+                        style={{ width: 120, height: 16, animation: "none" }}
+                    />
+                    {/* skeleton-line: 200×12px, animation off for deterministic diff */}
+                    <div
+                        className="bp6-skeleton"
+                        data-compare="skeleton-line"
+                        style={{ width: 200, height: 12, animation: "none" }}
+                    />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Animated (visual only — not diff&apos;d)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div className="bp6-skeleton" style={{ width: 200, height: 16 }} />
+                    <div className="bp6-skeleton" style={{ width: 160, height: 16 }} />
+                    <div className="bp6-skeleton" style={{ width: 120, height: 16 }} />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Modifier pattern (existing elements skeletonized)</h2>
+                {/* Blueprint canonical example: .bp6-card with skeletonized children */}
+                <div className="bp6-card" style={{ width: 240, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <h5 className="bp6-heading bp6-skeleton" style={{ animation: "none" }}>Card heading</h5>
+                    <p className="bp6-skeleton" style={{ animation: "none" }}>
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </p>
+                    <button type="button" className="bp6-button bp6-skeleton" style={{ animation: "none" }}>
+                        Submit
+                    </button>
+                </div>
+            </section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -474,6 +536,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
+    { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

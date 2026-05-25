@@ -6,6 +6,7 @@ import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 
@@ -450,6 +451,66 @@ function ProgressBarGallery() {
     );
 }
 
+/**
+ * Skeleton showcase. The two keyed specimens have animation DISABLED (`animate={false}`)
+ * so the background freezes at the start color (rgba(211,216,222,0.2)) — deterministic
+ * for the computed-style diff. The animated specimen is visual-only (no data-compare).
+ *
+ * Keyed specimens (identical size/animation-off on both sides):
+ *   skeleton-box  — 120×16px placeholder bar
+ *   skeleton-line — 200×12px placeholder line
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx SkeletonGallery exactly.
+ *
+ * Compared props: backgroundColor (= start color), borderColor, borderRadius (2px),
+ * color (transparent), boxShadow (none). All captured by capture-styles.js.
+ */
+function SkeletonGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Static specimens (animation off — diff'd)">
+                <div className="flex flex-col gap-3">
+                    {/* skeleton-box: 120×16 — animation disabled for deterministic diff */}
+                    <Skeleton
+                        animate={false}
+                        className="h-4 w-[120px]"
+                        data-compare="skeleton-box"
+                    />
+                    {/* skeleton-line: 200×12 — animation disabled for deterministic diff */}
+                    <Skeleton
+                        animate={false}
+                        className="h-3 w-[200px]"
+                        data-compare="skeleton-line"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Animated (visual only — not diff'd)">
+                <div className="flex flex-col gap-3">
+                    <Skeleton className="h-4 w-[200px]" />
+                    <Skeleton className="h-4 w-[160px]" />
+                    <Skeleton className="h-4 w-[120px]" />
+                </div>
+            </Section>
+
+            <Section title="Modifier pattern (existing elements skeletonized)">
+                {/* Blueprint-style: apply skeleton modifier to existing content elements */}
+                <Card className="flex flex-col gap-2 p-4 w-[240px]">
+                    <Skeleton as="h5" animate={false} className="text-heading-sm font-semibold">
+                        Card heading
+                    </Skeleton>
+                    <Skeleton as="p" animate={false} className="text-body">
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    </Skeleton>
+                    <Skeleton as="button" animate={false} className="h-7.5 w-20 text-body">
+                        Submit
+                    </Skeleton>
+                </Card>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -459,6 +520,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
+    { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

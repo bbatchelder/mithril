@@ -15,6 +15,21 @@
     to   { background-position: 30px 0; }
 }
 
+/* Skeleton glow animation — 1s (10 × $pt-transition-duration=100ms), matching Blueprint.
+ * Keyframes: skeleton-color-start = rgba(light-gray1, 0.2) = rgba(211,216,222,0.2)
+ *            skeleton-color-end   = rgba(gray1, 0.2)       = rgba(95,107,124,0.2)
+ * Same colors in both light and dark themes (Blueprint has no dark override for skeleton). */
+@keyframes bp-skeleton-glow {
+    from {
+        background: rgba(211, 216, 222, 0.2);
+        border-color: rgba(211, 216, 222, 0.2);
+    }
+    to {
+        background: rgba(95, 107, 124, 0.2);
+        border-color: rgba(95, 107, 124, 0.2);
+    }
+}
+
 @layer base {
     * {
         border-color: var(--border);
