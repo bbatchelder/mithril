@@ -14,6 +14,20 @@
                     "target": "src/styles/tokens.css"
                 }
             ]
+        },
+        {
+            "name": "button",
+            "type": "registry:ui",
+            "description": "Button — solid/outlined/minimal variants, five intents, three sizes, loading/active/fill states, start/end icons. Blueprint-faithful, built on CVA + Radix Slot.",
+            "dependencies": ["@radix-ui/react-slot", "class-variance-authority", "lucide-react"],
+            "registryDependencies": ["https://registry/tokens"],
+            "files": [
+                {
+                    "path": "src/components/ui/button.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/button.tsx"
+                }
+            ]
         }
     ]
 }
