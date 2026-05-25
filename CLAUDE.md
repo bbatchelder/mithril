@@ -28,6 +28,32 @@ A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's desi
   Authoritative tokens: `packages/core/src/design-tokens/tokens/`.
 - `docs/handoffs/` — session handoff docs; newest bootstraps the next session.
 
+## The development loop (autonomous)
+
+The goal is to build out `docs/ROADMAP.md` **autonomously, without stopping between components.**
+Work the roadmap top-down; the next component is always the first unchecked item.
+
+- **Branch per phase.** Cut `phase-N-<slug>` (e.g. `phase-1-primitives`) from fresh `main`. All of a
+  phase's component commits land on that branch.
+- **One loop = one component.** Per loop: build → register in BOTH galleries → `tools/compare.sh <id> both`
+  → tick the box in `ROADMAP.md` → write the next numbered handoff (`docs/handoffs/000N-*.md`) →
+  **one commit, then push.** The commit bundles the component, gallery edits, token changes, the roadmap
+  tick, and the handoff.
+- **Phase complete** → open a PR → merge to `main` (merge commit) → sync `main`, delete the phase branch
+  → cut the next phase branch. Then continue.
+- **Definition of done (commit gate):** `pnpm build` green **and** `compare.sh` clean in both themes.
+  Aim for an exact computed-style match; if a small sub-perceptual delta remains after real effort, accept
+  it, **document it in the handoff**, and move on (e.g. the dark-`--foreground` call — see agent memory).
+- **Pause only on hard blockers.** Make all fidelity / technical / API calls yourself and document them.
+  Stop for the user only when genuinely stuck: build can't go green, the harness can't reach the component
+  after real effort, or a *dependency* component (e.g. Popover) fails and blocks everything downstream.
+- **Auto-install dependencies** as components need them (`pnpm add @radix-ui/...`, Floating UI,
+  `react-day-picker`, …) and list each new package in that loop's handoff.
+- **The harness is ours to extend.** If `compare.sh` / the galleries can't reach a component (e.g. portaled
+  Dialog content), adapt the harness rather than treating it as a blocker.
+- No unit tests — verification is visual via the harness. Add registry entries as components are built.
+  Keep saving durable, non-obvious learnings to agent memory.
+
 ## Workflow rules
 
 - **Visual verification is required for components.** Build the component, render it in *both* galleries
@@ -35,8 +61,8 @@ A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's desi
   the same `id`, and tag key specimens with matching `data-compare` keys. Then run `tools/compare.sh <id>`
   to screenshot **and** computed-style-diff against Blueprint (both themes) before calling a component done.
   Prefer this over driving Chrome by hand.
-- **End every working session by writing a handoff** in `docs/handoffs/` (see `TEMPLATE.md`). Update the
-  current task's status. Commit.
+- **Write a handoff at the end of every loop** in `docs/handoffs/` (see `TEMPLATE.md`) — one per component,
+  numbered. The newest bootstraps the next session.
 - **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
   (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), not runtime `var()` in inline styles — those get
   dropped. Tokens declared in plain `:root {}` (e.g. `--elevation-0..4`) are always emitted.
