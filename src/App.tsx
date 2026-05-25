@@ -2,6 +2,7 @@ import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
+import { Card, type CardElevation } from "@/components/ui/card";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -98,9 +99,48 @@ function ButtonGallery() {
     );
 }
 
+const ELEVATIONS: CardElevation[] = [0, 1, 2, 3, 4];
+
+/**
+ * Card showcase. Compared specimens use a fixed box (`width`/`height`) so the
+ * harness diffs card chrome — bg, radius, shadow, padding — without typography
+ * line-height noise affecting the measured height. Keys mirror the reference gallery.
+ */
+function CardGallery() {
+    const box: React.CSSProperties = { width: 220, height: 96 };
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Elevation (0–4)">
+                <div className="flex flex-wrap gap-5">
+                    {ELEVATIONS.map((e) => (
+                        <Card key={e} elevation={e} style={box} data-compare={`card-elevation-${e}`}>
+                            Elevation {e}
+                        </Card>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Interactive / selected / compact">
+                <div className="flex flex-wrap gap-5">
+                    <Card interactive style={box}>
+                        Interactive (hover to raise)
+                    </Card>
+                    <Card interactive selected style={box} data-compare="card-selected">
+                        Selected
+                    </Card>
+                    <Card compact style={box} data-compare="card-compact">
+                        Compact (16px padding)
+                    </Card>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "card", title: "Card", render: () => <CardGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
