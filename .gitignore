@@ -12,3 +12,6 @@ pnpm-debug.log*
 coverage/
 .turbo/
 *.tsbuildinfo
+
+# comparison harness artifacts (screenshots + style dumps)
+tools/comparison/screenshots/
