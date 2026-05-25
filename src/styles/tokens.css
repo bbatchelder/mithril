@@ -268,6 +268,18 @@
     --elevation-2: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --elevation-3: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --elevation-4: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+
+    /* Card shadows (light) — the surface elevations, plus a primary selection ring.
+     * Blueprint derives the ring from intent.primary.rest (blue-3) via relative oklch;
+     * we mirror the exact offsets so both implementations resolve to identical colors. */
+    --card-shadow-0: var(--elevation-0);
+    --card-shadow-1: var(--elevation-1);
+    --card-shadow-2: var(--elevation-2);
+    --card-shadow-3: var(--elevation-3);
+    --card-shadow-4: var(--elevation-4);
+    --card-shadow-selected:
+        0 0 0 3px oklch(from var(--color-blue-3) calc(l + 0.095) calc(c - 0.004) h / 0.2),
+        0 0 0 1px oklch(from var(--color-blue-3) calc(l + 0.095) calc(c - 0.004) h);
 }
 
 /* =============================================================================
@@ -318,6 +330,19 @@
     --elevation-3: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 25px -5px rgba(0, 0, 0, 0.3),
         0 10px 30px -5px rgba(0, 0, 0, 0.3);
     --elevation-4: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 25px 60px -12px rgba(0, 0, 0, 0.85);
+
+    /* Card shadows (dark) — Blueprint layers two faint inset highlights over the
+     * surface elevation at levels 1–4 (not at 0). Selected ring uses larger L/C
+     * offsets in dark. See packages/core/src/components/card/_card.scss. */
+    --card-highlight: inset 0 0 0.5px 0 rgba(255, 255, 255, 0.3), inset 0 0.5px 0 0 rgba(255, 255, 255, 0.08);
+    --card-shadow-0: var(--elevation-0);
+    --card-shadow-1: var(--elevation-1), var(--card-highlight);
+    --card-shadow-2: var(--elevation-2), var(--card-highlight);
+    --card-shadow-3: var(--elevation-3), var(--card-highlight);
+    --card-shadow-4: var(--elevation-4), var(--card-highlight);
+    --card-shadow-selected:
+        0 0 0 3px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h / 0.4),
+        0 0 0 1px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h);
 }
 
 /* =============================================================================
@@ -359,4 +384,11 @@
     --shadow-elevation-4: var(--elevation-4);
     --shadow-input: var(--input-shadow);
     --shadow-button: var(--button-shadow);
+
+    --shadow-card-0: var(--card-shadow-0);
+    --shadow-card-1: var(--card-shadow-1);
+    --shadow-card-2: var(--card-shadow-2);
+    --shadow-card-3: var(--card-shadow-3);
+    --shadow-card-4: var(--card-shadow-4);
+    --shadow-card-selected: var(--card-shadow-selected);
 }
