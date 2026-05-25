@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+// Diff computed styles of paired [data-compare] specimens between analyst-ui and
+// Blueprint. Invoked by compare.sh; can also be run standalone:
+//   node tools/comparison/diff-styles.mjs <analyst.styles.json> <blueprint.styles.json> [label]
+//
+// Each input is the raw `agent-browser eval --json` envelope whose `data.result`
+// is itself a JSON string of { "<compare-key>": { "<cssProp>": "<value>", ... } }.
+
+import { readFileSync } from "node:fs";
+
+const [analystPath, blueprintPath, label = ""] = process.argv.slice(2);
+if (!analystPath || !blueprintPath) {
+    console.error("usage: diff-styles.mjs <analyst.styles.json> <blueprint.styles.json> [label]");
+    process.exit(2);
+}
+
+/** Unwrap the agent-browser eval envelope → the specimen→props object. */
+function load(path) {
+    const raw = readFileSync(path, "utf8").trim();
+    const outer = JSON.parse(raw);
+    if (!outer.success) throw new Error(`eval failed for ${path}: ${outer.error}`);
+    return JSON.parse(outer.data.result);
+}
+
+const A = load(analystPath);
+const B = load(blueprintPath);
+
+// Color tolerance: capture-styles.js normalizes every color to rgb()/rgba() via a
+// 1×1 canvas, but oklch→sRGB rounding can drift a channel by ±1. Compare colors
+// numerically (incl. those embedded in box-shadow) so identical-looking values
+// match, while non-color parts (lengths, "inset") must match exactly.
+const CHANNEL_TOL = 3;
+const ALPHA_TOL = 0.06;
+const rgbToken = /rgba?\([^)]*\)/g;
+const parseRgb = (c) => {
+    const n = (c.match(/[\d.]+/g) || []).map(Number);
+    return { r: n[0], g: n[1], b: n[2], a: n[3] ?? 1 };
+};
+const colorClose = (a, b) => {
+    const x = parseRgb(a);
+    const y = parseRgb(b);
+    return (
+        Math.abs(x.r - y.r) <= CHANNEL_TOL &&
+        Math.abs(x.g - y.g) <= CHANNEL_TOL &&
+        Math.abs(x.b - y.b) <= CHANNEL_TOL &&
+        Math.abs(x.a - y.a) <= ALPHA_TOL
+    );
+};
+function valuesEqual(a, b) {
+    if (a === b) return true;
+    if (a == null || b == null) return false;
+    // The non-color skeleton (lengths, keywords) must be identical...
+    if (a.replace(rgbToken, "•") !== b.replace(rgbToken, "•")) return false;
+    // ...and each positional color must match within tolerance.
+    const ca = a.match(rgbToken) || [];
+    const cb = b.match(rgbToken) || [];
+    if (ca.length !== cb.length) return false;
+    return ca.every((c, i) => colorClose(c, cb[i]));
+}
+
+const C = { dim: "\x1b[2m", red: "\x1b[31m", green: "\x1b[32m", yellow: "\x1b[33m", bold: "\x1b[1m", reset: "\x1b[0m" };
+
+const keys = [...new Set([...Object.keys(A), ...Object.keys(B)])].sort();
+let mismatchCount = 0;
+let matchCount = 0;
+const onlyA = [];
+const onlyB = [];
+
+console.log(`${C.bold}computed-style diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(analyst → blueprint)${C.reset}`);
+
+for (const key of keys) {
+    if (!(key in B)) { onlyA.push(key); continue; }
+    if (!(key in A)) { onlyB.push(key); continue; }
+    const props = [...new Set([...Object.keys(A[key]), ...Object.keys(B[key])])];
+    const diffs = props.filter((p) => !valuesEqual(A[key][p], B[key][p]));
+    if (diffs.length === 0) {
+        matchCount++;
+        continue;
+    }
+    mismatchCount++;
+    console.log(`\n${C.yellow}● ${key}${C.reset}`);
+    for (const p of diffs) {
+        console.log(`    ${p}`);
+        console.log(`      ${C.red}analyst  ${A[key][p] ?? "—"}${C.reset}`);
+        console.log(`      ${C.green}blueprnt ${B[key][p] ?? "—"}${C.reset}`);
+    }
+}
+
+if (onlyA.length) console.log(`\n${C.dim}only in analyst:  ${onlyA.join(", ")}${C.reset}`);
+if (onlyB.length) console.log(`${C.dim}only in blueprint: ${onlyB.join(", ")}${C.reset}`);
+
+const summary = `${matchCount} match · ${mismatchCount} differ`;
+console.log(`\n${mismatchCount ? C.yellow : C.green}${summary}${C.reset}`);

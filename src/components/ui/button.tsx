@@ -17,7 +17,7 @@ const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "dange
  * pressed (`:active`) fill so the `active` prop renders the same look.
  */
 const SOLID: Record<ButtonIntent, string> = {
-    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-dark-gray-4 dark:hover:bg-dark-gray-3 dark:active:bg-dark-gray-2 dark:data-[active=true]:bg-dark-gray-2",
+    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-dark-gray-3 dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
     primary:
         "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active data-[active=true]:bg-primary-active",
     success:
@@ -28,24 +28,27 @@ const SOLID: Record<ButtonIntent, string> = {
     danger: "bg-danger text-danger-foreground hover:bg-danger-hover active:bg-danger-active data-[active=true]:bg-danger-active",
 };
 
+// Outlined/minimal intent text uses theme-aware `--intent-*-text` tokens (palette -2
+// in light, Blueprint's color-mix-with-white shade in dark). Outlined borders are that
+// same color at 60% alpha — Blueprint's `color-mix(in oklch, text 60%, transparent)`.
 const OUTLINED: Record<ButtonIntent, string> = {
     none: "border-border-strong text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "border-blue-3/50 text-blue-2 hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:border-blue-4/50 dark:text-blue-4 dark:hover:bg-blue-4/15",
+        "border-intent-primary-text/60 text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
     success:
-        "border-green-3/50 text-green-2 hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:border-green-4/50 dark:text-green-4 dark:hover:bg-green-4/15",
+        "border-intent-success-text/60 text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
     warning:
-        "border-orange-3/50 text-orange-2 hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:border-orange-4/50 dark:text-orange-4 dark:hover:bg-orange-4/15",
-    danger: "border-red-3/50 text-red-2 hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:border-red-4/50 dark:text-red-4 dark:hover:bg-red-4/15",
+        "border-intent-warning-text/60 text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
+    danger: "border-intent-danger-text/60 text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
 };
 
 const MINIMAL: Record<ButtonIntent, string> = {
     none: "text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "text-blue-2 hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:text-blue-4 dark:hover:bg-blue-4/15",
-    success: "text-green-2 hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:text-green-4 dark:hover:bg-green-4/15",
-    warning: "text-orange-2 hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:text-orange-4 dark:hover:bg-orange-4/15",
-    danger: "text-red-2 hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:text-red-4 dark:hover:bg-red-4/15",
+        "text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
+    success: "text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
+    warning: "text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
+    danger: "text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
 };
 
 const VARIANT_MAP = { solid: SOLID, outlined: OUTLINED, minimal: MINIMAL } as const;
