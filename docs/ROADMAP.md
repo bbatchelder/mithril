@@ -50,7 +50,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **ProgressBar** — `progress-bar/`
 - [x] **Skeleton** — `skeleton/` (loading-state modifier)
 - [x] **Tag** — `tag/`
-- [ ] **Callout** — `callout/` (uses Icon)
+- [x] **Callout** — `callout/` (uses Icon)
 
 ## Phase 2 — Form controls
 

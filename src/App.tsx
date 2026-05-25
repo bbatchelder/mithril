@@ -8,6 +8,7 @@ import { Icon, type IconIntent } from "@/components/ui/icon";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
+import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
 
@@ -617,6 +618,74 @@ function TagGallery() {
     );
 }
 
+const CALLOUT_INTENTS: CalloutIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Callout showcase. All keyed specimens use a fixed width of 320px to ensure identical
+ * measured widths on both sides. Keys mirror tools/blueprint-reference/src/App.tsx CalloutGallery.
+ *
+ * The harness diffs: backgroundColor, color, paddingTop, paddingBottom, paddingLeft,
+ * paddingRight, borderRadius, fontSize, lineHeight.
+ */
+function CalloutGallery() {
+    const w: React.CSSProperties = { width: 320 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Intent (with default icon + title + body)">
+                <div className="flex flex-col gap-3">
+                    {CALLOUT_INTENTS.map((intent) => (
+                        <Callout
+                            key={intent}
+                            intent={intent}
+                            title={intent === "none" ? "Default callout" : `${intent.charAt(0).toUpperCase() + intent.slice(1)} callout`}
+                            style={w}
+                            data-compare={`callout-${intent}`}
+                        >
+                            This is the callout body content for {intent} intent.
+                        </Callout>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Compact">
+                <Callout
+                    intent="primary"
+                    title="Compact callout"
+                    compact
+                    style={w}
+                    data-compare="callout-compact"
+                >
+                    Compact reduces padding from 16px to 8px.
+                </Callout>
+            </Section>
+
+            <Section title="Minimal (no background)">
+                <Callout
+                    intent="warning"
+                    title="Minimal callout"
+                    minimal
+                    style={w}
+                    data-compare="callout-minimal"
+                >
+                    Minimal removes the background color fill.
+                </Callout>
+            </Section>
+
+            <Section title="No icon (icon={null} with intent)">
+                <Callout
+                    intent="danger"
+                    title="No icon callout"
+                    icon={null}
+                    style={w}
+                    data-compare="callout-no-icon"
+                >
+                    Explicitly suppressed icon with intent set.
+                </Callout>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -628,6 +697,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
+    { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
