@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "./tokens.css";
 
+/* Spinner rotation keyframe — 500ms (5 × $pt-transition-duration=100ms), matching Blueprint. */
+@keyframes bp-spinner-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
 @layer base {
     * {
         border-color: var(--border);

@@ -5,6 +5,7 @@ import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/b
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
+import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -301,6 +302,78 @@ function DividerGallery() {
     );
 }
 
+/**
+ * Spinner showcase. All compared specimens are DETERMINATE (value prop set) so
+ * stroke-dashoffset is stable and screenshots are still (no animation).
+ *
+ * data-compare placed on the head/track <path> elements via headProps/trackProps.
+ * The harness captures: stroke color, strokeWidth, strokeDasharray, strokeDashoffset,
+ * strokeLinecap, fillOpacity.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx SpinnerGallery exactly.
+ * value=0.5 on both sides → dashoffset = 280 - 0.5*280 = 140.
+ */
+const SPINNER_INTENTS: SpinnerIntent[] = ["primary", "success", "warning", "danger"];
+
+function SpinnerGallery() {
+    // All specimens are determinate with value=0.5 (50% arc → dashoffset=140).
+    const VALUE = 0.5;
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Sizes (determinate, value=0.5)">
+                <div className="flex flex-wrap items-center gap-6">
+                    {/* Small: size=20 → strokeWidth=16 */}
+                    <Spinner
+                        size={SpinnerSize.SMALL}
+                        value={VALUE}
+                        aria-label="small spinner"
+                        trackProps={{ "data-compare": "spinner-sm-track" }}
+                        headProps={{ "data-compare": "spinner-sm-head" }}
+                    />
+                    {/* Standard: size=50 → strokeWidth=8 */}
+                    <Spinner
+                        size={SpinnerSize.STANDARD}
+                        value={VALUE}
+                        aria-label="standard spinner"
+                        trackProps={{ "data-compare": "spinner-std-track" }}
+                        headProps={{ "data-compare": "spinner-std-head" }}
+                    />
+                    {/* Large: size=100 → strokeWidth=4 */}
+                    <Spinner
+                        size={SpinnerSize.LARGE}
+                        value={VALUE}
+                        aria-label="large spinner"
+                        headProps={{ "data-compare": "spinner-lg-head" }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Intents (standard, value=0.5)">
+                <div className="flex flex-wrap items-center gap-6">
+                    {SPINNER_INTENTS.map((intent) => (
+                        <Spinner
+                            key={intent}
+                            size={SpinnerSize.STANDARD}
+                            value={VALUE}
+                            intent={intent}
+                            aria-label={`${intent} spinner`}
+                            headProps={{ "data-compare": `spinner-${intent}-head` }}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Indeterminate (visual only — not diff'd)">
+                <div className="flex flex-wrap items-center gap-6">
+                    <Spinner size={SpinnerSize.SMALL} aria-label="small indeterminate spinner" />
+                    <Spinner size={SpinnerSize.STANDARD} aria-label="standard indeterminate spinner" />
+                    <Spinner size={SpinnerSize.LARGE} aria-label="large indeterminate spinner" />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -308,6 +381,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
+    { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

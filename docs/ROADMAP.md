@@ -46,7 +46,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
       `ReactNode`, so not a hard build-blocker, but most look incomplete without it.
 - [x] **Text** — `text/`
 - [x] **Divider** — `divider/`
-- [ ] **Spinner** — `spinner/`
+- [x] **Spinner** — `spinner/`
 - [ ] **ProgressBar** — `progress-bar/`
 - [ ] **Skeleton** — `skeleton/` (loading-state modifier)
 - [ ] **Tag** — `tag/`

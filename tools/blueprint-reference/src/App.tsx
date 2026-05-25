@@ -1,5 +1,5 @@
-import { Button, Card, Classes, Divider, Icon, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
-import { useState } from "react";
+import { Button, Card, Classes, Divider, Icon, Spinner, SpinnerSize, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
@@ -277,6 +277,100 @@ function DividerGallery() {
     );
 }
 
+/**
+ * Blueprint Spinner reference gallery.
+ *
+ * Blueprint's Spinner doesn't expose data-* props for internal path elements, so
+ * we use useRef + useEffect to add data-compare to the track/head paths after mount.
+ * The harness runs after networkidle, so the attributes will be present.
+ *
+ * Value=0.5 on all compared specimens (50% arc → dashoffset=140). Keys must match
+ * analyst-ui's SpinnerGallery exactly.
+ */
+const BP_SPINNER_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
+
+function TaggedSpinner({
+    size,
+    value,
+    intent,
+    trackKey,
+    headKey,
+}: {
+    size?: number;
+    value?: number;
+    intent?: Intent;
+    trackKey?: string;
+    headKey?: string;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const track = ref.current.querySelector(".bp6-spinner-track");
+        const head = ref.current.querySelector(".bp6-spinner-head");
+        if (track && trackKey) track.setAttribute("data-compare", trackKey);
+        if (head && headKey) head.setAttribute("data-compare", headKey);
+    });
+    return (
+        <div ref={ref}>
+            <Spinner size={size} value={value} intent={intent} />
+        </div>
+    );
+}
+
+function SpinnerGallery() {
+    const VALUE = 0.5;
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Sizes (determinate, value=0.5)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    <TaggedSpinner
+                        size={SpinnerSize.SMALL}
+                        value={VALUE}
+                        trackKey="spinner-sm-track"
+                        headKey="spinner-sm-head"
+                    />
+                    <TaggedSpinner
+                        size={SpinnerSize.STANDARD}
+                        value={VALUE}
+                        trackKey="spinner-std-track"
+                        headKey="spinner-std-head"
+                    />
+                    <TaggedSpinner
+                        size={SpinnerSize.LARGE}
+                        value={VALUE}
+                        headKey="spinner-lg-head"
+                    />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Intents (standard, value=0.5)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    {BP_SPINNER_INTENTS.map((intent) => (
+                        <TaggedSpinner
+                            key={intent}
+                            size={SpinnerSize.STANDARD}
+                            value={VALUE}
+                            intent={intent}
+                            headKey={`spinner-${intent}-head`}
+                        />
+                    ))}
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Indeterminate (visual only — not diff&apos;d)</h2>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 24 }}>
+                    <Spinner size={SpinnerSize.SMALL} />
+                    <Spinner size={SpinnerSize.STANDARD} />
+                    <Spinner size={SpinnerSize.LARGE} />
+                </div>
+            </section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -284,6 +378,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
+    { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
