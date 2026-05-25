@@ -17,14 +17,29 @@
         "backgroundColor",
         "borderTopColor",
         "borderTopWidth",
+        "borderBottomColor",
+        "borderBottomWidth",
+        "borderRightColor",
+        "borderRightWidth",
         "borderRadius",
         "boxShadow",
         "fontSize",
         "fontWeight",
+        "marginTop",
+        "marginBottom",
+        "marginLeft",
+        "marginRight",
         "paddingLeft",
         "paddingRight",
         "height",
         "minWidth",
+        // SVG/stroke props — for Spinner track/head path elements.
+        "stroke",
+        "strokeWidth",
+        "strokeDasharray",
+        "strokeDashoffset",
+        "strokeLinecap",
+        "fillOpacity",
     ];
 
     var cv = document.createElement("canvas");
@@ -80,6 +95,18 @@
         rec.boxShadow = cleanShadow(rec.boxShadow);
         // A zero-width border's color is invisible — comparing it is pure noise.
         if (parseFloat(s.borderTopWidth) === 0) delete rec.borderTopColor;
+        if (parseFloat(s.borderBottomWidth) === 0) delete rec.borderBottomColor;
+        if (parseFloat(s.borderRightWidth) === 0) delete rec.borderRightColor;
+        // SVG guard: if strokeWidth is 0 (or absent / not an SVG element), drop stroke
+        // color props so non-SVG specimens of other components don't generate false diffs.
+        if (parseFloat(s.strokeWidth) === 0 || !s.strokeWidth || s.strokeWidth === "") {
+            delete rec.stroke;
+            delete rec.strokeWidth;
+            delete rec.strokeDasharray;
+            delete rec.strokeDashoffset;
+            delete rec.strokeLinecap;
+            delete rec.fillOpacity;
+        }
         out[el.getAttribute("data-compare")] = rec;
     }
     return JSON.stringify(out);

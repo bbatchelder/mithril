@@ -259,6 +259,26 @@
     --intent-warning-text: var(--color-orange-2);
     --intent-danger-text: var(--color-red-2);
 
+    /* Tag solid warning bg/text — Blueprint lifts warning-rest by oklch l+0.19 for bg,
+     * and lightens warning-foreground (#111418) by oklch l+0.05 for text.
+     * Resolved: bg ≈ rgb(255,178,97), text ≈ rgb(28,31,36) */
+    --tag-solid-warning-bg: rgb(255, 178, 97);
+    --tag-solid-warning-text: rgb(28, 31, 36);
+
+    /* Tag minimal-none background — Blueprint uses oklch(from gray-1 calc(l+0.16) c h / 0.15)
+     * which is theme-invariant (gray-1 doesn't change). Computed ≈ rgba(141,154,174,0.15).
+     * Distinct from --interactive-hover which goes white-based in dark mode. */
+    --tag-minimal-bg: rgba(141, 154, 174, 0.15);
+
+    /* Tag minimal-none text (light) — Blueprint uses typography-color-default-rest ≈ dark-gray-1. */
+    --tag-minimal-none-text: var(--color-dark-gray-1);
+
+    /* Tag minimal intent text (light) — same as intent text for buttons/outlined. */
+    --tag-minimal-primary-text: var(--color-blue-2);
+    --tag-minimal-success-text: var(--color-green-2);
+    --tag-minimal-warning-text: var(--color-orange-2);
+    --tag-minimal-danger-text: var(--color-red-2);
+
     /* Solid button: subtle inset border + 1px drop shadow (Blueprint v6.15 computed values). */
     --button-shadow: inset 0 0 0 1px oklch(0.421111 0.0240744 257.113 / 0.325), 0 1px 2px rgba(17, 20, 24, 0.1);
 
@@ -321,6 +341,25 @@
     --intent-warning-text: color-mix(in oklch, var(--color-orange-3) 53%, white);
     --intent-danger-text: color-mix(in oklch, var(--color-red-3) 53%, white);
 
+    /* Tag solid warning: same formula applies in dark (warning-rest unchanged). */
+    --tag-solid-warning-bg: rgb(255, 178, 97);
+    --tag-solid-warning-text: rgb(28, 31, 36);
+
+    /* Tag minimal-none bg: same gray-1 based formula as light (theme-invariant). */
+    --tag-minimal-bg: rgba(141, 154, 174, 0.15);
+
+    /* Tag minimal-none dark text: Blueprint computes oklch(from typography-dark-rest calc(l+0.24) c h) ≈ #f2f7ff */
+    --tag-minimal-none-text: rgb(242, 247, 255);
+
+    /* Tag minimal intent text (dark) — Blueprint: oklch(from intent-rest calc(l+N) calc(c-N) h)
+     * Resolved values from Blueprint reference browser rendering:
+     *   primary: rgb(123,185,255)  success: rgb(141,207,164)
+     *   warning: rgb(253,179,112)  danger:  rgb(255,139,136) */
+    --tag-minimal-primary-text: rgb(123, 185, 255);
+    --tag-minimal-success-text: rgb(141, 207, 164);
+    --tag-minimal-warning-text: rgb(253, 179, 112);
+    --tag-minimal-danger-text: rgb(255, 139, 136);
+
     /* Elevation (dark) — inset white border + deeper shadows */
     --elevation-0: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 10px 0 rgba(0, 0, 0, 0.2);
     --elevation-1: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 10px 0 rgba(0, 0, 0, 0.2),
@@ -373,6 +412,15 @@
     --color-intent-success-text: var(--intent-success-text);
     --color-intent-warning-text: var(--intent-warning-text);
     --color-intent-danger-text: var(--intent-danger-text);
+
+    --color-tag-solid-warning-bg: var(--tag-solid-warning-bg);
+    --color-tag-solid-warning-text: var(--tag-solid-warning-text);
+    --color-tag-minimal-bg: var(--tag-minimal-bg);
+    --color-tag-minimal-none-text: var(--tag-minimal-none-text);
+    --color-tag-minimal-primary-text: var(--tag-minimal-primary-text);
+    --color-tag-minimal-success-text: var(--tag-minimal-success-text);
+    --color-tag-minimal-warning-text: var(--tag-minimal-warning-text);
+    --color-tag-minimal-danger-text: var(--tag-minimal-danger-text);
 
     --color-code-foreground: var(--code-foreground);
     --color-code-background: var(--code-background);
