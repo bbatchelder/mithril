@@ -8,6 +8,7 @@ import { Icon, type IconIntent } from "@/components/ui/icon";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
+import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -511,6 +512,111 @@ function SkeletonGallery() {
     );
 }
 
+const TAG_INTENTS: TagIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Tag showcase. Keyed specimens carry `data-compare` attributes that mirror the Blueprint
+ * reference gallery. The harness diffs: backgroundColor, color, height, paddingLeft,
+ * paddingRight, borderRadius, fontSize.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx TagGallery exactly.
+ */
+function TagGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Solid intents">
+                <div className="flex flex-wrap items-center gap-2">
+                    {TAG_INTENTS.map((intent) => (
+                        <Tag key={intent} intent={intent} data-compare={`tag-solid-${intent}`}>
+                            {intent}
+                        </Tag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Minimal intents">
+                <div className="flex flex-wrap items-center gap-2">
+                    {TAG_INTENTS.map((intent) => (
+                        <Tag key={intent} intent={intent} minimal data-compare={`tag-minimal-${intent}`}>
+                            {intent}
+                        </Tag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Tag size="large" data-compare="tag-large">
+                        Large tag
+                    </Tag>
+                    <Tag size="large" intent="primary">
+                        Large primary
+                    </Tag>
+                    <Tag size="large" minimal intent="success">
+                        Large minimal
+                    </Tag>
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Tag round data-compare="tag-round">
+                        Round
+                    </Tag>
+                    <Tag round intent="primary">
+                        Round primary
+                    </Tag>
+                    <Tag round size="large" intent="success">
+                        Round large
+                    </Tag>
+                </div>
+            </Section>
+
+            <Section title="With icon">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Tag icon={<Icon icon="tick" size={12} />} data-compare="tag-icon">
+                        With icon
+                    </Tag>
+                    <Tag icon={<Icon icon="tick" size={12} />} intent="success">
+                        Success icon
+                    </Tag>
+                    <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">
+                        End icon
+                    </Tag>
+                </div>
+            </Section>
+
+            <Section title="Removable">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Tag onRemove={() => {}} data-compare="tag-removable">
+                        Removable
+                    </Tag>
+                    <Tag onRemove={() => {}} intent="primary">
+                        Primary removable
+                    </Tag>
+                    <Tag onRemove={() => {}} size="large" intent="success">
+                        Large removable
+                    </Tag>
+                </div>
+            </Section>
+
+            <Section title="Interactive">
+                <div className="flex flex-wrap items-center gap-2">
+                    <Tag interactive>
+                        Interactive
+                    </Tag>
+                    <Tag interactive intent="primary">
+                        Primary interactive
+                    </Tag>
+                    <Tag interactive active intent="success">
+                        Active
+                    </Tag>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -521,6 +627,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
+    { id: "tag", title: "Tag", render: () => <TagGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

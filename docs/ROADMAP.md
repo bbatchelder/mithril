@@ -49,7 +49,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Spinner** — `spinner/`
 - [x] **ProgressBar** — `progress-bar/`
 - [x] **Skeleton** — `skeleton/` (loading-state modifier)
-- [ ] **Tag** — `tag/`
+- [x] **Tag** — `tag/`
 - [ ] **Callout** — `callout/` (uses Icon)
 
 ## Phase 2 — Form controls

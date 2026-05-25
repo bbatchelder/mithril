@@ -1,4 +1,4 @@
-import { Button, Card, Classes, Divider, Icon, ProgressBar, Spinner, SpinnerSize, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, Classes, Divider, Icon, ProgressBar, Spinner, SpinnerSize, Tag, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -527,6 +527,114 @@ function SkeletonGallery() {
     );
 }
 
+const TAG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * Blueprint reference for Tag. `data-compare` keys MUST match analyst-ui's TagGallery.
+ *
+ * Blueprint's Tag doesn't forward data-* to the outer span, so we use useRef+useEffect
+ * to set data-compare on the .bp6-tag element after mount — same pattern as TaggedSpinner.
+ */
+function TaggedTag({
+    intent,
+    minimal,
+    size,
+    round,
+    icon,
+    onRemove,
+    dataCompare,
+    children,
+}: {
+    intent?: Intent;
+    minimal?: boolean;
+    size?: "medium" | "large";
+    round?: boolean;
+    icon?: React.ReactElement;
+    onRemove?: () => void;
+    dataCompare: string;
+    children?: React.ReactNode;
+}) {
+    const ref = useRef<HTMLSpanElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        const tag = ref.current.querySelector(".bp6-tag");
+        if (tag) tag.setAttribute("data-compare", dataCompare);
+    });
+    return (
+        <span ref={ref}>
+            <Tag intent={intent} minimal={minimal} size={size} round={round} icon={icon} onRemove={onRemove}>
+                {children}
+            </Tag>
+        </span>
+    );
+}
+
+function TagGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Solid intents">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    {TAG_INTENTS.map((intent) => (
+                        <TaggedTag key={intent} intent={intent} dataCompare={`tag-solid-${intent}`}>
+                            {intent}
+                        </TaggedTag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Minimal intents">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    {TAG_INTENTS.map((intent) => (
+                        <TaggedTag key={intent} intent={intent} minimal dataCompare={`tag-minimal-${intent}`}>
+                            {intent}
+                        </TaggedTag>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag size="large" dataCompare="tag-large">Large tag</TaggedTag>
+                    <Tag size="large" intent="primary">Large primary</Tag>
+                    <Tag size="large" minimal intent="success">Large minimal</Tag>
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag round dataCompare="tag-round">Round</TaggedTag>
+                    <Tag round intent="primary">Round primary</Tag>
+                    <Tag round size="large" intent="success">Round large</Tag>
+                </div>
+            </Section>
+
+            <Section title="With icon">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag icon={<Icon icon="tick" size={12} />} dataCompare="tag-icon">With icon</TaggedTag>
+                    <Tag icon={<Icon icon="tick" size={12} />} intent="success">Success icon</Tag>
+                    <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">End icon</Tag>
+                </div>
+            </Section>
+
+            <Section title="Removable">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <TaggedTag onRemove={() => {}} dataCompare="tag-removable">Removable</TaggedTag>
+                    <Tag onRemove={() => {}} intent="primary">Primary removable</Tag>
+                    <Tag onRemove={() => {}} size="large" intent="success">Large removable</Tag>
+                </div>
+            </Section>
+
+            <Section title="Interactive">
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+                    <Tag interactive>Interactive</Tag>
+                    <Tag interactive intent="primary">Primary interactive</Tag>
+                    <Tag interactive active intent="success">Active</Tag>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -537,6 +645,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
+    { id: "tag", title: "Tag", render: () => <TagGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
