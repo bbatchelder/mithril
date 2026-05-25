@@ -20,15 +20,19 @@ A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's desi
 - `src/App.tsx` — preview/showcase app (`pnpm dev` → :5173).
 - `tools/blueprint-reference/` — isolated `@blueprintjs/core@6.15` gallery for side-by-side comparison
   (`cd tools/blueprint-reference && pnpm dev` → :5174). React 18 there to satisfy Blueprint's peer dep.
+- `tools/compare.sh` + `tools/comparison/` — the comparison harness (see its README). Drives `agent-browser`
+  to screenshot **and** computed-style-diff a component against Blueprint in one command.
 - Blueprint source clone (the design spec): `/Users/bbatchelder/Code/blueprint` (v6.15, Apache-2.0).
   Authoritative tokens: `packages/core/src/design-tokens/tokens/`.
 - `docs/handoffs/` — session handoff docs; newest bootstraps the next session.
 
 ## Workflow rules
 
-- **Visual verification is required for components.** Build the component, render it in the preview, run
-  both dev servers, and screenshot analyst-ui vs. the Blueprint reference to confirm pixel fidelity before
-  calling a component done.
+- **Visual verification is required for components.** Build the component, render it in *both* galleries
+  (`src/App.tsx` and `tools/blueprint-reference/src/App.tsx`) — register it in each `COMPONENTS` array under
+  the same `id`, and tag key specimens with matching `data-compare` keys. Then run `tools/compare.sh <id>`
+  to screenshot **and** computed-style-diff against Blueprint (both themes) before calling a component done.
+  Prefer this over driving Chrome by hand.
 - **End every working session by writing a handoff** in `docs/handoffs/` (see `TEMPLATE.md`). Update the
   current task's status. Commit.
 - **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
@@ -43,4 +47,7 @@ pnpm dev          # analyst-ui preview at :5173
 pnpm build        # typecheck (tsc -b) + vite build
 pnpm typecheck
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference at :5174
+
+tools/compare.sh button            # screenshot + style-diff a component vs Blueprint (both themes)
+tools/compare.sh button dark       # ...one theme only (light|dark|both)
 ```
