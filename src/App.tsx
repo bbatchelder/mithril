@@ -1,5 +1,5 @@
 import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Radio, RadioGroup } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
+import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-group";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1044,6 +1045,167 @@ function SwitchGallery() {
     );
 }
 
+// FormGroup inner element class names (mirror Blueprint's .bp6-* classes used in reference gallery).
+const FG_SUBLABEL_CLASS = "fg-inner-sublabel";
+const FG_HELPER_CLASS = "fg-inner-helper";
+
+/**
+ * Wrap a FormGroup and use useEffect to stamp data-compare on its inner elements.
+ * Mirrors the ref+setAttribute technique used in the Blueprint reference gallery.
+ */
+function TaggedFormGroup({
+    dataCompare,
+    targetSelector,
+    children,
+    ...props
+}: {
+    dataCompare: string;
+    targetSelector: string;
+} & React.ComponentProps<typeof FormGroup>) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (ref.current) {
+            const el = ref.current.querySelector(targetSelector);
+            if (el) el.setAttribute("data-compare", dataCompare);
+        }
+    }, [dataCompare, targetSelector]);
+    return <FormGroup ref={ref} {...props}>{children}</FormGroup>;
+}
+
+const FG_INTENTS: FormGroupIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * FormGroup + Label showcase. data-compare keys must match blueprint-reference gallery.
+ *
+ * Specimens:
+ *   fg-label       — standalone Label element (marginBottom=16px, color=foreground)
+ *   fg-label-info  — the muted span inside the Label (color=muted, marginLeft=4px)
+ *   fg-sublabel    — sub-label div inside FormGroup (color=muted, fontSize=12px, marginBottom=4px)
+ *   fg-intent-danger — helper text in danger-intent FormGroup (color=danger-text, fontSize=12px, marginTop=4px)
+ *   fg-inline      — label inside inline FormGroup (marginRight=12px, marginBottom=0)
+ *   fg-disabled    — helper text in disabled FormGroup (color=disabled)
+ */
+function FormGroupGallery() {
+    // ref trick for standalone Label's muted span
+    const labelRef = useRef<HTMLLabelElement>(null);
+    useEffect(() => {
+        if (labelRef.current) {
+            const span = labelRef.current.querySelector("span");
+            if (span) span.setAttribute("data-compare", "fg-label-info");
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Standalone Label">
+                <div className="flex flex-col gap-0">
+                    {/* fg-label: the label element itself — margin-bottom 16px, color foreground */}
+                    <Label ref={labelRef} htmlFor="fg-label-input" data-compare="fg-label" info="(optional)">
+                        Label text
+                    </Label>
+                    <input id="fg-label-input" type="text" className="border px-2 py-1 text-sm" placeholder="Input" />
+                </div>
+                <div className="flex flex-col gap-0">
+                    <Label disabled info="(optional)">
+                        Disabled label
+                    </Label>
+                </div>
+            </Section>
+
+            <Section title="Basic FormGroup">
+                {/* fg-basic: the in-group label element (margin-bottom 4px) */}
+                <TaggedFormGroup
+                    label="Full name"
+                    labelFor="fg-basic-input"
+                    helperText="Please enter your full name."
+                    labelInfo="(required)"
+                    dataCompare="fg-basic"
+                    targetSelector="label"
+                >
+                    <input id="fg-basic-input" type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Sub-label">
+                {/* fg-sublabel: the sub-label div — color muted, font-size 12px, margin-bottom 4px */}
+                <TaggedFormGroup
+                    label="Username"
+                    labelFor="fg-sublabel-input"
+                    subLabel="Must be 3–20 characters."
+                    helperText="Check availability first."
+                    dataCompare="fg-sublabel"
+                    targetSelector={`.${FG_SUBLABEL_CLASS}`}
+                >
+                    <input id="fg-sublabel-input" type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Intents (helper text color)">
+                <div className="flex flex-col gap-2">
+                    {FG_INTENTS.map((intent) => (
+                        intent === "danger" ? (
+                            // fg-intent-danger: helper text div — color = danger intent text, fontSize 12px, marginTop 4px
+                            <TaggedFormGroup
+                                key={intent}
+                                label={`Intent: ${intent}`}
+                                intent={intent}
+                                helperText={`Helper text for intent ${intent}.`}
+                                dataCompare="fg-intent-danger"
+                                targetSelector={`.${FG_HELPER_CLASS}`}
+                            >
+                                <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                            </TaggedFormGroup>
+                        ) : (
+                            <FormGroup
+                                key={intent}
+                                label={`Intent: ${intent}`}
+                                intent={intent}
+                                helperText={`Helper text for intent ${intent}.`}
+                            >
+                                <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                            </FormGroup>
+                        )
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                {/* fg-inline: the label inside inline FormGroup — marginRight=12px, marginBottom=0 */}
+                <TaggedFormGroup
+                    label="Inline label"
+                    labelFor="fg-inline-input"
+                    inline
+                    helperText="Helper below."
+                    dataCompare="fg-inline"
+                    targetSelector="label"
+                >
+                    <input id="fg-inline-input" type="text" className="border px-2 py-1 text-sm" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Disabled">
+                {/* fg-disabled: the helper text in disabled FormGroup — color = disabled */}
+                <TaggedFormGroup
+                    label="Disabled group"
+                    labelFor="fg-disabled-input"
+                    helperText="Helper text (disabled)."
+                    disabled
+                    dataCompare="fg-disabled"
+                    targetSelector={`.${FG_HELPER_CLASS}`}
+                >
+                    <input id="fg-disabled-input" type="text" disabled className="border px-2 py-1 text-sm w-full opacity-50" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Fill">
+                <FormGroup label="Full width" fill helperText="Fills container.">
+                    <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </FormGroup>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1061,6 +1223,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
     { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
     { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
+    { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
