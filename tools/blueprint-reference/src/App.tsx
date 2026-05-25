@@ -1,4 +1,4 @@
-import { Button, Card, Classes, Divider, Icon, Spinner, SpinnerSize, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, Classes, Divider, Icon, ProgressBar, Spinner, SpinnerSize, Text, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -371,6 +371,100 @@ function SpinnerGallery() {
     );
 }
 
+/**
+ * Blueprint ProgressBar reference gallery.
+ *
+ * Blueprint's ProgressBar doesn't expose data-* props for internal meter/track elements,
+ * so we use useRef + useEffect to add data-compare to the track (.bp6-progress-bar) and
+ * meter (.bp6-progress-meter) after mount. The harness runs after networkidle.
+ *
+ * Value=0.6 on intent specimens, 0.5/0.25/0.75 on default specimens.
+ * All are wrapped in 200px containers to match analyst-ui side exactly.
+ * Keys must match analyst-ui's ProgressBarGallery exactly.
+ */
+const BP_PB_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
+
+/**
+ * Wraps Blueprint's ProgressBar and tags the track + meter divs via useEffect.
+ * trackKey tags the outer .bp6-progress-bar; meterKey tags the inner .bp6-progress-meter.
+ */
+function TaggedProgressBar({
+    value,
+    intent,
+    trackKey,
+    meterKey,
+}: {
+    value?: number;
+    intent?: Intent;
+    trackKey?: string;
+    meterKey?: string;
+}) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        // The track is the first child element (the .bp6-progress-bar div itself)
+        const track = ref.current.querySelector(".bp6-progress-bar");
+        const meter = ref.current.querySelector(".bp6-progress-meter");
+        if (track && trackKey) track.setAttribute("data-compare", trackKey);
+        if (meter && meterKey) meter.setAttribute("data-compare", meterKey);
+    });
+    return (
+        <div ref={ref}>
+            <ProgressBar value={value} intent={intent} />
+        </div>
+    );
+}
+
+function ProgressBarGallery() {
+    const containerStyle: React.CSSProperties = { width: 200 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Default (determinate, fixed 200px)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.5} trackKey="pb-track-50" meterKey="pb-meter-50" />
+                    </div>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.25} meterKey="pb-meter-25" />
+                    </div>
+                    <div style={containerStyle}>
+                        <TaggedProgressBar value={0.75} meterKey="pb-meter-75" />
+                    </div>
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Intent (value=0.6, fixed 200px)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {BP_PB_INTENTS.map((intent) => (
+                        <div key={intent} style={containerStyle}>
+                            <TaggedProgressBar value={0.6} intent={intent} meterKey={`pb-meter-${intent}`} />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>No stripes / no animation (visual only)</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, width: 200 }}>
+                    <ProgressBar value={0.4} stripes={false} />
+                    <ProgressBar value={0.4} animate={false} />
+                    <ProgressBar value={0.4} stripes={false} animate={false} />
+                </div>
+            </section>
+
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Indeterminate (visual only — not diff&apos;d)</h2>
+                <div style={{ width: 200, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <ProgressBar />
+                    <ProgressBar intent="primary" />
+                </div>
+            </section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -379,6 +473,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "text", title: "Text", render: () => <TextGallery /> },
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
+    { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

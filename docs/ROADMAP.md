@@ -47,7 +47,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Text** — `text/`
 - [x] **Divider** — `divider/`
 - [x] **Spinner** — `spinner/`
-- [ ] **ProgressBar** — `progress-bar/`
+- [x] **ProgressBar** — `progress-bar/`
 - [ ] **Skeleton** — `skeleton/` (loading-state modifier)
 - [ ] **Tag** — `tag/`
 - [ ] **Callout** — `callout/` (uses Icon)

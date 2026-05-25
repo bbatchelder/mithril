@@ -5,6 +5,7 @@ import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/b
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
+import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 
@@ -374,6 +375,81 @@ function SpinnerGallery() {
     );
 }
 
+/**
+ * ProgressBar showcase. All compared specimens are DETERMINATE so meter width is stable
+ * and measurable in the diff. Each bar is wrapped in a fixed-width 200px container so
+ * the meter's pixel width (value% of 200) is identical on both sides.
+ *
+ * data-compare placed on track div (via the ProgressBar itself) and meter div (via meterProps).
+ * The harness captures: backgroundColor, height, borderRadius, width for track/meter.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx ProgressBarGallery exactly.
+ */
+const PB_INTENTS: ProgressBarIntent[] = ["primary", "success", "warning", "danger"];
+
+function ProgressBarGallery() {
+    const containerStyle: React.CSSProperties = { width: 200 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Default (determinate, fixed 200px)">
+                <div className="flex flex-col gap-3">
+                    {/* value=0.5 — track + meter keyed */}
+                    <div style={containerStyle}>
+                        <ProgressBar
+                            value={0.5}
+                            data-compare="pb-track-50"
+                            meterProps={{ "data-compare": "pb-meter-50" }}
+                        />
+                    </div>
+                    <div style={containerStyle}>
+                        <ProgressBar
+                            value={0.25}
+                            meterProps={{ "data-compare": "pb-meter-25" }}
+                        />
+                    </div>
+                    <div style={containerStyle}>
+                        <ProgressBar
+                            value={0.75}
+                            meterProps={{ "data-compare": "pb-meter-75" }}
+                        />
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Intent (value=0.6, fixed 200px)">
+                <div className="flex flex-col gap-3">
+                    {PB_INTENTS.map((intent) => (
+                        <div key={intent} style={containerStyle}>
+                            <ProgressBar
+                                value={0.6}
+                                intent={intent}
+                                meterProps={{ "data-compare": `pb-meter-${intent}` }}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="No stripes / no animation (visual only)">
+                <div className="flex flex-col gap-3" style={containerStyle}>
+                    <ProgressBar value={0.4} stripes={false} />
+                    <ProgressBar value={0.4} animate={false} />
+                    <ProgressBar value={0.4} stripes={false} animate={false} />
+                </div>
+            </Section>
+
+            <Section title="Indeterminate (visual only — not diff'd)">
+                <div style={containerStyle}>
+                    <ProgressBar />
+                </div>
+                <div style={containerStyle}>
+                    <ProgressBar intent="primary" />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -382,6 +458,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "text", title: "Text", render: () => <TextGallery /> },
     { id: "divider", title: "Divider", render: () => <DividerGallery /> },
     { id: "spinner", title: "Spinner", render: () => <SpinnerGallery /> },
+    { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
