@@ -2,6 +2,8 @@
 
 > **Bootstrapping a session?** Read the most recent file in `docs/handoffs/` first — it captures
 > the current state and the next steps. Then skim this file for the durable rules below.
+> The fixed component build order lives in `docs/ROADMAP.md` — the next component is always the first
+> unchecked item there, so no need to ask "what's next."
 
 ## What this project is
 
