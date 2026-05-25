@@ -1,4 +1,4 @@
-import { Button, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Card, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -78,9 +78,46 @@ function ButtonGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Card. `data-compare` keys MUST match analyst-ui's gallery.
+ * Compared cards use a fixed box so the diff targets card chrome, not content height.
+ * Blueprint shows the selection ring only on an interactive + selected card.
+ */
+function CardGallery() {
+    const box: React.CSSProperties = { width: 220, height: 96 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Elevation (0–4)">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+                    {([0, 1, 2, 3, 4] as const).map((e) => (
+                        <Card key={e} elevation={e} style={box} data-compare={`card-elevation-${e}`}>
+                            Elevation {e}
+                        </Card>
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Interactive / selected / compact">
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+                    <Card interactive={true} style={box}>
+                        Interactive (hover to raise)
+                    </Card>
+                    <Card interactive={true} selected={true} style={box} data-compare="card-selected">
+                        Selected
+                    </Card>
+                    <Card compact={true} style={box} data-compare="card-compact">
+                        Compact (16px padding)
+                    </Card>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "card", title: "Card", render: () => <CardGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
