@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
@@ -1755,6 +1756,39 @@ function ControlCardGallery() {
 }
 
 /**
+ * Alert showcase. Renders ONE alert OPEN by default so the harness can screenshot and
+ * computed-style-diff the portaled panel, icon, body, footer, and buttons.
+ *
+ * Portal + dark-mode: the alert receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Dialog).
+ *
+ * data-compare keys: alert-panel, alert-icon, alert-footer, alert-confirm, alert-cancel.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function AlertGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The alert below is open by default for comparison harness screenshots.
+            </p>
+            <Alert
+                defaultOpen={true}
+                icon="warning-sign"
+                intent="danger"
+                confirmButtonText="Delete"
+                cancelButtonText="Cancel"
+                onConfirm={() => {}}
+                onCancel={() => {}}
+                dark={dark}
+            >
+                Are you sure you want to delete this item? This action cannot be undone.
+            </Alert>
+        </div>
+    );
+}
+
+/**
  * Dialog showcase. Renders ONE dialog OPEN by default so the harness can screenshot and
  * computed-style-diff the portaled panel, header, body, footer, and close button.
  *
@@ -1822,6 +1856,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "alert", title: "Alert", render: () => <AlertGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

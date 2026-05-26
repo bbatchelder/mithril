@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1750,6 +1750,74 @@ function ControlCardGallery() {
 }
 
 /**
+ * Blueprint reference for Alert. Renders ONE alert open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals alert content to document.body. We use useEffect + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, icon, footer, confirm, cancel) after
+ * mount.
+ *
+ * Keys: alert-panel, alert-icon, alert-footer, alert-confirm, alert-cancel.
+ * Must match analyst-ui AlertGallery exactly.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as DialogGallery — see the ⚠️ ORCHESTRATOR REVIEW CORRECTION note in 0024).
+ */
+function AlertGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        function tag() {
+            // Blueprint Alert portals to document.body; we need to find via document query
+            // using the Classes constants. The alert body/footer/buttons are in the portaled DOM.
+            const panel = document.querySelector(`.${Classes.ALERT}`);
+            const body = panel?.querySelector(`.${Classes.ALERT_BODY}`);
+            const iconEl = body?.querySelector(`.${Classes.ICON}`);
+            const footer = panel?.querySelector(`.${Classes.ALERT_FOOTER}`);
+            // In row-reverse footer: first child (DOM) is the confirm button (rightmost visually)
+            const buttons = footer?.querySelectorAll<HTMLElement>("button");
+            const confirmBtn = buttons?.[0]; // first in DOM = confirm (row-reverse makes it right)
+            const cancelBtn = buttons?.[1];  // second in DOM = cancel
+
+            if (panel) panel.setAttribute("data-compare", "alert-panel");
+            if (iconEl) iconEl.setAttribute("data-compare", "alert-icon");
+            if (footer) footer.setAttribute("data-compare", "alert-footer");
+            if (confirmBtn) confirmBtn.setAttribute("data-compare", "alert-confirm");
+            if (cancelBtn) cancelBtn.setAttribute("data-compare", "alert-cancel");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The alert below is open by default for comparison harness screenshots.
+            </p>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <Alert
+                isOpen={true}
+                icon="warning-sign"
+                intent="danger"
+                confirmButtonText="Delete"
+                cancelButtonText="Cancel"
+                onConfirm={() => {}}
+                onCancel={() => {}}
+                onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled alert renders light unless we put the dark class on the portal itself.
+                // portalClassName is on OverlayableProps which AlertProps doesn't extend, but
+                // it's spread via ...overlayProps to Dialog at runtime and works correctly.
+                // Cast to any to bypass the type limitation.
+                {...({ portalClassName: dark ? Classes.DARK : undefined } as any)}
+            >
+                Are you sure you want to delete this item? This action cannot be undone.
+            </Alert>
+        </div>
+    );
+}
+
+/**
  * Blueprint reference for Dialog. Renders ONE dialog open by default (isOpen={true}) for harness.
  *
  * Blueprint portals dialog content to document.body. We use containerRef + querySelectorAll to
@@ -1847,6 +1915,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "alert", title: "Alert", render: () => <AlertGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
