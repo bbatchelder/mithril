@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3645,6 +3645,81 @@ function SliderGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Hotkeys. Uses Blueprint's Dialog, DialogBody, Hotkeys, Hotkey,
+ * and KeyComboTag components to render the canonical hotkeys dialog open by default.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal
+ * renders dark — same pattern as DialogGallery.
+ *
+ * data-compare keys must match analyst-ui's HotkeysGallery exactly:
+ *   hotkey-key        — first kbd key cap (tagged via useEffect on the portaled DOM)
+ *   hotkey-combo      — first .bp6-key-combo span
+ *   hotkey-row        — first .bp6-hotkey row
+ *   hotkey-label      — first .bp6-hotkey-label div
+ *   hotkey-column     — .bp6-hotkey-column wrapper div
+ *   hotkey-group-heading — first h4.bp6-heading group heading
+ */
+function HotkeysGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Tag the portaled content (Blueprint portals to document.body)
+            const col = document.querySelector(`.${Classes.HOTKEY_COLUMN}`);
+            if (col) col.setAttribute("data-compare", "hotkey-column");
+
+            const heading = document.querySelector(`.${Classes.HOTKEY_COLUMN} .${Classes.HEADING}`);
+            if (heading) heading.setAttribute("data-compare", "hotkey-group-heading");
+
+            const firstRow = document.querySelector(`.${Classes.HOTKEY}`);
+            if (firstRow) firstRow.setAttribute("data-compare", "hotkey-row");
+
+            const firstLabel = document.querySelector(`.${Classes.HOTKEY_LABEL}`);
+            if (firstLabel) firstLabel.setAttribute("data-compare", "hotkey-label");
+
+            const firstCombo = document.querySelector(`.${Classes.KEY_COMBO}`);
+            if (firstCombo) firstCombo.setAttribute("data-compare", "hotkey-combo");
+
+            const firstKey = document.querySelector(`.${Classes.KEY}`);
+            if (firstKey) firstKey.setAttribute("data-compare", "hotkey-key");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The hotkeys dialog below is open by default for comparison harness screenshots.
+            </p>
+            {/* Standalone KeyComboTag specimens */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>KeyCombo:</span>
+                <KeyComboTag combo="mod+s" />
+                <KeyComboTag combo="mod+shift+n" />
+                <KeyComboTag combo="ctrl+z" />
+            </div>
+            <Dialog
+                isOpen={true}
+                title="Keyboard shortcuts"
+                onClose={() => {}}
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <DialogBody style={{ margin: 0, padding: 0 }}>
+                    <Hotkeys>
+                        <Hotkey label="Save document" combo="mod+s" global={true} group="Global" />
+                        <Hotkey label="New file" combo="mod+n" global={true} group="Global" />
+                        <Hotkey label="Find" combo="mod+f" group="Editor" />
+                        <Hotkey label="Undo" combo="mod+z" group="Editor" />
+                    </Hotkeys>
+                </DialogBody>
+            </Dialog>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3690,6 +3765,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
+    { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

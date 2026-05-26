@@ -45,6 +45,7 @@ import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title"
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
+import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3297,6 +3298,56 @@ function SliderGallery() {
     );
 }
 
+/**
+ * Hotkeys showcase. Renders the HotkeysDialog OPEN by default so the harness can
+ * screenshot and computed-style-diff the portaled content.
+ *
+ * Portal + dark-mode: dark comes from DarkContext; the dialog receives it and
+ * wraps the portaled portal children in `<div className="dark">` (same as Dialog/Alert).
+ *
+ * data-compare keys (must match blueprint-reference HotkeysGallery exactly):
+ *   hotkey-key    — a single .bp6-key cap (first key in the first combo)
+ *   hotkey-combo  — the .bp6-key-combo wrapper span (first row)
+ *   hotkey-row    — a .bp6-hotkey row (first row, first group)
+ *   hotkey-label  — the .bp6-hotkey-label div (first row)
+ *
+ * NOTE: These elements are portaled to document.body, so the harness finds them
+ * via document.querySelectorAll("[data-compare]") which scans the full document.
+ */
+function HotkeysGallery() {
+    const dark = useContext(DarkContext);
+
+    const HOTKEYS = [
+        { label: "Save document", combo: "mod+s", global: true },
+        { label: "New file", combo: "mod+n", global: true },
+        { label: "Find", combo: "mod+f", group: "Editor" },
+        { label: "Undo", combo: "mod+z", group: "Editor" },
+    ] as const;
+
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The hotkeys dialog below is open by default for comparison harness screenshots.
+            </p>
+            {/* Standalone KeyCombo specimens (visible outside dialog) */}
+            <div className="flex flex-wrap items-center gap-4">
+                <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
+                <KeyCombo combo="mod+s" />
+                <KeyCombo combo="mod+shift+n" />
+                <KeyCombo combo="ctrl+z" />
+            </div>
+            <HotkeysDialog
+                open={true}
+                onOpenChange={() => {}}
+                dark={dark}
+                title="Keyboard shortcuts"
+                hotkeys={HOTKEYS}
+                globalGroupName="Global"
+            />
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3343,6 +3394,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
+    { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
