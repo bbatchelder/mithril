@@ -1,10 +1,22 @@
 import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
+import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
+import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Radio, RadioGroup } from "@/components/ui/radio";
+import { Switch } from "@/components/ui/switch";
+import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-group";
+import { ControlGroup } from "@/components/ui/control-group";
+import { HTMLSelect } from "@/components/ui/html-select";
+import { FileInput } from "@/components/ui/file-input";
+import { NumericInput, type NumericInputIntent } from "@/components/ui/numeric-input";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { CheckboxCard, RadioCard, SwitchCard } from "@/components/ui/control-card";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -686,6 +698,1058 @@ function CalloutGallery() {
     );
 }
 
+const IG_INTENTS: InputGroupIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * InputGroup showcase. All keyed specimens use a fixed width of 200px so the harness
+ * captures identical element widths on both sides.
+ *
+ * `data-compare` is placed on the `<input>` element (Blueprint's `.bp6-input`).
+ * The harness diffs: height, paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting / unfocused state only).
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx InputGroupGallery exactly.
+ */
+function InputGroupGallery() {
+    const w: React.CSSProperties = { width: 200 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Sizes">
+                <div className="flex flex-col gap-3">
+                    <InputGroup size="small" placeholder="Small (24px)" style={w} data-compare="ig-small" />
+                    <InputGroup size="medium" placeholder="Medium (30px)" style={w} data-compare="ig-medium" />
+                    <InputGroup size="large" placeholder="Large (40px)" style={w} data-compare="ig-large" />
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {IG_INTENTS.map((intent) => (
+                        <InputGroup
+                            key={intent}
+                            intent={intent}
+                            placeholder={`${intent} intent`}
+                            style={w}
+                            data-compare={`ig-intent-${intent}`}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Round">
+                <InputGroup round placeholder="Round input" style={w} data-compare="ig-round" />
+            </Section>
+
+            <Section title="Disabled">
+                <InputGroup disabled placeholder="Disabled input" style={w} data-compare="ig-disabled" />
+            </Section>
+
+            <Section title="Left icon">
+                <InputGroup leftIcon="search" placeholder="Search…" style={w} data-compare="ig-left-icon" />
+            </Section>
+
+            <Section title="Right element">
+                <InputGroup
+                    placeholder="With right element"
+                    style={w}
+                    data-compare="ig-right-element"
+                    rightElement={
+                        <Button size="small" variant="minimal" aria-label="Clear">
+                            <Icon icon="cross" size={12} />
+                        </Button>
+                    }
+                />
+            </Section>
+        </div>
+    );
+}
+
+const TA_INTENTS: TextAreaIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * TextArea showcase. All keyed specimens use a fixed width of 240px and rows=3 so the
+ * harness captures identical element widths and computed heights on both sides.
+ *
+ * `data-compare` is placed directly on the `<textarea>` element (Blueprint's `.bp6-input.bp6-text-area`).
+ * The harness diffs: paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting / unfocused state only).
+ * `height` is also compared — with rows=3 and matching font-size, heights should match.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx TextAreaGallery exactly.
+ */
+function TextAreaGallery() {
+    const w: React.CSSProperties = { width: 240 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Sizes">
+                <div className="flex flex-col gap-3">
+                    <TextArea size="medium" rows={3} placeholder="Medium (default)" style={w} data-compare="ta-medium" />
+                    <TextArea size="small" rows={3} placeholder="Small" style={w} data-compare="ta-small" />
+                    <TextArea size="large" rows={3} placeholder="Large" style={w} data-compare="ta-large" />
+                </div>
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {TA_INTENTS.map((intent) => (
+                        <TextArea
+                            key={intent}
+                            intent={intent}
+                            rows={3}
+                            placeholder={`${intent} intent`}
+                            style={w}
+                            data-compare={`ta-intent-${intent}`}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <TextArea disabled rows={3} placeholder="Disabled textarea" style={w} data-compare="ta-disabled" />
+            </Section>
+
+            <Section title="Fill">
+                <TextArea fill rows={3} placeholder="Fill textarea (full width)" />
+            </Section>
+
+            <Section title="Auto-resize (visual only)">
+                <TextArea autoResize placeholder="Type to auto-resize…" style={w} />
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Checkbox showcase. `data-compare` is placed via `indicatorProps` on the indicator span
+ * (`.bp6-control-indicator` equivalent) — the harness diffs width, height, border-radius,
+ * background-color, and box-shadow of that element.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx CheckboxGallery exactly.
+ */
+function CheckboxGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Checkbox
+                        label="Unchecked"
+                        indicatorProps={{ "data-compare": "cb-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "cb-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Indeterminate"
+                        indeterminate
+                        indicatorProps={{ "data-compare": "cb-indeterminate" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "cb-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox
+                        label="Disabled checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "cb-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Checkbox
+                        label="Large unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "cb-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Checkbox label="Large checked" large defaultChecked />
+                    <Checkbox label="Large indeterminate" large indeterminate />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Checkbox label="Option A" inline />
+                    <Checkbox label="Option B" inline defaultChecked />
+                    <Checkbox label="Option C" inline />
+                </div>
+            </Section>
+
+            <Section title="Align right">
+                <div className="flex flex-col gap-3 w-48">
+                    <Checkbox label="Right aligned" alignIndicator="right" />
+                    <Checkbox label="Right checked" alignIndicator="right" defaultChecked />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Radio + RadioGroup showcase. `data-compare` is placed via `indicatorProps` on the indicator span
+ * (the `.bp6-control-indicator` equivalent). The harness diffs: width, height, border-radius,
+ * background-color, and box-shadow of that element.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx RadioGallery exactly.
+ */
+function RadioGallery() {
+    const [groupValue, setGroupValue] = useState<string>("option-b");
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        label="Unchecked"
+                        name="radio-states"
+                        value="unchecked"
+                        indicatorProps={{ "data-compare": "radio-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Checked"
+                        name="radio-states"
+                        value="checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "radio-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Disabled"
+                        name="radio-disabled-states"
+                        value="disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "radio-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio
+                        label="Disabled checked"
+                        name="radio-disabled-states"
+                        value="disabled-checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "radio-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Radio
+                        label="Large unchecked"
+                        name="radio-large"
+                        value="large-unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "radio-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio label="Large checked" name="radio-large" value="large-checked" large defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="RadioGroup via options (controlled)">
+                <RadioGroup
+                    name="radio-group-opts"
+                    selectedValue={groupValue}
+                    onChange={(val) => setGroupValue(val)}
+                    label="Pick one"
+                    options={[
+                        { value: "option-a", label: "Option A" },
+                        { value: "option-b", label: "Option B (default selected)" },
+                        { value: "option-c", label: "Option C" },
+                    ]}
+                />
+            </Section>
+
+            <Section title="RadioGroup via children">
+                <RadioGroup name="radio-group-children" selectedValue={groupValue} onChange={(val) => setGroupValue(val)}>
+                    <Radio
+                        value="option-a"
+                        label="Option A"
+                        indicatorProps={{ "data-compare": "radio-group-selected" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Radio value="option-b" label="Option B (selected when groupValue=option-b)" />
+                    <Radio value="option-c" label="Option C" />
+                </RadioGroup>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Radio label="Option A" name="radio-inline" value="a" inline />
+                    <Radio label="Option B" name="radio-inline" value="b" inline defaultChecked />
+                    <Radio label="Option C" name="radio-inline" value="c" inline />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Switch showcase. `data-compare` is placed via `indicatorProps` on the track span.
+ * The harness diffs: backgroundColor, borderRadius, height, minWidth, boxShadow, color.
+ * Keys MUST match tools/blueprint-reference/src/App.tsx SwitchGallery exactly.
+ */
+function SwitchGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="States">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="Unchecked"
+                        indicatorProps={{ "data-compare": "switch-unchecked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Checked"
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "switch-checked" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Disabled"
+                        disabled
+                        indicatorProps={{ "data-compare": "switch-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch
+                        label="Disabled checked"
+                        disabled
+                        defaultChecked
+                        indicatorProps={{ "data-compare": "switch-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="Large unchecked"
+                        large
+                        indicatorProps={{ "data-compare": "switch-large" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch label="Large checked" large defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="Inner labels">
+                <div className="flex flex-col gap-3">
+                    <Switch
+                        label="With inner labels"
+                        innerLabel="OFF"
+                        innerLabelChecked="ON"
+                        indicatorProps={{ "data-compare": "switch-inner-labels" } as React.HTMLAttributes<HTMLSpanElement>}
+                    />
+                    <Switch label="Checked with inner labels" innerLabel="OFF" innerLabelChecked="ON" defaultChecked />
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex flex-wrap gap-4">
+                    <Switch label="Option A" inline />
+                    <Switch label="Option B" inline defaultChecked />
+                    <Switch label="Option C" inline disabled />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+// FormGroup inner element class names (mirror Blueprint's .bp6-* classes used in reference gallery).
+const FG_SUBLABEL_CLASS = "fg-inner-sublabel";
+const FG_HELPER_CLASS = "fg-inner-helper";
+
+/**
+ * Wrap a FormGroup and use useEffect to stamp data-compare on its inner elements.
+ * Mirrors the ref+setAttribute technique used in the Blueprint reference gallery.
+ */
+function TaggedFormGroup({
+    dataCompare,
+    targetSelector,
+    children,
+    ...props
+}: {
+    dataCompare: string;
+    targetSelector: string;
+} & React.ComponentProps<typeof FormGroup>) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (ref.current) {
+            const el = ref.current.querySelector(targetSelector);
+            if (el) el.setAttribute("data-compare", dataCompare);
+        }
+    }, [dataCompare, targetSelector]);
+    return <FormGroup ref={ref} {...props}>{children}</FormGroup>;
+}
+
+const FG_INTENTS: FormGroupIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * FormGroup + Label showcase. data-compare keys must match blueprint-reference gallery.
+ *
+ * Specimens:
+ *   fg-label       — standalone Label element (marginBottom=16px, color=foreground)
+ *   fg-label-info  — the muted span inside the Label (color=muted, marginLeft=4px)
+ *   fg-sublabel    — sub-label div inside FormGroup (color=muted, fontSize=12px, marginBottom=4px)
+ *   fg-intent-danger — helper text in danger-intent FormGroup (color=danger-text, fontSize=12px, marginTop=4px)
+ *   fg-inline      — label inside inline FormGroup (marginRight=12px, marginBottom=0)
+ *   fg-disabled    — helper text in disabled FormGroup (color=disabled)
+ */
+function FormGroupGallery() {
+    // ref trick for standalone Label's muted span
+    const labelRef = useRef<HTMLLabelElement>(null);
+    useEffect(() => {
+        if (labelRef.current) {
+            const span = labelRef.current.querySelector("span");
+            if (span) span.setAttribute("data-compare", "fg-label-info");
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Standalone Label">
+                <div className="flex flex-col gap-0">
+                    {/* fg-label: the label element itself — margin-bottom 16px, color foreground */}
+                    <Label ref={labelRef} htmlFor="fg-label-input" data-compare="fg-label" info="(optional)">
+                        Label text
+                    </Label>
+                    <input id="fg-label-input" type="text" className="border px-2 py-1 text-sm" placeholder="Input" />
+                </div>
+                <div className="flex flex-col gap-0">
+                    <Label disabled info="(optional)">
+                        Disabled label
+                    </Label>
+                </div>
+            </Section>
+
+            <Section title="Basic FormGroup">
+                {/* fg-basic: the in-group label element (margin-bottom 4px) */}
+                <TaggedFormGroup
+                    label="Full name"
+                    labelFor="fg-basic-input"
+                    helperText="Please enter your full name."
+                    labelInfo="(required)"
+                    dataCompare="fg-basic"
+                    targetSelector="label"
+                >
+                    <input id="fg-basic-input" type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Sub-label">
+                {/* fg-sublabel: the sub-label div — color muted, font-size 12px, margin-bottom 4px */}
+                <TaggedFormGroup
+                    label="Username"
+                    labelFor="fg-sublabel-input"
+                    subLabel="Must be 3–20 characters."
+                    helperText="Check availability first."
+                    dataCompare="fg-sublabel"
+                    targetSelector={`.${FG_SUBLABEL_CLASS}`}
+                >
+                    <input id="fg-sublabel-input" type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Intents (helper text color)">
+                <div className="flex flex-col gap-2">
+                    {FG_INTENTS.map((intent) => (
+                        intent === "danger" ? (
+                            // fg-intent-danger: helper text div — color = danger intent text, fontSize 12px, marginTop 4px
+                            <TaggedFormGroup
+                                key={intent}
+                                label={`Intent: ${intent}`}
+                                intent={intent}
+                                helperText={`Helper text for intent ${intent}.`}
+                                dataCompare="fg-intent-danger"
+                                targetSelector={`.${FG_HELPER_CLASS}`}
+                            >
+                                <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                            </TaggedFormGroup>
+                        ) : (
+                            <FormGroup
+                                key={intent}
+                                label={`Intent: ${intent}`}
+                                intent={intent}
+                                helperText={`Helper text for intent ${intent}.`}
+                            >
+                                <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                            </FormGroup>
+                        )
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Inline">
+                {/* fg-inline: the label inside inline FormGroup — marginRight=12px, marginBottom=0 */}
+                <TaggedFormGroup
+                    label="Inline label"
+                    labelFor="fg-inline-input"
+                    inline
+                    helperText="Helper below."
+                    dataCompare="fg-inline"
+                    targetSelector="label"
+                >
+                    <input id="fg-inline-input" type="text" className="border px-2 py-1 text-sm" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Disabled">
+                {/* fg-disabled: the helper text in disabled FormGroup — color = disabled */}
+                <TaggedFormGroup
+                    label="Disabled group"
+                    labelFor="fg-disabled-input"
+                    helperText="Helper text (disabled)."
+                    disabled
+                    dataCompare="fg-disabled"
+                    targetSelector={`.${FG_HELPER_CLASS}`}
+                >
+                    <input id="fg-disabled-input" type="text" disabled className="border px-2 py-1 text-sm w-full opacity-50" placeholder="Input" />
+                </TaggedFormGroup>
+            </Section>
+
+            <Section title="Fill">
+                <FormGroup label="Full width" fill helperText="Fills container.">
+                    <input type="text" className="border px-2 py-1 text-sm w-full" placeholder="Input" />
+                </FormGroup>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * ControlGroup showcase. `data-compare` is placed on the control-group div itself
+ * (the flex container). The harness diffs: display, flexDirection, alignItems, flexGrow.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   cg-horizontal  — InputGroup + Button in a row (flexDirection:row, alignItems:stretch)
+ *   cg-vertical    — two InputGroups stacked (flexDirection:column)
+ *   cg-fill        — fill group (width=100%, children flex-grow)
+ *   cg-fill-child  — first child of fill group (flexGrow:1)
+ */
+function ControlGroupGallery() {
+    // We need refs to stamp data-compare on the fill child (first child of cg-fill group)
+    const fillGroupRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (fillGroupRef.current) {
+            const firstChild = fillGroupRef.current.firstElementChild;
+            if (firstChild) {
+                firstChild.setAttribute("data-compare", "cg-fill-child");
+                firstChild.setAttribute("data-compare-flex", "");
+            }
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Horizontal (default)">
+                {/* cg-horizontal: data-compare + data-compare-flex → harness diffs display/flexDirection/alignItems */}
+                <ControlGroup data-compare="cg-horizontal" data-compare-flex="">
+                    <InputGroup placeholder="Search…" style={{ width: 180 }} />
+                    <Button>Go</Button>
+                </ControlGroup>
+            </Section>
+
+            <Section title="Vertical">
+                {/* cg-vertical: data-compare-flex → flexDirection:column */}
+                <ControlGroup vertical data-compare="cg-vertical" data-compare-flex="" style={{ width: 200 }}>
+                    <InputGroup placeholder="Username" />
+                    <InputGroup placeholder="Password" type="password" />
+                </ControlGroup>
+            </Section>
+
+            <Section title="Fill">
+                {/* cg-fill: data-compare-flex → width:100%, children flex-grow */}
+                {/* cg-fill-child: stamped via ref on the first child — flexGrow:1 */}
+                <ControlGroup fill ref={fillGroupRef} data-compare="cg-fill" data-compare-flex="">
+                    <InputGroup placeholder="Search…" />
+                    <Button>Go</Button>
+                </ControlGroup>
+            </Section>
+
+            <Section title="Intent / composition">
+                <ControlGroup>
+                    <InputGroup placeholder="Enter value…" intent="primary" style={{ width: 160 }} />
+                    <Button intent="primary">Submit</Button>
+                </ControlGroup>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * HTMLSelect showcase.
+ *
+ * `data-compare` is placed on the `<select>` element (the measured node), matching
+ * Blueprint's `.bp6-html-select > select`. The harness diffs: height, paddingLeft,
+ * paddingRight, backgroundColor, boxShadow, color, fontSize, borderRadius.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   hs-default  — default (30px, solid, double-caret-vertical)
+ *   hs-large    — large (40px, solid)
+ *   hs-minimal  — minimal (no bg/shadow at rest)
+ *   hs-disabled — disabled (muted bg, no shadow)
+ *   hs-fill     — fill (width:100%)
+ */
+const HS_OPTIONS = ["Apple", "Banana", "Cherry", "Dragon Fruit"];
+
+function HTMLSelectGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Default">
+                <HTMLSelect
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-default")}
+                />
+            </Section>
+
+            <Section title="Large">
+                <HTMLSelect
+                    large
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-large")}
+                />
+            </Section>
+
+            <Section title="Minimal">
+                <HTMLSelect
+                    minimal
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-minimal")}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <HTMLSelect
+                    disabled
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-disabled")}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 280 }}>
+                    <HTMLSelect
+                        fill
+                        options={HS_OPTIONS}
+                        ref={(el) => el?.setAttribute("data-compare", "hs-fill")}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * FileInput showcase. `data-compare` is placed on the `.bp6-file-upload-input` span
+ * (the visible box element, NOT the label wrapper). Blueprint's ref-setAttribute trick
+ * is used to attach data-compare to the inner span via a wrapper ref.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   fi-default       — default (30px, "Choose file...", placeholder text color)
+ *   fi-has-selection — hasSelection=true, text="report.pdf" (foreground text color)
+ *   fi-large         — large size (40px box)
+ *   fi-disabled      — disabled (muted box + disabled Browse button)
+ *   fi-fill          — fill (width:100%, wrapped in fixed-width container)
+ *
+ * The harness diffs: height, paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting state). The Browse button is verified
+ * visually via screenshots (pseudo-elements can't be diff'd in Blueprint reference).
+ */
+function FileInputGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Default">
+                <FileInput
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-default");
+                    }}
+                />
+            </Section>
+
+            <Section title="Has Selection (report.pdf)">
+                <FileInput
+                    hasSelection
+                    text="report.pdf"
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-has-selection");
+                    }}
+                />
+            </Section>
+
+            <Section title="Large">
+                <FileInput
+                    size="large"
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-large");
+                    }}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <FileInput
+                    disabled
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-disabled");
+                    }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <FileInput
+                        fill
+                        ref={(el) => {
+                            const span = el?.querySelector<HTMLElement>(".fi-box");
+                            if (span) span.setAttribute("data-compare", "fi-fill");
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+const NI_INTENTS: NumericInputIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * NumericInput showcase.
+ *
+ * `data-compare` is placed on the `<input>` element (the numeric input field, equivalent
+ * to Blueprint's `.bp6-input`). For the stepper button, we use a ref + querySelector
+ * to stamp `data-compare` on the first `.ni-step-btn` button.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   ni-default        — value=5, default size (30px field), stepper on right
+ *   ni-large          — value=5, large (40px field)
+ *   ni-disabled       — disabled
+ *   ni-intent-primary — primary intent (colored input border)
+ *   ni-buttons-left   — buttonPosition="left"
+ *   ni-fill           — fill (full-width, 300px container)
+ *   ni-step-button    — the increment stepper button (24px wide × ~14px tall)
+ */
+function NumericInputGallery() {
+    const [val, setVal] = useState<string>("5");
+
+    // Ref to stamp data-compare on the stepper button
+    const defaultRef = useRef<HTMLDivElement>(null);
+    const stepBtnRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // Stamp data-compare on the input element inside the default specimen
+        const input = defaultRef.current?.querySelector<HTMLInputElement>("input");
+        if (input) input.setAttribute("data-compare", "ni-default");
+
+        // Stamp data-compare on the increment stepper button
+        const btn = stepBtnRef.current?.querySelector<HTMLButtonElement>("button");
+        if (btn) btn.setAttribute("data-compare", "ni-step-button");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Default (value=5, stepSize=1)">
+                <div ref={defaultRef}>
+                    <div ref={stepBtnRef} className="inline-block">
+                        <NumericInput
+                            value={val}
+                            onValueChange={(_, s) => setVal(s)}
+                            min={0}
+                            max={100}
+                            stepSize={1}
+                            style={{ width: 120 }}
+                        />
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <NumericInput
+                    defaultValue={5}
+                    size="large"
+                    min={0}
+                    max={100}
+                    style={{ width: 140 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-large")}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <NumericInput
+                    defaultValue={5}
+                    disabled
+                    style={{ width: 120 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-disabled")}
+                />
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {NI_INTENTS.map((intent) => (
+                        <NumericInput
+                            key={intent}
+                            defaultValue={5}
+                            intent={intent}
+                            style={{ width: 120 }}
+                            ref={intent === "primary" ? (el) => el?.setAttribute("data-compare", "ni-intent-primary") : undefined}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Buttons left">
+                <NumericInput
+                    defaultValue={5}
+                    buttonPosition="left"
+                    style={{ width: 120 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-buttons-left")}
+                />
+            </Section>
+
+            <Section title="Buttons none">
+                <NumericInput
+                    defaultValue={5}
+                    buttonPosition="none"
+                    style={{ width: 120 }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <NumericInput
+                        defaultValue={5}
+                        fill
+                        ref={(el) => el?.setAttribute("data-compare", "ni-fill")}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Left icon">
+                <NumericInput
+                    defaultValue={5}
+                    leftIcon="search"
+                    style={{ width: 140 }}
+                />
+            </Section>
+        </div>
+    );
+}
+
+const SC_OPTIONS_3 = [
+    { label: "Day", value: "day" },
+    { label: "Week", value: "week" },
+    { label: "Month", value: "month" },
+];
+
+/**
+ * SegmentedControl showcase.
+ *
+ * Track key (`sc-default`): bg light-gray5/dark-gray2, padding 2px, gap 2px, radius 4px.
+ * Selected segment key (`sc-selected-segment`): bg white (light) / dark-gray5 (dark), foreground text.
+ * Unselected segment key (`sc-unselected-segment`): muted text, transparent bg.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx SegmentedControlGallery exactly.
+ */
+function SegmentedControlGallery() {
+    const [val, setVal] = useState<string>("week");
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Default (3 options, middle selected)">
+                {/* sc-default: track div — bg, padding, gap, radius */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    value={val}
+                    onValueChange={setVal}
+                    data-compare="sc-default"
+                    ref={(el) => {
+                        if (el) {
+                            // sc-selected-segment: the selected button (week = index 1)
+                            const buttons = el.querySelectorAll<HTMLButtonElement>("button");
+                            buttons[1]?.setAttribute("data-compare", "sc-selected-segment");
+                            // sc-unselected-segment: an unselected button (day = index 0)
+                            buttons[0]?.setAttribute("data-compare", "sc-unselected-segment");
+                        }
+                    }}
+                />
+            </Section>
+
+            <Section title="Large">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="large"
+                    data-compare="sc-large"
+                />
+            </Section>
+
+            <Section title="Small">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="small"
+                />
+            </Section>
+
+            <Section title="Intent: primary (selected = primary fill)">
+                {/* sc-intent-primary: the selected (week) button — expects primary bg + white text */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    intent="primary"
+                    ref={(el) => {
+                        if (el) {
+                            const buttons = el.querySelectorAll<HTMLButtonElement>("button");
+                            buttons[1]?.setAttribute("data-compare", "sc-intent-primary");
+                        }
+                    }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                {/* sc-fill: track at full width, segments grow equally */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    fill
+                    data-compare="sc-fill"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                {/* sc-disabled: entire control disabled */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    disabled
+                    data-compare="sc-disabled"
+                />
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex items-center gap-3">
+                    <SegmentedControl
+                        options={SC_OPTIONS_3}
+                        defaultValue="day"
+                        inline
+                    />
+                    <span className="text-foreground-muted text-body-sm">inline</span>
+                </div>
+            </Section>
+
+            <Section title="Individual disabled option">
+                <SegmentedControl
+                    options={[
+                        { label: "A", value: "a" },
+                        { label: "B", value: "b", disabled: true },
+                        { label: "C", value: "c" },
+                    ]}
+                    defaultValue="a"
+                />
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * ControlCard showcase. `data-compare` is placed on the Card div (the `.bp6-card.bp6-control-card`
+ * equivalent). Specimens use fixed width 240px identically on both sides.
+ *
+ * The harness diffs: backgroundColor (card surface), boxShadow (incl. selected ring when checked),
+ * borderRadius, paddingTop/Bottom/Left/Right (should be 0px on card), color, fontSize.
+ *
+ * Specimens (keys MUST match blueprint-reference gallery exactly):
+ *   cc-checkbox          — CheckboxCard unchecked, left-aligned indicator
+ *   cc-checkbox-checked  — CheckboxCard defaultChecked=true → selected ring on card
+ *   cc-radio             — RadioCard unchecked, right-aligned indicator
+ *   cc-switch            — SwitchCard unchecked, right-aligned indicator
+ *   cc-compact           — CheckboxCard compact (16px padding)
+ *   cc-disabled          — CheckboxCard disabled (no pointer, card not interactive)
+ *   cc-align-right       — CheckboxCard with alignIndicator="right"
+ */
+function ControlCardGallery() {
+    const cardStyle: React.CSSProperties = { width: 240 };
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="CheckboxCard (left-aligned, default)">
+                <div className="flex flex-col gap-3">
+                    <CheckboxCard
+                        label="Unchecked option"
+                        style={cardStyle}
+                        data-compare="cc-checkbox"
+                    />
+                    <CheckboxCard
+                        label="Checked option (selected ring)"
+                        defaultChecked
+                        style={cardStyle}
+                        data-compare="cc-checkbox-checked"
+                    />
+                </div>
+            </Section>
+
+            <Section title="RadioCard (right-aligned, default)">
+                <RadioCard
+                    label="Radio option"
+                    name="cc-radio-group"
+                    value="opt1"
+                    style={cardStyle}
+                    data-compare="cc-radio"
+                />
+            </Section>
+
+            <Section title="SwitchCard (right-aligned, default)">
+                <SwitchCard
+                    label="Switch option"
+                    style={cardStyle}
+                    data-compare="cc-switch"
+                />
+            </Section>
+
+            <Section title="Compact (16px padding)">
+                <CheckboxCard
+                    label="Compact option"
+                    compact
+                    style={cardStyle}
+                    data-compare="cc-compact"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <CheckboxCard
+                    label="Disabled option"
+                    disabled
+                    style={cardStyle}
+                    data-compare="cc-disabled"
+                />
+            </Section>
+
+            <Section title="Align right (indicator on right)">
+                <CheckboxCard
+                    label="Right-aligned indicator"
+                    alignIndicator="right"
+                    style={cardStyle}
+                    data-compare="cc-align-right"
+                />
+            </Section>
+
+            <Section title="SwitchCard checked (selected ring)">
+                <SwitchCard
+                    label="Switch checked"
+                    defaultChecked
+                    style={cardStyle}
+                />
+            </Section>
+
+            <Section title="showAsSelectedWhenChecked=false">
+                <CheckboxCard
+                    label="Checked but no selected ring"
+                    defaultChecked
+                    showAsSelectedWhenChecked={false}
+                    style={cardStyle}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -698,6 +1762,18 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
+    { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
+    { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
+    { id: "checkbox", title: "Checkbox", render: () => <CheckboxGallery /> },
+    { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
+    { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
+    { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
+    { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
+    { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
+    { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
+    { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
+    { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
+    { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -715,7 +1791,7 @@ export default function App() {
 
     return (
         <div className={dark ? "dark" : ""}>
-            <div className="min-h-screen bg-background p-10">
+            <div className="min-h-screen bg-background text-foreground p-10">
                 <div className="mx-auto flex max-w-[760px] flex-col gap-8">
                     {!isolated && (
                         <header className="flex items-center justify-between">
