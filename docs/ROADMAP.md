@@ -91,7 +91,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
 - [x] **Tree** — `tree/` (Icon + Collapse)
 - [x] **PanelStack** — `panel-stack/`
-- [ ] **HTMLTable** — `html-table/`
+- [x] **HTMLTable** — `html-table/`
 - [ ] **EditableText** — `editable-text/`
 - [ ] **EntityTitle** — `entity-title/`
 - [ ] **NonIdealState** — `non-ideal-state/` (Icon)

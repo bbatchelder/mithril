@@ -39,6 +39,7 @@ import { CardList } from "@/components/ui/card-list";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
+import { HTMLTable } from "@/components/ui/html-table";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2759,6 +2760,122 @@ function PanelStackGallery() {
     );
 }
 
+/**
+ * HTMLTable showcase.
+ *
+ * Specimens cover: plain, bordered+striped, interactive, and compact.
+ * Each specimen uses identical row/col data to the Blueprint reference gallery
+ * for a valid computed-style diff.
+ *
+ * data-compare keys:
+ *   html-table-header  — a <th> in the header row (font-weight:600, text-foreground)
+ *   html-table-cell    — a <td> in the first body row (has the top-border shadow)
+ *   html-table-row     — a <tr> in the body
+ */
+function HTMLTableGallery() {
+    const tableData = [
+        { name: "Alice", role: "Engineer", status: "Active" },
+        { name: "Bob", role: "Designer", status: "Inactive" },
+        { name: "Carol", role: "Manager", status: "Active" },
+    ];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Plain table */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Plain</p>
+                <HTMLTable>
+                    <thead>
+                        <tr>
+                            <th data-compare="html-table-header">Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name} data-compare={row.name === "Alice" ? "html-table-row" : undefined}>
+                                <td data-compare={row.name === "Alice" ? "html-table-cell" : undefined}>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Bordered + striped */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Bordered + Striped</p>
+                <HTMLTable bordered striped>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Interactive */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Interactive (hover rows)</p>
+                <HTMLTable interactive>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Compact */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <HTMLTable compact>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2799,6 +2916,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
+    { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
