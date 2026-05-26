@@ -4466,6 +4466,31 @@ const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
 
+/**
+ * Components whose specimens render a portaled/floating overlay OPEN by default (for the
+ * harness). In the combined all-components view these would stack on top of the page and
+ * the modal ones lock body scroll — so we render them behind a Show/Hide toggle there.
+ * In isolated `?component=<id>` harness mode each gallery is rendered directly (unchanged),
+ * so screenshots + computed-style diffs are unaffected.
+ */
+const OVERLAY_IDS = new Set([
+    "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
+    "select", "suggest", "multi-select", "timezone-select", "date-input", "date-range-input",
+]);
+
+/** Combined-view wrapper: mounts an overlay specimen only while toggled open. */
+function OverlaySpecimen({ title, children }: { title: string; children: React.ReactNode }) {
+    const [show, setShow] = useState(false);
+    return (
+        <div className="flex flex-col items-start gap-2.5">
+            <Button intent="primary" icon={<Icon icon={show ? "chevron-down" : "chevron-right"} />} onClick={() => setShow((s) => !s)}>
+                {show ? `Hide ${title}` : `Show ${title}`}
+            </Button>
+            {show && children}
+        </div>
+    );
+}
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
 
@@ -4490,7 +4515,11 @@ export default function App() {
                             {!isolated && (
                                 <h2 className="text-heading-lg font-semibold text-foreground">{c.title}</h2>
                             )}
-                            {c.render()}
+                            {!isolated && OVERLAY_IDS.has(c.id) ? (
+                                <OverlaySpecimen title={c.title}>{c.render()}</OverlaySpecimen>
+                            ) : (
+                                c.render()
+                            )}
                         </div>
                     ))}
                 </div>
