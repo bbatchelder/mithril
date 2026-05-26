@@ -76,7 +76,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Drawer** — `drawer/` (Overlay-based)
 - [x] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
       Menu dropdowns, Select family, DateInput, ContextMenu, Breadcrumbs overflow.
-- [ ] **Tooltip** — `tooltip/` (Popover-based)
+- [x] **Tooltip** — `tooltip/` (Popover-based)
 - [ ] **Toast / Toaster** — `toast/`
 - [ ] **Menu** (+ MenuItem, MenuDivider) — `menu/`
 - [ ] **ContextMenu** — `context-menu/` (Popover + Menu)

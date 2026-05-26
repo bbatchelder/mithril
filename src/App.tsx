@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { Popover } from "@/components/ui/popover";
+import { Tooltip } from "@/components/ui/tooltip";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
@@ -1907,6 +1908,64 @@ function PopoverGallery() {
     );
 }
 
+/**
+ * Tooltip showcase.
+ *
+ * Portal + dark-mode: the tooltip receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Popover/Dialog/Alert/Drawer).
+ *
+ * The tooltip is rendered with `defaultOpen={true}` so it's always visible for the
+ * comparison harness screenshot without requiring hover interaction.
+ *
+ * THE INVERSION: verify that:
+ * - Light theme: dark bubble (#404854 bg, #f6f7f9 text) on a light page.
+ * - Dark theme: light bubble (#e5e8eb bg, #404854 text) on a dark page.
+ *
+ * data-compare keys:
+ *   tooltip-content — the .bp6-tooltip bubble (the Radix Tooltip.Content element)
+ *   tooltip-arrow   — the .bp6-popover-arrow arrow element
+ *   tooltip-intent-danger — danger intent bubble (bg=danger, text=white)
+ *
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function TooltipGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                Tooltips below are open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating tooltips to render without clipping */}
+            <div className="flex items-center justify-center gap-12" style={{ minHeight: 160, paddingTop: 80 }}>
+                {/* Default tooltip — open by default, shows the inversion color scheme.
+                    data-compare="tooltip-content" marks the outer bubble element for the harness. */}
+                <Tooltip
+                    defaultOpen={true}
+                    content="Tooltip content"
+                    side="bottom"
+                    align="center"
+                    dark={dark}
+                    data-compare="tooltip-content"
+                >
+                    <Button intent="primary">Hover me</Button>
+                </Tooltip>
+
+                {/* Danger intent tooltip — open by default. No data-compare (unique key constraint). */}
+                <Tooltip
+                    defaultOpen={true}
+                    content="Danger tooltip"
+                    intent="danger"
+                    side="bottom"
+                    align="center"
+                    dark={dark}
+                >
+                    <Button intent="danger">Danger</Button>
+                </Tooltip>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1935,6 +1994,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
+    { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

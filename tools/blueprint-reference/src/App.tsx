@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2004,6 +2004,80 @@ function PopoverGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Tooltip.
+ *
+ * Must match analyst-ui TooltipGallery exactly.
+ *
+ * Blueprint Tooltip portals content to document.body. We use useEffect + querySelector to
+ * set data-compare attributes on the inner elements (bubble, arrow) after mount.
+ *
+ * Keys:
+ *   tooltip-content      — the .bp6-tooltip bubble (first one, default color scheme)
+ *   tooltip-arrow        — the .bp6-popover-arrow arrow element (inside first tooltip)
+ *   tooltip-intent-danger — danger intent bubble (second tooltip)
+ *
+ * THE INVERSION: Blueprint tooltip bubble should be dark in light mode, light in dark mode.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/Alert/Drawer/Popover — see orchestrator notes).
+ */
+function TooltipGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Tooltip portals to document.body as .bp6-tooltip elements.
+            // Tag only the first tooltip (default color scheme) for harness comparison.
+            // The danger intent tooltip is verified via screenshots only (visual check).
+            const firstTooltip = document.querySelector(`.${Classes.TOOLTIP}`);
+
+            if (firstTooltip) {
+                firstTooltip.setAttribute("data-compare", "tooltip-content");
+                const arrow = firstTooltip.querySelector(`.${Classes.POPOVER_ARROW}`);
+                if (arrow) arrow.setAttribute("data-compare", "tooltip-arrow");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 200);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Tooltips below are open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating tooltips to render without clipping */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 48, minHeight: 160, paddingTop: 80 }}>
+                {/* Default tooltip — isOpen=true, side=bottom */}
+                <Tooltip
+                    isOpen={true}
+                    content="Tooltip content"
+                    placement="bottom"
+                    // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div.
+                    // portalClassName={Classes.DARK} puts the dark class on the portal so
+                    // the tooltip renders with the dark inversion in dark theme.
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="primary" text="Hover me" />
+                </Tooltip>
+
+                {/* Danger intent tooltip — isOpen=true */}
+                <Tooltip
+                    isOpen={true}
+                    content="Danger tooltip"
+                    intent="danger"
+                    placement="bottom"
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="danger" text="Danger" />
+                </Tooltip>
+            </div>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2032,6 +2106,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
+    { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
