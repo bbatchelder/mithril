@@ -63,7 +63,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`
 - [x] **ControlGroup** — `forms/controlGroup.tsx`
 - [x] **HTMLSelect** — `html-select/`
-- [ ] **FileInput** — `forms/fileInput.tsx`
+- [x] **FileInput** — `forms/fileInput.tsx`
 - [ ] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)
 - [ ] **SegmentedControl** — `segmented-control/`
 - [ ] **ControlCard** — `control-card/` (Card + controls)

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
 import { HTMLSelect } from "@/components/ui/html-select";
+import { FileInput } from "@/components/ui/file-input";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1331,6 +1332,80 @@ function HTMLSelectGallery() {
     );
 }
 
+/**
+ * FileInput showcase. `data-compare` is placed on the `.bp6-file-upload-input` span
+ * (the visible box element, NOT the label wrapper). Blueprint's ref-setAttribute trick
+ * is used to attach data-compare to the inner span via a wrapper ref.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   fi-default       — default (30px, "Choose file...", placeholder text color)
+ *   fi-has-selection — hasSelection=true, text="report.pdf" (foreground text color)
+ *   fi-large         — large size (40px box)
+ *   fi-disabled      — disabled (muted box + disabled Browse button)
+ *   fi-fill          — fill (width:100%, wrapped in fixed-width container)
+ *
+ * The harness diffs: height, paddingLeft, paddingRight, borderRadius, boxShadow,
+ * backgroundColor, color, fontSize (resting state). The Browse button is verified
+ * visually via screenshots (pseudo-elements can't be diff'd in Blueprint reference).
+ */
+function FileInputGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Default">
+                <FileInput
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-default");
+                    }}
+                />
+            </Section>
+
+            <Section title="Has Selection (report.pdf)">
+                <FileInput
+                    hasSelection
+                    text="report.pdf"
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-has-selection");
+                    }}
+                />
+            </Section>
+
+            <Section title="Large">
+                <FileInput
+                    size="large"
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-large");
+                    }}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <FileInput
+                    disabled
+                    ref={(el) => {
+                        const span = el?.querySelector<HTMLElement>(".fi-box");
+                        if (span) span.setAttribute("data-compare", "fi-disabled");
+                    }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <FileInput
+                        fill
+                        ref={(el) => {
+                            const span = el?.querySelector<HTMLElement>(".fi-box");
+                            if (span) span.setAttribute("data-compare", "fi-fill");
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1351,6 +1426,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
+    { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

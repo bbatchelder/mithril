@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FormGroup, HTMLSelect, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1318,6 +1318,70 @@ function HTMLSelectGallery() {
     );
 }
 
+/**
+ * Blueprint reference for FileInput. `data-compare` is placed on the
+ * `.bp6-file-upload-input` span (the measured node — the visible text box).
+ * Blueprint's FileInput doesn't accept data-* directly, so we use ref + querySelector.
+ *
+ * Specimens match analyst-ui FileInputGallery exactly (keys, text, size, fill, disabled):
+ *   fi-default       — default (30px, "Choose file...", placeholder color)
+ *   fi-has-selection — hasSelection=true, text="report.pdf" (foreground color)
+ *   fi-large         — large (40px box)
+ *   fi-disabled      — disabled (muted box + disabled Browse button)
+ *   fi-fill          — fill (width:100%, 300px container)
+ */
+/**
+ * Wrapper for Blueprint FileInput that stamps data-compare on the inner
+ * .bp6-file-upload-input span via a container div ref. Blueprint's FileInput
+ * is not a forwardRef component, so we wrap it in a div for DOM access.
+ */
+function TaggedFileInput({
+    dataCompare,
+    fill,
+    ...props
+}: { dataCompare: string } & React.ComponentProps<typeof FileInput>) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        const span = ref.current?.querySelector(".bp6-file-upload-input");
+        if (span) span.setAttribute("data-compare", dataCompare);
+    });
+    return (
+        // Use block for fill specimens (so width:100% resolves against parent);
+        // inline-block for non-fill (so the label doesn't stretch to container width).
+        <div ref={ref} style={{ display: fill ? "block" : "inline-block" }}>
+            <FileInput fill={fill} {...props} />
+        </div>
+    );
+}
+
+function FileInputGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default">
+                <TaggedFileInput dataCompare="fi-default" />
+            </Section>
+
+            <Section title="Has Selection (report.pdf)">
+                <TaggedFileInput dataCompare="fi-has-selection" hasSelection={true} text="report.pdf" />
+            </Section>
+
+            <Section title="Large">
+                <TaggedFileInput dataCompare="fi-large" large={true} />
+            </Section>
+
+            <Section title="Disabled">
+                <TaggedFileInput dataCompare="fi-disabled" disabled={true} />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <TaggedFileInput dataCompare="fi-fill" fill={true} style={{ width: "100%" }} />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1338,6 +1402,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
+    { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
