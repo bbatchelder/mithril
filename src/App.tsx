@@ -36,6 +36,7 @@ import { Tabs, Tab } from "@/components/ui/tabs";
 import { Collapse } from "@/components/ui/collapse";
 import { Section as BpSection, SectionCard as BpSectionCard } from "@/components/ui/section";
 import { CardList } from "@/components/ui/card-list";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2514,6 +2515,64 @@ function CardListGallery() {
     );
 }
 
+/**
+ * Breadcrumbs showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference BreadcrumbsGallery exactly):
+ *   breadcrumb-link      — a non-current, non-disabled link crumb (the anchor/span element)
+ *   breadcrumb-current   — the last/current crumb (bold, non-interactive span)
+ *   breadcrumbs-separator — a chevron-right separator icon
+ *
+ * Fixed width (500px) so both galleries produce the same box dimensions.
+ */
+function BreadcrumbsGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 500 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Default trail (link + link + current)</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/", "data-compare": "breadcrumb-link" },
+                        { text: "Projects", href: "/projects" },
+                        { text: "Current Project", current: true, "data-compare": "breadcrumb-current" },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">With icons</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/", icon: "info-sign" },
+                        { text: "Settings", href: "/settings", icon: "caret-right" },
+                        { text: "Profile", current: true, icon: "tick-circle" },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">With disabled crumb</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/" },
+                        { text: "Restricted", href: "/admin", disabled: true },
+                        { text: "Page", current: true },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Single crumb (no separator)</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Only Page", current: true },
+                    ]}
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2551,6 +2610,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
     { id: "section", title: "Section", render: () => <SectionGallery /> },
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
+    { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

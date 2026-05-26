@@ -1,4 +1,4 @@
-import { Alert, Alignment, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2723,6 +2723,82 @@ function CardListGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Breadcrumbs.
+ *
+ * data-compare keys (must match analyst-ui BreadcrumbsGallery exactly):
+ *   breadcrumb-link      — a non-current, non-disabled link crumb (the .bp6-breadcrumb anchor)
+ *   breadcrumb-current   — the last/current crumb (.bp6-breadcrumb-current span)
+ *   breadcrumbs-separator — a chevron-right separator icon (li::after pseudo — not directly taggable;
+ *                           we tag the li instead via useEffect)
+ *
+ * Blueprint's BpBreadcrumbs renders .bp6-breadcrumbs > li > .bp6-breadcrumb/bp6-breadcrumb-current.
+ * Separators are li::after pseudo-elements (not real DOM nodes), so we tag the first li.
+ */
+function BreadcrumbsGallery() {
+    const trailRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!trailRef.current) return;
+        const ul = trailRef.current.querySelector(".bp6-breadcrumbs");
+        if (!ul) return;
+        // Tag the first link crumb (non-current)
+        const firstCrumb = ul.querySelector(".bp6-breadcrumb");
+        if (firstCrumb) firstCrumb.setAttribute("data-compare", "breadcrumb-link");
+        // Tag the current crumb
+        const currentCrumb = ul.querySelector(".bp6-breadcrumb-current");
+        if (currentCrumb) currentCrumb.setAttribute("data-compare", "breadcrumb-current");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 500 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default trail (link + link + current)</p>
+                <div ref={trailRef}>
+                    <BpBreadcrumbs
+                        items={[
+                            { text: "Home", href: "/" },
+                            { text: "Projects", href: "/projects" },
+                            { text: "Current Project", current: true },
+                        ]}
+                    />
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>With icons</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Home", href: "/", icon: "home" },
+                        { text: "Settings", href: "/settings", icon: "cog" },
+                        { text: "Profile", current: true, icon: "person" },
+                    ]}
+                />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>With disabled crumb</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Home", href: "/" },
+                        { text: "Restricted", href: "/admin", disabled: true },
+                        { text: "Page", current: true },
+                    ]}
+                />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Single crumb (no separator)</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Only Page", current: true },
+                    ]}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2759,6 +2835,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
     { id: "section", title: "Section", render: () => <SectionGallery /> },
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
+    { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
