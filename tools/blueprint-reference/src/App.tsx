@@ -1,5 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
+import { TimePicker as BpTimePicker } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4328,6 +4329,89 @@ function OmnibarGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// TimePicker reference gallery
+// Fixed value: 14:30 (same as analyst-ui gallery) for stable static diff.
+// data-compare keys (MUST match analyst-ui TimePickerGallery):
+//   time-picker-input   → the hour <input> element (first specimen)
+//   time-picker-divider → the colon divider span (first specimen)
+//   time-picker-arrow   → the first up-arrow button (arrows specimen)
+//   time-picker-ampm    → the AM/PM <select> element (ampm specimen)
+// ---------------------------------------------------------------------------
+const FIXED_TIME = new Date();
+FIXED_TIME.setHours(14, 30, 0, 0);
+
+const FIXED_TIME_SECOND = new Date();
+FIXED_TIME_SECOND.setHours(14, 30, 45, 0);
+
+const FIXED_TIME_AMPM = new Date();
+FIXED_TIME_AMPM.setHours(14, 30, 0, 0);
+
+function TimePickerGallery() {
+    const defaultRef = useRef<HTMLDivElement>(null);
+    const arrowRef = useRef<HTMLDivElement>(null);
+    const secondRef = useRef<HTMLDivElement>(null);
+    const ampmRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            // Default specimen: stamp time-picker-input (hour input) and time-picker-divider
+            if (defaultRef.current) {
+                // Blueprint renders .bp6-timepicker-input elements
+                const inputs = defaultRef.current.querySelectorAll<HTMLElement>("input.bp6-timepicker-input");
+                if (inputs[0]) inputs[0].setAttribute("data-compare", "time-picker-input");
+                // Blueprint renders .bp6-timepicker-divider-text spans
+                const dividers = defaultRef.current.querySelectorAll<HTMLElement>(".bp6-timepicker-divider-text");
+                if (dividers[0]) dividers[0].setAttribute("data-compare", "time-picker-divider");
+            }
+
+            // Arrow buttons specimen: stamp the first up-arrow button
+            if (arrowRef.current) {
+                const arrows = arrowRef.current.querySelectorAll<HTMLElement>(".bp6-timepicker-arrow-button");
+                // Blueprint renders: [up-hour, up-minute] in top row, then [down-hour, down-minute] in bottom
+                if (arrows[0]) arrows[0].setAttribute("data-compare", "time-picker-arrow");
+            }
+
+            // AM/PM specimen: stamp the <select> element
+            if (ampmRef.current) {
+                const sel = ampmRef.current.querySelector<HTMLElement>("select.bp6-timepicker-ampm-select, select");
+                if (sel) sel.setAttribute("data-compare", "time-picker-ampm");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Default: hour + minute at 14:30 */}
+            <div ref={defaultRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>Default (14:30)</span>
+                <BpTimePicker value={FIXED_TIME} onChange={() => {}} />
+            </div>
+
+            {/* Arrow buttons */}
+            <div ref={arrowRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>With arrow buttons</span>
+                <BpTimePicker value={FIXED_TIME} onChange={() => {}} showArrowButtons />
+            </div>
+
+            {/* Seconds precision */}
+            <div ref={secondRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>Seconds precision (14:30:45)</span>
+                <BpTimePicker value={FIXED_TIME_SECOND} onChange={() => {}} precision="second" />
+            </div>
+
+            {/* AM/PM mode */}
+            <div ref={ampmRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>AM/PM mode (2:30 PM)</span>
+                <BpTimePicker value={FIXED_TIME_AMPM} onChange={() => {}} useAmPm />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4379,6 +4463,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
+    { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

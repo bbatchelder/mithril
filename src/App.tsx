@@ -51,6 +51,7 @@ import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Omnibar } from "@/components/ui/omnibar";
+import { TimePicker } from "@/components/ui/time-picker";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3897,6 +3898,54 @@ function OmnibarGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// TimePicker gallery
+// Fixed value: 14:30 (2:30 PM in 24h mode) for stable static diff.
+// data-compare keys:
+//   time-picker-input   → the hour segment input (first specimen: default)
+//   time-picker-divider → the colon divider (first specimen: default)
+//   time-picker-arrow   → the first up-arrow button (arrows specimen)
+//   time-picker-ampm    → the AM/PM select element (ampm specimen)
+// ---------------------------------------------------------------------------
+const FIXED_TIME = new Date();
+FIXED_TIME.setHours(14, 30, 0, 0);
+
+const FIXED_TIME_SECOND = new Date();
+FIXED_TIME_SECOND.setHours(14, 30, 45, 0);
+
+const FIXED_TIME_AMPM = new Date();
+FIXED_TIME_AMPM.setHours(14, 30, 0, 0); // 2:30 PM
+
+function TimePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Default: hour + minute at 14:30 */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Default (14:30)</span>
+                <TimePicker value={FIXED_TIME} onChange={() => {}} />
+            </div>
+
+            {/* Arrow buttons */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">With arrow buttons</span>
+                <TimePicker value={FIXED_TIME} onChange={() => {}} showArrowButtons />
+            </div>
+
+            {/* Seconds precision */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Seconds precision (14:30:45)</span>
+                <TimePicker value={FIXED_TIME_SECOND} onChange={() => {}} precision="second" />
+            </div>
+
+            {/* AM/PM mode */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">AM/PM mode (2:30 PM)</span>
+                <TimePicker value={FIXED_TIME_AMPM} onChange={() => {}} useAmPm />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3949,6 +3998,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
+    { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

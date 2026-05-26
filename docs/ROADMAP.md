@@ -109,7 +109,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 6 — Date & time (`@blueprintjs/datetime`)
 
-- [ ] **TimePicker** — `datetime/time-picker/`
+- [x] **TimePicker** — `datetime/time-picker/`
 - [ ] **DatePicker** — `datetime/date-picker/` (react-day-picker)
 - [ ] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
 - [ ] **DateRangePicker** — `datetime/date-range-picker/`
