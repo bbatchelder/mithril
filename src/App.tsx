@@ -12,6 +12,7 @@ import { Radio, RadioGroup } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
+import { HTMLSelect } from "@/components/ui/html-select";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1267,6 +1268,69 @@ function ControlGroupGallery() {
     );
 }
 
+/**
+ * HTMLSelect showcase.
+ *
+ * `data-compare` is placed on the `<select>` element (the measured node), matching
+ * Blueprint's `.bp6-html-select > select`. The harness diffs: height, paddingLeft,
+ * paddingRight, backgroundColor, boxShadow, color, fontSize, borderRadius.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   hs-default  — default (30px, solid, double-caret-vertical)
+ *   hs-large    — large (40px, solid)
+ *   hs-minimal  — minimal (no bg/shadow at rest)
+ *   hs-disabled — disabled (muted bg, no shadow)
+ *   hs-fill     — fill (width:100%)
+ */
+const HS_OPTIONS = ["Apple", "Banana", "Cherry", "Dragon Fruit"];
+
+function HTMLSelectGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Default">
+                <HTMLSelect
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-default")}
+                />
+            </Section>
+
+            <Section title="Large">
+                <HTMLSelect
+                    large
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-large")}
+                />
+            </Section>
+
+            <Section title="Minimal">
+                <HTMLSelect
+                    minimal
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-minimal")}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <HTMLSelect
+                    disabled
+                    options={HS_OPTIONS}
+                    ref={(el) => el?.setAttribute("data-compare", "hs-disabled")}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 280 }}>
+                    <HTMLSelect
+                        fill
+                        options={HS_OPTIONS}
+                        ref={(el) => el?.setAttribute("data-compare", "hs-fill")}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1286,6 +1350,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
+    { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

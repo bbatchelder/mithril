@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FormGroup, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FormGroup, HTMLSelect, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1262,6 +1262,62 @@ function ControlGroupGallery() {
     );
 }
 
+/**
+ * Blueprint reference for HTMLSelect. `data-compare` is placed on the `<select>`
+ * element (the measured node inside .bp6-html-select). Blueprint's HTMLSelect
+ * does NOT forward data-* to the inner select, so we use ref to stamp it.
+ *
+ * Specimens (keys must match analyst-ui gallery exactly):
+ *   hs-default  — default (30px, solid, double-caret-vertical)
+ *   hs-large    — large (40px, solid)
+ *   hs-minimal  — minimal (no bg/shadow at rest)
+ *   hs-disabled — disabled (muted bg, no shadow)
+ *   hs-fill     — fill (width:100%)
+ */
+const HS_OPTIONS = ["Apple", "Banana", "Cherry", "Dragon Fruit"];
+
+function HTMLSelectGallery() {
+    const defaultRef = useRef<HTMLSelectElement>(null);
+    const largeRef = useRef<HTMLSelectElement>(null);
+    const minimalRef = useRef<HTMLSelectElement>(null);
+    const disabledRef = useRef<HTMLSelectElement>(null);
+    const fillRef = useRef<HTMLSelectElement>(null);
+
+    useEffect(() => {
+        defaultRef.current?.setAttribute("data-compare", "hs-default");
+        largeRef.current?.setAttribute("data-compare", "hs-large");
+        minimalRef.current?.setAttribute("data-compare", "hs-minimal");
+        disabledRef.current?.setAttribute("data-compare", "hs-disabled");
+        fillRef.current?.setAttribute("data-compare", "hs-fill");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default">
+                <HTMLSelect ref={defaultRef} options={HS_OPTIONS} />
+            </Section>
+
+            <Section title="Large">
+                <HTMLSelect ref={largeRef} large options={HS_OPTIONS} />
+            </Section>
+
+            <Section title="Minimal">
+                <HTMLSelect ref={minimalRef} minimal options={HS_OPTIONS} />
+            </Section>
+
+            <Section title="Disabled">
+                <HTMLSelect ref={disabledRef} disabled options={HS_OPTIONS} />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 280 }}>
+                    <HTMLSelect ref={fillRef} fill options={HS_OPTIONS} />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1281,6 +1337,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
+    { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
