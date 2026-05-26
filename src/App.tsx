@@ -29,6 +29,7 @@ import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2036,6 +2037,83 @@ function ToastGallery() {
     );
 }
 
+/**
+ * Menu showcase — renders the Menu inline (no portal) so dark mode works via ancestor `.dark`.
+ *
+ * data-compare keys (must match blueprint-reference MenuGallery):
+ *   menu-container       — the <ul> Menu element (bg, radius, min-width, padding)
+ *   menu-item            — a plain menu item (padding, color, line-height)
+ *   menu-item-active     — the active/selected item (bg, color)
+ *   menu-item-intent-danger — danger intent item (color)
+ *   menu-item-disabled   — disabled item (color, cursor)
+ *   menu-divider         — the horizontal rule divider (border, margin)
+ *   menu-header          — the heading section divider li (border, padding)
+ */
+function MenuGallery() {
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                Menu renders inline (no portal). Dark mode applies via parent .dark ancestor.
+            </p>
+            <div className="flex items-start gap-8 flex-wrap">
+                {/* Standard menu with all specimen types */}
+                <Menu data-compare="menu-container">
+                    {/* Heading divider — first-of-type so no top border */}
+                    <MenuDivider title="Actions" data-compare="menu-header" />
+
+                    {/* Plain item with icon */}
+                    <MenuItem
+                        icon="document"
+                        text="Open document"
+                        data-compare="menu-item"
+                    />
+
+                    {/* Item with icon + right label */}
+                    <MenuItem
+                        icon="search"
+                        text="Find…"
+                        label="⌘F"
+                    />
+
+                    {/* Active/selected item */}
+                    <MenuItem
+                        icon="tick"
+                        text="Selected item"
+                        active={true}
+                        data-compare="menu-item-active"
+                    />
+
+                    {/* Item with submenu caret */}
+                    <MenuItem
+                        icon="cog"
+                        text="Settings"
+                        hasSubmenu={true}
+                    />
+
+                    {/* Plain divider */}
+                    <MenuDivider data-compare="menu-divider" />
+
+                    {/* Danger intent */}
+                    <MenuItem
+                        icon="trash"
+                        text="Delete"
+                        intent="danger"
+                        data-compare="menu-item-intent-danger"
+                    />
+
+                    {/* Disabled item */}
+                    <MenuItem
+                        icon="cross"
+                        text="Disabled action"
+                        disabled={true}
+                        data-compare="menu-item-disabled"
+                    />
+                </Menu>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2066,6 +2144,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
+    { id: "menu", title: "Menu", render: () => <MenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

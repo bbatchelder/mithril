@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2172,6 +2172,114 @@ function ToastGallery() {
 }
 
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
+/**
+ * Blueprint Menu reference gallery.
+ *
+ * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
+ * data-compare keys must match analyst-ui exactly.
+ *
+ * Blueprint's Menu renders as a <ul role="menu"> with class .bp6-menu.
+ * MenuDivider with title renders as .bp6-menu-header.
+ * MenuDivider without title renders as .bp6-menu-divider.
+ * MenuItem renders as <li><a class=".bp6-menu-item"> ...
+ */
+/**
+ * Blueprint Menu reference gallery.
+ *
+ * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
+ * data-compare keys must match analyst-ui exactly.
+ *
+ * Notes:
+ * - Blueprint's MenuItem spreads htmlProps onto the inner <a> element, so data-compare
+ *   lands on the anchor (radius, padding, color are measured there).
+ * - Blueprint's MenuDivider does NOT forward arbitrary HTML props, so we use raw <li>
+ *   elements for menu-divider and menu-header specimens.
+ * - The menu-container data-compare lands on the <ul> element directly.
+ * - The first MenuDivider (with title) needs to be a raw <li class="bp6-menu-header">
+ *   so data-compare is preserved.
+ */
+function MenuGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Menu renders inline (no portal). Dark mode applies via parent .bp6-dark ancestor.
+            </p>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 32, flexWrap: "wrap" }}>
+                <Menu data-compare="menu-container">
+                    {/* Heading divider — first-of-type so no top border.
+                        MenuDivider doesn't forward data-* props, so use raw <li>.
+                        Blueprint renders <MenuDivider title="..."> as:
+                          <li class="bp6-menu-header" role="separator">
+                            <h6>Actions</h6>
+                          </li> */}
+                    <li
+                        className={`${Classes.MENU_HEADER}`}
+                        role="separator"
+                        data-compare="menu-header"
+                    >
+                        <h6>{/* must be h6 to match Blueprint internal markup */}Actions</h6>
+                    </li>
+
+                    {/* Plain item with icon */}
+                    <MenuItem
+                        icon="document"
+                        text="Open document"
+                        data-compare="menu-item"
+                    />
+
+                    {/* Item with icon + right label */}
+                    <MenuItem
+                        icon="search"
+                        text="Find…"
+                        label="⌘F"
+                    />
+
+                    {/* Active/selected item */}
+                    <MenuItem
+                        icon="tick"
+                        text="Selected item"
+                        active={true}
+                        data-compare="menu-item-active"
+                    />
+
+                    {/* Item with submenu caret — using children triggers Blueprint's submenu rendering */}
+                    <MenuItem
+                        icon="cog"
+                        text="Settings"
+                    >
+                        <MenuItem text="Sub item 1" />
+                    </MenuItem>
+
+                    {/* Plain divider — use raw <li> to forward data-compare.
+                        Blueprint renders <MenuDivider> as:
+                          <li class="bp6-menu-divider" role="separator"></li> */}
+                    <li
+                        className={`${Classes.MENU_DIVIDER}`}
+                        role="separator"
+                        data-compare="menu-divider"
+                    />
+
+                    {/* Danger intent */}
+                    <MenuItem
+                        icon="trash"
+                        text="Delete"
+                        intent="danger"
+                        data-compare="menu-item-intent-danger"
+                    />
+
+                    {/* Disabled item */}
+                    <MenuItem
+                        icon="cross"
+                        text="Disabled action"
+                        disabled={true}
+                        data-compare="menu-item-disabled"
+                    />
+                </Menu>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2201,6 +2309,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
+    { id: "menu", title: "Menu", render: () => <MenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

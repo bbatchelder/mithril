@@ -78,7 +78,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
       Menu dropdowns, Select family, DateInput, ContextMenu, Breadcrumbs overflow.
 - [x] **Tooltip** — `tooltip/` (Popover-based)
 - [x] **Toast / Toaster** — `toast/`
-- [ ] **Menu** (+ MenuItem, MenuDivider) — `menu/`
+- [x] **Menu** (+ MenuItem, MenuDivider) — `menu/`
 - [ ] **ContextMenu** — `context-menu/` (Popover + Menu)
 
 ## Phase 4 — Navigation & structure
