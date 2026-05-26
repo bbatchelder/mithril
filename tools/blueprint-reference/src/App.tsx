@@ -1,4 +1,4 @@
-import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2427,6 +2427,98 @@ function NavbarGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Tabs.
+ *
+ * data-compare keys (must match analyst-ui TabsGallery exactly):
+ *   tab-selected          — the selected tab title element (color, font)
+ *   tab-default           — an unselected tab title
+ *   tab-disabled          — a disabled tab title
+ *   tab-indicator         — the sliding indicator bar (height, backgroundColor)
+ *   tabs-vertical-selected — the selected tab in vertical mode (backgroundColor)
+ *
+ * Blueprint renders the indicator via JS (moveSelectionIndicator). After mount
+ * it positions the .bp6-tab-indicator-wrapper's transform to overlay the selected tab.
+ * The actual .bp6-tab-indicator bar inside it is always 3px tall with primary bg.
+ * We key on the inner .bp6-tab-indicator element which has stable height+color.
+ */
+function TabsGallery() {
+    // Blueprint's Tabs uses a class component so we need to use useEffect to set the
+    // data-compare attribute on the rendered .bp6-tab-indicator element after mount.
+    useEffect(() => {
+        // Find and tag the tab-indicator element
+        const indicator = document.querySelector(".bp6-tab-indicator-wrapper .bp6-tab-indicator");
+        if (indicator) {
+            indicator.setAttribute("data-compare", "tab-indicator");
+        }
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Horizontal (default)">
+                <Tabs id="bp-tabs-horizontal" defaultSelectedTabId="overview">
+                    <Tab
+                        id="overview"
+                        title={<span data-compare="tab-selected">Overview</span>}
+                        panel={
+                            <div style={{ padding: 8 }}>
+                                <p>Overview panel content. This is the selected tab.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="details"
+                        title={<span data-compare="tab-default">Details</span>}
+                        panel={
+                            <div style={{ padding: 8 }}>
+                                <p>Details panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="disabled-tab"
+                        title={<span data-compare="tab-disabled">Disabled</span>}
+                        disabled={true}
+                        panel={<div style={{ padding: 8 }}>Disabled panel.</div>}
+                    />
+                </Tabs>
+            </Section>
+
+            <Section title="Vertical">
+                <Tabs id="bp-tabs-vertical" defaultSelectedTabId="files" vertical={true}>
+                    <Tab
+                        id="files"
+                        title={<span data-compare="tabs-vertical-selected">Files</span>}
+                        panel={
+                            <div>
+                                <p>Files panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="config"
+                        title="Configuration"
+                        panel={
+                            <div>
+                                <p>Configuration panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="logs"
+                        title="Logs"
+                        panel={
+                            <div>
+                                <p>Logs panel content.</p>
+                            </div>
+                        }
+                    />
+                </Tabs>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2459,6 +2551,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
+    { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

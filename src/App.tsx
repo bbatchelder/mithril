@@ -32,6 +32,7 @@ import { Toast, ToastProvider } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
+import { Tabs, Tab } from "@/components/ui/tabs";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2249,6 +2250,83 @@ function NavbarGallery() {
     );
 }
 
+/**
+ * Tabs showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference TabsGallery exactly):
+ *   tab-selected          — the selected tab title element (color, box-shadow, font)
+ *   tab-default           — an unselected tab title (color, font)
+ *   tab-disabled          — a disabled tab title (color)
+ *   tab-indicator         — the indicator bar (height, backgroundColor)
+ *   tabs-vertical-selected — the selected tab in vertical mode (backgroundColor)
+ */
+function TabsGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Horizontal (default)">
+                <Tabs id="tabs-horizontal" defaultSelectedTabId="overview">
+                    <Tab
+                        id="overview"
+                        title={<span data-compare="tab-selected">Overview</span>}
+                        panel={
+                            <div className="p-2">
+                                <p className="text-body">Overview panel content. This is the selected tab.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="details"
+                        title={<span data-compare="tab-default">Details</span>}
+                        panel={
+                            <div className="p-2">
+                                <p className="text-body">Details panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="disabled-tab"
+                        title={<span data-compare="tab-disabled">Disabled</span>}
+                        disabled
+                        panel={<div className="p-2">Disabled panel.</div>}
+                    />
+                </Tabs>
+            </Section>
+
+            <Section title="Vertical">
+                <Tabs id="tabs-vertical" defaultSelectedTabId="files" vertical>
+                    <Tab
+                        id="files"
+                        title={<span data-compare="tabs-vertical-selected">Files</span>}
+                        panel={
+                            <div>
+                                <p className="text-body">Files panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="config"
+                        title="Configuration"
+                        panel={
+                            <div>
+                                <p className="text-body">Configuration panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="logs"
+                        title="Logs"
+                        panel={
+                            <div>
+                                <p className="text-body">Logs panel content.</p>
+                            </div>
+                        }
+                    />
+                </Tabs>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2282,6 +2360,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
+    { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
