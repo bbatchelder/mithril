@@ -1,6 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
-import { DateInput as BpDateInput, DatePicker as BpDatePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
+import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4617,6 +4617,121 @@ function DateInputGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateRangePicker reference gallery
+// Blueprint DateRangePicker with fixed range Jan 8 – Jan 20, 2026.
+// Left calendar: January 2026. Right calendar: February 2026 (contiguous).
+//
+// data-compare keys (MUST match analyst-ui DateRangePickerGallery):
+//   drp-day         → a regular (non-range) day — Jan 4
+//   drp-day-range   → an in-range (between) day — Jan 10
+//   drp-day-endpoint → start (Jan 8) or end (Jan 20)
+//
+// Blueprint's DateRangePicker uses react-day-picker v8 internally.
+// We use useEffect + querySelector to stamp data-compare on Blueprint's DOM.
+// ---------------------------------------------------------------------------
+const DRP_START_BP = new Date(2026, 0, 8);   // Jan 8, 2026
+const DRP_END_BP = new Date(2026, 0, 20);    // Jan 20, 2026
+const DRP_LEFT_MONTH_BP = new Date(2026, 0, 1); // January 2026 (initial month for left calendar)
+
+function DateRangePickerGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            const root = containerRef.current;
+            if (!root) return;
+
+            // In rdp v8, range days have these classes:
+            //   rdp-day_range_start, rdp-day_range_end, rdp-day_range_middle
+            // Blueprint may also apply their own class names via dayPickerClassNameOverrides.
+            // We use text content matching to pick stable cells.
+
+            // Tag: drp-day-endpoint → start day (Jan 8) or end day (Jan 20)
+            // rdp v8: button.rdp-day.rdp-day_range_start and button.rdp-day.rdp-day_range_end
+            const rangeStart = root.querySelector<HTMLElement>(
+                "button.rdp-day_range_start, button[class*='range_start'], button[class*='range-start']"
+            );
+            if (rangeStart) rangeStart.setAttribute("data-compare", "drp-day-endpoint");
+
+            const rangeEnd = root.querySelector<HTMLElement>(
+                "button.rdp-day_range_end:not(.rdp-day_range_start), button[class*='range_end']:not([class*='range_start'])"
+            );
+            if (rangeEnd) rangeEnd.setAttribute("data-compare", "drp-day-endpoint");
+
+            // Tag: drp-day-range → an in-range day (Jan 10)
+            // rdp v8: button.rdp-day.rdp-day_range_middle with text content "10"
+            const middleDays = root.querySelectorAll<HTMLElement>(
+                "button.rdp-day_range_middle, button[class*='range_middle']"
+            );
+            for (let i = 0; i < middleDays.length; i++) {
+                const btn = middleDays[i];
+                if ((btn.textContent ?? "").trim() === "10") {
+                    btn.setAttribute("data-compare", "drp-day-range");
+                    break;
+                }
+            }
+            // Fallback: first middle day
+            if (!root.querySelector("[data-compare='drp-day-range']") && middleDays[0]) {
+                middleDays[0].setAttribute("data-compare", "drp-day-range");
+            }
+
+            // Tag: drp-day → a normal (non-range) day — Jan 4
+            const dayButtons = root.querySelectorAll<HTMLElement>(
+                "button.rdp-day:not(.rdp-day_outside):not(.rdp-day_selected):not(.rdp-day_disabled):not(.rdp-day_range_start):not(.rdp-day_range_end):not(.rdp-day_range_middle)"
+            );
+            let normalDay: HTMLElement | null = null;
+            for (let i = 0; i < dayButtons.length; i++) {
+                const btn = dayButtons[i];
+                if ((btn.textContent ?? "").trim() === "4") {
+                    normalDay = btn;
+                    break;
+                }
+            }
+            if (!normalDay && dayButtons[0]) normalDay = dayButtons[0];
+            if (normalDay) normalDay.setAttribute("data-compare", "drp-day");
+        }
+
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        const t3 = setTimeout(tag, 600);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    });
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Main specimen — fixed range, two months side-by-side */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>
+                    Jan 8 – Jan 20, 2026 selected (January + February 2026)
+                </span>
+                <BpDateRangePicker
+                    value={[DRP_START_BP, DRP_END_BP]}
+                    onChange={() => {}}
+                    initialMonth={DRP_LEFT_MONTH_BP}
+                    shortcuts={false}
+                    contiguousCalendarMonths={true}
+                />
+            </div>
+
+            {/* Single-month variant */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>
+                    Single month (Jan 8 – Jan 20, 2026)
+                </span>
+                <BpDateRangePicker
+                    value={[DRP_START_BP, DRP_END_BP]}
+                    onChange={() => {}}
+                    initialMonth={DRP_LEFT_MONTH_BP}
+                    shortcuts={false}
+                    singleMonthOnly={true}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4671,6 +4786,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
+    { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

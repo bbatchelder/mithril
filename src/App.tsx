@@ -54,6 +54,7 @@ import { Omnibar } from "@/components/ui/omnibar";
 import { TimePicker } from "@/components/ui/time-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DateInput } from "@/components/ui/date-input";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -4120,6 +4121,50 @@ function DatePickerForDateInput({ dark: _dark }: { dark: boolean }) {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateRangePicker gallery
+// Fixed range: 2026-01-08 (start) to 2026-01-20 (end).
+// Fixed left month: January 2026. Fixed right month: February 2026.
+// Both months are locked so the harness always sees the same layout.
+//
+// data-compare keys:
+//   drp-day         → a regular (non-range) day — Jan 4, 2026
+//   drp-day-range   → an in-range (between) day — Jan 10, 2026
+//   drp-day-endpoint → the start (Jan 8) or end (Jan 20) endpoint
+// ---------------------------------------------------------------------------
+const DRP_START = new Date(2026, 0, 8);   // Jan 8, 2026
+const DRP_END = new Date(2026, 0, 20);    // Jan 20, 2026
+
+function DateRangePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Main specimen — fixed range, two months side-by-side */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">
+                    Jan 8 – Jan 20, 2026 selected (January + February 2026)
+                </span>
+                <DateRangePicker
+                    value={{ start: DRP_START, end: DRP_END }}
+                    onChange={() => {}}
+                    // Lock left month to January 2026 — right shows February 2026 automatically
+                />
+            </div>
+
+            {/* Single-month variant */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">
+                    Single month (Jan 8 – Jan 20, 2026)
+                </span>
+                <DateRangePicker
+                    value={{ start: DRP_START, end: DRP_END }}
+                    onChange={() => {}}
+                    singleMonthOnly
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -4175,6 +4220,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
+    { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
