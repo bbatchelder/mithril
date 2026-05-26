@@ -163,6 +163,15 @@ export interface PopoverProps {
     canOutsideClickClose?: boolean;
 
     /**
+     * When true, the popover content width matches the trigger element width.
+     * Uses Radix's CSS variable `--radix-popover-trigger-width` (set on the content element).
+     * Blueprint: `matchTargetWidth` on Suggest — dropdown matches input width.
+     * Applied as an inline style (runtime layout value, not a tree-shakeable token).
+     * @default false
+     */
+    matchTargetWidth?: boolean;
+
+    /**
      * Pass the app's dark state so the portaled popover inherits dark mode.
      * Radix portals content to document.body (outside the .dark ancestor div),
      * so we wrap portal children in a div with dark class when this is true.
@@ -211,6 +220,7 @@ export function Popover({
     hasContentPadding = true,
     canEscapeKeyClose = true,
     canOutsideClickClose = true,
+    matchTargetWidth = false,
     dark = false,
     disabled = false,
     className,
@@ -271,7 +281,13 @@ export function Popover({
                             "text-foreground",
                             className,
                         )}
-                        style={{ minWidth: "auto", ...style }}
+                        style={{
+                            minWidth: "auto",
+                            ...(matchTargetWidth
+                                ? { width: "var(--radix-popover-trigger-width)" }
+                                : {}),
+                            ...style,
+                        }}
                         onEscapeKeyDown={
                             canEscapeKeyClose ? undefined : (e) => e.preventDefault()
                         }

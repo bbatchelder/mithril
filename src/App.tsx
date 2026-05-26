@@ -46,6 +46,11 @@ import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
 import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
+import { TagInput } from "@/components/ui/tag-input";
+import { Select } from "@/components/ui/select";
+import { Suggest } from "@/components/ui/suggest";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Omnibar } from "@/components/ui/omnibar";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3348,6 +3353,550 @@ function HotkeysGallery() {
     );
 }
 
+/**
+ * TagInput showcase.
+ *
+ * All specimens are pre-populated with tags so the static screenshot + diff is stable
+ * and meaningful. The same values appear on both sides.
+ *
+ * data-compare keys (must match blueprint-reference TagInputGallery exactly):
+ *   tag-input-container  — the main TagInput container box
+ *   tag-input-tag        — the first Tag chip inside the container
+ *   tag-input-ghost      — the ghost text input
+ */
+function TagInputGallery() {
+    const [values, setValues] = useState<string[]>(["apple", "banana", "cherry"]);
+    const [largeValues, setLargeValues] = useState<string[]>(["react", "typescript"]);
+    const [intentValues, setIntentValues] = useState<string[]>(["error", "warning"]);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Default (pre-populated)">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={values}
+                        onChange={(v) => setValues(v as string[])}
+                        placeholder="Add a tag…"
+                        fill
+                        data-compare="tag-input-container"
+                        _firstTagCompare="tag-input-tag"
+                        _ghostCompare="tag-input-ghost"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={largeValues}
+                        onChange={(v) => setLargeValues(v as string[])}
+                        placeholder="Add a tag…"
+                        large
+                        fill
+                    />
+                </div>
+            </Section>
+
+            <Section title="Danger intent + fill">
+                <TagInput
+                    values={intentValues}
+                    onChange={(v) => setIntentValues(v as string[])}
+                    placeholder="Add a tag…"
+                    intent="danger"
+                    fill
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={["locked", "read-only"]}
+                        onChange={() => {}}
+                        placeholder="Disabled"
+                        disabled
+                        fill
+                    />
+                </div>
+            </Section>
+
+            <Section title="With left icon">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={["design", "ui", "ux"]}
+                        onChange={() => {}}
+                        placeholder="Tags…"
+                        leftIcon="search"
+                        fill
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Select items for both galleries ───────────────────────────────────────
+const SELECT_ITEMS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape"];
+const SELECT_SELECTED = "Cherry";
+
+/**
+ * Select showcase. The popover is controlled OPEN so the harness can screenshot
+ * the filter input + menu items. data-compare keys match blueprint-reference SelectGallery.
+ *
+ * data-compare keys:
+ *   select-trigger       — the trigger button wrapper div
+ *   select-filter        — the filter InputGroup's <input> element
+ *   select-menu          — the menu <ul> element inside the popover
+ *   select-item          — a non-active MenuItem (Cherry — the selected one)
+ *   select-item-active   — the active/highlighted MenuItem (Apple — first item, active by default)
+ *
+ * Because the popover content is portaled, we tag select-filter and select-item via
+ * document.querySelector in a useEffect (same pattern as ContextMenu/Dialog galleries).
+ */
+function SelectGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string | null>(SELECT_SELECTED);
+
+    // Stamp data-compare on portaled nodes after render.
+    // The popover content is portaled (outside the .dark ancestor), so we use
+    // document-wide querySelector to find elements by their structural position.
+    useEffect(() => {
+        function tag() {
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="select-menu"]');
+            if (!menuUl) return;
+
+            // Filter input: sibling of the menu, inside the same p-1 wrapper
+            const wrapper = menuUl.parentElement; // div.p-1
+            if (wrapper) {
+                const filterInput = wrapper.querySelector<HTMLElement>("input");
+                if (filterInput) filterInput.setAttribute("data-compare", "select-filter");
+            }
+
+            // select-item-active: Apple is index 0 (first item, active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "select-item-active");
+            }
+
+            // select-item: Cherry is index 2 (0-based) in the list
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "select-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Default filterable Select (popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <Select<string>
+                        items={SELECT_ITEMS}
+                        selectedItem={selected}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                                data-compare={undefined}
+                            />
+                        )}
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={
+                            <MenuItem disabled text="No results." />
+                        }
+                        dark={dark}
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    >
+                        <Button
+                            variant="solid"
+                            endIcon={<Icon icon="caret-down" size={16} />}
+                            data-compare="select-trigger"
+                            fill
+                        >
+                            {selected ?? "Select a fruit…"}
+                        </Button>
+                    </Select>
+                </div>
+            </Section>
+
+            <Section title="Non-filterable Select">
+                <Select<string>
+                    items={SELECT_ITEMS}
+                    selectedItem={selected}
+                    filterable={false}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            icon={item === selected ? "tick" : undefined}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    dark={dark}
+                >
+                    <Button variant="solid" endIcon={<Icon icon="caret-down" size={16} />}>
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </Select>
+            </Section>
+
+            <Section title="Disabled">
+                <Select<string>
+                    items={SELECT_ITEMS}
+                    selectedItem={selected}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    disabled
+                    dark={dark}
+                >
+                    <Button variant="solid" endIcon={<Icon icon="caret-down" size={16} />} disabled>
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </Select>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Suggest items (same list as Select + Blueprint reference) ─────────────
+const SUGGEST_ITEMS = SELECT_ITEMS;
+const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
+
+/**
+ * Suggest gallery. Renders the Suggest typeahead component.
+ *
+ * Strategy: Force popover OPEN so the harness can screenshot the input and menu
+ * items without interaction. We use popoverProps={{ open: true }} and tag
+ * portaled DOM nodes via document.querySelector in a useEffect.
+ *
+ * data-compare keys:
+ *   suggest-input        — the InputGroup's <input> element (the trigger + filter)
+ *   suggest-menu         — the menu <ul> element inside the popover (portaled)
+ *   suggest-item         — Apple (index 0, non-active, non-selected)
+ *   suggest-item-active  — Cherry (index 2, active because it's the selectedItem)
+ *
+ * Active item = selectedItem (Cherry) because Suggest initializes activeItem = selectedItem.
+ * suggest-input is stamped here (not in the component) to avoid picking up the disabled instance.
+ * suggest-menu is tagged via data-compare="suggest-menu" in the Suggest component itself.
+ * suggest-item and suggest-item-active are stamped via useEffect.
+ */
+function SuggestGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string | null>(SUGGEST_SELECTED);
+
+    // Stamp data-compare on portaled menu item nodes and the input after render.
+    useEffect(() => {
+        function tag() {
+            // suggest-input: the InputGroup's <input> inside the OPEN Suggest (not the disabled one).
+            // We find it via the suggest-menu's ancestor chain (the Suggest that has the open popover).
+            // The input is in the trigger area; the menu is portaled. We find the input by looking
+            // for the first InputGroup input inside the forced-open Suggest's wrapper container.
+            // Since the open Suggest is the first one (the disabled one comes second), we take [0].
+            const allInputs = document.querySelectorAll<HTMLElement>(".suggest-gallery-wrapper input");
+            const firstInput = allInputs[0];
+            if (firstInput) firstInput.setAttribute("data-compare", "suggest-input");
+
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="suggest-menu"]');
+            if (!menuUl) return;
+
+            // suggest-item: Apple is index 0 (non-active, non-selected)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "suggest-item");
+            }
+
+            // suggest-item-active: Cherry is index 2 (active because it's the selectedItem)
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "suggest-item-active");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="suggest-gallery-wrapper flex flex-col gap-8 text-foreground">
+            <Section title="Suggest (typeahead, popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <Suggest<string>
+                        items={SUGGEST_ITEMS}
+                        selectedItem={selected}
+                        inputValueRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={<MenuItem disabled text="No results." />}
+                        dark={dark}
+                        fill
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <Suggest<string>
+                    items={SUGGEST_ITEMS}
+                    selectedItem={selected}
+                    inputValueRenderer={(item) => item}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    dark={dark}
+                    disabled
+                />
+            </Section>
+        </div>
+    );
+}
+
+// ─── MultiSelect items (same list as Select/Suggest) ─────────────────────────
+const MULTI_SELECT_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+// Initially selected: Banana + Cherry (indices 1, 2)
+const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
+
+/**
+ * MultiSelect gallery.
+ *
+ * Shows the main MultiSelect with:
+ * - Two pre-selected chips (Banana, Cherry) visible in the trigger container.
+ * - Popover forced OPEN for static harness comparison.
+ * - Apple is index 0 (non-active, non-selected).
+ * - Durian is index 3 (active by default — first enabled item after query reset).
+ *
+ * data-compare keys:
+ *   multi-select-container  — the TagInput-like trigger container
+ *   multi-select-tag        — the first Tag chip (Banana)
+ *   multi-select-menu       — the menu <ul> element (portaled)
+ *   multi-select-item       — Apple (index 0, non-active, non-selected item in menu)
+ *   multi-select-item-active — Apple (index 0, active by default — first enabled item)
+ *
+ * NOTE: Apple is both non-selected AND active (first item), so it gets both
+ * multi-select-item and multi-select-item-active depending on which we want.
+ * We use Apple as multi-select-item-active (active state) since it's the first
+ * enabled item that gets highlighted. For multi-select-item (non-active), we use
+ * Banana's menu entry — but Banana is selected, so its tick icon is visible.
+ * Blueprint marks selected items in the menu; we do the same.
+ *
+ * Strategy: Apple is index 0 = active by default (first enabled item).
+ *           Durian is index 3 = not selected, not active → use for multi-select-item.
+ */
+function MultiSelectGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string[]>(MULTI_SELECT_SELECTED);
+
+    // Stamp data-compare on portaled menu item nodes after render
+    useEffect(() => {
+        function tag() {
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="multi-select-menu"]');
+            if (!menuUl) return;
+
+            // multi-select-item-active: Apple is index 0 (first item = active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "multi-select-item-active");
+            }
+
+            // multi-select-item: Durian is index 3 (non-active, non-selected)
+            const durianLi = menuUl.children[3] as HTMLElement | undefined;
+            if (durianLi) {
+                const btn = durianLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "multi-select-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="multi-select-gallery-wrapper flex flex-col gap-8 text-foreground">
+            <Section title="MultiSelect (chips + popover open for comparison)">
+                <div style={{ width: 400 }}>
+                    <MultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={selected}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={selected.includes(item) ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => {
+                            if (!selected.includes(item)) {
+                                setSelected((s) => [...s, item]);
+                            }
+                        }}
+                        onRemove={(_item, index) =>
+                            setSelected((s) => s.filter((_, i) => i !== index))
+                        }
+                        noResults={<MenuItem disabled text="No results." />}
+                        dark={dark}
+                        fill
+                        data-compare="multi-select-container"
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <MultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={["Apple", "Banana"]}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        dark={dark}
+                        disabled
+                        fill
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Omnibar items (same list as Select items) ────────────────────────────
+const OMNIBAR_ITEMS = SELECT_ITEMS;
+
+/**
+ * Omnibar gallery. Renders the Omnibar command-palette overlay OPEN.
+ *
+ * Strategy: Force isOpen=true so the harness can screenshot the portaled panel,
+ * input, and menu items without interaction. Data-compare keys are placed via
+ * the component's data-compare props and useEffect for portaled nodes.
+ *
+ * data-compare keys:
+ *   omnibar-panel        — the elevated panel div (portaled)
+ *   omnibar-input        — the search <input> element inside the InputGroup
+ *   omnibar-menu         — the menu <ul> element
+ *   omnibar-item         — Cherry (index 2, non-active, non-first item)
+ *   omnibar-item-active  — Apple (index 0, active by default — first enabled item)
+ */
+function OmnibarGallery() {
+    const dark = useContext(DarkContext);
+
+    // Stamp data-compare on portaled menu item nodes
+    useEffect(() => {
+        function tag() {
+            // omnibar-input: the <input> element inside the InputGroup
+            const inputEl = document.querySelector<HTMLElement>('[data-compare="omnibar-panel"] input');
+            if (inputEl) inputEl.setAttribute("data-compare", "omnibar-input");
+
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="omnibar-menu"]');
+            if (!menuUl) return;
+
+            // omnibar-item-active: Apple is index 0 (first item, active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "omnibar-item-active");
+            }
+
+            // omnibar-item: Cherry is index 2 (non-active, non-first item)
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "omnibar-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="flex flex-col gap-4 text-foreground">
+            <p className="text-body text-foreground-muted">
+                Omnibar is always rendered open for harness comparison. Click outside or press Esc to close.
+            </p>
+            {/* A placeholder element so the gallery has visible content when the harness takes a screenshot.
+                The actual omnibar panel is portaled (fixed position) and visible above. */}
+            <div className="relative h-[320px] border border-dashed border-gray-4 [border-radius:4px] flex items-center justify-center">
+                <span className="text-body text-foreground-muted">Omnibar panel is portaled above this area</span>
+                <Omnibar<string>
+                    isOpen={true}
+                    onClose={() => {}}
+                    items={OMNIBAR_ITEMS}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={() => {}}
+                    dark={dark}
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3395,6 +3944,11 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
+    { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
+    { id: "select", title: "Select", render: () => <SelectGallery /> },
+    { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
+    { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
+    { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

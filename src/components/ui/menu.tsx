@@ -222,11 +222,15 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         // border-radius: 4px
         "rounded-bp",
         // padding: 4px 8px (medium); line-height: 22px
-        effectiveSize === "small" && "px-[8px] py-[2px] leading-[20px]",
-        effectiveSize === "medium" && "px-[8px] py-[4px] leading-[22px]",
-        effectiveSize === "large" && "px-[8px] py-[9px] text-body-lg leading-[22px]",
-        // text styling
+        effectiveSize === "small" && "px-[8px] py-[2px]",
+        effectiveSize === "medium" && "px-[8px] py-[4px]",
+        effectiveSize === "large" && "px-[8px] py-[9px] text-body-lg",
+        // text styling — line-height comes AFTER text-body-* so leading-* wins over any
+        // implicit line-height that tailwind-merge infers from text-body (see utils.ts).
         "text-body no-underline select-none",
+        // Leading (line-height) AFTER text-* so tailwind-merge keeps it (text-body would shadow leading-* if earlier)
+        effectiveSize === "small" && "leading-[20px]",
+        (effectiveSize === "medium" || effectiveSize === "large") && "leading-[22px]",
         // default text color: inherit (from Menu which has text-foreground)
         "text-inherit",
         // transitions
