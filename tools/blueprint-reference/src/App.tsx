@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1382,6 +1382,147 @@ function FileInputGallery() {
     );
 }
 
+/**
+ * Blueprint reference for NumericInput. `data-compare` is placed on the `<input>` element
+ * (Blueprint's `.bp6-input` inside the numeric input). Blueprint's NumericInput is a class
+ * component; we use a container div + querySelector to stamp data-compare on inner elements.
+ *
+ * Specimens match analyst-ui NumericInputGallery exactly (keys, value, min, max, stepSize,
+ * buttonPosition, large, fill, disabled, intent):
+ *   ni-default        — value=5, medium (30px field), right buttons
+ *   ni-large          — value=5, large (40px field)
+ *   ni-disabled       — disabled
+ *   ni-intent-primary — primary intent
+ *   ni-buttons-left   — buttonPosition="left"
+ *   ni-fill           — fill (full-width, 300px container)
+ *   ni-step-button    — the increment stepper button (24px wide × ~14px)
+ */
+
+/**
+ * Helper that wraps Blueprint NumericInput and stamps data-compare on inner elements via ref.
+ * innerKey → stamps on the .bp6-input (the field)
+ * stepKey  → stamps on the first .bp6-button in the vertical button group
+ */
+function TaggedNumericInput({
+    innerKey,
+    stepKey,
+    ...props
+}: {
+    innerKey?: string;
+    stepKey?: string;
+} & React.ComponentProps<typeof NumericInput>) {
+    const ref = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!ref.current) return;
+        if (innerKey) {
+            const input = ref.current.querySelector(".bp6-input");
+            if (input) input.setAttribute("data-compare", innerKey);
+        }
+        if (stepKey) {
+            // The stepper is a vertical button group; the first button is the increment button
+            const btn = ref.current.querySelector(".bp6-button-group .bp6-button");
+            if (btn) btn.setAttribute("data-compare", stepKey);
+        }
+    });
+    return (
+        <div ref={ref}>
+            <NumericInput {...props} />
+        </div>
+    );
+}
+
+const NI_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+function NumericInputGallery() {
+    const [val, setVal] = useState<number>(5);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default (value=5, stepSize=1)">
+                <TaggedNumericInput
+                    value={val}
+                    onValueChange={(num) => setVal(num)}
+                    min={0}
+                    max={100}
+                    stepSize={1}
+                    style={{ width: 120 }}
+                    innerKey="ni-default"
+                    stepKey="ni-step-button"
+                />
+            </Section>
+
+            <Section title="Large">
+                <TaggedNumericInput
+                    defaultValue={5}
+                    large={true}
+                    min={0}
+                    max={100}
+                    style={{ width: 140 }}
+                    innerKey="ni-large"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <TaggedNumericInput
+                    defaultValue={5}
+                    disabled={true}
+                    style={{ width: 120 }}
+                    innerKey="ni-disabled"
+                />
+            </Section>
+
+            <Section title="Intent">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {NI_INTENTS.map((intent) => (
+                        <TaggedNumericInput
+                            key={intent}
+                            defaultValue={5}
+                            intent={intent}
+                            style={{ width: 120 }}
+                            innerKey={intent === "primary" ? "ni-intent-primary" : undefined}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Buttons left">
+                <TaggedNumericInput
+                    defaultValue={5}
+                    buttonPosition="left"
+                    style={{ width: 120 }}
+                    innerKey="ni-buttons-left"
+                />
+            </Section>
+
+            <Section title="Buttons none">
+                <NumericInput
+                    defaultValue={5}
+                    buttonPosition="none"
+                    style={{ width: 120 }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <TaggedNumericInput
+                        defaultValue={5}
+                        fill={true}
+                        innerKey="ni-fill"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Left icon">
+                <NumericInput
+                    defaultValue={5}
+                    leftIcon="search"
+                    style={{ width: 140 }}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1403,6 +1544,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
+    { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -14,6 +14,7 @@ import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-gro
 import { ControlGroup } from "@/components/ui/control-group";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { FileInput } from "@/components/ui/file-input";
+import { NumericInput, type NumericInputIntent } from "@/components/ui/numeric-input";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1406,6 +1407,130 @@ function FileInputGallery() {
     );
 }
 
+const NI_INTENTS: NumericInputIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+/**
+ * NumericInput showcase.
+ *
+ * `data-compare` is placed on the `<input>` element (the numeric input field, equivalent
+ * to Blueprint's `.bp6-input`). For the stepper button, we use a ref + querySelector
+ * to stamp `data-compare` on the first `.ni-step-btn` button.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   ni-default        — value=5, default size (30px field), stepper on right
+ *   ni-large          — value=5, large (40px field)
+ *   ni-disabled       — disabled
+ *   ni-intent-primary — primary intent (colored input border)
+ *   ni-buttons-left   — buttonPosition="left"
+ *   ni-fill           — fill (full-width, 300px container)
+ *   ni-step-button    — the increment stepper button (24px wide × ~14px tall)
+ */
+function NumericInputGallery() {
+    const [val, setVal] = useState<string>("5");
+
+    // Ref to stamp data-compare on the stepper button
+    const defaultRef = useRef<HTMLDivElement>(null);
+    const stepBtnRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // Stamp data-compare on the input element inside the default specimen
+        const input = defaultRef.current?.querySelector<HTMLInputElement>("input");
+        if (input) input.setAttribute("data-compare", "ni-default");
+
+        // Stamp data-compare on the increment stepper button
+        const btn = stepBtnRef.current?.querySelector<HTMLButtonElement>("button");
+        if (btn) btn.setAttribute("data-compare", "ni-step-button");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Default (value=5, stepSize=1)">
+                <div ref={defaultRef}>
+                    <div ref={stepBtnRef} className="inline-block">
+                        <NumericInput
+                            value={val}
+                            onValueChange={(_, s) => setVal(s)}
+                            min={0}
+                            max={100}
+                            stepSize={1}
+                            style={{ width: 120 }}
+                        />
+                    </div>
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <NumericInput
+                    defaultValue={5}
+                    size="large"
+                    min={0}
+                    max={100}
+                    style={{ width: 140 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-large")}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <NumericInput
+                    defaultValue={5}
+                    disabled
+                    style={{ width: 120 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-disabled")}
+                />
+            </Section>
+
+            <Section title="Intent">
+                <div className="flex flex-col gap-3">
+                    {NI_INTENTS.map((intent) => (
+                        <NumericInput
+                            key={intent}
+                            defaultValue={5}
+                            intent={intent}
+                            style={{ width: 120 }}
+                            ref={intent === "primary" ? (el) => el?.setAttribute("data-compare", "ni-intent-primary") : undefined}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Buttons left">
+                <NumericInput
+                    defaultValue={5}
+                    buttonPosition="left"
+                    style={{ width: 120 }}
+                    ref={(el) => el?.setAttribute("data-compare", "ni-buttons-left")}
+                />
+            </Section>
+
+            <Section title="Buttons none">
+                <NumericInput
+                    defaultValue={5}
+                    buttonPosition="none"
+                    style={{ width: 120 }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                <div style={{ width: 300 }}>
+                    <NumericInput
+                        defaultValue={5}
+                        fill
+                        ref={(el) => el?.setAttribute("data-compare", "ni-fill")}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Left icon">
+                <NumericInput
+                    defaultValue={5}
+                    leftIcon="search"
+                    style={{ width: 140 }}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1427,6 +1552,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
+    { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
