@@ -96,7 +96,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **EntityTitle** — `entity-title/`
 - [x] **NonIdealState** — `non-ideal-state/` (Icon)
 - [x] **Link** — `link/`
-- [ ] **Slider** — `slider/`
+- [x] **Slider** — `slider/`
 - [ ] **Hotkeys** — `hotkeys/` (Dialog-based)
 
 ## Phase 5 — Composite selects (`@blueprintjs/select`)

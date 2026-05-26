@@ -44,6 +44,7 @@ import { EditableText, type EditableTextIntent } from "@/components/ui/editable-
 import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
+import { Slider } from "@/components/ui/slider";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3227,6 +3228,73 @@ function LinkGallery() {
     );
 }
 
+/**
+ * Slider showcase.
+ *
+ * data-compare keys (must match blueprint-reference SliderGallery exactly):
+ *   slider-default      — horizontal slider at value=5, intent=primary, min=0 max=10 step=1
+ *   slider-success      — success intent slider at value=6
+ *   slider-disabled     — disabled slider at value=3
+ *   slider-track        — the track element (via data-compare on track wrapper)
+ *   slider-progress     — the progress fill element (via data-compare on fill div)
+ *   slider-handle       — the handle element (via data-compare on RadixSlider.Thumb)
+ *   slider-label        — first tick label (via data-compare on first label div)
+ */
+function SliderGallery() {
+    const [val, setVal] = useState(5);
+    const [successVal] = useState(6);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Default — primary intent, value=5, labels at 0/5/10 */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Default (primary, value=5)</p>
+                <div className="w-[320px]" data-compare="slider-default">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={val}
+                        onChange={setVal}
+                        intent="primary"
+                        labelStepSize={5}
+                    />
+                </div>
+            </div>
+
+            {/* Success intent */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Success intent (value=6)</p>
+                <div className="w-[320px]" data-compare="slider-success">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={successVal}
+                        intent="success"
+                        labelStepSize={5}
+                    />
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Disabled (value=3)</p>
+                <div className="w-[320px]" data-compare="slider-disabled">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={3}
+                        intent="primary"
+                        disabled
+                        labelStepSize={5}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3272,6 +3340,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
     { id: "link", title: "Link", render: () => <LinkGallery /> },
+    { id: "slider", title: "Slider", render: () => <SliderGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

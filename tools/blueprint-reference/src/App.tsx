@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3528,6 +3528,72 @@ function LinkGallery() {
     );
 }
 
+/**
+ * Blueprint Slider reference gallery.
+ *
+ * Mirrors analyst-ui SliderGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's Slider component directly (BpSlider).
+ *
+ * data-compare keys (must match analyst-ui SliderGallery exactly):
+ *   slider-default   — primary intent, value=5, labelStepSize=5
+ *   slider-success   — success intent, value=6, labelStepSize=5
+ *   slider-disabled  — disabled, value=3, labelStepSize=5
+ */
+function SliderGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Default — primary intent, value=5 */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default (primary, value=5)</p>
+                <div style={{ width: 320 }} data-compare="slider-default">
+                    <BpSlider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={5}
+                        intent="primary"
+                        labelStepSize={5}
+                        onChange={() => {}}
+                    />
+                </div>
+            </div>
+
+            {/* Success intent */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Success intent (value=6)</p>
+                <div style={{ width: 320 }} data-compare="slider-success">
+                    <BpSlider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={6}
+                        intent="success"
+                        labelStepSize={5}
+                        onChange={() => {}}
+                    />
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Disabled (value=3)</p>
+                <div style={{ width: 320 }} data-compare="slider-disabled">
+                    <BpSlider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={3}
+                        intent="primary"
+                        disabled
+                        labelStepSize={5}
+                        onChange={() => {}}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3572,6 +3638,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
     { id: "link", title: "Link", render: () => <LinkGallery /> },
+    { id: "slider", title: "Slider", render: () => <SliderGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
