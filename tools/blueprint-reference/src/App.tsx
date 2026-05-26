@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2381,6 +2381,52 @@ function ContextMenuGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Navbar.
+ *
+ * data-compare keys (must match analyst-ui NavbarGallery exactly):
+ *   navbar           — the Navbar bar itself (bg, shadow, height, padding)
+ *   navbar-heading   — the NavbarHeading div (font-size, margin-right, color)
+ *   navbar-divider   — the NavbarDivider (height, border-left, margin)
+ *
+ * Blueprint Alignment enum: Alignment.LEFT = "left", Alignment.RIGHT = "right".
+ * Fixed width 680px container to match analyst-ui gallery specimen size.
+ */
+function NavbarGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Standard navbar (left + right groups)">
+                <div style={{ width: 680 }}>
+                    <Navbar data-compare="navbar">
+                        <NavbarGroup align={Alignment.LEFT}>
+                            <NavbarHeading data-compare="navbar-heading">My Application</NavbarHeading>
+                            <NavbarDivider data-compare="navbar-divider" />
+                            <Button variant="minimal" text="Home" />
+                            <Button variant="minimal" text="Files" />
+                        </NavbarGroup>
+                        <NavbarGroup align={Alignment.RIGHT}>
+                            <Button variant="minimal" text="Log in" />
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+
+            <Section title="Left group only">
+                <div style={{ width: 680 }}>
+                    <Navbar>
+                        <NavbarGroup align={Alignment.LEFT}>
+                            <NavbarHeading>App</NavbarHeading>
+                            <NavbarDivider />
+                            <Button variant="minimal" text="Home" />
+                            <Button variant="minimal" text="About" />
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2412,6 +2458,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
+    { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -31,6 +31,7 @@ import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
+import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2202,6 +2203,52 @@ function ContextMenuGallery() {
     );
 }
 
+/**
+ * Navbar showcase. The navbar is inline (no portal) so dark mode works via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference NavbarGallery exactly):
+ *   navbar           — the Navbar bar itself (bg, shadow, height, padding)
+ *   navbar-heading   — the NavbarHeading div (font-size, font-weight, margin-right, color)
+ *   navbar-divider   — the NavbarDivider (height, border-left, margin)
+ *
+ * A fixed width is given to the navbar container so both sides measure identical widths.
+ * We use a wrapper div with fixed width to avoid full-page-width scroll issues in the gallery.
+ */
+function NavbarGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Standard navbar (left + right groups)">
+                <div style={{ width: 680 }}>
+                    <Navbar data-compare="navbar">
+                        <NavbarGroup align="left">
+                            <NavbarHeading data-compare="navbar-heading">My Application</NavbarHeading>
+                            <NavbarDivider data-compare="navbar-divider" />
+                            <Button variant="minimal">Home</Button>
+                            <Button variant="minimal">Files</Button>
+                        </NavbarGroup>
+                        <NavbarGroup align="right">
+                            <Button variant="minimal">Log in</Button>
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+
+            <Section title="Left group only">
+                <div style={{ width: 680 }}>
+                    <Navbar>
+                        <NavbarGroup align="left">
+                            <NavbarHeading>App</NavbarHeading>
+                            <NavbarDivider />
+                            <Button variant="minimal">Home</Button>
+                            <Button variant="minimal">About</Button>
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2234,6 +2281,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
+    { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

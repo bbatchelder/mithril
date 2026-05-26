@@ -83,7 +83,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 4 — Navigation & structure
 
-- [ ] **Navbar** — `navbar/`
+- [x] **Navbar** — `navbar/`
 - [ ] **Tabs** — `tabs/`
 - [ ] **Collapse** — `collapse/`
 - [ ] **Section** — `section/` (Card-based)
