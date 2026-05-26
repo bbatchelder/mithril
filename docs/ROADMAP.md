@@ -74,7 +74,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
       harness reaches portaled content; `@radix-ui/react-dialog`.
 - [x] **Alert** — `alert/` (Dialog-based)
 - [x] **Drawer** — `drawer/` (Overlay-based)
-- [ ] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
+- [x] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
       Menu dropdowns, Select family, DateInput, ContextMenu, Breadcrumbs overflow.
 - [ ] **Tooltip** — `tooltip/` (Popover-based)
 - [ ] **Toast / Toaster** — `toast/`

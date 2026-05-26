@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1950,6 +1950,63 @@ function DrawerGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Popover.
+ *
+ * Must match analyst-ui PopoverGallery exactly.
+ *
+ * Blueprint Popover portals content to document.body. We use useEffect + querySelector to
+ * set data-compare attributes on the inner elements (panel, arrow) after mount.
+ *
+ * Keys: popover-content (the .bp6-popover panel), popover-arrow (the .bp6-popover-arrow).
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/Alert/DrawerGallery — see orchestrator correction in 0024).
+ */
+function PopoverGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Popover portals to document.body; find via Classes constants.
+            const panel = document.querySelector(`.${Classes.POPOVER}`);
+            const arrow = panel?.querySelector(`.${Classes.POPOVER_ARROW}`);
+
+            if (panel) panel.setAttribute("data-compare", "popover-content");
+            if (arrow) arrow.setAttribute("data-compare", "popover-arrow");
+        }
+        tag();
+        const t = setTimeout(tag, 200);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The popover below is open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating popover to render without clipping */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200, paddingTop: 80 }}>
+                <Popover
+                    isOpen={true}
+                    placement="bottom"
+                    content={
+                        <p style={{ margin: 0 }}>
+                            Popover content. This is a floating panel anchored to the trigger button,
+                            the positioning primitive for Tooltip, Menu, Select, and ContextMenu.
+                        </p>
+                    }
+                    // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                    // portaled popover renders light unless we put the dark class on the portal itself.
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="primary" text="Open Popover" />
+                </Popover>
+            </div>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1977,6 +2034,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
+    { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

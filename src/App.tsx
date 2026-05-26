@@ -6,6 +6,7 @@ import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
+import { Popover } from "@/components/ui/popover";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
@@ -1868,6 +1869,46 @@ function DrawerGallery() {
     );
 }
 
+/**
+ * Popover showcase.
+ *
+ * Portal + dark-mode: the popover receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Dialog/Alert/Drawer).
+ *
+ * The popover is rendered with `defaultOpen={true}` so it's always visible for
+ * the comparison harness screenshot without requiring a click interaction.
+ *
+ * data-compare keys: popover-content (the panel), popover-arrow (the arrow).
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function PopoverGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The popover below is open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating popover to render without clipping */}
+            <div className="flex items-center justify-center" style={{ minHeight: 200, paddingTop: 80 }}>
+                <Popover
+                    defaultOpen={true}
+                    content={
+                        <p className="text-body text-foreground m-0">
+                            Popover content. This is a floating panel anchored to the trigger button,
+                            the positioning primitive for Tooltip, Menu, Select, and ContextMenu.
+                        </p>
+                    }
+                    side="bottom"
+                    align="center"
+                    dark={dark}
+                >
+                    <Button intent="primary">Open Popover</Button>
+                </Popover>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1895,6 +1936,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
+    { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
