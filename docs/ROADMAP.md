@@ -103,7 +103,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 - [x] **TagInput** — `tag-input/` (Tag + input handling) + QueryList *(infra)*
 - [x] **Select** — `select/select/` (Popover + Menu + input)
-- [ ] **Suggest** — `select/suggest/`
+- [x] **Suggest** — `select/suggest/`
 - [ ] **MultiSelect** — `select/multi-select/` (TagInput-based)
 - [ ] **Omnibar** — `select/omnibar/`
 

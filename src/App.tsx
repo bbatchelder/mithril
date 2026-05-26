@@ -48,6 +48,7 @@ import { Slider } from "@/components/ui/slider";
 import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
 import { TagInput } from "@/components/ui/tag-input";
 import { Select } from "@/components/ui/select";
+import { Suggest } from "@/components/ui/suggest";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3574,6 +3575,120 @@ function SelectGallery() {
     );
 }
 
+// ─── Suggest items (same list as Select + Blueprint reference) ─────────────
+const SUGGEST_ITEMS = SELECT_ITEMS;
+const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
+
+/**
+ * Suggest gallery. Renders the Suggest typeahead component.
+ *
+ * Strategy: Force popover OPEN so the harness can screenshot the input and menu
+ * items without interaction. We use popoverProps={{ open: true }} and tag
+ * portaled DOM nodes via document.querySelector in a useEffect.
+ *
+ * data-compare keys:
+ *   suggest-input        — the InputGroup's <input> element (the trigger + filter)
+ *   suggest-menu         — the menu <ul> element inside the popover (portaled)
+ *   suggest-item         — Apple (index 0, non-active, non-selected)
+ *   suggest-item-active  — Cherry (index 2, active because it's the selectedItem)
+ *
+ * Active item = selectedItem (Cherry) because Suggest initializes activeItem = selectedItem.
+ * suggest-input is stamped here (not in the component) to avoid picking up the disabled instance.
+ * suggest-menu is tagged via data-compare="suggest-menu" in the Suggest component itself.
+ * suggest-item and suggest-item-active are stamped via useEffect.
+ */
+function SuggestGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string | null>(SUGGEST_SELECTED);
+
+    // Stamp data-compare on portaled menu item nodes and the input after render.
+    useEffect(() => {
+        function tag() {
+            // suggest-input: the InputGroup's <input> inside the OPEN Suggest (not the disabled one).
+            // We find it via the suggest-menu's ancestor chain (the Suggest that has the open popover).
+            // The input is in the trigger area; the menu is portaled. We find the input by looking
+            // for the first InputGroup input inside the forced-open Suggest's wrapper container.
+            // Since the open Suggest is the first one (the disabled one comes second), we take [0].
+            const allInputs = document.querySelectorAll<HTMLElement>(".suggest-gallery-wrapper input");
+            const firstInput = allInputs[0];
+            if (firstInput) firstInput.setAttribute("data-compare", "suggest-input");
+
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="suggest-menu"]');
+            if (!menuUl) return;
+
+            // suggest-item: Apple is index 0 (non-active, non-selected)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "suggest-item");
+            }
+
+            // suggest-item-active: Cherry is index 2 (active because it's the selectedItem)
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "suggest-item-active");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="suggest-gallery-wrapper flex flex-col gap-8 text-foreground">
+            <Section title="Suggest (typeahead, popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <Suggest<string>
+                        items={SUGGEST_ITEMS}
+                        selectedItem={selected}
+                        inputValueRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={<MenuItem disabled text="No results." />}
+                        dark={dark}
+                        fill
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <Suggest<string>
+                    items={SUGGEST_ITEMS}
+                    selectedItem={selected}
+                    inputValueRenderer={(item) => item}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    dark={dark}
+                    disabled
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3623,6 +3738,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
     { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
     { id: "select", title: "Select", render: () => <SelectGallery /> },
+    { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

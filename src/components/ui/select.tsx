@@ -111,6 +111,12 @@ export interface UseQueryListOptions<T> {
     activeItem?: T | null;
     /** Called when the active item changes. */
     onActiveItemChange?: (item: T | null) => void;
+    /**
+     * The initial active item for uncontrolled mode. Overrides the default
+     * behavior of activating the first enabled item. Used by Suggest to initialize
+     * the active item to the selectedItem (Blueprint: `initialActiveItem = selectedItem`).
+     */
+    initialActiveItem?: T | null;
     /** Whether to reset to the first item when the query changes. @default true */
     resetOnQuery?: boolean;
     /** Whether to reset query to empty string after selecting an item. @default false */
@@ -187,6 +193,7 @@ export function useQueryList<T>(options: UseQueryListOptions<T>): QueryListState
         resetOnQuery = true,
         resetOnSelect = false,
         itemDisabled,
+        initialActiveItem,
     } = options;
 
     const isControlledQuery = controlledQuery !== undefined;
@@ -194,10 +201,17 @@ export function useQueryList<T>(options: UseQueryListOptions<T>): QueryListState
 
     const [internalQuery, setInternalQuery] = useState("");
 
-    // Eagerly initialize active item to the first enabled item on mount
-    // (lazy initializer runs synchronously so the first render already has an active item).
+    // Eagerly initialize active item on mount (lazy initializer runs synchronously).
+    // Priority: controlled > initialActiveItem > first enabled item.
     const [internalActiveItem, setInternalActiveItem] = useState<T | null>(() => {
         if (isControlledActive) return null; // controlled — don't init
+        // If initialActiveItem is provided and is in the filtered items, use it.
+        if (initialActiveItem !== undefined && initialActiveItem !== null) {
+            const initialFiltered = getFilteredItems("", options);
+            if (initialFiltered.includes(initialActiveItem)) {
+                return initialActiveItem;
+            }
+        }
         const initialFiltered = getFilteredItems("", options);
         return getFirstEnabledItem(initialFiltered, itemDisabled, 1, -1);
     });

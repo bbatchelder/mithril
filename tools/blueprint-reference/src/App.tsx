@@ -1,5 +1,5 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
-import { Select as BpSelect } from "@blueprintjs/select";
+import { Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3968,6 +3968,134 @@ function SelectGallery() {
     );
 }
 
+// ─── Suggest items (same list as analyst-ui SuggestGallery) ──────────────────
+const SUGGEST_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
+
+/**
+ * Blueprint reference for Suggest. Uses @blueprintjs/select's Suggest<T>.
+ *
+ * Strategy: Force the popover OPEN so the harness can screenshot the input and menu
+ * items without interaction. We use popoverProps={{ isOpen: true }} and stamp
+ * data-compare on portaled DOM nodes via useEffect.
+ *
+ * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled menu renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui SuggestGallery):
+ *   suggest-input        — the InputGroup's <input> element (trigger + filter)
+ *   suggest-menu         — the menu <ul> element inside the popover (portaled)
+ *   suggest-item         — Apple (index 0, non-active, non-selected)
+ *   suggest-item-active  — Cherry (index 2, active because it's the selectedItem)
+ *
+ * NOTE: We do NOT use roleStructure="listoption" so that paddingLeft is 8px
+ * on both sides (no indent from SELECTABLE class). The tick icon is shown via
+ * icon="tick" prop on the selected item, maintaining visual consistency.
+ * Blueprint's activeItem is initialized to selectedItem (Cherry) by Suggest.
+ */
+function SuggestGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [selected, setSelected] = useState<string | null>(SUGGEST_SELECTED);
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // suggest-input: Blueprint Suggest renders the input with role="combobox".
+            const input = document.querySelector<HTMLElement>(
+                `input[role="combobox"]`,
+            );
+            if (input) input.setAttribute("data-compare", "suggest-input");
+
+            // suggest-menu: Blueprint renders the menu as a <ul role="listbox"> inside the portaled popover
+            const menuUl = document.querySelector<HTMLElement>(
+                `ul.bp6-menu[role="listbox"]`,
+            );
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "suggest-menu");
+
+                // suggest-item: Apple is index 0 (non-active, non-selected)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "suggest-item");
+                }
+
+                // suggest-item-active: Cherry is index 2 (active — it's the selectedItem which
+                // Blueprint Suggest uses as initialActiveItem)
+                const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+                if (cherryLi) {
+                    const anchor = cherryLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "suggest-item-active");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Suggest (typeahead, popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <BpSuggest<string>
+                        items={SUGGEST_ITEMS}
+                        selectedItem={selected}
+                        inputValueRenderer={(item) => item}
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={<MenuItem disabled={true} text="No results." />}
+                        fill={true}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            matchTargetWidth: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <BpSuggest<string>
+                    items={SUGGEST_ITEMS}
+                    selectedItem={selected}
+                    inputValueRenderer={(item) => item}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            roleStructure="listoption"
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    onItemSelect={(item) => setSelected(item)}
+                    disabled={true}
+                    popoverProps={{
+                        minimal: true,
+                        portalClassName: dark ? Classes.DARK : undefined,
+                    }}
+                />
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4016,6 +4144,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
     { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
     { id: "select", title: "Select", render: () => <SelectGallery /> },
+    { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
