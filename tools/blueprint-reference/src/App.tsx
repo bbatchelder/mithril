@@ -2280,6 +2280,107 @@ function MenuGallery() {
     );
 }
 
+/**
+ * Blueprint ContextMenu reference gallery.
+ *
+ * Strategy: Render the Menu directly inside a `.bp6-popover` styled div (the same surface
+ * Blueprint renders for a ContextMenuPopover) so harness specimens are always in the DOM
+ * without fighting Blueprint's cursor-based positioning.
+ *
+ * The harness diffs:
+ *   context-menu-surface — the .bp6-menu ul (bg, radius, min-width, padding)
+ *   context-menu-item    — a plain menu item's inner <a> (padding, color, line-height)
+ *
+ * Dark mode: the dark class on the ancestor div provides dark context for inline menu.
+ * We also show a live ContextMenuPopover for visual reference (not tagged).
+ */
+function ContextMenuGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    // Wrapper ref for finding the menu element (since Blueprint Menu uses ulRef not ref).
+    const menuWrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!menuWrapperRef.current) return;
+        const menu = menuWrapperRef.current.querySelector<HTMLElement>("ul[role='menu']");
+        if (menu) menu.setAttribute("data-compare", "context-menu-surface");
+
+        const firstItemAnchor = menuWrapperRef.current.querySelector<HTMLElement>(
+            "ul[role='menu'] li:nth-child(2) a.bp6-menu-item"
+        );
+        if (firstItemAnchor) firstItemAnchor.setAttribute("data-compare", "context-menu-item");
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The context menu surface below is always visible for comparison harness screenshots.
+            </p>
+
+            {/* Always-visible specimen: Menu wrapped in Blueprint popover surface styling.
+                Blueprint .bp6-popover has: bg white, border-radius 2px (?), box-shadow = elevation-3.
+                We replicate with .bp6-popover class on the wrapper div. */}
+            <div
+                className={`bp6-popover${dark ? ` ${Classes.DARK}` : ""}`}
+                style={{ display: "inline-block" }}
+                ref={menuWrapperRef}
+            >
+                <div className={Classes.POPOVER_CONTENT}>
+                    <Menu>
+                        {/* Heading divider — first-of-type so no top border.
+                            Use raw <li> since MenuDivider doesn't forward data-* props. */}
+                        <li
+                            className={Classes.MENU_HEADER}
+                            role="separator"
+                        >
+                            <h6>Actions</h6>
+                        </li>
+
+                        {/* Plain item with icon — context-menu-item tagged via useEffect */}
+                        <MenuItem
+                            icon="document"
+                            text="Open document"
+                        />
+
+                        {/* Item with right label */}
+                        <MenuItem
+                            icon="search"
+                            text="Find…"
+                            label="⌘F"
+                        />
+
+                        {/* Active/selected item */}
+                        <MenuItem
+                            icon="tick"
+                            text="Selected item"
+                            active={true}
+                        />
+
+                        {/* Plain divider — raw <li> for data-compare forwarding */}
+                        <li
+                            className={Classes.MENU_DIVIDER}
+                            role="separator"
+                        />
+
+                        {/* Danger intent */}
+                        <MenuItem
+                            icon="trash"
+                            text="Delete"
+                            intent="danger"
+                        />
+
+                        {/* Disabled item */}
+                        <MenuItem
+                            icon="cross"
+                            text="Disabled action"
+                            disabled={true}
+                        />
+                    </Menu>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2310,6 +2411,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
+    { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

@@ -30,6 +30,7 @@ import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
+import { ContextMenu } from "@/components/ui/context-menu";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2114,6 +2115,93 @@ function MenuGallery() {
     );
 }
 
+/**
+ * ContextMenu showcase — renders the menu surface OPEN by default for harness comparison.
+ *
+ * Strategy: render the Menu directly inside a styled "popover surface" div (the same
+ * bg/shadow/radius treatment that ContextMenu applies to portaled content). This gives
+ * the harness stable, non-portaled `data-compare` specimens without fighting Radix's
+ * cursor-based positioning. We also show a live ContextMenu trigger area below it.
+ *
+ * Portal + dark-mode: dark comes from DarkContext; the inline surface uses `dark:` utilities
+ * directly since it's not portaled — no wrapper div needed for the always-visible specimen.
+ *
+ * data-compare keys (must match blueprint-reference ContextMenuGallery):
+ *   context-menu-surface  — the popover surface container (our inline Menu ul)
+ *   context-menu-item     — a plain menu item (the inner button element)
+ */
+function ContextMenuGallery() {
+    const dark = useContext(DarkContext);
+
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The context menu surface below is always visible for comparison harness screenshots.
+                Right-click the dashed area to open a live context menu.
+            </p>
+
+            {/* Always-visible specimen: Menu wrapped in popover surface styling.
+                This matches what ContextMenu renders portaled — same bg/shadow/radius.
+                We render it inline so data-compare targets are always in the DOM. */}
+            <div className="self-start rounded-bp shadow-card-3 dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]">
+                <div className="bg-white dark:bg-dark-gray-3 rounded-bp text-foreground">
+                    <Menu data-compare="context-menu-surface">
+                        <MenuDivider title="Actions" />
+                        <MenuItem
+                            icon="document"
+                            text="Open document"
+                            data-compare="context-menu-item"
+                        />
+                        <MenuItem
+                            icon="search"
+                            text="Find…"
+                            label="⌘F"
+                        />
+                        <MenuItem
+                            icon="tick"
+                            text="Selected item"
+                            active={true}
+                        />
+                        <MenuDivider />
+                        <MenuItem
+                            icon="trash"
+                            text="Delete"
+                            intent="danger"
+                        />
+                        <MenuItem
+                            icon="cross"
+                            text="Disabled action"
+                            disabled={true}
+                        />
+                    </Menu>
+                </div>
+            </div>
+
+            {/* Live ContextMenu trigger — right-click to open. For visual verification only. */}
+            <div className="mt-4">
+                <ContextMenu
+                    dark={dark}
+                    content={
+                        <Menu>
+                            <MenuDivider title="Actions" />
+                            <MenuItem icon="document" text="Open document" />
+                            <MenuItem icon="search" text="Find…" label="⌘F" />
+                            <MenuItem icon="tick" text="Selected item" active={true} />
+                            <MenuDivider />
+                            <MenuItem icon="trash" text="Delete" intent="danger" />
+                            <MenuItem icon="cross" text="Disabled action" disabled={true} />
+                        </Menu>
+                    }
+                >
+                    <div className="p-8 border border-dashed border-foreground-muted rounded text-foreground-muted text-body text-center cursor-context-menu">
+                        Right-click anywhere in this area to open the live context menu.
+                    </div>
+                </ContextMenu>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2145,6 +2233,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
+    { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
