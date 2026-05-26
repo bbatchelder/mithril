@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Radio, RadioGroup } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-group";
+import { ControlGroup } from "@/components/ui/control-group";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1206,6 +1207,66 @@ function FormGroupGallery() {
     );
 }
 
+/**
+ * ControlGroup showcase. `data-compare` is placed on the control-group div itself
+ * (the flex container). The harness diffs: display, flexDirection, alignItems, flexGrow.
+ *
+ * Specimens (keys must match blueprint-reference gallery exactly):
+ *   cg-horizontal  — InputGroup + Button in a row (flexDirection:row, alignItems:stretch)
+ *   cg-vertical    — two InputGroups stacked (flexDirection:column)
+ *   cg-fill        — fill group (width=100%, children flex-grow)
+ *   cg-fill-child  — first child of fill group (flexGrow:1)
+ */
+function ControlGroupGallery() {
+    // We need refs to stamp data-compare on the fill child (first child of cg-fill group)
+    const fillGroupRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (fillGroupRef.current) {
+            const firstChild = fillGroupRef.current.firstElementChild;
+            if (firstChild) {
+                firstChild.setAttribute("data-compare", "cg-fill-child");
+                firstChild.setAttribute("data-compare-flex", "");
+            }
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Horizontal (default)">
+                {/* cg-horizontal: data-compare + data-compare-flex → harness diffs display/flexDirection/alignItems */}
+                <ControlGroup data-compare="cg-horizontal" data-compare-flex="">
+                    <InputGroup placeholder="Search…" style={{ width: 180 }} />
+                    <Button>Go</Button>
+                </ControlGroup>
+            </Section>
+
+            <Section title="Vertical">
+                {/* cg-vertical: data-compare-flex → flexDirection:column */}
+                <ControlGroup vertical data-compare="cg-vertical" data-compare-flex="" style={{ width: 200 }}>
+                    <InputGroup placeholder="Username" />
+                    <InputGroup placeholder="Password" type="password" />
+                </ControlGroup>
+            </Section>
+
+            <Section title="Fill">
+                {/* cg-fill: data-compare-flex → width:100%, children flex-grow */}
+                {/* cg-fill-child: stamped via ref on the first child — flexGrow:1 */}
+                <ControlGroup fill ref={fillGroupRef} data-compare="cg-fill" data-compare-flex="">
+                    <InputGroup placeholder="Search…" />
+                    <Button>Go</Button>
+                </ControlGroup>
+            </Section>
+
+            <Section title="Intent / composition">
+                <ControlGroup>
+                    <InputGroup placeholder="Enter value…" intent="primary" style={{ width: 160 }} />
+                    <Button intent="primary">Submit</Button>
+                </ControlGroup>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1224,6 +1285,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
     { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
+    { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -1241,7 +1303,7 @@ export default function App() {
 
     return (
         <div className={dark ? "dark" : ""}>
-            <div className="min-h-screen bg-background p-10">
+            <div className="min-h-screen bg-background text-foreground p-10">
                 <div className="mx-auto flex max-w-[760px] flex-col gap-8">
                     {!isolated && (
                         <header className="flex items-center justify-between">

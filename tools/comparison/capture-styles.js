@@ -42,6 +42,13 @@
         "fillOpacity",
     ];
 
+    // Flex layout props — captured only for elements with data-compare-flex attribute.
+    // Used for ControlGroup container specimens where display/flexDirection/alignItems
+    // are the key measurable layout properties. Not added globally to avoid false diffs
+    // on other components' indicators (e.g. Checkbox uses flex internally but Blueprint
+    // uses inline-block — same visual, different implementation).
+    var FLEX_PROPS = ["display", "flexDirection", "alignItems", "flexGrow"];
+
     var cv = document.createElement("canvas");
     cv.width = cv.height = 1;
     var cx = cv.getContext("2d");
@@ -91,6 +98,14 @@
         for (var j = 0; j < PROPS.length; j++) {
             var p = PROPS[j];
             rec[p] = normColors(s[p]);
+        }
+        // For elements tagged data-compare-flex, also capture flex layout properties.
+        // This allows ControlGroup container comparisons without polluting other specimens.
+        if (el.hasAttribute("data-compare-flex")) {
+            for (var k = 0; k < FLEX_PROPS.length; k++) {
+                var fp = FLEX_PROPS[k];
+                rec[fp] = s[fp];
+            }
         }
         rec.boxShadow = cleanShadow(rec.boxShadow);
         // A zero-width border's color is invisible — comparing it is pure noise.

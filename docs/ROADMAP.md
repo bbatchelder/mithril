@@ -61,7 +61,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Radio / RadioGroup** — `forms/controls.tsx`, `forms/radioGroup.tsx`
 - [x] **Switch** — `forms/controls.tsx`
 - [x] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`
-- [ ] **ControlGroup** — `forms/controlGroup.tsx`
+- [x] **ControlGroup** — `forms/controlGroup.tsx`
 - [ ] **HTMLSelect** — `html-select/`
 - [ ] **FileInput** — `forms/fileInput.tsx`
 - [ ] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)

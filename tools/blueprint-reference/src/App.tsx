@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, Divider, FormGroup, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FormGroup, Icon, InputGroup, Label, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1201,6 +1201,67 @@ function FormGroupGallery() {
     );
 }
 
+/**
+ * Blueprint reference for ControlGroup. `data-compare` is on the group div directly
+ * (Blueprint's ControlGroup accepts and forwards HTML div props, so data-compare goes
+ * straight to the root .bp6-control-group div). Keys MUST match analyst-ui gallery.
+ *
+ * Specimens:
+ *   cg-horizontal — InputGroup + Button in a row
+ *   cg-vertical   — two InputGroups stacked
+ *   cg-fill       — fill group (width:100%)
+ *   cg-fill-child — first child of fill group (flex-grow:1)
+ */
+function ControlGroupGallery() {
+    // Stamp data-compare on the first child of the fill group via ref.
+    const fillGroupRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (fillGroupRef.current) {
+            // Blueprint's ControlGroup renders a div.bp6-control-group; children are direct.
+            const firstChild = fillGroupRef.current.firstElementChild;
+            if (firstChild) {
+                firstChild.setAttribute("data-compare", "cg-fill-child");
+                firstChild.setAttribute("data-compare-flex", "");
+            }
+        }
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Horizontal (default)">
+                {/* cg-horizontal: data-compare-flex triggers flex layout diff (display/flexDirection/alignItems) */}
+                <ControlGroup data-compare="cg-horizontal" data-compare-flex="">
+                    <InputGroup placeholder="Search…" style={{ width: 180 }} />
+                    <Button text="Go" />
+                </ControlGroup>
+            </Section>
+
+            <Section title="Vertical">
+                {/* cg-vertical: flexDirection:column */}
+                <ControlGroup vertical={true} data-compare="cg-vertical" data-compare-flex="" style={{ width: 200 }}>
+                    <InputGroup placeholder="Username" />
+                    <InputGroup placeholder="Password" type="password" />
+                </ControlGroup>
+            </Section>
+
+            <Section title="Fill">
+                {/* cg-fill: width:100%, children flex-grow */}
+                <ControlGroup fill={true} ref={fillGroupRef} data-compare="cg-fill" data-compare-flex="">
+                    <InputGroup placeholder="Search…" />
+                    <Button text="Go" />
+                </ControlGroup>
+            </Section>
+
+            <Section title="Intent / composition">
+                <ControlGroup>
+                    <InputGroup placeholder="Enter value…" intent="primary" style={{ width: 160 }} />
+                    <Button text="Submit" intent="primary" />
+                </ControlGroup>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1219,6 +1280,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "radio", title: "Radio / RadioGroup", render: () => <RadioGallery /> },
     { id: "switch", title: "Switch", render: () => <SwitchGallery /> },
     { id: "form-group", title: "Label + FormGroup", render: () => <FormGroupGallery /> },
+    { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
