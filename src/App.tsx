@@ -28,6 +28,7 @@ import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinne
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
+import { Toast, ToastProvider } from "@/components/ui/toast";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -1966,6 +1967,75 @@ function TooltipGallery() {
     );
 }
 
+/**
+ * Toast showcase.
+ *
+ * Portal + dark-mode: ToastProvider receives `dark` from DarkContext so the Viewport
+ * portal wrapper gets the dark class (same pattern as Popover/Dialog/Tooltip).
+ *
+ * We render static always-visible toasts using StaticToast (open={true}, infinite duration).
+ * This bypasses the Toaster imperative API for gallery purposes.
+ *
+ * data-compare keys:
+ *   toast-card         — the default (no-intent) toast card
+ *   toast-intent-danger — the danger-intent toast card
+ *
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function ToastGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <ToastProvider dark={dark} position="top">
+            <div className="flex flex-col gap-4">
+                <p className="text-body text-foreground-muted">
+                    Toasts below are always visible for comparison harness screenshots.
+                </p>
+                {/* Stack toasts in a column, matching Blueprint container layout */}
+                <div className="flex flex-col gap-[20px] items-start">
+                    {/* Default (no intent) toast — icon + message + action + dismiss */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        icon="info-sign"
+                        message="Reconnecting to server."
+                        action={{ text: "Reconnect", onClick: () => {} }}
+                        data-compare="toast-card"
+                    />
+
+                    {/* Danger intent toast */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="danger"
+                        icon="warning-sign"
+                        message="Failed to delete 3 items."
+                        action={{ text: "Retry", onClick: () => {} }}
+                        data-compare="toast-intent-danger"
+                    />
+
+                    {/* Success intent toast (visual only — no data-compare) */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="success"
+                        icon="tick-circle"
+                        message="Item saved successfully."
+                    />
+
+                    {/* Warning intent toast (visual only) */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="warning"
+                        icon="warning-sign"
+                        message="Low disk space warning."
+                    />
+                </div>
+            </div>
+        </ToastProvider>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1995,6 +2065,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
+    { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

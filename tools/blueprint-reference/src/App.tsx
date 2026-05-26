@@ -2078,6 +2078,99 @@ function TooltipGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Toast.
+ *
+ * Blueprint's OverlayToaster is async and uses portals+Overlay2 — complex to use in a
+ * static gallery. Instead, we render the toast markup directly using Blueprint CSS classes
+ * (`.bp6-toast`, `.bp6-toast-message`, `.bp6-button-group`).
+ * This is a valid approach: the harness keys off `data-compare` on the `.bp6-toast` element,
+ * which is the measured node for bg, shadow, radius, min-width, padding, color.
+ *
+ * data-compare keys (must match analyst-ui ToastGallery):
+ *   toast-card          — the default (no-intent) toast card
+ *   toast-intent-danger — the danger-intent toast card
+ *
+ * Dark mode: the dark class on the parent div provides the dark context for toast styling.
+ */
+function ToastGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Toasts below are always visible for comparison harness screenshots.
+            </p>
+            {/* Stack toasts in a column with 20px gap (Blueprint $toast-margin = $pt-spacing * 5) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "flex-start" }}>
+                {/* Default (no intent) toast — icon + message + action + dismiss */}
+                <div
+                    className={`${Classes.TOAST} ${dark ? Classes.DARK : ""}`}
+                    data-compare="toast-card"
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="info-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Reconnecting to server.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" text="Reconnect" />
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Danger intent toast */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("danger")} ${dark ? Classes.DARK : ""}`}
+                    data-compare="toast-intent-danger"
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="warning-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Failed to delete 3 items.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" text="Retry" />
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Success intent toast (visual only) */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("success")} ${dark ? Classes.DARK : ""}`}
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="tick-circle" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Item saved successfully.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Warning intent toast (visual only) */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("warning")} ${dark ? Classes.DARK : ""}`}
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="warning-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Low disk space warning.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2107,6 +2200,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
     { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
+    { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
