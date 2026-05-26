@@ -1,5 +1,5 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
-import { MultiSelect as BpMultiSelect, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
+import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4232,6 +4232,102 @@ function MultiSelectGallery() {
     );
 }
 
+// ─── Omnibar items (same list as Select items) ────────────────────────────
+const OMNIBAR_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+
+/**
+ * Blueprint reference for Omnibar. Uses @blueprintjs/select's Omnibar<T>.
+ *
+ * Strategy: Force isOpen=true so the harness can screenshot the portaled panel,
+ * input, and menu items without interaction. Stamp data-compare on portaled DOM
+ * nodes via useEffect (panel, input, menu, items).
+ *
+ * Dark mode: pass overlayProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled Omnibar panel renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui OmnibarGallery):
+ *   omnibar-panel        — the elevated panel div (portaled)
+ *   omnibar-input        — the search <input> element
+ *   omnibar-menu         — the menu <ul> element
+ *   omnibar-item         — Cherry (index 2, non-active item)
+ *   omnibar-item-active  — Apple (index 0, active by default — first enabled item)
+ */
+function OmnibarGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // omnibar-panel: Blueprint renders the omnibar as .bp6-omnibar
+            const panel = document.querySelector<HTMLElement>(".bp6-omnibar");
+            if (panel) panel.setAttribute("data-compare", "omnibar-panel");
+
+            // omnibar-input: the <input> element inside the panel
+            const inputEl = document.querySelector<HTMLElement>(".bp6-omnibar input");
+            if (inputEl) inputEl.setAttribute("data-compare", "omnibar-input");
+
+            // omnibar-menu: Blueprint renders the menu as <ul class="bp6-menu">
+            const menuUl = document.querySelector<HTMLElement>(".bp6-omnibar .bp6-menu");
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "omnibar-menu");
+
+                // omnibar-item-active: Apple is index 0 (first item, active by default)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "omnibar-item-active");
+                }
+
+                // omnibar-item: Cherry is index 2 (non-active, non-first)
+                const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+                if (cherryLi) {
+                    const anchor = cherryLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "omnibar-item");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Omnibar (open for comparison)">
+                <div style={{ position: "relative", height: 320, border: "1px dashed #aaa", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#888" }}>Omnibar panel is portaled above this area</span>
+                    <BpOmnibar<string>
+                        isOpen={true}
+                        onClose={() => {}}
+                        items={OMNIBAR_ITEMS}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                                roleStructure="menuitem"
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        // initialContent={undefined} bypasses Blueprint's default behavior of showing
+                        // nothing when query is empty. With initialContent=null (Blueprint's Omnibar
+                        // default), renderFilteredItems() returns null when query.length===0, hiding
+                        // all items. Setting to undefined makes it show items immediately (like our Omnibar).
+                        initialContent={undefined}
+                        overlayProps={{
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4282,6 +4378,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "select", title: "Select", render: () => <SelectGallery /> },
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
+    { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

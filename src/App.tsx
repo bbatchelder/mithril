@@ -50,6 +50,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { Omnibar } from "@/components/ui/omnibar";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3815,6 +3816,87 @@ function MultiSelectGallery() {
     );
 }
 
+// ─── Omnibar items (same list as Select items) ────────────────────────────
+const OMNIBAR_ITEMS = SELECT_ITEMS;
+
+/**
+ * Omnibar gallery. Renders the Omnibar command-palette overlay OPEN.
+ *
+ * Strategy: Force isOpen=true so the harness can screenshot the portaled panel,
+ * input, and menu items without interaction. Data-compare keys are placed via
+ * the component's data-compare props and useEffect for portaled nodes.
+ *
+ * data-compare keys:
+ *   omnibar-panel        — the elevated panel div (portaled)
+ *   omnibar-input        — the search <input> element inside the InputGroup
+ *   omnibar-menu         — the menu <ul> element
+ *   omnibar-item         — Cherry (index 2, non-active, non-first item)
+ *   omnibar-item-active  — Apple (index 0, active by default — first enabled item)
+ */
+function OmnibarGallery() {
+    const dark = useContext(DarkContext);
+
+    // Stamp data-compare on portaled menu item nodes
+    useEffect(() => {
+        function tag() {
+            // omnibar-input: the <input> element inside the InputGroup
+            const inputEl = document.querySelector<HTMLElement>('[data-compare="omnibar-panel"] input');
+            if (inputEl) inputEl.setAttribute("data-compare", "omnibar-input");
+
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="omnibar-menu"]');
+            if (!menuUl) return;
+
+            // omnibar-item-active: Apple is index 0 (first item, active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "omnibar-item-active");
+            }
+
+            // omnibar-item: Cherry is index 2 (non-active, non-first item)
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "omnibar-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="flex flex-col gap-4 text-foreground">
+            <p className="text-body text-foreground-muted">
+                Omnibar is always rendered open for harness comparison. Click outside or press Esc to close.
+            </p>
+            {/* A placeholder element so the gallery has visible content when the harness takes a screenshot.
+                The actual omnibar panel is portaled (fixed position) and visible above. */}
+            <div className="relative h-[320px] border border-dashed border-gray-4 [border-radius:4px] flex items-center justify-center">
+                <span className="text-body text-foreground-muted">Omnibar panel is portaled above this area</span>
+                <Omnibar<string>
+                    isOpen={true}
+                    onClose={() => {}}
+                    items={OMNIBAR_ITEMS}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={() => {}}
+                    dark={dark}
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3866,6 +3948,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "select", title: "Select", render: () => <SelectGallery /> },
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
+    { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

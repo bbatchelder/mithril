@@ -105,7 +105,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Select** — `select/select/` (Popover + Menu + input)
 - [x] **Suggest** — `select/suggest/`
 - [x] **MultiSelect** — `select/multi-select/` (TagInput-based)
-- [ ] **Omnibar** — `select/omnibar/`
+- [x] **Omnibar** — `select/omnibar/`
 
 ## Phase 6 — Date & time (`@blueprintjs/datetime`)
 
