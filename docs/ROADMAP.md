@@ -109,9 +109,9 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 6 — Date & time (`@blueprintjs/datetime`)
 
-- [ ] **TimePicker** — `datetime/time-picker/`
-- [ ] **DatePicker** — `datetime/date-picker/` (react-day-picker)
-- [ ] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
-- [ ] **DateRangePicker** — `datetime/date-range-picker/`
-- [ ] **DateRangeInput** — `datetime/date-range-input/`
-- [ ] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)
+- [x] **TimePicker** — `datetime/time-picker/`
+- [x] **DatePicker** — `datetime/date-picker/` (react-day-picker)
+- [x] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
+- [x] **DateRangePicker** — `datetime/date-range-picker/`
+- [x] **DateRangeInput** — `datetime/date-range-input/`
+- [x] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)

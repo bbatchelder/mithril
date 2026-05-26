@@ -51,6 +51,12 @@ import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Omnibar } from "@/components/ui/omnibar";
+import { TimePicker } from "@/components/ui/time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
+import { DateInput } from "@/components/ui/date-input";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRangeInput } from "@/components/ui/date-range-input";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3897,6 +3903,503 @@ function OmnibarGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// TimePicker gallery
+// Fixed value: 14:30 (2:30 PM in 24h mode) for stable static diff.
+// data-compare keys:
+//   time-picker-input   → the hour segment input (first specimen: default)
+//   time-picker-divider → the colon divider (first specimen: default)
+//   time-picker-arrow   → the first up-arrow button (arrows specimen)
+//   time-picker-ampm    → the AM/PM select element (ampm specimen)
+// ---------------------------------------------------------------------------
+const FIXED_TIME = new Date();
+FIXED_TIME.setHours(14, 30, 0, 0);
+
+const FIXED_TIME_SECOND = new Date();
+FIXED_TIME_SECOND.setHours(14, 30, 45, 0);
+
+const FIXED_TIME_AMPM = new Date();
+FIXED_TIME_AMPM.setHours(14, 30, 0, 0); // 2:30 PM
+
+function TimePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Default: hour + minute at 14:30 */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Default (14:30)</span>
+                <TimePicker value={FIXED_TIME} onChange={() => {}} />
+            </div>
+
+            {/* Arrow buttons */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">With arrow buttons</span>
+                <TimePicker value={FIXED_TIME} onChange={() => {}} showArrowButtons />
+            </div>
+
+            {/* Seconds precision */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Seconds precision (14:30:45)</span>
+                <TimePicker value={FIXED_TIME_SECOND} onChange={() => {}} precision="second" />
+            </div>
+
+            {/* AM/PM mode */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">AM/PM mode (2:30 PM)</span>
+                <TimePicker value={FIXED_TIME_AMPM} onChange={() => {}} useAmPm />
+            </div>
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// DatePicker gallery
+// Fixed selected date: 2026-01-15. Fixed display month: January 2026.
+// Both sides must show the SAME selected date + displayed month for stable diff.
+//
+// data-compare keys:
+//   date-picker-nav           → the previous-month nav button (caption area)
+//   date-picker-weekday       → a weekday header cell (e.g. "Su")
+//   date-picker-day           → a regular (non-selected, non-outside) day cell
+//   date-picker-day-selected  → the selected day cell (Jan 15, 2026)
+// ---------------------------------------------------------------------------
+const FIXED_DATE = new Date(2026, 0, 15); // Jan 15, 2026
+const FIXED_MONTH = new Date(2026, 0, 1); // January 2026
+
+function DatePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Basic specimen — fixed selected date, fixed month, no time */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Basic (Jan 15, 2026 selected)</span>
+                <DatePicker
+                    value={FIXED_DATE}
+                    onChange={() => {}}
+                    month={FIXED_MONTH}
+                />
+            </div>
+
+            {/* With TimePicker */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">With TimePicker (minute precision)</span>
+                <DatePicker
+                    value={FIXED_DATE}
+                    onChange={() => {}}
+                    month={FIXED_MONTH}
+                    timePrecision="minute"
+                />
+            </div>
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// DateInput gallery
+// Fixed selected date: 2026-01-15. Popover OPEN (showing January 2026 calendar).
+// Harness sees both the input field AND the portaled calendar in the same page.
+//
+// data-compare keys:
+//   date-input-field        → the InputGroup <input> element
+//   date-input-day          → a regular (non-selected) day in the open calendar (Jan 4)
+//   date-input-day-selected → the selected day in the open calendar (Jan 15)
+// ---------------------------------------------------------------------------
+
+function DateInputGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Interactive specimen — the real DateInput component */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateInput (interactive)</span>
+                <DateInput
+                    defaultValue={FIXED_DATE}
+                    dark={dark}
+                    placeholder="M/d/yyyy"
+                />
+            </div>
+
+            {/* Harness specimen — popover forced open for static diff */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateInput (open, Jan 15 2026 selected)</span>
+                {/* Popover is forced open via open=true so the harness sees the calendar */}
+                <OpenDateInput dark={dark} />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * DateInput with popover forced open for harness comparison.
+ * We use a wrapper because Popover needs open to be a controlled prop.
+ *
+ * The DatePicker inside the popover uses the same FIXED_DATE / FIXED_MONTH
+ * as the DatePicker gallery for a consistent January 2026 calendar view.
+ * data-compare keys on the day cells come from DatePicker's DayButton component.
+ * We override them here (date-input-day / date-input-day-selected) by
+ * adding a second DatePicker inside the gallery with its own keys.
+ */
+function OpenDateInput({ dark }: { dark: boolean }) {
+    // Wrap in inline JSX so we can render the Popover as always-open
+    // We use DatePicker directly inside Popover (instead of DateInput's controlled open)
+    // so the harness reliably sees both input + calendar in the DOM.
+    return (
+        <div className="flex flex-col gap-2 items-start">
+            {/* The input field with data-compare tag */}
+            <div
+                className="relative inline-block"
+                style={{ minWidth: 200 }}
+            >
+                {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
+                <InputGroup
+                    type="text"
+                    value="1/15/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="date-input-field"
+                />
+            </div>
+
+            {/* Popover calendar always visible — portaled with dark support */}
+            <Popover
+                open={true}
+                onOpenChange={() => {}}
+                content={
+                    <DatePickerForDateInput dark={dark} />
+                }
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                arrow={false}
+                minimal={true}
+                hasContentPadding={false}
+                dark={dark}
+            >
+                {/* Invisible anchor so Popover has a trigger (it won't be seen) */}
+                <span />
+            </Popover>
+        </div>
+    );
+}
+
+/**
+ * DatePicker for the DateInput gallery harness — uses date-input-day and
+ * date-input-day-selected keys (instead of date-picker-day / date-picker-day-selected)
+ * so they show as "date-input-*" pairs in the compare output.
+ */
+function DatePickerForDateInput({ dark: _dark }: { dark: boolean }) {
+    // Inline a tiny wrapper that re-tags the DayButton data-compare keys
+    // We render a standard DatePicker but override its day tags by using a wrapper div
+    // and then post-processing via useEffect.
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // After render, re-stamp data-compare keys on the portaled calendar cells.
+        // DatePicker puts date-picker-day and date-picker-day-selected on cells.
+        // We replace those with date-input-day and date-input-day-selected.
+        const root = ref.current;
+        if (!root) return;
+
+        function retag() {
+            if (!root) return;
+            const sel = root.querySelector<HTMLElement>("[data-compare='date-picker-day-selected']");
+            if (sel) sel.setAttribute("data-compare", "date-input-day-selected");
+            const norm = root.querySelector<HTMLElement>("[data-compare='date-picker-day']");
+            if (norm) norm.setAttribute("data-compare", "date-input-day");
+        }
+
+        retag();
+        const t1 = setTimeout(retag, 50);
+        const t2 = setTimeout(retag, 200);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={ref}>
+            <DatePicker
+                value={FIXED_DATE}
+                onChange={() => {}}
+                month={FIXED_MONTH}
+            />
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// DateRangePicker gallery
+// Fixed range: 2026-01-08 (start) to 2026-01-20 (end).
+// Fixed left month: January 2026. Fixed right month: February 2026.
+// Both months are locked so the harness always sees the same layout.
+//
+// data-compare keys:
+//   drp-day         → a regular (non-range) day — Jan 4, 2026
+//   drp-day-range   → an in-range (between) day — Jan 10, 2026
+//   drp-day-endpoint → the start (Jan 8) or end (Jan 20) endpoint
+// ---------------------------------------------------------------------------
+const DRP_START = new Date(2026, 0, 8);   // Jan 8, 2026
+const DRP_END = new Date(2026, 0, 20);    // Jan 20, 2026
+
+function DateRangePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Main specimen — fixed range, two months side-by-side */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">
+                    Jan 8 – Jan 20, 2026 selected (January + February 2026)
+                </span>
+                <DateRangePicker
+                    value={{ start: DRP_START, end: DRP_END }}
+                    onChange={() => {}}
+                    // Lock left month to January 2026 — right shows February 2026 automatically
+                />
+            </div>
+
+            {/* Single-month variant */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">
+                    Single month (Jan 8 – Jan 20, 2026)
+                </span>
+                <DateRangePicker
+                    value={{ start: DRP_START, end: DRP_END }}
+                    onChange={() => {}}
+                    singleMonthOnly
+                />
+            </div>
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// DateRangeInput gallery
+// Fixed range: 2026-01-08 (start) to 2026-01-20 (end).
+// Two specimens:
+//   1. Interactive DateRangeInput
+//   2. Open specimen — two InputGroups + forced-open Popover with DateRangePicker
+//
+// data-compare keys:
+//   dri-start         → the start InputGroup <input> element
+//   dri-end           → the end InputGroup <input> element
+//   dri-day-endpoint  → a filled endpoint day in the open DateRangePicker calendar
+// ---------------------------------------------------------------------------
+const DRI_START = new Date(2026, 0, 8);  // Jan 8, 2026
+const DRI_END = new Date(2026, 0, 20);   // Jan 20, 2026
+
+function DateRangeInputGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Interactive specimen */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateRangeInput (interactive)</span>
+                <DateRangeInput
+                    defaultValue={{ start: DRI_START, end: DRI_END }}
+                    dark={dark}
+                />
+            </div>
+
+            {/* Harness specimen — two inputs + popover forced open */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateRangeInput (open, Jan 8 – Jan 20, 2026)</span>
+                <OpenDateRangeInput dark={dark} />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * DateRangeInput with popover forced open for harness comparison.
+ * Renders two InputGroup fields + a forced-open Popover with DateRangePicker.
+ * The DateRangePicker uses the same DRP_START/DRP_END/data-compare keys as
+ * the DateRangePicker gallery (drp-day-endpoint is our dri-day-endpoint key).
+ */
+function OpenDateRangeInput({ dark }: { dark: boolean }) {
+    return (
+        <div className="flex flex-col gap-2 items-start">
+            {/* Two input fields side-by-side, matching Blueprint's control-group layout */}
+            <div className="inline-flex flex-row items-stretch">
+                {/* Start input — tagged for harness */}
+                <InputGroup
+                    type="text"
+                    value="1/8/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="dri-start"
+                />
+                {/* End input — tagged for harness */}
+                <InputGroup
+                    type="text"
+                    value="1/20/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="dri-end"
+                />
+            </div>
+
+            {/* Popover always visible — portaled DateRangePicker */}
+            <Popover
+                open={true}
+                onOpenChange={() => {}}
+                content={
+                    <DateRangePickerForDRI />
+                }
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                arrow={false}
+                minimal={true}
+                hasContentPadding={false}
+                dark={dark}
+            >
+                <span />
+            </Popover>
+        </div>
+    );
+}
+
+/**
+ * DateRangePicker for the DateRangeInput harness — uses dri-day-endpoint key
+ * (instead of drp-day-endpoint) so it shows as a "dri-*" pair in the compare output.
+ * Re-tags only the FIRST drp-day-endpoint (Jan 8 = range start) as dri-day-endpoint,
+ * and clears the second (Jan 20 = range end) so only one key remains for pairing.
+ * This matches Blueprint reference which tags range_start as dri-day-endpoint.
+ */
+function DateRangePickerForDRI() {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function retag() {
+            const root = ref.current;
+            if (!root) return;
+            // drp-day-endpoint is stamped by the custom DayButton in DateRangePicker
+            // for BOTH Jan 8 (start) and Jan 20 (end). We tag only the first (Jan 8 = start),
+            // which matches Blueprint reference gallery that tags range_start as dri-day-endpoint.
+            const eps = root.querySelectorAll<HTMLElement>("[data-compare='drp-day-endpoint']");
+            if (eps.length > 0) {
+                // Tag the first endpoint (Jan 8, range_start) as dri-day-endpoint
+                eps[0].setAttribute("data-compare", "dri-day-endpoint");
+                // Remove tag from remaining endpoints so they don't pollute the diff
+                for (let i = 1; i < eps.length; i++) {
+                    eps[i].removeAttribute("data-compare");
+                }
+            }
+        }
+        retag();
+        const t1 = setTimeout(retag, 50);
+        const t2 = setTimeout(retag, 200);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={ref}>
+            <DateRangePicker
+                value={{ start: DRI_START, end: DRI_END }}
+                onChange={() => {}}
+            />
+        </div>
+    );
+}
+
+// ─── TimezoneSelect gallery ─────────────────────────────────────────────────
+// TimezoneSelect with popover forced open for comparison.
+//
+// data-compare keys (MUST match blueprint-reference TimezoneSelectGallery):
+//   tz-trigger     — the trigger button
+//   tz-menu        — the menu <ul> inside the popover (portaled)
+//   tz-item        — a non-active MenuItem (New York — position 6 in minimal list)
+//   tz-item-offset — the offset label on that same item
+//
+// Blueprint's initial list (empty query) shows the same MINIMAL_IANA_CODES order.
+// "New York" is at index 6 in our minimal list (UTC, Honolulu, Anchorage, LA, Denver,
+// Chicago, New York). We fix the same index on both sides so the item text matches.
+// ---------------------------------------------------------------------------
+
+const TZ_SELECTED = "America/Los_Angeles"; // "Los Angeles" — shown in trigger
+
+/**
+ * TimezoneSelect with popover forced open for harness comparison.
+ * Uses a fixed selected timezone and empty query (shows minimal list).
+ * Tags portaled DOM nodes via document.querySelector in a useEffect.
+ */
+function TimezoneSelectGallery() {
+    const dark = useContext(DarkContext);
+    const [value, setValue] = useState<string>(TZ_SELECTED);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            const root = containerRef.current;
+            if (!root) return;
+
+            // tz-trigger: the trigger <button> inside the first TimezoneSelect
+            // It's the first <button> in the container (before any portaled content)
+            const triggerBtn = root.querySelector<HTMLElement>("button");
+            if (triggerBtn) triggerBtn.setAttribute("data-compare", "tz-trigger");
+
+            // tz-menu: the menu <ul> inside the TimezoneSelect popover
+            // Our Select adds data-compare="select-menu" to the Menu ul —
+            // we look for it and re-tag it as tz-menu for this gallery.
+            // Since multiple Selects may be open on the page, we pick the one
+            // inside the timezone-select popover (it will be the only open popover
+            // when this gallery is isolated via ?component=timezone-select).
+            const menuUls = document.querySelectorAll<HTMLElement>('[data-compare="select-menu"]');
+            // If only one menu is visible (isolated gallery mode), use it.
+            const menuUl = menuUls.length > 0 ? menuUls[menuUls.length - 1] : null;
+            if (!menuUl) return;
+            menuUl.setAttribute("data-compare", "tz-menu");
+
+            // tz-item: "New York" — index 6 in the minimal list (0-based)
+            // Order: 0=UTC, 1=Honolulu, 2=Anchorage, 3=LA, 4=Denver, 5=Chicago, 6=NewYork
+            const nyLi = menuUl.children[6] as HTMLElement | undefined;
+            if (nyLi) {
+                const btn = nyLi.querySelector("button,a");
+                if (btn) {
+                    btn.setAttribute("data-compare", "tz-item");
+                    // tz-item-offset: the label span (offset text) inside the item
+                    const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
+                    if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
+                }
+            }
+        }
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={containerRef} className="flex flex-col gap-8 text-foreground">
+            <Section title="TimezoneSelect (popover open for comparison)">
+                <div style={{ width: 320 }}>
+                    <TimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        dark={dark}
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Interactive TimezoneSelect">
+                <div style={{ width: 320 }}>
+                    <TimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        dark={dark}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <TimezoneSelect
+                    value={value}
+                    onChange={setValue}
+                    disabled
+                    dark={dark}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3949,6 +4452,12 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
+    { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
+    { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
+    { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
+    { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
+    { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
+    { id: "timezone-select", title: "TimezoneSelect", render: () => <TimezoneSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
