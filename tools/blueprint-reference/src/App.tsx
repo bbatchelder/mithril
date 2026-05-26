@@ -3534,61 +3534,112 @@ function LinkGallery() {
  * Mirrors analyst-ui SliderGallery exactly — same specimens, same data-compare keys.
  * Uses Blueprint's Slider component directly (BpSlider).
  *
+ * Blueprint does not expose data-* forwarding on Slider, so we use a wrapper div +
+ * useEffect + querySelector to stamp data-compare on Blueprint's internal DOM nodes:
+ *   .bp6-slider-track          → slider-track
+ *   .bp6-slider-progress       → slider-progress (the intent-colored fill)
+ *   .bp6-slider-handle         → slider-handle (the interactive handle)
+ *   .bp6-slider-axis .bp6-slider-label:first-child → slider-axis-label
+ *   .bp6-slider-handle .bp6-slider-label           → slider-handle-label
+ *
  * data-compare keys (must match analyst-ui SliderGallery exactly):
- *   slider-default   — primary intent, value=5, labelStepSize=5
- *   slider-success   — success intent, value=6, labelStepSize=5
- *   slider-disabled  — disabled, value=3, labelStepSize=5
+ *   slider-default      — primary intent, value=5, labelStepSize=5
+ *   slider-success      — success intent, value=6, labelStepSize=5
+ *   slider-disabled     — disabled, value=3, labelStepSize=5
+ *   slider-track        — the track rail
+ *   slider-progress     — the fill segment with intent color
+ *   slider-handle       — the draggable handle knob
+ *   slider-axis-label   — first axis tick label (plain text, no background)
+ *   slider-handle-label — handle value badge (dark tooltip pill below handle)
  */
+function BpSliderWithInternalCompare({
+    containerCompareKey,
+    tagInternals,
+    ...props
+}: React.ComponentProps<typeof BpSlider> & {
+    containerCompareKey: string;
+    /** If true, stamp slider-track/progress/handle/axis-label/handle-label on this instance */
+    tagInternals?: boolean;
+}) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!wrapperRef.current) return;
+        if (tagInternals) {
+            const track = wrapperRef.current.querySelector(".bp6-slider-track");
+            if (track) track.setAttribute("data-compare", "slider-track");
+
+            // .bp6-slider-progress with intent class = the filled segment
+            const progress = wrapperRef.current.querySelector(".bp6-slider-progress.bp6-intent-primary, .bp6-slider-progress.bp6-intent-success, .bp6-slider-progress.bp6-intent-warning, .bp6-slider-progress.bp6-intent-danger");
+            if (progress) progress.setAttribute("data-compare", "slider-progress");
+
+            // The interactive handle (first .bp6-slider-handle)
+            const handle = wrapperRef.current.querySelector(".bp6-slider-handle");
+            if (handle) handle.setAttribute("data-compare", "slider-handle");
+
+            // Axis tick label — first .bp6-slider-label inside .bp6-slider-axis
+            const axisLabel = wrapperRef.current.querySelector(".bp6-slider-axis .bp6-slider-label");
+            if (axisLabel) axisLabel.setAttribute("data-compare", "slider-axis-label");
+
+            // Handle value badge — .bp6-slider-label inside .bp6-slider-handle
+            const handleLabel = wrapperRef.current.querySelector(".bp6-slider-handle .bp6-slider-label");
+            if (handleLabel) handleLabel.setAttribute("data-compare", "slider-handle-label");
+        }
+    });
+    return (
+        <div ref={wrapperRef} style={{ width: 320 }} data-compare={containerCompareKey}>
+            <BpSlider {...props} />
+        </div>
+    );
+}
+
 function SliderGallery() {
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
             {/* Default — primary intent, value=5 */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default (primary, value=5)</p>
-                <div style={{ width: 320 }} data-compare="slider-default">
-                    <BpSlider
-                        min={0}
-                        max={10}
-                        stepSize={1}
-                        value={5}
-                        intent="primary"
-                        labelStepSize={5}
-                        onChange={() => {}}
-                    />
-                </div>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-default"
+                    tagInternals={true}
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={5}
+                    intent="primary"
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
             </div>
 
             {/* Success intent */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Success intent (value=6)</p>
-                <div style={{ width: 320 }} data-compare="slider-success">
-                    <BpSlider
-                        min={0}
-                        max={10}
-                        stepSize={1}
-                        value={6}
-                        intent="success"
-                        labelStepSize={5}
-                        onChange={() => {}}
-                    />
-                </div>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-success"
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={6}
+                    intent="success"
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
             </div>
 
             {/* Disabled */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Disabled (value=3)</p>
-                <div style={{ width: 320 }} data-compare="slider-disabled">
-                    <BpSlider
-                        min={0}
-                        max={10}
-                        stepSize={1}
-                        value={3}
-                        intent="primary"
-                        disabled
-                        labelStepSize={5}
-                        onChange={() => {}}
-                    />
-                </div>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-disabled"
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={3}
+                    intent="primary"
+                    disabled
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
             </div>
         </div>
     );

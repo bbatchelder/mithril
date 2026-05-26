@@ -3235,10 +3235,11 @@ function LinkGallery() {
  *   slider-default      — horizontal slider at value=5, intent=primary, min=0 max=10 step=1
  *   slider-success      — success intent slider at value=6
  *   slider-disabled     — disabled slider at value=3
- *   slider-track        — the track element (via data-compare on track wrapper)
- *   slider-progress     — the progress fill element (via data-compare on fill div)
- *   slider-handle       — the handle element (via data-compare on RadixSlider.Thumb)
- *   slider-label        — first tick label (via data-compare on first label div)
+ *   slider-track        — the track rail (RadixSlider.Track)
+ *   slider-progress     — the progress fill element (fill div inside Track)
+ *   slider-handle       — the handle knob (RadixSlider.Thumb)
+ *   slider-axis-label   — first axis tick label (plain text, no bg)
+ *   slider-handle-label — handle value badge (dark tooltip pill below handle)
  */
 function SliderGallery() {
     const [val, setVal] = useState(5);
@@ -3257,6 +3258,7 @@ function SliderGallery() {
                         onChange={setVal}
                         intent="primary"
                         labelStepSize={5}
+                        _tagInternals
                     />
                 </div>
             </div>

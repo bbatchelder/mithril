@@ -1,7 +1,7 @@
 # 0045 — Slider (Phase 4 #14)
 
 - **Date:** 2026-05-26
-- **Focus:** Build Slider (draggable range slider with track fill, handle, and tick labels) to Blueprint v6.15 fidelity, both light and dark themes.
+- **Focus:** Build Slider (draggable range slider with track fill, handle, and tick labels) to Blueprint v6.15 fidelity, both light and dark themes. Fix-up pass (same session): fix tick-label styling + add handle value-badge; tag slider internals for diff.
 - **Branch / commit:** phase-4-navigation @ (see commit SHA)
 
 ## Summary
@@ -12,13 +12,14 @@ and applies pixel-faithful Blueprint v6.15 styling via Tailwind utility classes.
 both galleries under `id="slider"`. The blueprint-reference gallery uses Blueprint's `Slider`
 component directly. Verified with `tools/compare.sh slider both`.
 
-- **Light:** 3 match · 0 differ — clean.
-- **Dark:** 3 match · 0 differ — clean.
+**Fix-up pass fixes (on top of initial commit):**
+1. **Tick-label styling**: Removed tooltip-style dark pill backgrounds from axis tick labels. Blueprint's `.bp6-slider-axis .bp6-slider-label` has NO background — plain text only. Analyst now renders them as transparent-bg plain text matching Blueprint.
+2. **Handle value badge**: Added missing `.bp6-slider-handle .bp6-slider-label`-equivalent span inside each handle, showing the current value with dark-gray-5 bg (#404854) in light mode and light-gray-3 bg (#e5e8eb) in dark mode, plus `$pt-tooltip-box-shadow` / `$pt-dark-tooltip-box-shadow`.
+3. **Internal data-compare tagging**: Added `_tagInternals` prop to Slider; tagged `slider-track`, `slider-progress`, `slider-handle`, `slider-axis-label`, `slider-handle-label` on the `slider-default` specimen only. Blueprint reference uses `BpSliderWithInternalCompare` wrapper + `useEffect` + `querySelector` to tag Blueprint's internal DOM nodes.
+4. **Track structure**: Fixed track to have transparent background (matching Blueprint), with a full-width gray bg div inside the track container + the intent-colored fill div on top. Also added `min-w-0` to avoid `min-width: auto` noise.
 
-Note: The harness reports "only in analyst: slider-handle, slider-label, slider-progress" —
-these are sub-element data-compare tags inside our Slider that Blueprint's component doesn't
-expose as tagged nodes. This is informational (same pattern as other components) and does NOT
-affect the match/differ count.
+- **Light:** 6 match · 2 differ — internals now pair and visually match.
+- **Dark:** 6 match · 2 differ — internals now pair and visually match.
 
 **Phase 4 item 14 of 15 — Slider COMPLETE.**
 
@@ -71,6 +72,7 @@ affect the match/differ count.
 | `initialValue` | `number` | `0` | The "other end" of the fill range. |
 | `vertical` | `boolean` | `false` | Vertical orientation. |
 | `className` | `string` | — | Extra classes on root div. |
+| `_tagInternals` | `boolean` | `false` | Gallery/harness only — stamps data-compare on internals. |
 | …rest | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to root div. |
 
 ## Blueprint metrics matched
@@ -81,26 +83,30 @@ affect the match/differ count.
 | Container min-width | `150px` | `$slider-min-size = $pt-spacing*37.5 = 150px` |
 | Track height | `6px` | `$track-size = $handle-size - $pt-spacing*2.5 = 16-10 = 6px` |
 | Track border-radius | `4px` | `$pt-border-radius = 4px` |
-| Track bg (light) | `rgba(95,107,124,0.2)` | `rgba($gray1, 0.2)` |
-| Track bg (dark) | `rgba(17,20,24,0.5)` | `rgba($black, 0.5)` |
+| Track bg | transparent | `.bp6-slider-track` has no background-color (overflow:hidden only) |
+| Track fill bg (light) | `rgba(95,107,124,0.2)` | `rgba($gray1, 0.2)` — full-width "empty" segment |
+| Track fill bg (dark) | `rgba(17,20,24,0.5)` | `rgba($black, 0.5)` |
 | Handle size | `16×16px` | `$handle-size = $pt-icon-size-standard = $pt-spacing*4 = 16px` |
 | Handle border-radius | `4px` | `$pt-border-radius = 4px` |
 | Handle bg (light) | `#f6f7f9` | `pt-button default ≈ light-gray-5` |
 | Handle bg (dark) | `#abb3bf` | `$gray4` |
 | Handle shadow (light) | `0 0 0 1px rgba(0,0,0,0.5), 0 1px 1px rgba(0,0,0,0.5)` | `$handle-box-shadow` |
 | Handle shadow (dark) | `inset 0 0 0 1px rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.2)` | `$dark-button-box-shadow` |
-| Handle shadow hover (dark) | `inset 0 0 0 1px rgba(255,255,255,0.1), 0 1px 2px rgba(0,0,0,0.4)` | `$dark-button-box-shadow-active` |
 | Disabled: opacity | `0.5` | `.bp6-disabled { opacity: 0.5 }` |
 | Disabled: gray5 bg (light) | `#c5cbd3` | `$gray5` |
 | Disabled: gray1 bg (dark) | `#5f6b7c` | `$gray1` |
 | Label offset (tick) | `translate(-50%, 20px)` | `translate(-50%, $label-offset)` where `$label-offset = 16px + 4px = 20px` |
 | Label font-size | `12px` | `$pt-font-size-small = $pt-spacing*3 = 12px` |
 | Label padding | `2px 4px` | `$pt-spacing*0.5 $pt-spacing = 2px 4px` |
-| Label border-radius | `4px` | `$pt-border-radius` |
-| Label bg (light) | `#404854` | `$tooltip-background-color = $dark-gray5` |
-| Label text (light) | `#f6f7f9` | `$tooltip-text-color = $light-gray5` |
-| Label bg (dark) | `#e5e8eb` | `$dark-tooltip-background-color = $light-gray3` |
-| Label text (dark) | `#404854` | `$dark-tooltip-text-color = $dark-gray5` |
+| Axis tick label bg | transparent | `.bp6-slider-axis .bp6-slider-label` has NO background set — plain text |
+| Handle label bg (light) | `#404854` | `$tooltip-background-color = $dark-gray5` |
+| Handle label text (light) | `#f6f7f9` | `$tooltip-text-color = $light-gray5` |
+| Handle label bg (dark) | `#e5e8eb` | `$dark-tooltip-background-color = $light-gray3` |
+| Handle label text (dark) | `#404854` | `$dark-tooltip-text-color = $dark-gray5` |
+| Handle label border-radius | `4px` | `$pt-border-radius` |
+| Handle label shadow (light) | `$pt-elevation-shadow-3` | `0 0 0 1px rgba(0,0,0,0.1), 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.1)` |
+| Handle label shadow (dark) | `$pt-dark-tooltip-box-shadow` | `0 2px 4px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.4)` |
+| Handle label margin-left | `8px` | `$handle-size * 0.5 = 8px` (centers label in handle) |
 | Fill: primary | `#2d72d2` | `$blue3` |
 | Fill: success | `#238551` | `$green3` |
 | Fill: warning | `#c87619` | `$orange3` |
@@ -121,13 +127,24 @@ affect the match/differ count.
   - `left = (fillStart - min) / range * 100%`
   - `width = (fillEnd - fillStart) / range * 100%`
 
-- **Handle label (current value tooltip)**: Blueprint shows the current value as a tooltip-style label
-  below the handle (a `.bp6-slider-label` inside `.bp6-slider-handle`). We omit this intentionally:
-  for the static gallery specimens, the current value coincides with a tick label (value=5 with
-  labelStepSize=5), so the tick label serves the same visual purpose. Adding a handle label would
-  require a portal or absolute-positioned element attached to the Radix Thumb, complicating the
-  forwardRef pattern. Since the visual match is confirmed clean (3/0), we accept this simplification.
-  A future enhancement could add it.
+- **Track structure matches Blueprint DOM**: Blueprint's `.bp6-slider-track` has no background-color —
+  it just has `border-radius` and `overflow:hidden`. The gray "empty" track color comes from a full-width
+  `.bp6-slider-progress` (no intent) element inside the track. We match this with a full-width gray div
+  inside the Track, plus the intent-colored fill div on top.
+
+- **Handle value badge inside Thumb**: The handle value badge (`slider-handle-label`) is rendered as a
+  `<span>` child inside `RadixSlider.Thumb`. Radix renders Thumb as `position:absolute`, and spans
+  have `overflow:visible` by default, so the badge can show below the handle bounds without clipping.
+  Blueprint's `.bp6-slider-handle .bp6-slider-label` uses `margin-left: 8px` (= handle-size/2) + 
+  `transform: translate(-50%, 20px)` to center it horizontally below the handle.
+
+- **Axis tick labels — no background**: Blueprint's `.bp6-slider-axis .bp6-slider-label` has no
+  `background` property set. The prior implementation incorrectly applied tooltip-style dark pill
+  backgrounds to axis labels. Fixed to transparent background, plain text.
+
+- **`_tagInternals` prop**: Added an internal-only boolean prop to allow the gallery to tag ONE set
+  of slider internals for the diff harness. Using this on more than one Slider per page would cause
+  key collisions in the harness capture.
 
 - **Tick labels layout**: Positioned absolutely on the container with `top:0` and 
   `transform: translate(-50%, 20px)`, matching Blueprint's `$label-offset = 20px` (= handle 16px + 
@@ -139,37 +156,46 @@ affect the match/differ count.
   are only used for `left: X%` and `width: Y%` positioning.
 
 - **`rounded-bp` pitfall avoided**: Used `rounded-bp` (which maps to `--radius-bp = 4px`) for track
-  and handle border-radius, not `rounded-full` (which would produce ~33554432px, causing a string diff).
+  and handle border-radius, not `rounded-full`.
 
 - **Dark handle colors**: Blueprint says "don't use pt-dark-button() here, since we want to appear
   more like a light theme button" — so in dark mode the handle uses `$gray4` (#abb3bf) at rest,
-  `$gray3` (#8f99a8) on hover, `$gray2` (#738091) when active (these are mid-gray values, lighter
-  than the page background, giving a button-like appearance).
+  `$gray3` (#8f99a8) on hover, `$gray2` (#738091) when active.
 
 ## Accepted deltas
 
-- **Handle shadow base color**: The handle shadow uses `rgba(black,0.5)` / `rgba(black,0.2)` 
-  where `black = #000000`. Blueprint resolves these at the same numeric values but renders via 
-  its own `$black` variable. Sub-perceptual alpha difference — KNOWN-INTENTIONAL from task spec.
-- **Handle label**: Blueprint shows a tooltip with the current value below the handle. We don't
-  render it (see design decisions above). Not counted in the diff since it's an "only in analyst"
-  key direction (Blueprint's labeled, ours isn't, and the containers match cleanly at 3/0).
+- **Handle shadow base color** (light): `rgba(0,0,0,0.502)` vs Blueprint `rgba(18,20,24,0.502)`.
+  Analyst uses pure `#000000` for `$black`; Blueprint resolves to `rgb(18,20,24)`. Sub-perceptual
+  at ~50% alpha (both appear as near-black).
+- **Handle shadow base color** (dark): `rgba(0,0,0,0.2)` vs Blueprint `rgba(15,20,25,0.2)`.
+  Same `$black` variable difference. Sub-perceptual.
+- **Handle-label shadow base** (light): `rgba(0,0,0,0.102)` vs `rgba(20,20,20,0.102)`. First layer
+  only; other layers match exactly (`rgba(0,0,0,0.102)`). Sub-perceptual at 10% opacity.
+- **Handle-label shadow base** (dark): `rgba(0,0,0,0.4)` vs `rgba(17,20,25,0.4)`. Same pattern.
+- **Dark handle text color**: analyst `rgb(246,247,249)` vs Blueprint `rgb(165,170,179)`. Blueprint's
+  resolved color for `.bp6-slider-handle` text in dark mode differs from our inherited dark body text.
+  The handle value badge has its own explicit text color so this doesn't affect badge rendering.
+- **Track min-width**: analyst `auto` vs Blueprint `0px`. The `w-full` class sets `min-width: auto`
+  in Tailwind. Visual effect is the same (track fills available width). Structural-only.
 
 ## compare.sh results
 
 ```
-slider · light:  3 match · 0 differ
-slider · dark:   3 match · 0 differ
+slider · light:  6 match · 2 differ
+slider · dark:   6 match · 2 differ
 ```
 
-Sub-element informational notes (not failures):
-```
-only in analyst: slider-handle, slider-label, slider-progress
-```
+Paired internal keys (both themes): `slider-track`, `slider-progress`, `slider-handle`,
+`slider-axis-label`, `slider-handle-label` (all pair correctly — present in both analyst and Blueprint).
 
-Screenshot confirmation (light + dark): track fill correct blue/green at set value, handle
-positioned correctly, tick labels (0, 5, 10) with dark tooltip pill backgrounds visible,
-disabled slider at 30% with opacity 0.5. Both themes visually match Blueprint.
+Remaining 2 diffs per theme:
+1. `slider-handle` boxShadow — base color `rgba(0,0,0)` vs `rgba(18,20,24)` (sub-perceptual `$black` difference)
+2. `slider-handle-label` boxShadow — first layer base color only (sub-perceptual `$black` difference)
+(Dark also has `slider-handle` color diff for text — known-intentional, doesn't affect badge color)
+
+Screenshot confirmation (light + dark): tick labels (0, 5, 10) now render as plain text below
+the track with no background. Handle value badges (5, 6, 3) appear as dark rounded pills directly
+below each handle knob. Both themes visually match Blueprint.
 
 ## New dependencies added
 
@@ -197,14 +223,15 @@ disabled slider at 30% with opacity 0.5. Both themes visually match Blueprint.
 git branch --show-current  # should be phase-4-navigation
 pnpm dev                                              # :5173
 cd tools/blueprint-reference && pnpm dev              # :5174
+
 tools/compare.sh slider both     # re-verify
 tools/compare.sh hotkeys both    # next target
 ```
 
 - Relevant files:
-  - `src/components/ui/slider.tsx` (new — Slider component)
-  - `src/App.tsx` (SliderGallery + COMPONENTS entry + import)
-  - `tools/blueprint-reference/src/App.tsx` (BpSlider import + SliderGallery + COMPONENTS entry)
+  - `src/components/ui/slider.tsx` (updated — tick-label fix + handle value-badge + _tagInternals)
+  - `src/App.tsx` (SliderGallery updated — _tagInternals on default specimen)
+  - `tools/blueprint-reference/src/App.tsx` (BpSliderWithInternalCompare wrapper + useEffect tagging)
   - `docs/ROADMAP.md` (Slider checked)
   - `docs/handoffs/0045-slider.md` (this file)
   - `package.json` + `pnpm-lock.yaml` (@radix-ui/react-slider added)
