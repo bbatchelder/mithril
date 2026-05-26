@@ -1,4 +1,5 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3720,6 +3721,613 @@ function HotkeysGallery() {
     );
 }
 
+/**
+ * Blueprint reference for TagInput.
+ *
+ * Uses Blueprint's TagInput component with identical values/placeholder to analyst-ui.
+ * data-compare keys must match analyst-ui TagInputGallery exactly:
+ *   tag-input-container  — the main .bp6-tag-input container box
+ *   tag-input-tag        — the first Tag chip inside the container
+ *   tag-input-ghost      — the ghost input (.bp6-input-ghost)
+ *
+ * Blueprint does not directly forward data-* to the internal tag or ghost input,
+ * so we use a wrapper div + useEffect + querySelector to stamp data-compare.
+ */
+function TagInputGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            if (!containerRef.current) return;
+            // Tag the container (.bp6-tag-input) — Blueprint renders it as the root div
+            const container = containerRef.current.querySelector(".bp6-tag-input");
+            if (container) container.setAttribute("data-compare", "tag-input-container");
+
+            // Tag the first Tag chip
+            const firstTag = containerRef.current.querySelector(".bp6-tag");
+            if (firstTag) firstTag.setAttribute("data-compare", "tag-input-tag");
+
+            // Tag the ghost input
+            const ghostInput = containerRef.current.querySelector(".bp6-input-ghost");
+            if (ghostInput) ghostInput.setAttribute("data-compare", "tag-input-ghost");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Default (pre-populated)">
+                <div style={{ width: 400 }} ref={containerRef}>
+                    <BpTagInput
+                        values={["apple", "banana", "cherry"]}
+                        onChange={() => {}}
+                        placeholder="Add a tag…"
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["react", "typescript"]}
+                        onChange={() => {}}
+                        placeholder="Add a tag…"
+                        large={true}
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Danger intent + fill">
+                <BpTagInput
+                    values={["error", "warning"]}
+                    onChange={() => {}}
+                    placeholder="Add a tag…"
+                    intent="danger"
+                    fill={true}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["locked", "read-only"]}
+                        onChange={() => {}}
+                        placeholder="Disabled"
+                        disabled={true}
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="With left icon">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["design", "ui", "ux"]}
+                        onChange={() => {}}
+                        placeholder="Tags…"
+                        leftIcon="tag"
+                        fill={true}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Select items (same list as analyst-ui SelectGallery) ──────────────────
+const SELECT_ITEMS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape"];
+const SELECT_SELECTED = "Cherry";
+
+/**
+ * Blueprint reference for Select. Uses @blueprintjs/select's Select<T>.
+ *
+ * Strategy: Control the popover OPEN so the harness can screenshot the filter
+ * input and menu items without interaction. We use popoverProps={{ isOpen: true }}
+ * plus useEffect to stamp data-compare on portaled DOM nodes.
+ *
+ * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled menu renders in dark mode (matching our portal dark-mode fix).
+ *
+ * data-compare keys (MUST match analyst-ui SelectGallery):
+ *   select-trigger       — the trigger Button element
+ *   select-filter        — the filter InputGroup's <input> element (portaled)
+ *   select-menu          — the menu <ul> element inside the popover (portaled)
+ *   select-item          — Cherry (selected, non-active, 3rd item in filtered list)
+ *   select-item-active   — Apple (first item, active by default)
+ */
+function SelectGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [selected, setSelected] = useState<string | null>(SELECT_SELECTED);
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // select-menu: Blueprint renders the menu as a <ul role="listbox"> inside the popover
+            const menuUl = document.querySelector<HTMLElement>("ul.bp6-menu[role='listbox']");
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "select-menu");
+
+                // select-item-active: Apple is index 0 (first item, active by default)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "select-item-active");
+                }
+
+                // select-item: Cherry is index 2 (0-based)
+                const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+                if (cherryLi) {
+                    const anchor = cherryLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "select-item");
+                }
+            }
+
+            // select-filter: the filter input inside the portaled popover
+            const filterInput = document.querySelector<HTMLElement>(
+                `.bp6-select-popover .bp6-input`
+            );
+            if (filterInput) filterInput.setAttribute("data-compare", "select-filter");
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Default filterable Select (popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <BpSelect<string>
+                        items={SELECT_ITEMS}
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={<MenuItem disabled={true} text="No results." />}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    >
+                        <Button
+                            rightIcon="caret-down"
+                            data-compare="select-trigger"
+                            fill={true}
+                        >
+                            {selected ?? "Select a fruit…"}
+                        </Button>
+                    </BpSelect>
+                </div>
+            </Section>
+
+            <Section title="Non-filterable Select">
+                <BpSelect<string>
+                    items={SELECT_ITEMS}
+                    filterable={false}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            roleStructure="listoption"
+                            text={item}
+                            active={modifiers.active}
+                            icon={item === selected ? "tick" : undefined}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    popoverProps={{
+                        minimal: true,
+                        portalClassName: dark ? Classes.DARK : undefined,
+                    }}
+                >
+                    <Button rightIcon="caret-down">
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </BpSelect>
+            </Section>
+
+            <Section title="Disabled">
+                <BpSelect<string>
+                    items={SELECT_ITEMS}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            roleStructure="listoption"
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    disabled={true}
+                    popoverProps={{
+                        minimal: true,
+                        portalClassName: dark ? Classes.DARK : undefined,
+                    }}
+                >
+                    <Button rightIcon="caret-down" disabled={true}>
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </BpSelect>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Suggest items (same list as analyst-ui SuggestGallery) ──────────────────
+const SUGGEST_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
+
+/**
+ * Blueprint reference for Suggest. Uses @blueprintjs/select's Suggest<T>.
+ *
+ * Strategy: Force the popover OPEN so the harness can screenshot the input and menu
+ * items without interaction. We use popoverProps={{ isOpen: true }} and stamp
+ * data-compare on portaled DOM nodes via useEffect.
+ *
+ * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled menu renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui SuggestGallery):
+ *   suggest-input        — the InputGroup's <input> element (trigger + filter)
+ *   suggest-menu         — the menu <ul> element inside the popover (portaled)
+ *   suggest-item         — Apple (index 0, non-active, non-selected)
+ *   suggest-item-active  — Cherry (index 2, active because it's the selectedItem)
+ *
+ * NOTE: We do NOT use roleStructure="listoption" so that paddingLeft is 8px
+ * on both sides (no indent from SELECTABLE class). The tick icon is shown via
+ * icon="tick" prop on the selected item, maintaining visual consistency.
+ * Blueprint's activeItem is initialized to selectedItem (Cherry) by Suggest.
+ */
+function SuggestGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [selected, setSelected] = useState<string | null>(SUGGEST_SELECTED);
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // suggest-input: Blueprint Suggest renders the input with role="combobox".
+            const input = document.querySelector<HTMLElement>(
+                `input[role="combobox"]`,
+            );
+            if (input) input.setAttribute("data-compare", "suggest-input");
+
+            // suggest-menu: Blueprint renders the menu as a <ul role="listbox"> inside the portaled popover
+            const menuUl = document.querySelector<HTMLElement>(
+                `ul.bp6-menu[role="listbox"]`,
+            );
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "suggest-menu");
+
+                // suggest-item: Apple is index 0 (non-active, non-selected)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "suggest-item");
+                }
+
+                // suggest-item-active: Cherry is index 2 (active — it's the selectedItem which
+                // Blueprint Suggest uses as initialActiveItem)
+                const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+                if (cherryLi) {
+                    const anchor = cherryLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "suggest-item-active");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Suggest (typeahead, popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <BpSuggest<string>
+                        items={SUGGEST_ITEMS}
+                        selectedItem={selected}
+                        inputValueRenderer={(item) => item}
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={<MenuItem disabled={true} text="No results." />}
+                        fill={true}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            matchTargetWidth: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <BpSuggest<string>
+                    items={SUGGEST_ITEMS}
+                    selectedItem={selected}
+                    inputValueRenderer={(item) => item}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            roleStructure="listoption"
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    itemPredicate={(query, item) =>
+                        item.toLowerCase().includes(query.toLowerCase())
+                    }
+                    onItemSelect={(item) => setSelected(item)}
+                    disabled={true}
+                    popoverProps={{
+                        minimal: true,
+                        portalClassName: dark ? Classes.DARK : undefined,
+                    }}
+                />
+            </Section>
+        </div>
+    );
+}
+
+// ─── MultiSelect items (same list as analyst-ui MultiSelectGallery) ─────────
+const MULTI_SELECT_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
+
+/**
+ * Blueprint reference for MultiSelect. Uses @blueprintjs/select's MultiSelect<T>.
+ *
+ * Strategy: Force the popover OPEN so the harness can screenshot chips and menu items
+ * without interaction. We stamp data-compare on portaled DOM nodes via useEffect.
+ *
+ * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled menu renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui MultiSelectGallery):
+ *   multi-select-container  — the TagInput-like trigger container
+ *   multi-select-tag        — the first Tag chip (Banana)
+ *   multi-select-menu       — the menu <ul> element inside the popover (portaled)
+ *   multi-select-item       — Durian (index 3, non-active, non-selected)
+ *   multi-select-item-active — Apple (index 0, active by default — first enabled item)
+ */
+function MultiSelectGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [selected, setSelected] = useState<string[]>(MULTI_SELECT_SELECTED);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // multi-select-container: Blueprint renders TagInput as root element
+            if (containerRef.current) {
+                const container = containerRef.current.querySelector(".bp6-tag-input");
+                if (container) container.setAttribute("data-compare", "multi-select-container");
+
+                // multi-select-tag: first Tag chip inside the container
+                const firstTag = containerRef.current.querySelector(".bp6-tag");
+                if (firstTag) firstTag.setAttribute("data-compare", "multi-select-tag");
+            }
+
+            // multi-select-menu: Blueprint renders the menu as <ul role="listbox">
+            const menuUl = document.querySelector<HTMLElement>(
+                `ul.bp6-menu[role="listbox"]`,
+            );
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "multi-select-menu");
+
+                // multi-select-item-active: Apple is index 0 (first item, active by default)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "multi-select-item-active");
+                }
+
+                // multi-select-item: Durian is index 3 (non-active, non-selected)
+                const durianLi = menuUl.children[3] as HTMLElement | undefined;
+                if (durianLi) {
+                    const anchor = durianLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "multi-select-item");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="MultiSelect (chips + popover open for comparison)">
+                <div style={{ width: 400 }} ref={containerRef}>
+                    <BpMultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={selected}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={selected.includes(item) ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => {
+                            if (!selected.includes(item)) {
+                                setSelected((s) => [...s, item]);
+                            }
+                        }}
+                        onRemove={(_tag, index) =>
+                            setSelected((s) => s.filter((_, i) => i !== index))
+                        }
+                        noResults={<MenuItem disabled={true} text="No results." />}
+                        fill={true}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            matchTargetWidth: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <BpMultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={["Apple", "Banana"]}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        disabled={true}
+                        fill={true}
+                        popoverProps={{
+                            minimal: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+// ─── Omnibar items (same list as Select items) ────────────────────────────
+const OMNIBAR_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+
+/**
+ * Blueprint reference for Omnibar. Uses @blueprintjs/select's Omnibar<T>.
+ *
+ * Strategy: Force isOpen=true so the harness can screenshot the portaled panel,
+ * input, and menu items without interaction. Stamp data-compare on portaled DOM
+ * nodes via useEffect (panel, input, menu, items).
+ *
+ * Dark mode: pass overlayProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled Omnibar panel renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui OmnibarGallery):
+ *   omnibar-panel        — the elevated panel div (portaled)
+ *   omnibar-input        — the search <input> element
+ *   omnibar-menu         — the menu <ul> element
+ *   omnibar-item         — Cherry (index 2, non-active item)
+ *   omnibar-item-active  — Apple (index 0, active by default — first enabled item)
+ */
+function OmnibarGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // omnibar-panel: Blueprint renders the omnibar as .bp6-omnibar
+            const panel = document.querySelector<HTMLElement>(".bp6-omnibar");
+            if (panel) panel.setAttribute("data-compare", "omnibar-panel");
+
+            // omnibar-input: the <input> element inside the panel
+            const inputEl = document.querySelector<HTMLElement>(".bp6-omnibar input");
+            if (inputEl) inputEl.setAttribute("data-compare", "omnibar-input");
+
+            // omnibar-menu: Blueprint renders the menu as <ul class="bp6-menu">
+            const menuUl = document.querySelector<HTMLElement>(".bp6-omnibar .bp6-menu");
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "omnibar-menu");
+
+                // omnibar-item-active: Apple is index 0 (first item, active by default)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "omnibar-item-active");
+                }
+
+                // omnibar-item: Cherry is index 2 (non-active, non-first)
+                const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+                if (cherryLi) {
+                    const anchor = cherryLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "omnibar-item");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Omnibar (open for comparison)">
+                <div style={{ position: "relative", height: 320, border: "1px dashed #aaa", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#888" }}>Omnibar panel is portaled above this area</span>
+                    <BpOmnibar<string>
+                        isOpen={true}
+                        onClose={() => {}}
+                        items={OMNIBAR_ITEMS}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                                roleStructure="menuitem"
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        // initialContent={undefined} bypasses Blueprint's default behavior of showing
+                        // nothing when query is empty. With initialContent=null (Blueprint's Omnibar
+                        // default), renderFilteredItems() returns null when query.length===0, hiding
+                        // all items. Setting to undefined makes it show items immediately (like our Omnibar).
+                        initialContent={undefined}
+                        overlayProps={{
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3766,6 +4374,11 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
+    { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
+    { id: "select", title: "Select", render: () => <SelectGallery /> },
+    { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
+    { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
+    { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
