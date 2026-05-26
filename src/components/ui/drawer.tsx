@@ -205,9 +205,9 @@ export function Drawer({
                             // Set own text color: portal renders at body, must set text-foreground
                             // so dark mode resolves to the correct dark --foreground.
                             "text-foreground",
-                            // Blueprint: box-shadow = elevation-4 → use shadow-card-4 (same rule as
-                            // Dialog/Card: card-N tokens have the correct base color + dark insets)
-                            "shadow-card-4",
+                            // Blueprint drawer uses elevation-4 in LIGHT but elevation-3 in DARK
+                            // (Blueprint quirk). card-N tokens have the correct base + dark insets.
+                            "shadow-card-4 dark:shadow-card-3",
                             // Blueprint: no padding, no margin, no border-radius
                             "p-0 m-0",
                             // Blueprint: &:focus { outline: 0 }
