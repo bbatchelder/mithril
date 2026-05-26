@@ -47,6 +47,7 @@ import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
 import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
 import { TagInput } from "@/components/ui/tag-input";
+import { Select } from "@/components/ui/select";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3430,6 +3431,149 @@ function TagInputGallery() {
     );
 }
 
+// ─── Select items for both galleries ───────────────────────────────────────
+const SELECT_ITEMS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape"];
+const SELECT_SELECTED = "Cherry";
+
+/**
+ * Select showcase. The popover is controlled OPEN so the harness can screenshot
+ * the filter input + menu items. data-compare keys match blueprint-reference SelectGallery.
+ *
+ * data-compare keys:
+ *   select-trigger       — the trigger button wrapper div
+ *   select-filter        — the filter InputGroup's <input> element
+ *   select-menu          — the menu <ul> element inside the popover
+ *   select-item          — a non-active MenuItem (Cherry — the selected one)
+ *   select-item-active   — the active/highlighted MenuItem (Apple — first item, active by default)
+ *
+ * Because the popover content is portaled, we tag select-filter and select-item via
+ * document.querySelector in a useEffect (same pattern as ContextMenu/Dialog galleries).
+ */
+function SelectGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string | null>(SELECT_SELECTED);
+
+    // Stamp data-compare on portaled nodes after render.
+    // The popover content is portaled (outside the .dark ancestor), so we use
+    // document-wide querySelector to find elements by their structural position.
+    useEffect(() => {
+        function tag() {
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="select-menu"]');
+            if (!menuUl) return;
+
+            // Filter input: sibling of the menu, inside the same p-1 wrapper
+            const wrapper = menuUl.parentElement; // div.p-1
+            if (wrapper) {
+                const filterInput = wrapper.querySelector<HTMLElement>("input");
+                if (filterInput) filterInput.setAttribute("data-compare", "select-filter");
+            }
+
+            // select-item-active: Apple is index 0 (first item, active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "select-item-active");
+            }
+
+            // select-item: Cherry is index 2 (0-based) in the list
+            const cherryLi = menuUl.children[2] as HTMLElement | undefined;
+            if (cherryLi) {
+                const btn = cherryLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "select-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Default filterable Select (popover open for comparison)">
+                <div style={{ width: 300 }}>
+                    <Select<string>
+                        items={SELECT_ITEMS}
+                        selectedItem={selected}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={item === selected ? "tick" : undefined}
+                                onClick={handleClick}
+                                data-compare={undefined}
+                            />
+                        )}
+                        onItemSelect={(item) => setSelected(item)}
+                        noResults={
+                            <MenuItem disabled text="No results." />
+                        }
+                        dark={dark}
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    >
+                        <Button
+                            variant="solid"
+                            endIcon={<Icon icon="caret-down" size={16} />}
+                            data-compare="select-trigger"
+                            fill
+                        >
+                            {selected ?? "Select a fruit…"}
+                        </Button>
+                    </Select>
+                </div>
+            </Section>
+
+            <Section title="Non-filterable Select">
+                <Select<string>
+                    items={SELECT_ITEMS}
+                    selectedItem={selected}
+                    filterable={false}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            icon={item === selected ? "tick" : undefined}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    dark={dark}
+                >
+                    <Button variant="solid" endIcon={<Icon icon="caret-down" size={16} />}>
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </Select>
+            </Section>
+
+            <Section title="Disabled">
+                <Select<string>
+                    items={SELECT_ITEMS}
+                    selectedItem={selected}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem
+                            key={item}
+                            text={item}
+                            active={modifiers.active}
+                            onClick={handleClick}
+                        />
+                    )}
+                    onItemSelect={(item) => setSelected(item)}
+                    disabled
+                    dark={dark}
+                >
+                    <Button variant="solid" endIcon={<Icon icon="caret-down" size={16} />} disabled>
+                        {selected ?? "Select a fruit…"}
+                    </Button>
+                </Select>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3478,6 +3622,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
     { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
+    { id: "select", title: "Select", render: () => <SelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
