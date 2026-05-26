@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, FileInput, FormGroup, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3221,6 +3221,124 @@ function EditableTextGallery() {
     );
 }
 
+/**
+ * Blueprint EntityTitle reference gallery.
+ *
+ * Mirrors analyst-ui EntityTitleGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's H1–H6 heading components for size variants.
+ *
+ * Blueprint's EntityTitle is typed as React.FC so ref forwarding isn't exposed in its types.
+ * We wrap in a div and use querySelector to find the .bp6-entity-title root, then set
+ * data-compare on it imperatively via useEffect — so harness reads the right element.
+ */
+function BpEntityTitleWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpEntityTitle> & { compareKey: string }) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (wrapperRef.current) {
+            const inner = wrapperRef.current.querySelector(".bp6-entity-title");
+            if (inner) {
+                inner.setAttribute("data-compare", compareKey);
+            }
+        }
+    }, [compareKey]);
+    return (
+        <div ref={wrapperRef}>
+            <BpEntityTitle {...props} />
+        </div>
+    );
+}
+
+function EntityTitleGallery() {
+    const sizeHeadings: [string, React.FC<any>][] = [
+        ["text", Text],
+        ["h1", H1],
+        ["h2", H2],
+        ["h3", H3],
+        ["h4", H4],
+        ["h5", H5],
+        ["h6", H6],
+    ];
+
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Basic: title only */}
+            <div className="flex flex-col gap-2">
+                <p>Title only</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-basic"
+                    title="Project Alpha"
+                />
+            </div>
+
+            {/* Title + icon + subtitle */}
+            <div className="flex flex-col gap-2">
+                <p>Icon + title + subtitle</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-full"
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                />
+            </div>
+
+            {/* Title + icon + subtitle + tag */}
+            <div className="flex flex-col gap-2">
+                <p>Icon + title + subtitle + tag</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-tags"
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    tags={<Tag intent="primary">Active</Tag>}
+                />
+            </div>
+
+            {/* Sizes */}
+            <div className="flex flex-col gap-4">
+                <p>Sizes</p>
+                {sizeHeadings.map(([size, headingComponent]) => (
+                    <BpEntityTitleWithCompare
+                        key={size}
+                        compareKey={`entity-title-${size}`}
+                        heading={headingComponent}
+                        icon="folder-close"
+                        title={`${size === "text" ? "Text" : size.toUpperCase()} — Project Alpha`}
+                        subtitle="Last updated 2 hours ago"
+                    />
+                ))}
+            </div>
+
+            {/* Loading state */}
+            <div className="flex flex-col gap-2">
+                <p>Loading</p>
+                <BpEntityTitle
+                    icon="folder-close"
+                    title="Loading title"
+                    subtitle="Loading subtitle"
+                    loading
+                />
+            </div>
+
+            {/* Fill + ellipsize */}
+            <div className="flex flex-col gap-2">
+                <p>Fill + ellipsize</p>
+                <div style={{ width: 300, border: "1px solid rgba(17,20,24,0.15)", borderRadius: 4 }}>
+                    <BpEntityTitle
+                        icon="folder-close"
+                        title="Very long project name that should be truncated on overflow"
+                        subtitle="Last updated 2 hours ago"
+                        fill
+                        ellipsize
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3262,6 +3380,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
+    { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

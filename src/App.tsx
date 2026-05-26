@@ -41,6 +41,7 @@ import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
 import { HTMLTable } from "@/components/ui/html-table";
 import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
+import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2962,6 +2963,100 @@ function EditableTextGallery() {
     );
 }
 
+/**
+ * EntityTitle showcase.
+ *
+ * Specimens cover: basic title only, title+icon+subtitle, title+icon+subtitle+tag,
+ * and each size variant (h1–h6 + text). Identical text/icon on both sides.
+ *
+ * data-compare keys:
+ *   entity-title-basic       — title-only (no icon, no subtitle)
+ *   entity-title-full        — icon + title + subtitle
+ *   entity-title-tags        — icon + title + subtitle + tag
+ *   entity-title-h1          — h1 size with icon + subtitle
+ *   entity-title-h3          — h3 size with icon + subtitle
+ *   entity-title-h6          — h6 size with icon + subtitle
+ */
+function EntityTitleGallery() {
+    const sizes: EntityTitleSize[] = ["text", "h1", "h2", "h3", "h4", "h5", "h6"];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Basic: title only */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Title only</p>
+                <EntityTitle
+                    title="Project Alpha"
+                    data-compare="entity-title-basic"
+                />
+            </div>
+
+            {/* Title + icon + subtitle */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon + title + subtitle</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    data-compare="entity-title-full"
+                />
+            </div>
+
+            {/* Title + icon + subtitle + tag */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon + title + subtitle + tag</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    tags={<Tag intent="primary">Active</Tag>}
+                    data-compare="entity-title-tags"
+                />
+            </div>
+
+            {/* Sizes */}
+            <div className="flex flex-col gap-4">
+                <p className="text-body-sm text-foreground-muted">Sizes</p>
+                {sizes.map((size) => (
+                    <EntityTitle
+                        key={size}
+                        size={size}
+                        icon="folder-close"
+                        title={`${size === "text" ? "Text" : size.toUpperCase()} — Project Alpha`}
+                        subtitle="Last updated 2 hours ago"
+                        data-compare={`entity-title-${size}`}
+                    />
+                ))}
+            </div>
+
+            {/* Loading state */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Loading</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Loading title"
+                    subtitle="Loading subtitle"
+                    loading
+                />
+            </div>
+
+            {/* Fill + ellipsize */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Fill + ellipsize</p>
+                <div style={{ width: 300 }} className="border border-divider rounded">
+                    <EntityTitle
+                        icon="folder-close"
+                        title="Very long project name that should be truncated on overflow"
+                        subtitle="Last updated 2 hours ago"
+                        fill
+                        ellipsize
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3004,6 +3099,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
+    { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
