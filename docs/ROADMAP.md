@@ -86,7 +86,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Navbar** — `navbar/`
 - [x] **Tabs** — `tabs/`
 - [x] **Collapse** — `collapse/`
-- [ ] **Section** — `section/` (Card-based)
+- [x] **Section** — `section/` (Card-based)
 - [ ] **CardList** — `card-list/` (Card-based)
 - [ ] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
 - [ ] **Tree** — `tree/` (Icon + Collapse)

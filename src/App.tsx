@@ -34,6 +34,7 @@ import { ContextMenu } from "@/components/ui/context-menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
 import { Tabs, Tab } from "@/components/ui/tabs";
 import { Collapse } from "@/components/ui/collapse";
+import { Section as BpSection, SectionCard as BpSectionCard } from "@/components/ui/section";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2383,6 +2384,83 @@ function CollapseGallery() {
     );
 }
 
+/**
+ * Section showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference SectionGallery exactly):
+ *   section          — the outer Card container (bg, shadow, radius, border)
+ *   section-header   — the header div (border-bottom, min-height, padding)
+ *   section-title    — the H6 title element (font, color)
+ *   section-subtitle — the subtitle div (color, margin)
+ *   section-body     — the SectionCard content panel (padding)
+ *
+ * We render: a basic Section (title + subtitle + SectionCard body),
+ * a collapsible Section (open, with caret), and a compact one.
+ * Fixed width (400px) so both galleries produce the same box dimensions.
+ */
+function SectionGallery() {
+    useEffect(() => {
+        // Tag internal elements within the basic section specimen (data-compare="section").
+        const basicSection = document.querySelector('[data-compare="section"]');
+        if (basicSection) {
+            // Header: first child div of the section card (directly inside the card wrapper)
+            const header = basicSection.firstElementChild;
+            if (header) header.setAttribute("data-compare", "section-header");
+            // Title: the h6 element inside the header
+            const title = basicSection.querySelector("h6");
+            if (title) title.setAttribute("data-compare", "section-title");
+            // Subtitle: the div after the h6
+            const subtitle = basicSection.querySelector("h6 + div");
+            if (subtitle) subtitle.setAttribute("data-compare", "section-subtitle");
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 400 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Basic (title + subtitle + body)</p>
+                <BpSection
+                    title="Account settings"
+                    subtitle="Manage your account preferences"
+                    icon="cog"
+                    data-compare="section"
+                >
+                    <BpSectionCard data-compare="section-body">
+                        <p className="text-body">Section card content goes here.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Collapsible (open)</p>
+                <BpSection
+                    title="Advanced options"
+                    subtitle="Expand to see more"
+                    collapsible
+                    collapseProps={{ defaultIsOpen: true }}
+                >
+                    <BpSectionCard>
+                        <p className="text-body">Collapsible section body — currently open.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <BpSection
+                    title="Compact section"
+                    compact
+                    elevation={1}
+                >
+                    <BpSectionCard compact>
+                        <p className="text-body">Compact body content.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2418,6 +2496,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
+    { id: "section", title: "Section", render: () => <SectionGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

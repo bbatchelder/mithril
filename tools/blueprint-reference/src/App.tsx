@@ -1,4 +1,4 @@
-import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2578,6 +2578,83 @@ function CollapseGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Section.
+ *
+ * data-compare keys (must match analyst-ui SectionGallery exactly):
+ *   section          — the outer .bp6-card container (bg, shadow, radius, border)
+ *   section-header   — the .bp6-section-header div (border-bottom, min-height, padding)
+ *   section-title    — the .bp6-section-header-title h6 (font, color)
+ *   section-subtitle — the .bp6-section-header-sub-title div (color, margin)
+ *   section-body     — the .bp6-section-card panel (padding)
+ *
+ * Identical content both sides. Tagged via useEffect since Blueprint renders these
+ * internal elements — we can't pass data-compare directly as a prop.
+ */
+function SectionGallery() {
+    const basicRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!basicRef.current) return;
+        const card = basicRef.current.querySelector(".bp6-section");
+        if (card) card.setAttribute("data-compare", "section");
+        const header = basicRef.current.querySelector(".bp6-section-header");
+        if (header) header.setAttribute("data-compare", "section-header");
+        const title = basicRef.current.querySelector(".bp6-section-header-title");
+        if (title) title.setAttribute("data-compare", "section-title");
+        const subtitle = basicRef.current.querySelector(".bp6-section-header-sub-title");
+        if (subtitle) subtitle.setAttribute("data-compare", "section-subtitle");
+        const body = basicRef.current.querySelector(".bp6-section-card");
+        if (body) body.setAttribute("data-compare", "section-body");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 400 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Basic (title + subtitle + body)</p>
+                <div ref={basicRef}>
+                    <BpSection
+                        title="Account settings"
+                        subtitle="Manage your account preferences"
+                        icon="cog"
+                    >
+                        <BpSectionCard>
+                            <p style={{ margin: 0 }}>Section card content goes here.</p>
+                        </BpSectionCard>
+                    </BpSection>
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Collapsible (open)</p>
+                <BpSection
+                    title="Advanced options"
+                    subtitle="Expand to see more"
+                    collapsible={true}
+                    collapseProps={{ defaultIsOpen: true }}
+                >
+                    <BpSectionCard>
+                        <p style={{ margin: 0 }}>Collapsible section body — currently open.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Compact</p>
+                <BpSection
+                    title="Compact section"
+                    compact={true}
+                    elevation={1}
+                >
+                    <BpSectionCard>
+                        <p style={{ margin: 0 }}>Compact body content.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2612,6 +2689,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
+    { id: "section", title: "Section", render: () => <SectionGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
