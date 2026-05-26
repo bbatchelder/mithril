@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1890,6 +1890,66 @@ function DialogGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Drawer. Renders ONE drawer open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals drawer content to document.body. We use useEffect + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, header, body) after mount.
+ *
+ * Keys: drawer-panel, drawer-header, drawer-body.
+ * Must match analyst-ui DrawerGallery exactly.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/AlertGallery — see orchestrator correction in 0024).
+ */
+function DrawerGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Drawer portals to document.body; find via Classes constants.
+            const panel = document.querySelector(`.${Classes.DRAWER}`);
+            const header = panel?.querySelector(`.${Classes.DRAWER_HEADER}`);
+            const body = panel?.querySelector(`.${Classes.DRAWER_BODY}`);
+
+            if (panel) panel.setAttribute("data-compare", "drawer-panel");
+            if (header) header.setAttribute("data-compare", "drawer-header");
+            if (body) body.setAttribute("data-compare", "drawer-body");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The drawer below is open by default for comparison harness screenshots.
+            </p>
+            <Drawer
+                isOpen={true}
+                position="right"
+                size={DrawerSize.SMALL}
+                title="Drawer Title"
+                icon="info-sign"
+                isCloseButtonShown={true}
+                onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled drawer renders light unless we put the dark class on the portal itself.
+                // portalClassName is on OverlayableProps which DrawerProps extends, so this is typed.
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <div className={Classes.DRAWER_BODY} style={{ padding: 20 }}>
+                    <p style={{ margin: 0 }}>
+                        This is the drawer body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </div>
+            </Drawer>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1916,6 +1976,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
+    { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

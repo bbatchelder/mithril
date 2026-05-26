@@ -5,6 +5,7 @@ import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/b
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
+import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
@@ -1831,6 +1832,42 @@ function DialogGallery() {
     );
 }
 
+/**
+ * Drawer showcase. Renders ONE drawer OPEN by default (right edge, 360px = SMALL) so the
+ * harness can screenshot and computed-style-diff the portaled panel, header, body.
+ *
+ * Portal + dark-mode: the drawer receives `dark` from DarkContext (same as Dialog/Alert).
+ *
+ * data-compare keys: drawer-panel, drawer-header, drawer-body.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function DrawerGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The drawer below is open by default for comparison harness screenshots.
+            </p>
+            <Drawer
+                defaultOpen={true}
+                position="right"
+                size={DrawerSize.SMALL}
+                title="Drawer Title"
+                icon={<Icon icon="info-sign" />}
+                closeButton={true}
+                dark={dark}
+            >
+                <DrawerBody className="p-5">
+                    <p className="text-body text-foreground m-0">
+                        This is the drawer body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DrawerBody>
+            </Drawer>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1857,6 +1894,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
+    { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
