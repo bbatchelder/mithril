@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1646,6 +1646,109 @@ function SegmentedControlGallery() {
     );
 }
 
+/**
+ * Blueprint reference for ControlCard (CheckboxCard / RadioCard / SwitchCard).
+ *
+ * Blueprint's control card components DO forward data-* props to the root .bp6-card element,
+ * so we can place data-compare directly on CheckboxCard/RadioCard/SwitchCard.
+ *
+ * Specimens (keys MUST match analyst-ui's ControlCardGallery exactly):
+ *   cc-checkbox          — CheckboxCard unchecked, left-aligned indicator
+ *   cc-checkbox-checked  — CheckboxCard defaultChecked=true → selected ring
+ *   cc-radio             — RadioCard unchecked, right-aligned indicator
+ *   cc-switch            — SwitchCard unchecked, right-aligned indicator
+ *   cc-compact           — CheckboxCard compact=true (16px padding)
+ *   cc-disabled          — CheckboxCard disabled=true
+ *   cc-align-right       — CheckboxCard alignIndicator="right"
+ *
+ * The harness diffs: backgroundColor, boxShadow (selected ring), borderRadius, padding, color.
+ * Fixed width 240px on all specimens (identical to analyst-ui side).
+ */
+function ControlCardGallery() {
+    const cardStyle: React.CSSProperties = { width: 240 };
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="CheckboxCard (left-aligned, default)">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <CheckboxCard
+                        label="Unchecked option"
+                        style={cardStyle}
+                        data-compare="cc-checkbox"
+                    />
+                    <CheckboxCard
+                        label="Checked option (selected ring)"
+                        defaultChecked={true}
+                        style={cardStyle}
+                        data-compare="cc-checkbox-checked"
+                    />
+                </div>
+            </Section>
+
+            <Section title="RadioCard (right-aligned, default)">
+                <RadioCard
+                    label="Radio option"
+                    value="opt1"
+                    inputProps={{ name: "cc-radio-group" }}
+                    style={cardStyle}
+                    data-compare="cc-radio"
+                />
+            </Section>
+
+            <Section title="SwitchCard (right-aligned, default)">
+                <SwitchCard
+                    label="Switch option"
+                    style={cardStyle}
+                    data-compare="cc-switch"
+                />
+            </Section>
+
+            <Section title="Compact (16px padding)">
+                <CheckboxCard
+                    label="Compact option"
+                    compact={true}
+                    style={cardStyle}
+                    data-compare="cc-compact"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <CheckboxCard
+                    label="Disabled option"
+                    disabled={true}
+                    style={cardStyle}
+                    data-compare="cc-disabled"
+                />
+            </Section>
+
+            <Section title="Align right (indicator on right)">
+                <CheckboxCard
+                    label="Right-aligned indicator"
+                    alignIndicator="right"
+                    style={cardStyle}
+                    data-compare="cc-align-right"
+                />
+            </Section>
+
+            <Section title="SwitchCard checked (selected ring)">
+                <SwitchCard
+                    label="Switch checked"
+                    defaultChecked={true}
+                    style={cardStyle}
+                />
+            </Section>
+
+            <Section title="showAsSelectedWhenChecked=false">
+                <CheckboxCard
+                    label="Checked but no selected ring"
+                    defaultChecked={true}
+                    showAsSelectedWhenChecked={false}
+                    style={cardStyle}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1669,6 +1772,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
+    { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

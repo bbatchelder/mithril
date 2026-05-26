@@ -189,6 +189,9 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
                     disabled && !effectiveChecked && "bg-[rgba(143,153,168,0.15)] shadow-none dark:shadow-none cursor-not-allowed",
                     // Checked disabled: bg = rgba(blue-3, 0.5) = rgba(45,114,210,0.5), no shadow
                     disabled && effectiveChecked && "bg-[rgba(45,114,210,0.5)] shadow-none dark:shadow-none cursor-not-allowed",
+                    // indicatorProps.className is merged LAST so callers (e.g. ControlCard) can
+                    // override indicator margins/positioning without fighting specificity.
+                    indicatorProps?.className,
                 )}
             >
                 {/* Center dot — shown when checked.

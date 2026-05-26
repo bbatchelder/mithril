@@ -66,7 +66,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **FileInput** — `forms/fileInput.tsx`
 - [x] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)
 - [x] **SegmentedControl** — `segmented-control/`
-- [ ] **ControlCard** — `control-card/` (Card + controls)
+- [x] **ControlCard** — `control-card/` (Card + controls)
 
 ## Phase 3 — Overlays & positioning
 
