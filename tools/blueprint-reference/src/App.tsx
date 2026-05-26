@@ -1,4 +1,4 @@
-import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2381,6 +2381,1345 @@ function ContextMenuGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Navbar.
+ *
+ * data-compare keys (must match analyst-ui NavbarGallery exactly):
+ *   navbar           — the Navbar bar itself (bg, shadow, height, padding)
+ *   navbar-heading   — the NavbarHeading div (font-size, margin-right, color)
+ *   navbar-divider   — the NavbarDivider (height, border-left, margin)
+ *
+ * Blueprint Alignment enum: Alignment.LEFT = "left", Alignment.RIGHT = "right".
+ * Fixed width 680px container to match analyst-ui gallery specimen size.
+ */
+function NavbarGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Standard navbar (left + right groups)">
+                <div style={{ width: 680 }}>
+                    <Navbar data-compare="navbar">
+                        <NavbarGroup align={Alignment.LEFT}>
+                            <NavbarHeading data-compare="navbar-heading">My Application</NavbarHeading>
+                            <NavbarDivider data-compare="navbar-divider" />
+                            <Button variant="minimal" text="Home" />
+                            <Button variant="minimal" text="Files" />
+                        </NavbarGroup>
+                        <NavbarGroup align={Alignment.RIGHT}>
+                            <Button variant="minimal" text="Log in" />
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+
+            <Section title="Left group only">
+                <div style={{ width: 680 }}>
+                    <Navbar>
+                        <NavbarGroup align={Alignment.LEFT}>
+                            <NavbarHeading>App</NavbarHeading>
+                            <NavbarDivider />
+                            <Button variant="minimal" text="Home" />
+                            <Button variant="minimal" text="About" />
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Tabs.
+ *
+ * data-compare keys (must match analyst-ui TabsGallery exactly):
+ *   tab-selected          — the selected tab title element (color, font)
+ *   tab-default           — an unselected tab title
+ *   tab-disabled          — a disabled tab title
+ *   tab-indicator         — the sliding indicator bar (height, backgroundColor)
+ *   tabs-vertical-selected — the selected tab in vertical mode (backgroundColor)
+ *
+ * Blueprint renders the indicator via JS (moveSelectionIndicator). After mount
+ * it positions the .bp6-tab-indicator-wrapper's transform to overlay the selected tab.
+ * The actual .bp6-tab-indicator bar inside it is always 3px tall with primary bg.
+ * We key on the inner .bp6-tab-indicator element which has stable height+color.
+ */
+function TabsGallery() {
+    // Blueprint's Tabs uses a class component so we need to use useEffect to set the
+    // data-compare attribute on the rendered .bp6-tab-indicator element after mount.
+    useEffect(() => {
+        // Find and tag the tab-indicator element
+        const indicator = document.querySelector(".bp6-tab-indicator-wrapper .bp6-tab-indicator");
+        if (indicator) {
+            indicator.setAttribute("data-compare", "tab-indicator");
+        }
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Horizontal (default)">
+                <Tabs id="bp-tabs-horizontal" defaultSelectedTabId="overview">
+                    <Tab
+                        id="overview"
+                        title={<span data-compare="tab-selected">Overview</span>}
+                        panel={
+                            <div style={{ padding: 8 }}>
+                                <p>Overview panel content. This is the selected tab.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="details"
+                        title={<span data-compare="tab-default">Details</span>}
+                        panel={
+                            <div style={{ padding: 8 }}>
+                                <p>Details panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="disabled-tab"
+                        title={<span data-compare="tab-disabled">Disabled</span>}
+                        disabled={true}
+                        panel={<div style={{ padding: 8 }}>Disabled panel.</div>}
+                    />
+                </Tabs>
+            </Section>
+
+            <Section title="Vertical">
+                <Tabs id="bp-tabs-vertical" defaultSelectedTabId="files" vertical={true}>
+                    <Tab
+                        id="files"
+                        title={<span data-compare="tabs-vertical-selected">Files</span>}
+                        panel={
+                            <div>
+                                <p>Files panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="config"
+                        title="Configuration"
+                        panel={
+                            <div>
+                                <p>Configuration panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="logs"
+                        title="Logs"
+                        panel={
+                            <div>
+                                <p>Logs panel content.</p>
+                            </div>
+                        }
+                    />
+                </Tabs>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Collapse.
+ *
+ * data-compare keys (must match analyst-ui CollapseGallery exactly):
+ *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
+ *   collapse-body  — the .bp6-collapse-body inner element (transform)
+ *
+ * Identical content both sides so measured open height matches.
+ * Both the outer container and body are tagged via useEffect (Blueprint renders
+ * these internally — we can't pass data-compare directly as a prop).
+ */
+function CollapseGallery() {
+    const openWrapRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!openWrapRef.current) return;
+        // Tag the .bp6-collapse (outer) element rendered by Blueprint.
+        const outer = openWrapRef.current.querySelector(".bp6-collapse");
+        if (outer) outer.setAttribute("data-compare", "collapse-open");
+        // Tag the .bp6-collapse-body (inner) element.
+        const body = openWrapRef.current.querySelector(".bp6-collapse-body");
+        if (body) body.setAttribute("data-compare", "collapse-body");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Open">
+                <div ref={openWrapRef}>
+                    <Collapse isOpen={true}>
+                        <p>
+                            This is the collapse content. It is always visible when isOpen is true.
+                            Blueprint animates the height of the outer container from 0 to the natural
+                            content height.
+                        </p>
+                    </Collapse>
+                </div>
+            </Section>
+
+            <Section title="Closed">
+                <Collapse isOpen={false}>
+                    <p>
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+                <p style={{ fontSize: 12, opacity: 0.6 }}>(Nothing visible above — Collapse is closed)</p>
+            </Section>
+
+            <Section title="Keep children mounted (closed)">
+                <Collapse isOpen={false} keepChildrenMounted={true}>
+                    <p>Children stay in DOM but are hidden.</p>
+                </Collapse>
+                <p style={{ fontSize: 12, opacity: 0.6 }}>(Nothing visible above — keepChildrenMounted, closed)</p>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Section.
+ *
+ * data-compare keys (must match analyst-ui SectionGallery exactly):
+ *   section          — the outer .bp6-card container (bg, shadow, radius, border)
+ *   section-header   — the .bp6-section-header div (border-bottom, min-height, padding)
+ *   section-title    — the .bp6-section-header-title h6 (font, color)
+ *   section-subtitle — the .bp6-section-header-sub-title div (color, margin)
+ *   section-body     — the .bp6-section-card panel (padding)
+ *
+ * Identical content both sides. Tagged via useEffect since Blueprint renders these
+ * internal elements — we can't pass data-compare directly as a prop.
+ */
+function SectionGallery() {
+    const basicRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!basicRef.current) return;
+        const card = basicRef.current.querySelector(".bp6-section");
+        if (card) card.setAttribute("data-compare", "section");
+        const header = basicRef.current.querySelector(".bp6-section-header");
+        if (header) header.setAttribute("data-compare", "section-header");
+        const title = basicRef.current.querySelector(".bp6-section-header-title");
+        if (title) title.setAttribute("data-compare", "section-title");
+        const subtitle = basicRef.current.querySelector(".bp6-section-header-sub-title");
+        if (subtitle) subtitle.setAttribute("data-compare", "section-subtitle");
+        const body = basicRef.current.querySelector(".bp6-section-card");
+        if (body) body.setAttribute("data-compare", "section-body");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 400 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Basic (title + subtitle + body)</p>
+                <div ref={basicRef}>
+                    <BpSection
+                        title="Account settings"
+                        subtitle="Manage your account preferences"
+                        icon="cog"
+                    >
+                        <BpSectionCard>
+                            <p style={{ margin: 0 }}>Section card content goes here.</p>
+                        </BpSectionCard>
+                    </BpSection>
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Collapsible (open)</p>
+                <BpSection
+                    title="Advanced options"
+                    subtitle="Expand to see more"
+                    collapsible={true}
+                    collapseProps={{ defaultIsOpen: true }}
+                >
+                    <BpSectionCard>
+                        <p style={{ margin: 0 }}>Collapsible section body — currently open.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Compact</p>
+                <BpSection
+                    title="Compact section"
+                    compact={true}
+                    elevation={1}
+                >
+                    <BpSectionCard>
+                        <p style={{ margin: 0 }}>Compact body content.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for CardList.
+ *
+ * data-compare keys (must match analyst-ui CardListGallery exactly):
+ *   card-list        — the outer .bp6-card.bp6-card-list container (bg, radius, shadow)
+ *   card-list-item   — a middle .bp6-card row (padding, divider, min-height)
+ *
+ * Identical content both sides. Tagged via useEffect since Blueprint renders these
+ * internal elements — we can't pass data-compare directly as a prop to Card children.
+ */
+function CardListGallery() {
+    const listRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!listRef.current) return;
+        // The CardList container: .bp6-card-list (which is also .bp6-card)
+        const list = listRef.current.querySelector(".bp6-card-list");
+        if (list) list.setAttribute("data-compare", "card-list");
+        // The middle (second) card row — index 1 (0-based)
+        const items = list?.querySelectorAll(":scope > .bp6-card");
+        if (items && items.length >= 2) {
+            items[1].setAttribute("data-compare", "card-list-item");
+        }
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 400 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Bordered (default)</p>
+                <div ref={listRef}>
+                    <BpCardList>
+                        <Card>
+                            <span>Item one — plain</span>
+                        </Card>
+                        <Card interactive={true}>
+                            <span>Item two — interactive (hover me)</span>
+                        </Card>
+                        <Card>
+                            <span>Item three — plain</span>
+                        </Card>
+                        <Card>
+                            <span>Item four — plain</span>
+                        </Card>
+                    </BpCardList>
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Compact</p>
+                <BpCardList compact={true}>
+                    <Card>Compact item one</Card>
+                    <Card interactive={true}>Compact item two — interactive</Card>
+                    <Card>Compact item three</Card>
+                </BpCardList>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Flush (bordered=false)</p>
+                <BpCardList bordered={false}>
+                    <Card>Flush item one</Card>
+                    <Card interactive={true}>Flush item two — interactive</Card>
+                    <Card>Flush item three</Card>
+                </BpCardList>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Breadcrumbs.
+ *
+ * data-compare keys (must match analyst-ui BreadcrumbsGallery exactly):
+ *   breadcrumb-link      — a non-current, non-disabled link crumb (the .bp6-breadcrumb anchor)
+ *   breadcrumb-current   — the last/current crumb (.bp6-breadcrumb-current span)
+ *   breadcrumbs-separator — a chevron-right separator icon (li::after pseudo — not directly taggable;
+ *                           we tag the li instead via useEffect)
+ *
+ * Blueprint's BpBreadcrumbs renders .bp6-breadcrumbs > li > .bp6-breadcrumb/bp6-breadcrumb-current.
+ * Separators are li::after pseudo-elements (not real DOM nodes), so we tag the first li.
+ */
+function BreadcrumbsGallery() {
+    const trailRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!trailRef.current) return;
+        const ul = trailRef.current.querySelector(".bp6-breadcrumbs");
+        if (!ul) return;
+        // Tag the first link crumb (non-current)
+        const firstCrumb = ul.querySelector(".bp6-breadcrumb");
+        if (firstCrumb) firstCrumb.setAttribute("data-compare", "breadcrumb-link");
+        // Tag the current crumb
+        const currentCrumb = ul.querySelector(".bp6-breadcrumb-current");
+        if (currentCrumb) currentCrumb.setAttribute("data-compare", "breadcrumb-current");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 500 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default trail (link + link + current)</p>
+                <div ref={trailRef}>
+                    <BpBreadcrumbs
+                        items={[
+                            { text: "Home", href: "/" },
+                            { text: "Projects", href: "/projects" },
+                            { text: "Current Project", current: true },
+                        ]}
+                    />
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>With icons</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Home", href: "/", icon: "home" },
+                        { text: "Settings", href: "/settings", icon: "cog" },
+                        { text: "Profile", current: true, icon: "person" },
+                    ]}
+                />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>With disabled crumb</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Home", href: "/" },
+                        { text: "Restricted", href: "/admin", disabled: true },
+                        { text: "Page", current: true },
+                    ]}
+                />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Single crumb (no separator)</p>
+                <BpBreadcrumbs
+                    items={[
+                        { text: "Only Page", current: true },
+                    ]}
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint Tree reference gallery.
+ *
+ * data-compare keys (must match analyst-ui TreeGallery exactly):
+ *   tree-node-content    — default node row div (.bp6-tree-node-content)
+ *   tree-node-selected   — selected node row div (selected node's content)
+ *   tree-node-caret      — caret span on an expandable node
+ *   tree-node-caret-none — caret-none spacer span on a leaf node
+ *   tree-node-icon       — icon span on a node that has an icon
+ *
+ * The specimen MUST be structurally identical to the analyst-ui TreeGallery:
+ *   - "Documents" (expanded) → "Annual Report 2025" (doc icon, secondaryLabel), "Projects" (expanded) → "analyst-ui" (SELECTED), "blueprint-ref"
+ *   - "Drafts" (collapsed, folder icon)
+ *   - "Trash" (disabled, trash icon)
+ */
+function TreeGallery() {
+    const [contents, setContents] = useState<BpTreeNodeInfo[]>([
+        {
+            id: 1,
+            label: "Documents",
+            icon: "folder-close",
+            isExpanded: true,
+            childNodes: [
+                {
+                    id: 2,
+                    label: "Annual Report 2025",
+                    icon: "document",
+                    secondaryLabel: <span style={{ fontSize: 12, opacity: 0.6 }}>4.2 MB</span>,
+                },
+                {
+                    id: 3,
+                    label: "Projects",
+                    icon: "folder-close",
+                    isExpanded: true,
+                    childNodes: [
+                        {
+                            id: 4,
+                            label: "analyst-ui",
+                            isSelected: true,
+                        },
+                        {
+                            id: 5,
+                            label: "blueprint-ref",
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id: 6,
+            label: "Drafts",
+            icon: "folder-close",
+        },
+        {
+            id: 7,
+            label: "Trash",
+            icon: "trash",
+            disabled: true,
+        },
+    ]);
+
+    const treeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!treeRef.current) return;
+        // Tag specific nodes for style diffing.
+        // Blueprint renders: .bp6-tree-node > .bp6-tree-node-content
+        // We tag specific content divs by looking at the tree structure.
+        const allContents = treeRef.current.querySelectorAll(".bp6-tree-node-content");
+        // Node order (flattened, in DOM order):
+        // 0: Documents (depth 0, has caret)
+        // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel)
+        // 2: Projects (depth 1, has caret + icon)
+        // 3: analyst-ui (depth 2, SELECTED)
+        // 4: blueprint-ref (depth 2)
+        // 5: Drafts (depth 0, has icon, collapsed)
+        // 6: Trash (depth 0, disabled)
+        if (allContents[1]) {
+            allContents[1].setAttribute("data-compare", "tree-node-content");
+        }
+        if (allContents[3]) {
+            allContents[3].setAttribute("data-compare", "tree-node-selected");
+        }
+        // Tag caret spans: first .bp6-tree-node-caret in DOM
+        const carets = treeRef.current.querySelectorAll(".bp6-tree-node-caret");
+        if (carets[0]) carets[0].setAttribute("data-compare", "tree-node-caret");
+        // Tag caret-none span: first leaf at depth 1
+        const caretNones = treeRef.current.querySelectorAll(".bp6-tree-node-caret-none");
+        if (caretNones[0]) caretNones[0].setAttribute("data-compare", "tree-node-caret-none");
+        // Tag icon span on "Annual Report 2025" node (.bp6-tree-node-icon)
+        const icons = treeRef.current.querySelectorAll(".bp6-tree-node-icon");
+        if (icons[1]) icons[1].setAttribute("data-compare", "tree-node-icon");
+    }, []);
+
+    return (
+        <div style={{ width: 320 }}>
+            <div ref={treeRef}>
+                <BpTree
+                    contents={contents}
+                    onNodeClick={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            clearSelected(next);
+                            BpTree.nodeFromPath(path, next).isSelected = true;
+                            return next;
+                        });
+                    }}
+                    onNodeExpand={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            BpTree.nodeFromPath(path, next).isExpanded = true;
+                            return next;
+                        });
+                    }}
+                    onNodeCollapse={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            BpTree.nodeFromPath(path, next).isExpanded = false;
+                            return next;
+                        });
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+function clearSelected(nodes: BpTreeNodeInfo[]) {
+    for (const n of nodes) {
+        n.isSelected = false;
+        if (n.childNodes) clearSelected(n.childNodes);
+    }
+}
+
+/**
+ * Blueprint PanelStack reference gallery.
+ *
+ * Matches analyst-ui PanelStackGallery exactly:
+ *   - Controlled stack of depth 2: [Root, Detail]
+ *   - Fixed 320×240px container
+ *   - data-compare keys on header, back button, title
+ *
+ * Blueprint's PanelStack uses CSSTransition internally but the rendered STATE
+ * (back button + title) is identical to analyst-ui for diffing purposes.
+ */
+const BP_ROOT_PANEL: BpPanel<object> = {
+    title: "Root",
+    renderPanel: ({ openPanel }: any) => (
+        <div style={{ padding: 16 }}>
+            <p style={{ marginBottom: 8, fontSize: 14 }}>Root panel content.</p>
+            <Button
+                size="small"
+                onClick={() =>
+                    openPanel({
+                        title: "Detail",
+                        renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+                    })
+                }
+                text="Open Detail"
+            />
+        </div>
+    ),
+};
+
+const BP_DETAIL_PANEL: BpPanel<object> = {
+    title: "Detail",
+    renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+};
+
+// Controlled stack of [Root, Detail] — depth 2, back button visible.
+const BP_INITIAL_PANEL_STACK: BpPanel<object>[] = [BP_ROOT_PANEL, BP_DETAIL_PANEL];
+
+function PanelStackGallery() {
+    const [stack, setStack] = useState<BpPanel<object>[]>(BP_INITIAL_PANEL_STACK);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+        // Tag the header, back button, and title for the harness.
+        // Blueprint renders:
+        //   .bp6-panel-stack2-view > .bp6-panel-stack2-header > span > .bp6-panel-stack2-header-back (back btn)
+        //   .bp6-panel-stack2-view > .bp6-panel-stack2-header > h6.bp6-heading (title)
+        const header = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header");
+        if (header) header.setAttribute("data-compare", "panel-stack-header");
+
+        const backBtn = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header-back");
+        if (backBtn) backBtn.setAttribute("data-compare", "panel-stack-back");
+
+        const title = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header .bp6-heading");
+        if (title) title.setAttribute("data-compare", "panel-stack-title");
+    }, []);
+
+    return (
+        <div style={{ width: 320 }}>
+            <div
+                ref={containerRef}
+                style={{ width: 320, height: 240, position: "relative", border: "1px solid rgba(0,0,0,0.1)" }}
+            >
+                <BpPanelStack
+                    stack={stack as any}
+                    onOpen={(p: any) => setStack((prev: any) => [...prev, p])}
+                    onClose={() => setStack((prev: any) => prev.slice(0, -1))}
+                    style={{ width: "100%", height: "100%" }}
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint HTMLTable reference gallery.
+ *
+ * Mirrors analyst-ui HTMLTableGallery exactly — same rows, same columns, same variant order.
+ * data-compare keys match analyst-ui for the computed-style diff harness.
+ *
+ * data-compare keys:
+ *   html-table-header  — a <th> in the header row
+ *   html-table-cell    — a <td> in the first body row (has the top-border shadow)
+ *   html-table-row     — a <tr> in the body
+ */
+function HTMLTableGallery() {
+    const tableData = [
+        { name: "Alice", role: "Engineer", status: "Active" },
+        { name: "Bob", role: "Designer", status: "Inactive" },
+        { name: "Carol", role: "Manager", status: "Active" },
+    ];
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Plain table */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Plain</p>
+                <BpHTMLTable>
+                    <thead>
+                        <tr>
+                            <th data-compare="html-table-header">Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name} data-compare={row.name === "Alice" ? "html-table-row" : undefined}>
+                                <td data-compare={row.name === "Alice" ? "html-table-cell" : undefined}>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </BpHTMLTable>
+            </div>
+
+            {/* Bordered + striped */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Bordered + Striped</p>
+                <BpHTMLTable bordered striped>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </BpHTMLTable>
+            </div>
+
+            {/* Interactive */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Interactive (hover rows)</p>
+                <BpHTMLTable interactive>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </BpHTMLTable>
+            </div>
+
+            {/* Compact */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Compact</p>
+                <BpHTMLTable compact>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </BpHTMLTable>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint EditableText reference gallery.
+ *
+ * Mirrors analyst-ui EditableTextGallery exactly — same specimens, same data-compare keys.
+ *
+ * Blueprint's EditableText does not forward data-* to its root div, so we use the
+ * `elementRef` prop to get the root element ref and set `data-compare` imperatively.
+ *
+ * data-compare keys:
+ *   editable-text-resting    — root div, resting state with value
+ *   editable-text-placeholder — root div showing placeholder (no value)
+ *   editable-text-editing    — root div with isEditing=true (shows editing ring)
+ */
+function BpEditableTextWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpEditableText> & { compareKey: string }) {
+    const elRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (elRef.current) {
+            elRef.current.setAttribute("data-compare", compareKey);
+        }
+    }, [compareKey]);
+    return <BpEditableText {...props} elementRef={elRef} />;
+}
+
+function EditableTextGallery() {
+    const [editingValue, setEditingValue] = useState("Editing now");
+    const intents: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Resting state with value */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Resting (with value)</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-resting"
+                    defaultValue="Hello, Blueprint"
+                />
+            </div>
+
+            {/* Empty + placeholder */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Empty + placeholder</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-placeholder"
+                    defaultValue=""
+                    placeholder="Click to Edit"
+                />
+            </div>
+
+            {/* Editing state */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Editing state</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-editing"
+                    value={editingValue}
+                    isEditing={true}
+                    onChange={setEditingValue}
+                />
+            </div>
+
+            {/* Multiline */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Multiline</p>
+                <BpEditableText
+                    defaultValue={"Line one\nLine two\nLine three"}
+                    multiline
+                    minLines={3}
+                />
+            </div>
+
+            {/* Intents */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Intents</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {intents.map((intent) => (
+                        <BpEditableText
+                            key={intent}
+                            defaultValue={intent === "none" ? "No intent" : intent}
+                            intent={intent}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Disabled</p>
+                <BpEditableText
+                    defaultValue="Cannot edit this"
+                    disabled={true}
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint EntityTitle reference gallery.
+ *
+ * Mirrors analyst-ui EntityTitleGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's H1–H6 heading components for size variants.
+ *
+ * Blueprint's EntityTitle is typed as React.FC so ref forwarding isn't exposed in its types.
+ * We wrap in a div and use querySelector to find the .bp6-entity-title root, then set
+ * data-compare on it imperatively via useEffect — so harness reads the right element.
+ */
+function BpEntityTitleWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpEntityTitle> & { compareKey: string }) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (wrapperRef.current) {
+            const inner = wrapperRef.current.querySelector(".bp6-entity-title");
+            if (inner) {
+                inner.setAttribute("data-compare", compareKey);
+            }
+        }
+    }, [compareKey]);
+    return (
+        <div ref={wrapperRef}>
+            <BpEntityTitle {...props} />
+        </div>
+    );
+}
+
+function EntityTitleGallery() {
+    const sizeHeadings: [string, React.FC<any>][] = [
+        ["text", Text],
+        ["h1", H1],
+        ["h2", H2],
+        ["h3", H3],
+        ["h4", H4],
+        ["h5", H5],
+        ["h6", H6],
+    ];
+
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Basic: title only */}
+            <div className="flex flex-col gap-2">
+                <p>Title only</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-basic"
+                    title="Project Alpha"
+                />
+            </div>
+
+            {/* Title + icon + subtitle */}
+            <div className="flex flex-col gap-2">
+                <p>Icon + title + subtitle</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-full"
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                />
+            </div>
+
+            {/* Title + icon + subtitle + tag */}
+            <div className="flex flex-col gap-2">
+                <p>Icon + title + subtitle + tag</p>
+                <BpEntityTitleWithCompare
+                    compareKey="entity-title-tags"
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    tags={<Tag intent="primary">Active</Tag>}
+                />
+            </div>
+
+            {/* Sizes */}
+            <div className="flex flex-col gap-4">
+                <p>Sizes</p>
+                {sizeHeadings.map(([size, headingComponent]) => (
+                    <BpEntityTitleWithCompare
+                        key={size}
+                        compareKey={`entity-title-${size}`}
+                        heading={headingComponent}
+                        icon="folder-close"
+                        title={`${size === "text" ? "Text" : size.toUpperCase()} — Project Alpha`}
+                        subtitle="Last updated 2 hours ago"
+                    />
+                ))}
+            </div>
+
+            {/* Loading state */}
+            <div className="flex flex-col gap-2">
+                <p>Loading</p>
+                <BpEntityTitle
+                    icon="folder-close"
+                    title="Loading title"
+                    subtitle="Loading subtitle"
+                    loading
+                />
+            </div>
+
+            {/* Fill + ellipsize */}
+            <div className="flex flex-col gap-2">
+                <p>Fill + ellipsize</p>
+                <div style={{ width: 300, border: "1px solid rgba(17,20,24,0.15)", borderRadius: 4 }}>
+                    <BpEntityTitle
+                        icon="folder-close"
+                        title="Very long project name that should be truncated on overflow"
+                        subtitle="Last updated 2 hours ago"
+                        fill
+                        ellipsize
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint NonIdealState reference gallery.
+ *
+ * Mirrors analyst-ui NonIdealStateGallery exactly — same specimens, same data-compare keys,
+ * same container widths/heights.
+ *
+ * Blueprint's NonIdealState renders:
+ *   .bp6-non-ideal-state (root)
+ *     .bp6-non-ideal-state-visual (icon wrapper)
+ *     .bp6-non-ideal-state-text (title + description wrapper)
+ *       h4.bp6-heading (title)
+ *       div (description)
+ *     {action} (direct child)
+ *
+ * data-compare keys (must match analyst-ui NonIdealStateGallery exactly):
+ *   non-ideal-state-full    — the root div of the full-state specimen
+ *   non-ideal-state-minimal — the root div of the minimal specimen
+ *
+ * We use a wrapper div + useEffect to set data-compare on the .bp6-non-ideal-state root
+ * (Blueprint's NonIdealState doesn't forward arbitrary props in v6).
+ * A fixed 400px-wide, fixed-height container matches the analyst-ui gallery so
+ * centering and max-width dimensions compare cleanly.
+ */
+function BpNonIdealStateWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpNonIdealState> & { compareKey: string }) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (wrapperRef.current) {
+            const inner = wrapperRef.current.querySelector(".bp6-non-ideal-state");
+            if (inner) inner.setAttribute("data-compare", compareKey);
+        }
+    }, [compareKey]);
+    return (
+        <div ref={wrapperRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+            <BpNonIdealState {...props} />
+        </div>
+    );
+}
+
+function NonIdealStateGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Full state: icon + title + description + action */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Full state (icon + title + description + action)</p>
+                <div style={{ width: 400, height: 300, position: "relative" }}>
+                    <BpNonIdealStateWithCompare
+                        compareKey="non-ideal-state-full"
+                        icon="search"
+                        title="No search results"
+                        description="Your query returned no results. Try a different search."
+                        action={<Button intent="primary" text="Clear search" />}
+                    />
+                </div>
+            </div>
+
+            {/* Minimal: icon + title only */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Minimal (icon + title)</p>
+                <div style={{ width: 400, height: 200, position: "relative" }}>
+                    <BpNonIdealStateWithCompare
+                        compareKey="non-ideal-state-minimal"
+                        icon="folder-close"
+                        title="Empty folder"
+                    />
+                </div>
+            </div>
+
+            {/* Title + description only (no icon) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Title + description (no icon)</p>
+                <div style={{ width: 400, height: 150, position: "relative" }}>
+                    <BpNonIdealState
+                        title="Nothing here"
+                        description="Come back later when there's something to show."
+                    />
+                </div>
+            </div>
+
+            {/* Horizontal layout */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Horizontal layout</p>
+                <div style={{ width: 400, height: 120, position: "relative" }}>
+                    <BpNonIdealState
+                        icon="warning-sign"
+                        title="Connection error"
+                        description="Could not connect to the server."
+                        layout="horizontal"
+                    />
+                </div>
+            </div>
+
+            {/* Icon size variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Icon sizes (STANDARD / SMALL / EXTRA_SMALL)</p>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    {([
+                        ["STANDARD", BpNonIdealStateIconSize.STANDARD],
+                        ["SMALL", BpNonIdealStateIconSize.SMALL],
+                        ["EXTRA_SMALL", BpNonIdealStateIconSize.EXTRA_SMALL],
+                    ] as const).map(([label, size]) => (
+                        <div key={label} style={{ width: 160, height: 180, position: "relative", border: "1px dashed rgba(0,0,0,0.1)" }}>
+                            <BpNonIdealState
+                                icon="document"
+                                iconSize={size}
+                                title={label}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* iconMuted=false */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>iconMuted=false (inherits muted text color)</p>
+                <div style={{ width: 400, height: 180, position: "relative" }}>
+                    <BpNonIdealState
+                        icon="info-sign"
+                        title="Information"
+                        iconMuted={false}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint Link reference gallery.
+ *
+ * Mirrors analyst-ui LinkGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's Link component directly (BpLink) which applies .bp6-link styles.
+ *
+ * data-compare keys (must match analyst-ui LinkGallery exactly):
+ *   link-default   — primary color, always underlined
+ *   link-hover     — primary color, hover underline
+ *   link-none      — primary color, no underline
+ *   link-inherit   — inherit color, always underlined
+ *   link-success   — success color
+ *   link-warning   — warning color
+ *   link-danger    — danger color
+ *   link-inline    — link in a sentence of body text
+ */
+function LinkGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            {/* Default — always underlined, primary color */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default (underline=always, color=primary)</p>
+                <BpLink href="#" underline="always" data-compare="link-default">Blueprint Link</BpLink>
+            </div>
+
+            {/* Underline variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Underline variants</p>
+                <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
+                    <BpLink href="#" underline="always">always</BpLink>
+                    <BpLink href="#" underline="hover" data-compare="link-hover">hover</BpLink>
+                    <BpLink href="#" underline="none" data-compare="link-none">none</BpLink>
+                </div>
+            </div>
+
+            {/* Color variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Color variants</p>
+                <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
+                    <BpLink href="#" color="primary">primary</BpLink>
+                    <BpLink href="#" color="success" data-compare="link-success">success</BpLink>
+                    <BpLink href="#" color="warning" data-compare="link-warning">warning</BpLink>
+                    <BpLink href="#" color="danger" data-compare="link-danger">danger</BpLink>
+                    <BpLink href="#" color="inherit" data-compare="link-inherit">inherit</BpLink>
+                </div>
+            </div>
+
+            {/* Inline in text */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Inline in body text</p>
+                <p style={{ fontSize: 14, lineHeight: "1.28581", margin: 0 }}>
+                    Visit the{" "}
+                    <BpLink href="#" data-compare="link-inline">Blueprint documentation</BpLink>
+                    {" "}for more details.
+                </p>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint Slider reference gallery.
+ *
+ * Mirrors analyst-ui SliderGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's Slider component directly (BpSlider).
+ *
+ * Blueprint does not expose data-* forwarding on Slider, so we use a wrapper div +
+ * useEffect + querySelector to stamp data-compare on Blueprint's internal DOM nodes:
+ *   .bp6-slider-track          → slider-track
+ *   .bp6-slider-progress       → slider-progress (the intent-colored fill)
+ *   .bp6-slider-handle         → slider-handle (the interactive handle)
+ *   .bp6-slider-axis .bp6-slider-label:first-child → slider-axis-label
+ *   .bp6-slider-handle .bp6-slider-label           → slider-handle-label
+ *
+ * data-compare keys (must match analyst-ui SliderGallery exactly):
+ *   slider-default      — primary intent, value=5, labelStepSize=5
+ *   slider-success      — success intent, value=6, labelStepSize=5
+ *   slider-disabled     — disabled, value=3, labelStepSize=5
+ *   slider-track        — the track rail
+ *   slider-progress     — the fill segment with intent color
+ *   slider-handle       — the draggable handle knob
+ *   slider-axis-label   — first axis tick label (plain text, no background)
+ *   slider-handle-label — handle value badge (dark tooltip pill below handle)
+ */
+function BpSliderWithInternalCompare({
+    containerCompareKey,
+    tagInternals,
+    ...props
+}: React.ComponentProps<typeof BpSlider> & {
+    containerCompareKey: string;
+    /** If true, stamp slider-track/progress/handle/axis-label/handle-label on this instance */
+    tagInternals?: boolean;
+}) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!wrapperRef.current) return;
+        if (tagInternals) {
+            const track = wrapperRef.current.querySelector(".bp6-slider-track");
+            if (track) track.setAttribute("data-compare", "slider-track");
+
+            // .bp6-slider-progress with intent class = the filled segment
+            const progress = wrapperRef.current.querySelector(".bp6-slider-progress.bp6-intent-primary, .bp6-slider-progress.bp6-intent-success, .bp6-slider-progress.bp6-intent-warning, .bp6-slider-progress.bp6-intent-danger");
+            if (progress) progress.setAttribute("data-compare", "slider-progress");
+
+            // The interactive handle (first .bp6-slider-handle)
+            const handle = wrapperRef.current.querySelector(".bp6-slider-handle");
+            if (handle) handle.setAttribute("data-compare", "slider-handle");
+
+            // Axis tick label — first .bp6-slider-label inside .bp6-slider-axis
+            const axisLabel = wrapperRef.current.querySelector(".bp6-slider-axis .bp6-slider-label");
+            if (axisLabel) axisLabel.setAttribute("data-compare", "slider-axis-label");
+
+            // Handle value badge — .bp6-slider-label inside .bp6-slider-handle
+            const handleLabel = wrapperRef.current.querySelector(".bp6-slider-handle .bp6-slider-label");
+            if (handleLabel) handleLabel.setAttribute("data-compare", "slider-handle-label");
+        }
+    });
+    return (
+        <div ref={wrapperRef} style={{ width: 320 }} data-compare={containerCompareKey}>
+            <BpSlider {...props} />
+        </div>
+    );
+}
+
+function SliderGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Default — primary intent, value=5 */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default (primary, value=5)</p>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-default"
+                    tagInternals={true}
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={5}
+                    intent="primary"
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
+            </div>
+
+            {/* Success intent */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Success intent (value=6)</p>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-success"
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={6}
+                    intent="success"
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
+            </div>
+
+            {/* Disabled */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Disabled (value=3)</p>
+                <BpSliderWithInternalCompare
+                    containerCompareKey="slider-disabled"
+                    min={0}
+                    max={10}
+                    stepSize={1}
+                    value={3}
+                    intent="primary"
+                    disabled
+                    labelStepSize={5}
+                    onChange={() => {}}
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Hotkeys. Uses Blueprint's Dialog, DialogBody, Hotkeys, Hotkey,
+ * and KeyComboTag components to render the canonical hotkeys dialog open by default.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal
+ * renders dark — same pattern as DialogGallery.
+ *
+ * data-compare keys must match analyst-ui's HotkeysGallery exactly:
+ *   hotkey-key        — first kbd key cap (tagged via useEffect on the portaled DOM)
+ *   hotkey-combo      — first .bp6-key-combo span
+ *   hotkey-row        — first .bp6-hotkey row
+ *   hotkey-label      — first .bp6-hotkey-label div
+ *   hotkey-column     — .bp6-hotkey-column wrapper div
+ *   hotkey-group-heading — first h4.bp6-heading group heading
+ */
+function HotkeysGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Tag the portaled content (Blueprint portals to document.body)
+            const col = document.querySelector(`.${Classes.HOTKEY_COLUMN}`);
+            if (col) col.setAttribute("data-compare", "hotkey-column");
+
+            const heading = document.querySelector(`.${Classes.HOTKEY_COLUMN} .${Classes.HEADING}`);
+            if (heading) heading.setAttribute("data-compare", "hotkey-group-heading");
+
+            const firstRow = document.querySelector(`.${Classes.HOTKEY}`);
+            if (firstRow) firstRow.setAttribute("data-compare", "hotkey-row");
+
+            const firstLabel = document.querySelector(`.${Classes.HOTKEY_LABEL}`);
+            if (firstLabel) firstLabel.setAttribute("data-compare", "hotkey-label");
+
+            const firstCombo = document.querySelector(`.${Classes.KEY_COMBO}`);
+            if (firstCombo) firstCombo.setAttribute("data-compare", "hotkey-combo");
+
+            const firstKey = document.querySelector(`.${Classes.KEY}`);
+            if (firstKey) firstKey.setAttribute("data-compare", "hotkey-key");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The hotkeys dialog below is open by default for comparison harness screenshots.
+            </p>
+            {/* Standalone KeyComboTag specimens */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>KeyCombo:</span>
+                <KeyComboTag combo="mod+s" />
+                <KeyComboTag combo="mod+shift+n" />
+                <KeyComboTag combo="ctrl+z" />
+            </div>
+            <Dialog
+                isOpen={true}
+                title="Keyboard shortcuts"
+                onClose={() => {}}
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <DialogBody style={{ margin: 0, padding: 0 }}>
+                    <Hotkeys>
+                        <Hotkey label="Save document" combo="mod+s" global={true} group="Global" />
+                        <Hotkey label="New file" combo="mod+n" global={true} group="Global" />
+                        <Hotkey label="Find" combo="mod+f" group="Editor" />
+                        <Hotkey label="Undo" combo="mod+z" group="Editor" />
+                    </Hotkeys>
+                </DialogBody>
+            </Dialog>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2412,6 +3751,21 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
+    { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
+    { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
+    { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
+    { id: "section", title: "Section", render: () => <SectionGallery /> },
+    { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
+    { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
+    { id: "tree", title: "Tree", render: () => <TreeGallery /> },
+    { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
+    { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
+    { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
+    { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
+    { id: "link", title: "Link", render: () => <LinkGallery /> },
+    { id: "slider", title: "Slider", render: () => <SliderGallery /> },
+    { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

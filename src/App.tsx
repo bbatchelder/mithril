@@ -31,6 +31,21 @@ import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
+import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
+import { Tabs, Tab } from "@/components/ui/tabs";
+import { Collapse } from "@/components/ui/collapse";
+import { Section as BpSection, SectionCard as BpSectionCard } from "@/components/ui/section";
+import { CardList } from "@/components/ui/card-list";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
+import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
+import { HTMLTable } from "@/components/ui/html-table";
+import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
+import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
+import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
+import { Link } from "@/components/ui/link";
+import { Slider } from "@/components/ui/slider";
+import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2202,6 +2217,1137 @@ function ContextMenuGallery() {
     );
 }
 
+/**
+ * Navbar showcase. The navbar is inline (no portal) so dark mode works via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference NavbarGallery exactly):
+ *   navbar           — the Navbar bar itself (bg, shadow, height, padding)
+ *   navbar-heading   — the NavbarHeading div (font-size, font-weight, margin-right, color)
+ *   navbar-divider   — the NavbarDivider (height, border-left, margin)
+ *
+ * A fixed width is given to the navbar container so both sides measure identical widths.
+ * We use a wrapper div with fixed width to avoid full-page-width scroll issues in the gallery.
+ */
+function NavbarGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Standard navbar (left + right groups)">
+                <div style={{ width: 680 }}>
+                    <Navbar data-compare="navbar">
+                        <NavbarGroup align="left">
+                            <NavbarHeading data-compare="navbar-heading">My Application</NavbarHeading>
+                            <NavbarDivider data-compare="navbar-divider" />
+                            <Button variant="minimal">Home</Button>
+                            <Button variant="minimal">Files</Button>
+                        </NavbarGroup>
+                        <NavbarGroup align="right">
+                            <Button variant="minimal">Log in</Button>
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+
+            <Section title="Left group only">
+                <div style={{ width: 680 }}>
+                    <Navbar>
+                        <NavbarGroup align="left">
+                            <NavbarHeading>App</NavbarHeading>
+                            <NavbarDivider />
+                            <Button variant="minimal">Home</Button>
+                            <Button variant="minimal">About</Button>
+                        </NavbarGroup>
+                    </Navbar>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Tabs showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference TabsGallery exactly):
+ *   tab-selected          — the selected tab title element (color, box-shadow, font)
+ *   tab-default           — an unselected tab title (color, font)
+ *   tab-disabled          — a disabled tab title (color)
+ *   tab-indicator         — the indicator bar (height, backgroundColor)
+ *   tabs-vertical-selected — the selected tab in vertical mode (backgroundColor)
+ */
+function TabsGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Horizontal (default)">
+                <Tabs id="tabs-horizontal" defaultSelectedTabId="overview">
+                    <Tab
+                        id="overview"
+                        title={<span data-compare="tab-selected">Overview</span>}
+                        panel={
+                            <div className="p-2">
+                                <p className="text-body">Overview panel content. This is the selected tab.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="details"
+                        title={<span data-compare="tab-default">Details</span>}
+                        panel={
+                            <div className="p-2">
+                                <p className="text-body">Details panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="disabled-tab"
+                        title={<span data-compare="tab-disabled">Disabled</span>}
+                        disabled
+                        panel={<div className="p-2">Disabled panel.</div>}
+                    />
+                </Tabs>
+            </Section>
+
+            <Section title="Vertical">
+                <Tabs id="tabs-vertical" defaultSelectedTabId="files" vertical>
+                    <Tab
+                        id="files"
+                        title={<span data-compare="tabs-vertical-selected">Files</span>}
+                        panel={
+                            <div>
+                                <p className="text-body">Files panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="config"
+                        title="Configuration"
+                        panel={
+                            <div>
+                                <p className="text-body">Configuration panel content.</p>
+                            </div>
+                        }
+                    />
+                    <Tab
+                        id="logs"
+                        title="Logs"
+                        panel={
+                            <div>
+                                <p className="text-body">Logs panel content.</p>
+                            </div>
+                        }
+                    />
+                </Tabs>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Collapse showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference CollapseGallery exactly):
+ *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
+ *   collapse-body  — the .bp6-collapse-body inner element (transform)
+ *
+ * We use an open Collapse containing identical content on both sides so the
+ * measured height matches. The open state is the meaningful comparison: Blueprint
+ * sets height=auto / overflow-y=visible; we replicate that exactly.
+ *
+ * The body element is tagged via useEffect (same pattern as TabsGallery for the
+ * indicator) because it's rendered inside Collapse — we can't place data-compare
+ * on it directly from the gallery.
+ */
+function CollapseGallery() {
+    useEffect(() => {
+        // Tag the .bp6-collapse-body inside the open collapse specimen.
+        const body = document.querySelector('[data-compare="collapse-open"] .bp6-collapse-body');
+        if (body) body.setAttribute("data-compare", "collapse-body");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Open">
+                <Collapse isOpen data-compare="collapse-open">
+                    <p className="text-body">
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+            </Section>
+
+            <Section title="Closed">
+                <Collapse isOpen={false}>
+                    <p className="text-body">
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+                <p className="text-body-sm text-foreground-muted">(Nothing visible above — Collapse is closed)</p>
+            </Section>
+
+            <Section title="Keep children mounted (closed)">
+                <Collapse isOpen={false} keepChildrenMounted>
+                    <p className="text-body">Children stay in DOM but are hidden.</p>
+                </Collapse>
+                <p className="text-body-sm text-foreground-muted">(Nothing visible above — keepChildrenMounted, closed)</p>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Section showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference SectionGallery exactly):
+ *   section          — the outer Card container (bg, shadow, radius, border)
+ *   section-header   — the header div (border-bottom, min-height, padding)
+ *   section-title    — the H6 title element (font, color)
+ *   section-subtitle — the subtitle div (color, margin)
+ *   section-body     — the SectionCard content panel (padding)
+ *
+ * We render: a basic Section (title + subtitle + SectionCard body),
+ * a collapsible Section (open, with caret), and a compact one.
+ * Fixed width (400px) so both galleries produce the same box dimensions.
+ */
+function SectionGallery() {
+    useEffect(() => {
+        // Tag internal elements within the basic section specimen (data-compare="section").
+        const basicSection = document.querySelector('[data-compare="section"]');
+        if (basicSection) {
+            // Header: first child div of the section card (directly inside the card wrapper)
+            const header = basicSection.firstElementChild;
+            if (header) header.setAttribute("data-compare", "section-header");
+            // Title: the h6 element inside the header
+            const title = basicSection.querySelector("h6");
+            if (title) title.setAttribute("data-compare", "section-title");
+            // Subtitle: the div after the h6
+            const subtitle = basicSection.querySelector("h6 + div");
+            if (subtitle) subtitle.setAttribute("data-compare", "section-subtitle");
+        }
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 400 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Basic (title + subtitle + body)</p>
+                <BpSection
+                    title="Account settings"
+                    subtitle="Manage your account preferences"
+                    icon="cog"
+                    data-compare="section"
+                >
+                    <BpSectionCard data-compare="section-body">
+                        <p className="text-body">Section card content goes here.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Collapsible (open)</p>
+                <BpSection
+                    title="Advanced options"
+                    subtitle="Expand to see more"
+                    collapsible
+                    collapseProps={{ defaultIsOpen: true }}
+                >
+                    <BpSectionCard>
+                        <p className="text-body">Collapsible section body — currently open.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <BpSection
+                    title="Compact section"
+                    compact
+                    elevation={1}
+                >
+                    <BpSectionCard compact>
+                        <p className="text-body">Compact body content.</p>
+                    </BpSectionCard>
+                </BpSection>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * CardList showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference CardListGallery exactly):
+ *   card-list        — the outer Card container (bg, radius, shadow / no radius when bordered=false)
+ *   card-list-item   — a middle Card row (padding, divider, min-height)
+ *
+ * We render: a bordered CardList with 3 rows (middle is interactive), and a compact one.
+ * Fixed width (400px) so both galleries produce the same box dimensions.
+ */
+function CardListGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 400 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Bordered (default)</p>
+                <CardList data-compare="card-list">
+                    <Card>
+                        <span>Item one — plain</span>
+                    </Card>
+                    <Card interactive data-compare="card-list-item">
+                        <span>Item two — interactive (hover me)</span>
+                    </Card>
+                    <Card>
+                        <span>Item three — plain</span>
+                    </Card>
+                    <Card>
+                        <span>Item four — plain</span>
+                    </Card>
+                </CardList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <CardList compact>
+                    <Card>Compact item one</Card>
+                    <Card interactive>Compact item two — interactive</Card>
+                    <Card>Compact item three</Card>
+                </CardList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Flush (bordered=false)</p>
+                <CardList bordered={false}>
+                    <Card>Flush item one</Card>
+                    <Card interactive>Flush item two — interactive</Card>
+                    <Card>Flush item three</Card>
+                </CardList>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Breadcrumbs showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference BreadcrumbsGallery exactly):
+ *   breadcrumb-link      — a non-current, non-disabled link crumb (the anchor/span element)
+ *   breadcrumb-current   — the last/current crumb (bold, non-interactive span)
+ *   breadcrumbs-separator — a chevron-right separator icon
+ *
+ * Fixed width (500px) so both galleries produce the same box dimensions.
+ */
+function BreadcrumbsGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 500 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Default trail (link + link + current)</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/", "data-compare": "breadcrumb-link" },
+                        { text: "Projects", href: "/projects" },
+                        { text: "Current Project", current: true, "data-compare": "breadcrumb-current" },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">With icons</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/", icon: "info-sign" },
+                        { text: "Settings", href: "/settings", icon: "caret-right" },
+                        { text: "Profile", current: true, icon: "tick-circle" },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">With disabled crumb</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Home", href: "/" },
+                        { text: "Restricted", href: "/admin", disabled: true },
+                        { text: "Page", current: true },
+                    ]}
+                />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Single crumb (no separator)</p>
+                <Breadcrumbs
+                    items={[
+                        { text: "Only Page", current: true },
+                    ]}
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Tree showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference TreeGallery exactly):
+ *   tree-node-content    — the default (non-selected, non-disabled) node row div
+ *   tree-node-selected   — the selected node row div
+ *   tree-node-caret      — the caret span on an expandable node
+ *   tree-node-caret-none — the spacer span on a leaf node
+ *   tree-node-icon       — the icon span on a node with an icon
+ *
+ * Fixed width (320px) so both galleries produce the same box dimensions.
+ *
+ * DOM tagging (via useEffect) tags equivalent nodes to the blueprint-reference gallery:
+ * Flattened DOM order (same as Blueprint):
+ *   0: Documents (depth 0, expanded, folder icon)
+ *   1: Annual Report 2025 (depth 1, doc icon + secondaryLabel) → tree-node-content, tree-node-icon
+ *   2: Projects (depth 1, expanded, folder icon)
+ *   3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+ *   4: blueprint-ref (depth 2)
+ *   5: Drafts (depth 0, collapsed)
+ *   6: Trash (depth 0, disabled)
+ */
+const TREE_INITIAL: TreeNodeInfo[] = [
+    {
+        id: 1,
+        label: "Documents",
+        icon: "folder-close",
+        isExpanded: true,
+        childNodes: [
+            {
+                id: 2,
+                label: "Annual Report 2025",
+                icon: "document",
+                secondaryLabel: <span style={{ fontSize: 12, opacity: 0.6 }}>4.2 MB</span>,
+            },
+            {
+                id: 3,
+                label: "Projects",
+                icon: "folder-close",
+                isExpanded: true,
+                childNodes: [
+                    {
+                        id: 4,
+                        label: "analyst-ui",
+                        isSelected: true,
+                    },
+                    {
+                        id: 5,
+                        label: "blueprint-ref",
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 6,
+        label: "Drafts",
+        icon: "folder-close",
+    },
+    {
+        id: 7,
+        label: "Trash",
+        icon: "trash",
+        disabled: true,
+    },
+];
+
+function TreeGallery() {
+    const [contents, { handleNodeClick, handleNodeExpand, handleNodeCollapse }] = useTreeState(TREE_INITIAL);
+    const treeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!treeRef.current) return;
+        // analyst-ui Tree renders .bp6-tree-node-content divs for each node row.
+        // DOM order matches Blueprint reference exactly (pre-order traversal).
+        // 0: Documents (depth 0, expanded, has caret)
+        // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel) → tree-node-content
+        // 2: Projects (depth 1, expanded, has caret + icon)
+        // 3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+        // 4: blueprint-ref (depth 2, leaf)
+        // 5: Drafts (depth 0, collapsed)
+        // 6: Trash (depth 0, disabled)
+        const rows = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-content");
+        if (rows[1]) rows[1].setAttribute("data-compare", "tree-node-content");
+        if (rows[3]) rows[3].setAttribute("data-compare", "tree-node-selected");
+
+        // Caret spans (expandable nodes): Documents (0), Projects (2)
+        const carets = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret");
+        if (carets[0]) carets[0].setAttribute("data-compare", "tree-node-caret");
+
+        // Caret-none spans (leaf nodes): Annual Report 2025 is first leaf at depth 1
+        const caretNones = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret-none");
+        if (caretNones[0]) caretNones[0].setAttribute("data-compare", "tree-node-caret-none");
+
+        // Icon span on "Annual Report 2025" (second node in DOM order):
+        // .bp6-tree-node-icon is the class on icon spans within that content row.
+        const icons = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-icon");
+        if (icons[1]) icons[1].setAttribute("data-compare", "tree-node-icon");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 320 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Default tree (multi-level, selected, icon, secondaryLabel)</p>
+                <div ref={treeRef}>
+                    <Tree
+                        contents={contents}
+                        onNodeClick={handleNodeClick}
+                        onNodeExpand={handleNodeExpand}
+                        onNodeCollapse={handleNodeCollapse}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * PanelStack showcase.
+ *
+ * For a stable screenshot + computed-style diff, the specimen shows a stack of
+ * DEPTH 2 (root + one pushed panel) so the back button is visible in the header.
+ * We use a controlled `stack` prop with a fixed initial stack of 2 panels — no
+ * interaction needed. Both galleries show identical structure so the diff is valid.
+ *
+ * data-compare keys:
+ *   panel-stack-header  — the header div (height:30px, box-shadow bottom divider)
+ *   panel-stack-back    — the back button (minimal small, chevron-left + "Root" text)
+ *   panel-stack-title   — the centered title span
+ *
+ * Fixed container: 320×240px so screenshots are stable.
+ */
+
+const ROOT_PANEL: PanelInfo = {
+    title: "Root",
+    renderPanel: ({ openPanel }: PanelActions & object) => (
+        <div style={{ padding: 16 }}>
+            <p style={{ marginBottom: 8, fontSize: 14 }}>Root panel content.</p>
+            <Button
+                size="small"
+                onClick={() =>
+                    openPanel({
+                        title: "Detail",
+                        renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+                    })
+                }
+            >
+                Open Detail
+            </Button>
+        </div>
+    ),
+};
+
+const DETAIL_PANEL: PanelInfo = {
+    title: "Detail",
+    renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+};
+
+// Controlled stack of [root, detail] — depth 2, back button visible.
+const INITIAL_PANEL_STACK: PanelInfo[] = [ROOT_PANEL, DETAIL_PANEL];
+
+function PanelStackGallery() {
+    const [stack, setStack] = useState<PanelInfo[]>(INITIAL_PANEL_STACK);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">
+                    Controlled stack (depth 2) — back button + centered title visible
+                </p>
+                {/* Fixed size so the harness gets a stable layout */}
+                <div style={{ width: 320, height: 240, position: "relative", border: "1px solid rgba(0,0,0,0.1)" }}>
+                    <PanelStack
+                        stack={stack}
+                        onOpen={(p) => setStack((prev) => [...prev, p])}
+                        onClose={() => setStack((prev) => prev.slice(0, -1))}
+                        style={{ width: "100%", height: "100%" }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * HTMLTable showcase.
+ *
+ * Specimens cover: plain, bordered+striped, interactive, and compact.
+ * Each specimen uses identical row/col data to the Blueprint reference gallery
+ * for a valid computed-style diff.
+ *
+ * data-compare keys:
+ *   html-table-header  — a <th> in the header row (font-weight:600, text-foreground)
+ *   html-table-cell    — a <td> in the first body row (has the top-border shadow)
+ *   html-table-row     — a <tr> in the body
+ */
+function HTMLTableGallery() {
+    const tableData = [
+        { name: "Alice", role: "Engineer", status: "Active" },
+        { name: "Bob", role: "Designer", status: "Inactive" },
+        { name: "Carol", role: "Manager", status: "Active" },
+    ];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Plain table */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Plain</p>
+                <HTMLTable>
+                    <thead>
+                        <tr>
+                            <th data-compare="html-table-header">Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name} data-compare={row.name === "Alice" ? "html-table-row" : undefined}>
+                                <td data-compare={row.name === "Alice" ? "html-table-cell" : undefined}>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Bordered + striped */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Bordered + Striped</p>
+                <HTMLTable bordered striped>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Interactive */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Interactive (hover rows)</p>
+                <HTMLTable interactive>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+
+            {/* Compact */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <HTMLTable compact>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tableData.map((row) => (
+                            <tr key={row.name}>
+                                <td>{row.name}</td>
+                                <td>{row.role}</td>
+                                <td>{row.status}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </HTMLTable>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * EditableText showcase.
+ *
+ * Specimens cover: resting with value, empty+placeholder, editing (isEditing),
+ * multiline, intent (primary), and disabled.
+ *
+ * data-compare keys:
+ *   editable-text-resting    — root div, resting state with value
+ *   editable-text-content    — the content span (resting, no-intent, has value)
+ *   editable-text-placeholder — content span showing placeholder (no value)
+ *   editable-text-editing    — root div with isEditing=true (shows editing ring)
+ *   editable-text-input      — the <input> inside the editing specimen
+ */
+function EditableTextGallery() {
+    const [editingValue, setEditingValue] = useState("Editing now");
+    const intents: EditableTextIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Resting state with value */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Resting (with value)</p>
+                <EditableText
+                    defaultValue="Hello, Blueprint"
+                    data-compare="editable-text-resting"
+                />
+            </div>
+
+            {/* Empty + placeholder */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Empty + placeholder</p>
+                <EditableText
+                    defaultValue=""
+                    placeholder="Click to Edit"
+                    data-compare="editable-text-placeholder"
+                />
+            </div>
+
+            {/* Editing state (controlled isEditing) */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Editing state</p>
+                <EditableText
+                    value={editingValue}
+                    isEditing={true}
+                    onChange={setEditingValue}
+                    data-compare="editable-text-editing"
+                />
+            </div>
+
+            {/* Multiline */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Multiline</p>
+                <EditableText
+                    defaultValue={"Line one\nLine two\nLine three"}
+                    multiline
+                    minLines={3}
+                />
+            </div>
+
+            {/* Intents */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Intents</p>
+                <div className="flex flex-col gap-2">
+                    {intents.map((intent) => (
+                        <EditableText
+                            key={intent}
+                            defaultValue={intent === "none" ? "No intent" : intent}
+                            intent={intent}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Disabled</p>
+                <EditableText
+                    defaultValue="Cannot edit this"
+                    disabled
+                />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * EntityTitle showcase.
+ *
+ * Specimens cover: basic title only, title+icon+subtitle, title+icon+subtitle+tag,
+ * and each size variant (h1–h6 + text). Identical text/icon on both sides.
+ *
+ * data-compare keys:
+ *   entity-title-basic       — title-only (no icon, no subtitle)
+ *   entity-title-full        — icon + title + subtitle
+ *   entity-title-tags        — icon + title + subtitle + tag
+ *   entity-title-h1          — h1 size with icon + subtitle
+ *   entity-title-h3          — h3 size with icon + subtitle
+ *   entity-title-h6          — h6 size with icon + subtitle
+ */
+function EntityTitleGallery() {
+    const sizes: EntityTitleSize[] = ["text", "h1", "h2", "h3", "h4", "h5", "h6"];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Basic: title only */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Title only</p>
+                <EntityTitle
+                    title="Project Alpha"
+                    data-compare="entity-title-basic"
+                />
+            </div>
+
+            {/* Title + icon + subtitle */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon + title + subtitle</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    data-compare="entity-title-full"
+                />
+            </div>
+
+            {/* Title + icon + subtitle + tag */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon + title + subtitle + tag</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Project Alpha"
+                    subtitle="Last updated 2 hours ago"
+                    tags={<Tag intent="primary">Active</Tag>}
+                    data-compare="entity-title-tags"
+                />
+            </div>
+
+            {/* Sizes */}
+            <div className="flex flex-col gap-4">
+                <p className="text-body-sm text-foreground-muted">Sizes</p>
+                {sizes.map((size) => (
+                    <EntityTitle
+                        key={size}
+                        size={size}
+                        icon="folder-close"
+                        title={`${size === "text" ? "Text" : size.toUpperCase()} — Project Alpha`}
+                        subtitle="Last updated 2 hours ago"
+                        data-compare={`entity-title-${size}`}
+                    />
+                ))}
+            </div>
+
+            {/* Loading state */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Loading</p>
+                <EntityTitle
+                    icon="folder-close"
+                    title="Loading title"
+                    subtitle="Loading subtitle"
+                    loading
+                />
+            </div>
+
+            {/* Fill + ellipsize */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Fill + ellipsize</p>
+                <div style={{ width: 300 }} className="border border-divider rounded">
+                    <EntityTitle
+                        icon="folder-close"
+                        title="Very long project name that should be truncated on overflow"
+                        subtitle="Last updated 2 hours ago"
+                        fill
+                        ellipsize
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * NonIdealState showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * Specimens cover:
+ *   - Full state (icon + title + description + action)
+ *   - Minimal (icon + title only)
+ *   - Title + description only (no icon)
+ *   - Horizontal layout
+ *   - Icon size variants (STANDARD, SMALL, EXTRA_SMALL)
+ *   - Custom ReactNode visual (non-string icon)
+ *
+ * data-compare keys (must match blueprint-reference NonIdealStateGallery exactly):
+ *   non-ideal-state-full          — full state: icon + title + description + action
+ *   non-ideal-state-minimal       — icon + title only
+ *   non-ideal-state-visual-full   — the visual div inside the full-state specimen
+ *   non-ideal-state-title-full    — the title h4 inside the full-state specimen
+ *   non-ideal-state-description   — the description div inside the full-state specimen
+ *
+ * Fixed width (400px) so centering + max-width compare cleanly on both sides.
+ */
+function NonIdealStateGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Full state: icon + title + description + action */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Full state (icon + title + description + action)</p>
+                <div style={{ width: 400, height: 300, position: "relative" }}>
+                    <NonIdealState
+                        icon="search"
+                        title="No search results"
+                        description="Your query returned no results. Try a different search."
+                        action={<Button intent="primary">Clear search</Button>}
+                        data-compare="non-ideal-state-full"
+                    />
+                </div>
+            </div>
+
+            {/* Minimal: icon + title only */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Minimal (icon + title)</p>
+                <div style={{ width: 400, height: 200, position: "relative" }}>
+                    <NonIdealState
+                        icon="folder-close"
+                        title="Empty folder"
+                        data-compare="non-ideal-state-minimal"
+                    />
+                </div>
+            </div>
+
+            {/* Title + description only (no icon) */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Title + description (no icon)</p>
+                <div style={{ width: 400, height: 150, position: "relative" }}>
+                    <NonIdealState
+                        title="Nothing here"
+                        description="Come back later when there's something to show."
+                    />
+                </div>
+            </div>
+
+            {/* Horizontal layout */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Horizontal layout</p>
+                <div style={{ width: 400, height: 120, position: "relative" }}>
+                    <NonIdealState
+                        icon="warning-sign"
+                        title="Connection error"
+                        description="Could not connect to the server."
+                        layout="horizontal"
+                    />
+                </div>
+            </div>
+
+            {/* Icon size variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon sizes (STANDARD / SMALL / EXTRA_SMALL)</p>
+                <div className="flex gap-4 flex-wrap">
+                    {([
+                        ["STANDARD", NonIdealStateIconSize.STANDARD],
+                        ["SMALL", NonIdealStateIconSize.SMALL],
+                        ["EXTRA_SMALL", NonIdealStateIconSize.EXTRA_SMALL],
+                    ] as const).map(([label, size]) => (
+                        <div key={label} style={{ width: 160, height: 180, position: "relative", border: "1px dashed rgba(0,0,0,0.1)" }}>
+                            <NonIdealState
+                                icon="document"
+                                iconSize={size}
+                                title={label}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* iconMuted=false */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">iconMuted=false (inherits muted text color)</p>
+                <div style={{ width: 400, height: 180, position: "relative" }}>
+                    <NonIdealState
+                        icon="info-sign"
+                        title="Information"
+                        iconMuted={false}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Link showcase.
+ *
+ * Blueprint spec: bp6-link with underline/color variants.
+ * Default: underline="always", color="primary" (blue-2 light / blue-5 dark).
+ *
+ * data-compare keys (must match blueprint-reference LinkGallery exactly):
+ *   link-default       — primary color, always underlined
+ *   link-hover         — primary color, hover underline
+ *   link-none          — primary color, no underline
+ *   link-inherit       — inherit color, always underlined
+ *   link-success       — success color, always underlined
+ *   link-warning       — warning color, always underlined
+ *   link-danger        — danger color, always underlined
+ *   link-inline        — link in a sentence of body text
+ */
+function LinkGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            {/* Default — always underlined, primary color */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Default (underline=always, color=primary)</p>
+                <Link href="#" data-compare="link-default">Blueprint Link</Link>
+            </div>
+
+            {/* Underline variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Underline variants</p>
+                <div className="flex gap-6 items-baseline">
+                    <Link href="#" underline="always" data-compare="link-hover-nope">always</Link>
+                    <Link href="#" underline="hover" data-compare="link-hover">hover</Link>
+                    <Link href="#" underline="none" data-compare="link-none">none</Link>
+                </div>
+            </div>
+
+            {/* Color variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Color variants</p>
+                <div className="flex gap-6 items-baseline">
+                    <Link href="#" color="primary">primary</Link>
+                    <Link href="#" color="success" data-compare="link-success">success</Link>
+                    <Link href="#" color="warning" data-compare="link-warning">warning</Link>
+                    <Link href="#" color="danger" data-compare="link-danger">danger</Link>
+                    <Link href="#" color="inherit" data-compare="link-inherit">inherit</Link>
+                </div>
+            </div>
+
+            {/* Inline in text */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Inline in body text</p>
+                <p className="text-[14px] leading-[1.28581]">
+                    Visit the{" "}
+                    <Link href="#" data-compare="link-inline">Blueprint documentation</Link>
+                    {" "}for more details.
+                </p>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Slider showcase.
+ *
+ * data-compare keys (must match blueprint-reference SliderGallery exactly):
+ *   slider-default      — horizontal slider at value=5, intent=primary, min=0 max=10 step=1
+ *   slider-success      — success intent slider at value=6
+ *   slider-disabled     — disabled slider at value=3
+ *   slider-track        — the track rail (RadixSlider.Track)
+ *   slider-progress     — the progress fill element (fill div inside Track)
+ *   slider-handle       — the handle knob (RadixSlider.Thumb)
+ *   slider-axis-label   — first axis tick label (plain text, no bg)
+ *   slider-handle-label — handle value badge (dark tooltip pill below handle)
+ */
+function SliderGallery() {
+    const [val, setVal] = useState(5);
+    const [successVal] = useState(6);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Default — primary intent, value=5, labels at 0/5/10 */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Default (primary, value=5)</p>
+                <div className="w-[320px]" data-compare="slider-default">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={val}
+                        onChange={setVal}
+                        intent="primary"
+                        labelStepSize={5}
+                        _tagInternals
+                    />
+                </div>
+            </div>
+
+            {/* Success intent */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Success intent (value=6)</p>
+                <div className="w-[320px]" data-compare="slider-success">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={successVal}
+                        intent="success"
+                        labelStepSize={5}
+                    />
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Disabled (value=3)</p>
+                <div className="w-[320px]" data-compare="slider-disabled">
+                    <Slider
+                        min={0}
+                        max={10}
+                        stepSize={1}
+                        value={3}
+                        intent="primary"
+                        disabled
+                        labelStepSize={5}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Hotkeys showcase. Renders the HotkeysDialog OPEN by default so the harness can
+ * screenshot and computed-style-diff the portaled content.
+ *
+ * Portal + dark-mode: dark comes from DarkContext; the dialog receives it and
+ * wraps the portaled portal children in `<div className="dark">` (same as Dialog/Alert).
+ *
+ * data-compare keys (must match blueprint-reference HotkeysGallery exactly):
+ *   hotkey-key    — a single .bp6-key cap (first key in the first combo)
+ *   hotkey-combo  — the .bp6-key-combo wrapper span (first row)
+ *   hotkey-row    — a .bp6-hotkey row (first row, first group)
+ *   hotkey-label  — the .bp6-hotkey-label div (first row)
+ *
+ * NOTE: These elements are portaled to document.body, so the harness finds them
+ * via document.querySelectorAll("[data-compare]") which scans the full document.
+ */
+function HotkeysGallery() {
+    const dark = useContext(DarkContext);
+
+    const HOTKEYS = [
+        { label: "Save document", combo: "mod+s", global: true },
+        { label: "New file", combo: "mod+n", global: true },
+        { label: "Find", combo: "mod+f", group: "Editor" },
+        { label: "Undo", combo: "mod+z", group: "Editor" },
+    ] as const;
+
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The hotkeys dialog below is open by default for comparison harness screenshots.
+            </p>
+            {/* Standalone KeyCombo specimens (visible outside dialog) */}
+            <div className="flex flex-wrap items-center gap-4">
+                <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
+                <KeyCombo combo="mod+s" />
+                <KeyCombo combo="mod+shift+n" />
+                <KeyCombo combo="ctrl+z" />
+            </div>
+            <HotkeysDialog
+                open={true}
+                onOpenChange={() => {}}
+                dark={dark}
+                title="Keyboard shortcuts"
+                hotkeys={HOTKEYS}
+                globalGroupName="Global"
+            />
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2234,6 +3380,21 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
     { id: "menu", title: "Menu", render: () => <MenuGallery /> },
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
+    { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
+    { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
+    { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
+    { id: "section", title: "Section", render: () => <SectionGallery /> },
+    { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
+    { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
+    { id: "tree", title: "Tree", render: () => <TreeGallery /> },
+    { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
+    { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
+    { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
+    { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
+    { id: "link", title: "Link", render: () => <LinkGallery /> },
+    { id: "slider", title: "Slider", render: () => <SliderGallery /> },
+    { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
