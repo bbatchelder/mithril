@@ -253,6 +253,24 @@
     /* Form input inset shadow */
     --input-shadow: inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
 
+    /* Input intent shadows (resting) — Blueprint pt-input-intent mixin:
+     * inset 0 0 0 1px <intent-color-rest> + the base input-shadow.
+     * Light intent colors = pt-intent-colors: blue3/green3/orange3/red3. */
+    --input-intent-primary: inset 0 0 0 1px #2d72d2, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-success: inset 0 0 0 1px #238551, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-warning: inset 0 0 0 1px #c87619, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-danger:  inset 0 0 0 1px #cd4246, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+
+    /* Input focus shadows (no intent and per intent) — Blueprint input-transition-shadow(color, true):
+     * inset 0 0 0 1px rgba(color, 0.752) + 0 0 0 1px rgba(color, 0.752) + inset 0 1px 1px rgba(black, 0.2).
+     * The outer (non-inset) shadow is the focus indicator ring.
+     * Light focus color = $pt-focus-indicator-color = rgba(blue2, 0.752) = rgba(33,93,176,0.752). */
+    --input-focus: inset 0 0 0 1px rgba(33, 93, 176, 0.752), 0 0 0 1px rgba(33, 93, 176, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+    --input-focus-primary: inset 0 0 0 1px rgba(45, 114, 210, 0.752), 0 0 0 1px rgba(45, 114, 210, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+    --input-focus-success: inset 0 0 0 1px rgba(35, 133, 81, 0.752), 0 0 0 1px rgba(35, 133, 81, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+    --input-focus-warning: inset 0 0 0 1px rgba(200, 118, 25, 0.752), 0 0 0 1px rgba(200, 118, 25, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+    --input-focus-danger:  inset 0 0 0 1px rgba(205, 66, 70, 0.752), 0 0 0 1px rgba(205, 66, 70, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+
     /* Minimal/outlined intent text — Blueprint uses the intent *hover* shade (palette -2) in light. */
     --intent-primary-text: var(--color-blue-2);
     --intent-success-text: var(--color-green-2);
@@ -334,6 +352,23 @@
 
     --input-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
     --button-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px oklch(0.189828 0.00940823 none / 0.2);
+
+    /* Input intent shadows (dark) — pt-dark-input-intent-box-shadow-colors:
+     * blue4/green4/orange4/red4 as the border color + dark input-shadow. */
+    --input-intent-primary: inset 0 0 0 1px #4c90f0, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-success: inset 0 0 0 1px #32a467, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-warning: inset 0 0 0 1px #ec9a3c, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-danger:  inset 0 0 0 1px #e76a6e, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+
+    /* Input focus shadows (dark) — dark-input-transition-shadow(color, true):
+     * inset 0 0 0 1px rgba(color, 0.752) + 0 0 0 1px rgba(color, 0.752)
+     * (note: dark focus mixin does NOT add the inset 0 1px 1px layer).
+     * Dark focus color = $pt-dark-focus-indicator-color = rgba(blue5, 0.752) = rgba(138,187,255,0.752). */
+    --input-focus: inset 0 0 0 1px rgba(138, 187, 255, 0.752), 0 0 0 1px rgba(138, 187, 255, 0.752);
+    --input-focus-primary: inset 0 0 0 1px rgba(76, 144, 240, 0.752), 0 0 0 1px rgba(76, 144, 240, 0.752);
+    --input-focus-success: inset 0 0 0 1px rgba(50, 164, 103, 0.752), 0 0 0 1px rgba(50, 164, 103, 0.752);
+    --input-focus-warning: inset 0 0 0 1px rgba(236, 154, 60, 0.752), 0 0 0 1px rgba(236, 154, 60, 0.752);
+    --input-focus-danger:  inset 0 0 0 1px rgba(231, 106, 110, 0.752), 0 0 0 1px rgba(231, 106, 110, 0.752);
 
     /* Dark minimal/outlined intent text — Blueprint: color-mix(in oklch, intent-rest, white). */
     --intent-primary-text: color-mix(in oklch, var(--color-blue-3) 51%, white);
@@ -431,6 +466,15 @@
     --shadow-elevation-3: var(--elevation-3);
     --shadow-elevation-4: var(--elevation-4);
     --shadow-input: var(--input-shadow);
+    --shadow-input-intent-primary: var(--input-intent-primary);
+    --shadow-input-intent-success: var(--input-intent-success);
+    --shadow-input-intent-warning: var(--input-intent-warning);
+    --shadow-input-intent-danger: var(--input-intent-danger);
+    --shadow-input-focus: var(--input-focus);
+    --shadow-input-focus-primary: var(--input-focus-primary);
+    --shadow-input-focus-success: var(--input-focus-success);
+    --shadow-input-focus-warning: var(--input-focus-warning);
+    --shadow-input-focus-danger: var(--input-focus-danger);
     --shadow-button: var(--button-shadow);
 
     --shadow-card-0: var(--card-shadow-0);

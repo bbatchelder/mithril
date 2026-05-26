@@ -54,19 +54,19 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 2 — Form controls
 
-- [ ] **InputGroup** (text input) — `forms/inputGroup.tsx`. `--input-shadow` already tokenized. Intent
+- [x] **InputGroup** (text input) — `forms/inputGroup.tsx`. `--input-shadow` already tokenized. Intent
       validation states, sizes matching button heights (24/30/40), measured focus ring. First form control.
-- [ ] **TextArea** — `forms/textArea.tsx`
-- [ ] **Checkbox** — `forms/controls.tsx`
-- [ ] **Radio / RadioGroup** — `forms/controls.tsx`, `forms/radioGroup.tsx`
-- [ ] **Switch** — `forms/controls.tsx`
-- [ ] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`
-- [ ] **ControlGroup** — `forms/controlGroup.tsx`
-- [ ] **HTMLSelect** — `html-select/`
-- [ ] **FileInput** — `forms/fileInput.tsx`
-- [ ] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)
-- [ ] **SegmentedControl** — `segmented-control/`
-- [ ] **ControlCard** — `control-card/` (Card + controls)
+- [x] **TextArea** — `forms/textArea.tsx`
+- [x] **Checkbox** — `forms/controls.tsx`
+- [x] **Radio / RadioGroup** — `forms/controls.tsx`, `forms/radioGroup.tsx`
+- [x] **Switch** — `forms/controls.tsx`
+- [x] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`
+- [x] **ControlGroup** — `forms/controlGroup.tsx`
+- [x] **HTMLSelect** — `html-select/`
+- [x] **FileInput** — `forms/fileInput.tsx`
+- [x] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)
+- [x] **SegmentedControl** — `segmented-control/`
+- [x] **ControlCard** — `control-card/` (Card + controls)
 
 ## Phase 3 — Overlays & positioning
 
