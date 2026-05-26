@@ -129,11 +129,6 @@ const [selected, setSelected] = useState<string | null>(null);
 
 ## Accepted deltas
 
-- **Popover width (visual only, not measured)**: Blueprint's Suggest uses `matchTargetWidth` making
-  the popover match the trigger input width. Our Popover does not implement `matchTargetWidth`, so
-  the popover is narrower (content-sized). This is a visual-only difference — NOT measured by the
-  computed style harness. The menu items' styles all match.
-
 - **`only in analyst: popover-content`**: Radix's portaled popover wrapper element has
   `data-compare="popover-content"` from the Popover component's own `data-compare`. It has no
   Blueprint counterpart and is simply ignored by the diff.
@@ -163,6 +158,24 @@ Screenshot confirmation (light + dark):
 ## New dependencies added
 
 None. `@blueprintjs/select` was already installed in `tools/blueprint-reference/` from Select (Phase 5 #2).
+
+## Post-commit fix: matchTargetWidth on Popover (2026-05-26)
+
+After the initial commit, a follow-up fix was applied to close the visual fidelity gap where
+Suggest's dropdown was narrower than the input trigger.
+
+**Fix:** Added `matchTargetWidth?: boolean` prop to `src/components/ui/popover.tsx`. When `true`,
+the Popover content element gets `style={{ width: "var(--radix-popover-trigger-width)" }}` — a
+runtime inline style using Radix's CSS variable (set by Radix Floating UI on the content/positioner
+element). This is intentionally an inline style (not a Tailwind class) because it's a runtime layout
+value, not a tree-shakeable design token.
+
+Suggest passes `matchTargetWidth` (defaulting true) to its Popover, matching Blueprint's
+`matchTargetWidth` default on Suggest. The prop is opt-in and does NOT affect Select, Tooltip,
+or the base Popover component (no regressions).
+
+`compare.sh suggest both` confirmed: 4 match · 0 differ in both themes. Select, Popover, and Tooltip
+regression checks all stayed at their pre-existing counts.
 
 ## Changes to existing files
 

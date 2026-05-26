@@ -461,6 +461,7 @@ export function Suggest<T>({
             align="start"
             minimal
             hasContentPadding={false}
+            matchTargetWidth
             dark={dark}
             disabled={disabled}
             {...restPopoverProps}
