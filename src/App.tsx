@@ -15,6 +15,7 @@ import { ControlGroup } from "@/components/ui/control-group";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { FileInput } from "@/components/ui/file-input";
 import { NumericInput, type NumericInputIntent } from "@/components/ui/numeric-input";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { ProgressBar, type ProgressBarIntent } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
@@ -1531,6 +1532,122 @@ function NumericInputGallery() {
     );
 }
 
+const SC_OPTIONS_3 = [
+    { label: "Day", value: "day" },
+    { label: "Week", value: "week" },
+    { label: "Month", value: "month" },
+];
+
+/**
+ * SegmentedControl showcase.
+ *
+ * Track key (`sc-default`): bg light-gray5/dark-gray2, padding 2px, gap 2px, radius 4px.
+ * Selected segment key (`sc-selected-segment`): bg white (light) / dark-gray5 (dark), foreground text.
+ * Unselected segment key (`sc-unselected-segment`): muted text, transparent bg.
+ *
+ * Keys mirror tools/blueprint-reference/src/App.tsx SegmentedControlGallery exactly.
+ */
+function SegmentedControlGallery() {
+    const [val, setVal] = useState<string>("week");
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Default (3 options, middle selected)">
+                {/* sc-default: track div — bg, padding, gap, radius */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    value={val}
+                    onValueChange={setVal}
+                    data-compare="sc-default"
+                    ref={(el) => {
+                        if (el) {
+                            // sc-selected-segment: the selected button (week = index 1)
+                            const buttons = el.querySelectorAll<HTMLButtonElement>("button");
+                            buttons[1]?.setAttribute("data-compare", "sc-selected-segment");
+                            // sc-unselected-segment: an unselected button (day = index 0)
+                            buttons[0]?.setAttribute("data-compare", "sc-unselected-segment");
+                        }
+                    }}
+                />
+            </Section>
+
+            <Section title="Large">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="large"
+                    data-compare="sc-large"
+                />
+            </Section>
+
+            <Section title="Small">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="small"
+                />
+            </Section>
+
+            <Section title="Intent: primary (selected = primary fill)">
+                {/* sc-intent-primary: the selected (week) button — expects primary bg + white text */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    intent="primary"
+                    ref={(el) => {
+                        if (el) {
+                            const buttons = el.querySelectorAll<HTMLButtonElement>("button");
+                            buttons[1]?.setAttribute("data-compare", "sc-intent-primary");
+                        }
+                    }}
+                />
+            </Section>
+
+            <Section title="Fill">
+                {/* sc-fill: track at full width, segments grow equally */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    fill
+                    data-compare="sc-fill"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                {/* sc-disabled: entire control disabled */}
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    disabled
+                    data-compare="sc-disabled"
+                />
+            </Section>
+
+            <Section title="Inline">
+                <div className="flex items-center gap-3">
+                    <SegmentedControl
+                        options={SC_OPTIONS_3}
+                        defaultValue="day"
+                        inline
+                    />
+                    <span className="text-foreground-muted text-body-sm">inline</span>
+                </div>
+            </Section>
+
+            <Section title="Individual disabled option">
+                <SegmentedControl
+                    options={[
+                        { label: "A", value: "a" },
+                        { label: "B", value: "b", disabled: true },
+                        { label: "C", value: "c" },
+                    ]}
+                    defaultValue="a"
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1553,6 +1670,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
+    { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

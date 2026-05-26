@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioGroup, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1523,6 +1523,129 @@ function NumericInputGallery() {
     );
 }
 
+const SC_OPTIONS_3 = [
+    { label: "Day", value: "day" },
+    { label: "Week", value: "week" },
+    { label: "Month", value: "month" },
+];
+
+/**
+ * Blueprint reference for SegmentedControl. Keys MUST match analyst-ui's SegmentedControlGallery.
+ *
+ * Blueprint's SegmentedControl accepts data-* directly on the outer div (forwarded via htmlProps).
+ * For inner buttons we use ref + useEffect to stamp data-compare via querySelector.
+ *
+ * sc-default        — track div (bg, padding, gap, radius), value="week" (middle selected)
+ * sc-selected-segment — the selected (week) button: white/dark-gray5 bg, foreground text
+ * sc-unselected-segment — an unselected (day) button: muted text, transparent bg
+ * sc-large          — large size track
+ * sc-intent-primary — selected button with intent="primary" (primary fill + white text)
+ * sc-fill           — fill track
+ * sc-disabled       — disabled track
+ */
+function SegmentedControlGallery() {
+    const [val, setVal] = useState<string>("week");
+
+    const defaultRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (defaultRef.current) {
+            const buttons = defaultRef.current.querySelectorAll<HTMLButtonElement>("button");
+            buttons[1]?.setAttribute("data-compare", "sc-selected-segment");
+            buttons[0]?.setAttribute("data-compare", "sc-unselected-segment");
+        }
+    });
+
+    const intentPrimaryRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (intentPrimaryRef.current) {
+            const buttons = intentPrimaryRef.current.querySelectorAll<HTMLButtonElement>("button");
+            buttons[1]?.setAttribute("data-compare", "sc-intent-primary");
+        }
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <Section title="Default (3 options, middle selected)">
+                <div ref={defaultRef}>
+                    <SegmentedControl
+                        options={SC_OPTIONS_3}
+                        value={val}
+                        onValueChange={setVal}
+                        data-compare="sc-default"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="large"
+                    data-compare="sc-large"
+                />
+            </Section>
+
+            <Section title="Small">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    size="small"
+                />
+            </Section>
+
+            <Section title="Intent: primary (selected = primary fill)">
+                <div ref={intentPrimaryRef}>
+                    <SegmentedControl
+                        options={SC_OPTIONS_3}
+                        defaultValue="week"
+                        intent="primary"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Fill">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    fill={true}
+                    data-compare="sc-fill"
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <SegmentedControl
+                    options={SC_OPTIONS_3}
+                    defaultValue="week"
+                    disabled={true}
+                    data-compare="sc-disabled"
+                />
+            </Section>
+
+            <Section title="Inline">
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <SegmentedControl
+                        options={SC_OPTIONS_3}
+                        defaultValue="day"
+                        inline={true}
+                    />
+                    <span style={{ fontSize: 12, opacity: 0.6 }}>inline</span>
+                </div>
+            </Section>
+
+            <Section title="Individual disabled option">
+                <SegmentedControl
+                    options={[
+                        { label: "A", value: "a" },
+                        { label: "B", value: "b", disabled: true },
+                        { label: "C", value: "c" },
+                    ]}
+                    defaultValue="a"
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1545,6 +1668,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
+    { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
