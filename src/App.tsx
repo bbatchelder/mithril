@@ -49,6 +49,7 @@ import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
 import { TagInput } from "@/components/ui/tag-input";
 import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3689,6 +3690,131 @@ function SuggestGallery() {
     );
 }
 
+// ─── MultiSelect items (same list as Select/Suggest) ─────────────────────────
+const MULTI_SELECT_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+// Initially selected: Banana + Cherry (indices 1, 2)
+const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
+
+/**
+ * MultiSelect gallery.
+ *
+ * Shows the main MultiSelect with:
+ * - Two pre-selected chips (Banana, Cherry) visible in the trigger container.
+ * - Popover forced OPEN for static harness comparison.
+ * - Apple is index 0 (non-active, non-selected).
+ * - Durian is index 3 (active by default — first enabled item after query reset).
+ *
+ * data-compare keys:
+ *   multi-select-container  — the TagInput-like trigger container
+ *   multi-select-tag        — the first Tag chip (Banana)
+ *   multi-select-menu       — the menu <ul> element (portaled)
+ *   multi-select-item       — Apple (index 0, non-active, non-selected item in menu)
+ *   multi-select-item-active — Apple (index 0, active by default — first enabled item)
+ *
+ * NOTE: Apple is both non-selected AND active (first item), so it gets both
+ * multi-select-item and multi-select-item-active depending on which we want.
+ * We use Apple as multi-select-item-active (active state) since it's the first
+ * enabled item that gets highlighted. For multi-select-item (non-active), we use
+ * Banana's menu entry — but Banana is selected, so its tick icon is visible.
+ * Blueprint marks selected items in the menu; we do the same.
+ *
+ * Strategy: Apple is index 0 = active by default (first enabled item).
+ *           Durian is index 3 = not selected, not active → use for multi-select-item.
+ */
+function MultiSelectGallery() {
+    const dark = useContext(DarkContext);
+    const [selected, setSelected] = useState<string[]>(MULTI_SELECT_SELECTED);
+
+    // Stamp data-compare on portaled menu item nodes after render
+    useEffect(() => {
+        function tag() {
+            const menuUl = document.querySelector<HTMLElement>('[data-compare="multi-select-menu"]');
+            if (!menuUl) return;
+
+            // multi-select-item-active: Apple is index 0 (first item = active by default)
+            const appleLi = menuUl.children[0] as HTMLElement | undefined;
+            if (appleLi) {
+                const btn = appleLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "multi-select-item-active");
+            }
+
+            // multi-select-item: Durian is index 3 (non-active, non-selected)
+            const durianLi = menuUl.children[3] as HTMLElement | undefined;
+            if (durianLi) {
+                const btn = durianLi.querySelector("button,a");
+                if (btn) btn.setAttribute("data-compare", "multi-select-item");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div className="multi-select-gallery-wrapper flex flex-col gap-8 text-foreground">
+            <Section title="MultiSelect (chips + popover open for comparison)">
+                <div style={{ width: 400 }}>
+                    <MultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={selected}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={selected.includes(item) ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => {
+                            if (!selected.includes(item)) {
+                                setSelected((s) => [...s, item]);
+                            }
+                        }}
+                        onRemove={(_item, index) =>
+                            setSelected((s) => s.filter((_, i) => i !== index))
+                        }
+                        noResults={<MenuItem disabled text="No results." />}
+                        dark={dark}
+                        fill
+                        data-compare="multi-select-container"
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <MultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={["Apple", "Banana"]}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        dark={dark}
+                        disabled
+                        fill
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3739,6 +3865,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
     { id: "select", title: "Select", render: () => <SelectGallery /> },
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
+    { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

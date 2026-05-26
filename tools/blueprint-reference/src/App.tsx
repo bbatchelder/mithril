@@ -1,5 +1,5 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
-import { Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
+import { MultiSelect as BpMultiSelect, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4096,6 +4096,142 @@ function SuggestGallery() {
     );
 }
 
+// ─── MultiSelect items (same list as analyst-ui MultiSelectGallery) ─────────
+const MULTI_SELECT_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
+const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
+
+/**
+ * Blueprint reference for MultiSelect. Uses @blueprintjs/select's MultiSelect<T>.
+ *
+ * Strategy: Force the popover OPEN so the harness can screenshot chips and menu items
+ * without interaction. We stamp data-compare on portaled DOM nodes via useEffect.
+ *
+ * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+ * so Blueprint's portaled menu renders in dark mode.
+ *
+ * data-compare keys (MUST match analyst-ui MultiSelectGallery):
+ *   multi-select-container  — the TagInput-like trigger container
+ *   multi-select-tag        — the first Tag chip (Banana)
+ *   multi-select-menu       — the menu <ul> element inside the popover (portaled)
+ *   multi-select-item       — Durian (index 3, non-active, non-selected)
+ *   multi-select-item-active — Apple (index 0, active by default — first enabled item)
+ */
+function MultiSelectGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [selected, setSelected] = useState<string[]>(MULTI_SELECT_SELECTED);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Stamp data-compare on portaled nodes after render
+    useEffect(() => {
+        function tag() {
+            // multi-select-container: Blueprint renders TagInput as root element
+            if (containerRef.current) {
+                const container = containerRef.current.querySelector(".bp6-tag-input");
+                if (container) container.setAttribute("data-compare", "multi-select-container");
+
+                // multi-select-tag: first Tag chip inside the container
+                const firstTag = containerRef.current.querySelector(".bp6-tag");
+                if (firstTag) firstTag.setAttribute("data-compare", "multi-select-tag");
+            }
+
+            // multi-select-menu: Blueprint renders the menu as <ul role="listbox">
+            const menuUl = document.querySelector<HTMLElement>(
+                `ul.bp6-menu[role="listbox"]`,
+            );
+            if (menuUl) {
+                menuUl.setAttribute("data-compare", "multi-select-menu");
+
+                // multi-select-item-active: Apple is index 0 (first item, active by default)
+                const appleLi = menuUl.children[0] as HTMLElement | undefined;
+                if (appleLi) {
+                    const anchor = appleLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "multi-select-item-active");
+                }
+
+                // multi-select-item: Durian is index 3 (non-active, non-selected)
+                const durianLi = menuUl.children[3] as HTMLElement | undefined;
+                if (durianLi) {
+                    const anchor = durianLi.querySelector("a.bp6-menu-item,button.bp6-menu-item");
+                    if (anchor) anchor.setAttribute("data-compare", "multi-select-item");
+                }
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 150);
+        return () => clearTimeout(t);
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="MultiSelect (chips + popover open for comparison)">
+                <div style={{ width: 400 }} ref={containerRef}>
+                    <BpMultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={selected}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                icon={selected.includes(item) ? "tick" : undefined}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={(item) => {
+                            if (!selected.includes(item)) {
+                                setSelected((s) => [...s, item]);
+                            }
+                        }}
+                        onRemove={(_tag, index) =>
+                            setSelected((s) => s.filter((_, i) => i !== index))
+                        }
+                        noResults={<MenuItem disabled={true} text="No results." />}
+                        fill={true}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            matchTargetWidth: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <BpMultiSelect<string>
+                        items={MULTI_SELECT_ITEMS}
+                        selectedItems={["Apple", "Banana"]}
+                        tagRenderer={(item) => item}
+                        itemPredicate={(query, item) =>
+                            item.toLowerCase().includes(query.toLowerCase())
+                        }
+                        itemRenderer={(item, { modifiers, handleClick }) => (
+                            <MenuItem
+                                key={item}
+                                text={item}
+                                active={modifiers.active}
+                                onClick={handleClick}
+                            />
+                        )}
+                        onItemSelect={() => {}}
+                        disabled={true}
+                        fill={true}
+                        popoverProps={{
+                            minimal: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4145,6 +4281,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
     { id: "select", title: "Select", render: () => <SelectGallery /> },
     { id: "suggest", title: "Suggest", render: () => <SuggestGallery /> },
+    { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
