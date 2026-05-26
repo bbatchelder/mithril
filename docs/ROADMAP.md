@@ -114,4 +114,4 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
 - [x] **DateRangePicker** — `datetime/date-range-picker/`
 - [x] **DateRangeInput** — `datetime/date-range-input/`
-- [ ] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)
+- [x] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)

@@ -56,6 +56,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { DateInput } from "@/components/ui/date-input";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -4296,6 +4297,109 @@ function DateRangePickerForDRI() {
     );
 }
 
+// ─── TimezoneSelect gallery ─────────────────────────────────────────────────
+// TimezoneSelect with popover forced open for comparison.
+//
+// data-compare keys (MUST match blueprint-reference TimezoneSelectGallery):
+//   tz-trigger     — the trigger button
+//   tz-menu        — the menu <ul> inside the popover (portaled)
+//   tz-item        — a non-active MenuItem (New York — position 6 in minimal list)
+//   tz-item-offset — the offset label on that same item
+//
+// Blueprint's initial list (empty query) shows the same MINIMAL_IANA_CODES order.
+// "New York" is at index 6 in our minimal list (UTC, Honolulu, Anchorage, LA, Denver,
+// Chicago, New York). We fix the same index on both sides so the item text matches.
+// ---------------------------------------------------------------------------
+
+const TZ_SELECTED = "America/Los_Angeles"; // "Los Angeles" — shown in trigger
+
+/**
+ * TimezoneSelect with popover forced open for harness comparison.
+ * Uses a fixed selected timezone and empty query (shows minimal list).
+ * Tags portaled DOM nodes via document.querySelector in a useEffect.
+ */
+function TimezoneSelectGallery() {
+    const dark = useContext(DarkContext);
+    const [value, setValue] = useState<string>(TZ_SELECTED);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            const root = containerRef.current;
+            if (!root) return;
+
+            // tz-trigger: the trigger <button> inside the first TimezoneSelect
+            // It's the first <button> in the container (before any portaled content)
+            const triggerBtn = root.querySelector<HTMLElement>("button");
+            if (triggerBtn) triggerBtn.setAttribute("data-compare", "tz-trigger");
+
+            // tz-menu: the menu <ul> inside the TimezoneSelect popover
+            // Our Select adds data-compare="select-menu" to the Menu ul —
+            // we look for it and re-tag it as tz-menu for this gallery.
+            // Since multiple Selects may be open on the page, we pick the one
+            // inside the timezone-select popover (it will be the only open popover
+            // when this gallery is isolated via ?component=timezone-select).
+            const menuUls = document.querySelectorAll<HTMLElement>('[data-compare="select-menu"]');
+            // If only one menu is visible (isolated gallery mode), use it.
+            const menuUl = menuUls.length > 0 ? menuUls[menuUls.length - 1] : null;
+            if (!menuUl) return;
+            menuUl.setAttribute("data-compare", "tz-menu");
+
+            // tz-item: "New York" — index 6 in the minimal list (0-based)
+            // Order: 0=UTC, 1=Honolulu, 2=Anchorage, 3=LA, 4=Denver, 5=Chicago, 6=NewYork
+            const nyLi = menuUl.children[6] as HTMLElement | undefined;
+            if (nyLi) {
+                const btn = nyLi.querySelector("button,a");
+                if (btn) {
+                    btn.setAttribute("data-compare", "tz-item");
+                    // tz-item-offset: the label span (offset text) inside the item
+                    const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
+                    if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
+                }
+            }
+        }
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={containerRef} className="flex flex-col gap-8 text-foreground">
+            <Section title="TimezoneSelect (popover open for comparison)">
+                <div style={{ width: 320 }}>
+                    <TimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        dark={dark}
+                        popoverProps={{ open: true, onOpenChange: () => {} }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Interactive TimezoneSelect">
+                <div style={{ width: 320 }}>
+                    <TimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        dark={dark}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <TimezoneSelect
+                    value={value}
+                    onChange={setValue}
+                    disabled
+                    dark={dark}
+                />
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -4353,6 +4457,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
     { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
+    { id: "timezone-select", title: "TimezoneSelect", render: () => <TimezoneSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

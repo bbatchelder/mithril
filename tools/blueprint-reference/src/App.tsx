@@ -1,6 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
-import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
+import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4834,6 +4834,101 @@ function DateRangeInputGallery() {
     );
 }
 
+// ─── TimezoneSelect reference gallery ───────────────────────────────────────
+// Blueprint TimezoneSelect with popover forced open for comparison.
+//
+// data-compare keys (MUST match analyst-ui TimezoneSelectGallery):
+//   tz-trigger     — the trigger button
+//   tz-menu        — the menu <ul> inside the popover (portaled)
+//   tz-item        — a non-active MenuItem (New York — position 6 in minimal list)
+//   tz-item-offset — the offset label on that same item
+//
+// Blueprint's TimezoneSelect initial list (empty query) uses MINIMAL_TIMEZONE_ITEMS.
+// The order matches: UTC(0), Honolulu(1), Anchorage(2), LA(3), Denver(4), Chicago(5), NewYork(6).
+// We tag index 6 to match our analyst gallery's tz-item (New York).
+// ---------------------------------------------------------------------------
+
+const TZ_SELECTED_BP = "America/Los_Angeles"; // "Los Angeles" — shown in trigger
+
+function TimezoneSelectGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [value, setValue] = useState<string>(TZ_SELECTED_BP);
+
+    useEffect(() => {
+        function tag() {
+            // tz-trigger: the trigger button rendered by Blueprint's TimezoneSelect
+            // Blueprint renders a <button class="bp6-button"> as the trigger
+            // We look for it by finding the button that does NOT have bp6-menu-item class
+            // and is inside our gallery container. We find it via the tz-trigger data attribute
+            // which we set manually below.
+
+            // tz-menu: Blueprint's Select renders a <ul role="listbox" class="bp6-menu"> in the portal
+            const menuUl = document.querySelector<HTMLElement>("ul.bp6-menu[role='listbox']");
+            if (!menuUl) return;
+            menuUl.setAttribute("data-compare", "tz-menu");
+
+            // tz-item: "New York" — index 6 in the minimal list
+            // Blueprint's MINIMAL_TIMEZONE_ITEMS order:
+            //   0=UTC, 1=Hawaii(Honolulu), 2=Alaska(Anchorage), 3=LA, 4=Denver, 5=Chicago, 6=NewYork
+            const nyLi = menuUl.children[6] as HTMLElement | undefined;
+            if (nyLi) {
+                const anchor = nyLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
+                if (anchor) {
+                    anchor.setAttribute("data-compare", "tz-item");
+                    // tz-item-offset: Blueprint renders the label (shortName) as a span.bp6-menu-item-label
+                    const labelSpan = anchor.querySelector<HTMLElement>(".bp6-menu-item-label");
+                    if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
+                }
+            }
+        }
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="TimezoneSelect (popover open for comparison)">
+                <div style={{ width: 320 }}>
+                    <BpTimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        buttonProps={{ "data-compare": "tz-trigger" } as React.ComponentProps<typeof Button>}
+                        popoverProps={{
+                            isOpen: true,
+                            minimal: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                            onClose: () => {},
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Interactive TimezoneSelect">
+                <div style={{ width: 320 }}>
+                    <BpTimezoneSelect
+                        value={value}
+                        onChange={setValue}
+                        popoverProps={{
+                            minimal: true,
+                            portalClassName: dark ? Classes.DARK : undefined,
+                        }}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Disabled">
+                <BpTimezoneSelect
+                    value={value}
+                    onChange={setValue}
+                    disabled={true}
+                />
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4890,6 +4985,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
     { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
+    { id: "timezone-select", title: "TimezoneSelect", render: () => <TimezoneSelectGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
