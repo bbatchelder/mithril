@@ -33,6 +33,7 @@ import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
 import { Tabs, Tab } from "@/components/ui/tabs";
+import { Collapse } from "@/components/ui/collapse";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2327,6 +2328,61 @@ function TabsGallery() {
     );
 }
 
+/**
+ * Collapse showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference CollapseGallery exactly):
+ *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
+ *   collapse-body  — the .bp6-collapse-body inner element (transform)
+ *
+ * We use an open Collapse containing identical content on both sides so the
+ * measured height matches. The open state is the meaningful comparison: Blueprint
+ * sets height=auto / overflow-y=visible; we replicate that exactly.
+ *
+ * The body element is tagged via useEffect (same pattern as TabsGallery for the
+ * indicator) because it's rendered inside Collapse — we can't place data-compare
+ * on it directly from the gallery.
+ */
+function CollapseGallery() {
+    useEffect(() => {
+        // Tag the .bp6-collapse-body inside the open collapse specimen.
+        const body = document.querySelector('[data-compare="collapse-open"] .bp6-collapse-body');
+        if (body) body.setAttribute("data-compare", "collapse-body");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Open">
+                <Collapse isOpen data-compare="collapse-open">
+                    <p className="text-body">
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+            </Section>
+
+            <Section title="Closed">
+                <Collapse isOpen={false}>
+                    <p className="text-body">
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+                <p className="text-body-sm text-foreground-muted">(Nothing visible above — Collapse is closed)</p>
+            </Section>
+
+            <Section title="Keep children mounted (closed)">
+                <Collapse isOpen={false} keepChildrenMounted>
+                    <p className="text-body">Children stay in DOM but are hidden.</p>
+                </Collapse>
+                <p className="text-body-sm text-foreground-muted">(Nothing visible above — keepChildrenMounted, closed)</p>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2361,6 +2417,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
+    { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

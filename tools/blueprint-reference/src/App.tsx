@@ -1,4 +1,4 @@
-import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2519,6 +2519,65 @@ function TabsGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Collapse.
+ *
+ * data-compare keys (must match analyst-ui CollapseGallery exactly):
+ *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
+ *   collapse-body  — the .bp6-collapse-body inner element (transform)
+ *
+ * Identical content both sides so measured open height matches.
+ * Both the outer container and body are tagged via useEffect (Blueprint renders
+ * these internally — we can't pass data-compare directly as a prop).
+ */
+function CollapseGallery() {
+    const openWrapRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!openWrapRef.current) return;
+        // Tag the .bp6-collapse (outer) element rendered by Blueprint.
+        const outer = openWrapRef.current.querySelector(".bp6-collapse");
+        if (outer) outer.setAttribute("data-compare", "collapse-open");
+        // Tag the .bp6-collapse-body (inner) element.
+        const body = openWrapRef.current.querySelector(".bp6-collapse-body");
+        if (body) body.setAttribute("data-compare", "collapse-body");
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Open">
+                <div ref={openWrapRef}>
+                    <Collapse isOpen={true}>
+                        <p>
+                            This is the collapse content. It is always visible when isOpen is true.
+                            Blueprint animates the height of the outer container from 0 to the natural
+                            content height.
+                        </p>
+                    </Collapse>
+                </div>
+            </Section>
+
+            <Section title="Closed">
+                <Collapse isOpen={false}>
+                    <p>
+                        This is the collapse content. It is always visible when isOpen is true.
+                        Blueprint animates the height of the outer container from 0 to the natural
+                        content height.
+                    </p>
+                </Collapse>
+                <p style={{ fontSize: 12, opacity: 0.6 }}>(Nothing visible above — Collapse is closed)</p>
+            </Section>
+
+            <Section title="Keep children mounted (closed)">
+                <Collapse isOpen={false} keepChildrenMounted={true}>
+                    <p>Children stay in DOM but are hidden.</p>
+                </Collapse>
+                <p style={{ fontSize: 12, opacity: 0.6 }}>(Nothing visible above — keepChildrenMounted, closed)</p>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2552,6 +2611,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
     { id: "navbar", title: "Navbar", render: () => <NavbarGallery /> },
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
+    { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
