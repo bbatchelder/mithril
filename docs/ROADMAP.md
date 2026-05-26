@@ -83,21 +83,21 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 4 — Navigation & structure
 
-- [ ] **Navbar** — `navbar/`
-- [ ] **Tabs** — `tabs/`
-- [ ] **Collapse** — `collapse/`
-- [ ] **Section** — `section/` (Card-based)
-- [ ] **CardList** — `card-list/` (Card-based)
-- [ ] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
-- [ ] **Tree** — `tree/` (Icon + Collapse)
-- [ ] **PanelStack** — `panel-stack/`
-- [ ] **HTMLTable** — `html-table/`
-- [ ] **EditableText** — `editable-text/`
-- [ ] **EntityTitle** — `entity-title/`
-- [ ] **NonIdealState** — `non-ideal-state/` (Icon)
-- [ ] **Link** — `link/`
-- [ ] **Slider** — `slider/`
-- [ ] **Hotkeys** — `hotkeys/` (Dialog-based)
+- [x] **Navbar** — `navbar/`
+- [x] **Tabs** — `tabs/`
+- [x] **Collapse** — `collapse/`
+- [x] **Section** — `section/` (Card-based)
+- [x] **CardList** — `card-list/` (Card-based)
+- [x] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
+- [x] **Tree** — `tree/` (Icon + Collapse)
+- [x] **PanelStack** — `panel-stack/`
+- [x] **HTMLTable** — `html-table/`
+- [x] **EditableText** — `editable-text/`
+- [x] **EntityTitle** — `entity-title/`
+- [x] **NonIdealState** — `non-ideal-state/` (Icon)
+- [x] **Link** — `link/`
+- [x] **Slider** — `slider/`
+- [x] **Hotkeys** — `hotkeys/` (Dialog-based)
 
 ## Phase 5 — Composite selects (`@blueprintjs/select`)
 
