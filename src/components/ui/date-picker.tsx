@@ -400,11 +400,15 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         formatWeekdayName,
                     }}
                     classNames={{
-                        root: "rdp-analyst",
+                        root: "rdp-analyst inline-block",
                         months: "flex flex-col",
                         month: "flex flex-col mx-1",
                         month_caption: "",
-                        month_grid: "w-full border-collapse",
+                        // Blueprint: table is NOT w-full — it is content-sized (inline-block rdp).
+                        // Setting w-auto prevents the table from stretching to its container,
+                        // which was causing spread-out columns. Blueprint's min-width = 210px
+                        // (7 columns × 30px) is achieved naturally by the 30px day cells.
+                        month_grid: "border-collapse",
                         weekdays: "",
                         weekday: cn(
                             // Blueprint .rdp-head_cell: font-weight:600, padding-top:4px
@@ -414,13 +418,18 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         ),
                         weeks: "",
                         week: "",
-                        day: "p-0 text-center",
+                        // day is the <td> cell wrapper — let it be compact, no padding
+                        day: "text-center align-middle",
                         day_button: cn(
                             // Base: 30×30, rounded-4px, transparent bg
-                            "w-[30px] h-[30px] rounded-bp",
+                            // Blueprint day button: min-width 30px + 8px px + 2px transparent border
+                            "w-[30px] h-[30px] min-w-[30px] rounded-bp",
                             "inline-flex items-center justify-center",
                             "text-body font-normal cursor-pointer",
-                            "border-0 bg-transparent p-0 m-0",
+                            // 2px transparent border (matches Blueprint .bp6-button computed style)
+                            "border-2 border-transparent bg-transparent",
+                            // 8px horizontal padding
+                            "px-2 py-0 m-0",
                             "text-foreground",
                             "transition-colors duration-100",
                             "hover:bg-[rgba(143,153,168,0.15)] dark:hover:bg-[rgba(143,153,168,0.15)] hover:text-foreground dark:hover:text-white",
@@ -470,12 +479,16 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                                               : undefined
                                     }
                                     className={cn(
-                                        // Base styles: 30×30, rounded-4px
-                                        "w-[30px] h-[30px]",
+                                        // Base styles: Blueprint day button box model —
+                                        // min-width 30px, height 30px, 8px px, 2px transparent border
+                                        "w-[30px] h-[30px] min-w-[30px]",
                                         "[border-radius:4px]",
                                         "inline-flex items-center justify-center",
                                         "text-body font-normal",
-                                        "border-0 p-0 m-0",
+                                        // 2px transparent border to match Blueprint computed style
+                                        "border-2 border-transparent",
+                                        // 8px horizontal padding (px-2), no vertical padding
+                                        "px-2 py-0 m-0",
                                         "transition-colors duration-100",
                                         // Non-selected, non-disabled: default state
                                         !isSelected && !isDisabled && "cursor-pointer text-foreground bg-transparent",

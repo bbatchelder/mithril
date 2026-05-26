@@ -118,24 +118,30 @@ const [month, setMonth] = useState(new Date(2026, 0, 1));
   composable. DateInput (#3) wraps DatePicker in a Popover + Input. DateRangePicker (#4)
   uses two linked DatePicker instances.
 
+## Fix: Calendar sizing bug resolved (post-commit fixup)
+
+A layout fidelity gap was discovered and fixed after the initial commit: the analyst
+calendar was stretched to the full container width (~760px) instead of being compact
+(~250px like Blueprint). Root cause: `month_grid: "w-full border-collapse"` caused
+the `<table>` to stretch to 100% width, spreading day columns far apart.
+
+**Fix applied:**
+1. Removed `w-full` from `month_grid` class (table is now content-sized — `border-collapse` only)
+2. Added `inline-block` to `root` class (rdp root element) to prevent flex-stretch
+3. Added `min-w-[30px]`, `border-2 border-transparent`, `px-2` to day buttons in both
+   `day_button` classNames and the custom `DayButton` component — matching Blueprint's
+   computed box model (min-width 30px, 2px transparent border, 8px horizontal padding)
+4. Fixed `day` cell class: `"text-center align-middle"` (was `"p-0 text-center"`)
+
+The 2px transparent border and 8px padding are inherited from `.bp6-button.bp6-minimal`
+in Blueprint (via rdp v8's class mapping). Now analyst matches the same computed values.
+
 ## Accepted deltas
 
-- **`date-picker-day` / `date-picker-day-selected` border+padding+minWidth (both themes)**:
-  Blueprint's day buttons are `.bp6-button.bp6-minimal` from rdp v8's button class mapping
-  (`dayPickerClassNameOverrides.button = classNames(Classes.BUTTON, Classes.MINIMAL)`).
-  This gives them `border: 2px solid transparent`, `padding: 0 8px`, `min-width: 30px`.
-  Our analyst day buttons have `border-0 p-0` (correct per Blueprint SCSS which sets
-  `padding: 0` for day cells). The 2px transparent border and 8px padding in Blueprint
-  are inherited from the `.bp6-button` base class, not from the datepicker CSS.
-  Visually identical (transparent border is invisible). **IMPLEMENTATION DELTA — ACCEPTED.**
-
-- **`date-picker-day` dark foreground color**: analyst `rgb(246,247,249)` vs
-  blueprint `rgb(255,255,255)`. Known dark foreground delta from project memory —
+- **`date-picker-day` / `date-picker-nav` dark foreground color**: analyst `rgb(246,247,249)`
+  vs blueprint `rgb(255,255,255)`. Known dark foreground delta from project memory —
   analyst uses `#f6f7f9` (light-gray-5) as dark text color; Blueprint reference renders
   pure white. **KNOWN ACCEPTED DELTA.**
-
-- **`date-picker-nav` dark foreground color**: Same dark foreground delta — analyst
-  `rgb(246,247,249)` vs blueprint `rgb(255,255,255)`. **KNOWN ACCEPTED DELTA.**
 
 - **`only in analyst: time-picker-divider, time-picker-input`**: The second specimen
   (DatePicker with TimePicker) renders our TimePicker component which has `data-compare`
@@ -143,26 +149,27 @@ const [month, setMonth] = useState(new Date(2026, 0, 1));
   TimePicker specimen doesn't have these tags. These appear as "only in analyst" orphans
   but don't affect the match/differ count. **ORPHAN KEYS — HARMLESS.**
 
-## compare.sh results
+## compare.sh results (after fix)
 
 ```
-date-picker · light:  2 match · 2 differ (accepted: day/selected btn border+padding+minWidth)
-date-picker · dark:   1 match · 3 differ (accepted: day/selected btn border+padding+minWidth + dark foreground ×2)
+date-picker · light:  4 match · 0 differ  ✓ PERFECT
+date-picker · dark:   2 match · 2 differ  (accepted: dark foreground ×2)
 ```
 
 **data-compare keys paired (both themes):**
 - `date-picker-nav` — MATCH light; 1 differ dark (dark foreground — ACCEPTED)
 - `date-picker-weekday` — MATCH both. font-weight=600, color=foreground, h=30px, pt=4px
-- `date-picker-day` — 2 differ both (border 2px, padding 8px, minWidth 30px — ACCEPTED btn impl delta)
-- `date-picker-day-selected` — 2 differ both (same border/padding/minWidth — ACCEPTED)
+- `date-picker-day` — MATCH both. border 2px transparent, padding 8px, minWidth 30px ✓
+- `date-picker-day-selected` — MATCH light; 1 differ dark (dark foreground — ACCEPTED)
 
-Screenshot confirmation (light + dark):
+Screenshot confirmation (light + dark — compact layout):
+- Calendar width ~250px, tight 7-column grid (each col ~30px), matches Blueprint layout
 - Caption row: `[January ▼] [2026 ▼] [<] [>]` — matches Blueprint layout exactly
 - Weekday row: Su Mo Tu We Th Fr Sa, font-weight:600, normal text color
 - Day grid: 30×30 cells, 7 columns, correct 5-week January 2026 layout
 - Outside-month days (28-31 from Dec): muted/disabled text color
 - Selected day (Jan 15): blue-3 background (#2d72d2), white text, 4px border-radius
-- Dark: dark-gray-3 background, white text on grid, correct blue selected day
+- Dark: dark-gray-3 background, correct blue selected day
 - TimePicker below: hour + minute input row (0 : 00) aligned center
 
 ## New dependencies added
