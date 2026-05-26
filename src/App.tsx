@@ -55,6 +55,7 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { DateInput } from "@/components/ui/date-input";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRangeInput } from "@/components/ui/date-range-input";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -4165,6 +4166,136 @@ function DateRangePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateRangeInput gallery
+// Fixed range: 2026-01-08 (start) to 2026-01-20 (end).
+// Two specimens:
+//   1. Interactive DateRangeInput
+//   2. Open specimen — two InputGroups + forced-open Popover with DateRangePicker
+//
+// data-compare keys:
+//   dri-start         → the start InputGroup <input> element
+//   dri-end           → the end InputGroup <input> element
+//   dri-day-endpoint  → a filled endpoint day in the open DateRangePicker calendar
+// ---------------------------------------------------------------------------
+const DRI_START = new Date(2026, 0, 8);  // Jan 8, 2026
+const DRI_END = new Date(2026, 0, 20);   // Jan 20, 2026
+
+function DateRangeInputGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Interactive specimen */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateRangeInput (interactive)</span>
+                <DateRangeInput
+                    defaultValue={{ start: DRI_START, end: DRI_END }}
+                    dark={dark}
+                />
+            </div>
+
+            {/* Harness specimen — two inputs + popover forced open */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateRangeInput (open, Jan 8 – Jan 20, 2026)</span>
+                <OpenDateRangeInput dark={dark} />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * DateRangeInput with popover forced open for harness comparison.
+ * Renders two InputGroup fields + a forced-open Popover with DateRangePicker.
+ * The DateRangePicker uses the same DRP_START/DRP_END/data-compare keys as
+ * the DateRangePicker gallery (drp-day-endpoint is our dri-day-endpoint key).
+ */
+function OpenDateRangeInput({ dark }: { dark: boolean }) {
+    return (
+        <div className="flex flex-col gap-2 items-start">
+            {/* Two input fields side-by-side, matching Blueprint's control-group layout */}
+            <div className="inline-flex flex-row items-stretch">
+                {/* Start input — tagged for harness */}
+                <InputGroup
+                    type="text"
+                    value="1/8/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="dri-start"
+                />
+                {/* End input — tagged for harness */}
+                <InputGroup
+                    type="text"
+                    value="1/20/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="dri-end"
+                />
+            </div>
+
+            {/* Popover always visible — portaled DateRangePicker */}
+            <Popover
+                open={true}
+                onOpenChange={() => {}}
+                content={
+                    <DateRangePickerForDRI />
+                }
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                arrow={false}
+                minimal={true}
+                hasContentPadding={false}
+                dark={dark}
+            >
+                <span />
+            </Popover>
+        </div>
+    );
+}
+
+/**
+ * DateRangePicker for the DateRangeInput harness — uses dri-day-endpoint key
+ * (instead of drp-day-endpoint) so it shows as a "dri-*" pair in the compare output.
+ * Re-tags only the FIRST drp-day-endpoint (Jan 8 = range start) as dri-day-endpoint,
+ * and clears the second (Jan 20 = range end) so only one key remains for pairing.
+ * This matches Blueprint reference which tags range_start as dri-day-endpoint.
+ */
+function DateRangePickerForDRI() {
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function retag() {
+            const root = ref.current;
+            if (!root) return;
+            // drp-day-endpoint is stamped by the custom DayButton in DateRangePicker
+            // for BOTH Jan 8 (start) and Jan 20 (end). We tag only the first (Jan 8 = start),
+            // which matches Blueprint reference gallery that tags range_start as dri-day-endpoint.
+            const eps = root.querySelectorAll<HTMLElement>("[data-compare='drp-day-endpoint']");
+            if (eps.length > 0) {
+                // Tag the first endpoint (Jan 8, range_start) as dri-day-endpoint
+                eps[0].setAttribute("data-compare", "dri-day-endpoint");
+                // Remove tag from remaining endpoints so they don't pollute the diff
+                for (let i = 1; i < eps.length; i++) {
+                    eps[i].removeAttribute("data-compare");
+                }
+            }
+        }
+        retag();
+        const t1 = setTimeout(retag, 50);
+        const t2 = setTimeout(retag, 200);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={ref}>
+            <DateRangePicker
+                value={{ start: DRI_START, end: DRI_END }}
+                onChange={() => {}}
+            />
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -4221,6 +4352,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
+    { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

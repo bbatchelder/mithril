@@ -1,6 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
-import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
+import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4732,6 +4732,108 @@ function DateRangePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateRangeInput reference gallery
+// Blueprint DateRangeInput with fixed range Jan 8 – Jan 20, 2026.
+// Popover forced open via popoverProps={{ isOpen: true }}.
+//
+// data-compare keys (MUST match analyst-ui DateRangeInputGallery):
+//   dri-start         → the start <input> element
+//   dri-end           → the end <input> element
+//   dri-day-endpoint  → a filled endpoint day in the open DateRangePicker
+//
+// The portaled DateRangePicker content is searched via document.querySelector
+// (not containerRef — it's in the portal).
+// ---------------------------------------------------------------------------
+const DRI_START_BP = new Date(2026, 0, 8);  // Jan 8, 2026
+const DRI_END_BP = new Date(2026, 0, 20);   // Jan 20, 2026
+const DRI_LEFT_MONTH_BP = new Date(2026, 0, 1); // January 2026
+
+function DateRangeInputGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            const root = containerRef.current;
+            if (!root) return;
+
+            // Tag start and end inputs (they live in containerRef, not the portal)
+            const inputs = root.querySelectorAll<HTMLElement>("input");
+            if (inputs[0]) inputs[0].setAttribute("data-compare", "dri-start");
+            if (inputs[1]) inputs[1].setAttribute("data-compare", "dri-end");
+
+            // Tag endpoint day in the portaled calendar
+            // Blueprint DateRangeInput popover gets class .bp6-date-range-input-popover
+            // rdp v8: button.rdp-day_range_start and rdp-day_range_end
+            const rangeStart = document.querySelector<HTMLElement>(
+                "button.rdp-day_range_start, button[class*='range_start']"
+            );
+            if (rangeStart) rangeStart.setAttribute("data-compare", "dri-day-endpoint");
+        }
+
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        const t3 = setTimeout(tag, 600);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    });
+
+    const formatDate = (date: Date) => {
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const y = date.getFullYear();
+        return `${m}/${d}/${y}`;
+    };
+
+    const parseDate = (str: string) => {
+        const parts = str.trim().split(/[\/\-\.]/);
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        return new Date(str);
+    };
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Interactive specimen */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>DateRangeInput (interactive, Jan 8 – Jan 20 2026)</span>
+                <BpDateRangeInput
+                    value={[DRI_START_BP, DRI_END_BP]}
+                    onChange={() => {}}
+                    formatDate={formatDate}
+                    parseDate={parseDate}
+                    shortcuts={false}
+                    contiguousCalendarMonths={true}
+                />
+            </div>
+
+            {/* Harness specimen — popover forced open */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>DateRangeInput (open, Jan 8 – Jan 20, 2026)</span>
+                <BpDateRangeInput
+                    value={[DRI_START_BP, DRI_END_BP]}
+                    onChange={() => {}}
+                    formatDate={formatDate}
+                    parseDate={parseDate}
+                    shortcuts={false}
+                    contiguousCalendarMonths={true}
+                    popoverProps={{
+                        isOpen: true,
+                        portalClassName: INITIAL_DARK ? Classes.DARK : undefined,
+                        onClose: () => {},
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4787,6 +4889,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
     { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
+    { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
