@@ -1,6 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
-import { TimePicker as BpTimePicker } from "@blueprintjs/datetime";
+import { DatePicker as BpDatePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4412,6 +4412,106 @@ function TimePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DatePicker reference gallery
+// Fixed selected date: 2026-01-15. Fixed display month: January 2026.
+// Blueprint DatePicker uses "initialMonth" to set the displayed month.
+// We set value=FIXED_DATE so the selected state is fixed.
+//
+// data-compare keys (MUST match analyst-ui DatePickerGallery):
+//   date-picker-nav           → the previous-month nav button
+//   date-picker-weekday       → a weekday header cell (first "Su" cell)
+//   date-picker-day           → a regular (non-selected, non-outside) day cell
+//   date-picker-day-selected  → the selected day cell (Jan 15, 2026)
+//
+// We use useEffect + querySelector to stamp data-compare on Blueprint's DOM.
+// Blueprint's DatePicker renders react-day-picker v8 DOM with bp6- classes.
+// ---------------------------------------------------------------------------
+const FIXED_DATE_BP = new Date(2026, 0, 15); // Jan 15, 2026
+const FIXED_MONTH_BP = new Date(2026, 0, 1); // January 2026
+
+function DatePickerGallery() {
+    const basicRef = useRef<HTMLDivElement>(null);
+    const timeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            // Tag in the first (basic) specimen
+            // Blueprint's DatePicker uses react-day-picker v8 internally.
+            // In rdp v8: day buttons are <button class="rdp-day [rdp-day_outside] [rdp-day_selected]">
+            // In rdp v8 with Blueprint overrides: Blueprint maps rdp class names to bp6- equivalents.
+            // dayPickerClassNameOverrides maps: nav_button_previous → bp6-datepicker-nav-button-previous
+            //   head_cell → NOT overridden (stays rdp-head_cell)
+            //   day → rdp-day (not overridden)
+            //   day_selected → rdp-day_selected (not overridden)
+            const root = basicRef.current;
+            if (root) {
+                // Nav button: Blueprint maps nav_button_previous → .bp6-datepicker-nav-button-previous
+                // These are also .bp6-button.bp6-minimal elements
+                const prevBtn = root.querySelector<HTMLElement>(
+                    ".bp6-datepicker-nav-button-previous, .bp6-button[aria-label*='previous'], button[aria-label*='Previous']"
+                );
+                if (prevBtn) prevBtn.setAttribute("data-compare", "date-picker-nav");
+
+                // Weekday header: rdp v8 uses th.rdp-head_cell
+                const weekdayCells = root.querySelectorAll<HTMLElement>("th.rdp-head_cell");
+                if (weekdayCells[0]) weekdayCells[0].setAttribute("data-compare", "date-picker-weekday");
+
+                // Selected day: in rdp v8, the button itself has .rdp-day_selected
+                const selectedDay = root.querySelector<HTMLElement>("button.rdp-day_selected");
+                if (selectedDay) selectedDay.setAttribute("data-compare", "date-picker-day-selected");
+
+                // Normal day: rdp v8 button.rdp-day, pick Jan 4 (stable, not today, not selected, not outside)
+                // In rdp v8, the button text content is the day number (e.g. "4")
+                const dayButtons = root.querySelectorAll<HTMLElement>(
+                    "button.rdp-day:not(.rdp-day_outside):not(.rdp-day_selected):not(.rdp-day_disabled)"
+                );
+                let normalDay: HTMLElement | null = null;
+                for (let i = 0; i < dayButtons.length; i++) {
+                    const btn = dayButtons[i];
+                    // Match Jan 4 specifically (text content "4")
+                    if ((btn.textContent ?? "").trim() === "4") {
+                        normalDay = btn;
+                        break;
+                    }
+                }
+                // Fallback: first available non-special day
+                if (!normalDay && dayButtons[0]) normalDay = dayButtons[0];
+                if (normalDay) normalDay.setAttribute("data-compare", "date-picker-day");
+            }
+        }
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Basic specimen — fixed selected date + month */}
+            <div ref={basicRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>Basic (Jan 15, 2026 selected)</span>
+                <BpDatePicker
+                    value={FIXED_DATE_BP}
+                    onChange={() => {}}
+                    initialMonth={FIXED_MONTH_BP}
+                />
+            </div>
+
+            {/* With TimePicker */}
+            <div ref={timeRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>With TimePicker (minute precision)</span>
+                <BpDatePicker
+                    value={FIXED_DATE_BP}
+                    onChange={() => {}}
+                    initialMonth={FIXED_MONTH_BP}
+                    timePrecision="minute"
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4464,6 +4564,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
+    { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

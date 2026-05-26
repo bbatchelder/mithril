@@ -52,6 +52,7 @@ import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Omnibar } from "@/components/ui/omnibar";
 import { TimePicker } from "@/components/ui/time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3946,6 +3947,47 @@ function TimePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DatePicker gallery
+// Fixed selected date: 2026-01-15. Fixed display month: January 2026.
+// Both sides must show the SAME selected date + displayed month for stable diff.
+//
+// data-compare keys:
+//   date-picker-nav           → the previous-month nav button (caption area)
+//   date-picker-weekday       → a weekday header cell (e.g. "Su")
+//   date-picker-day           → a regular (non-selected, non-outside) day cell
+//   date-picker-day-selected  → the selected day cell (Jan 15, 2026)
+// ---------------------------------------------------------------------------
+const FIXED_DATE = new Date(2026, 0, 15); // Jan 15, 2026
+const FIXED_MONTH = new Date(2026, 0, 1); // January 2026
+
+function DatePickerGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Basic specimen — fixed selected date, fixed month, no time */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">Basic (Jan 15, 2026 selected)</span>
+                <DatePicker
+                    value={FIXED_DATE}
+                    onChange={() => {}}
+                    month={FIXED_MONTH}
+                />
+            </div>
+
+            {/* With TimePicker */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">With TimePicker (minute precision)</span>
+                <DatePicker
+                    value={FIXED_DATE}
+                    onChange={() => {}}
+                    month={FIXED_MONTH}
+                    timePrecision="minute"
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3999,6 +4041,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "multi-select", title: "MultiSelect", render: () => <MultiSelectGallery /> },
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
+    { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
