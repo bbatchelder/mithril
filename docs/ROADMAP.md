@@ -70,7 +70,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 3 — Overlays & positioning
 
-- [ ] **Dialog** — `dialog/` (+ Portal/Overlay *(infra)*). First Radix-portal component — work out how the
+- [x] **Dialog** — `dialog/` (+ Portal/Overlay *(infra)*). First Radix-portal component — work out how the
       harness reaches portaled content; `@radix-ui/react-dialog`.
 - [ ] **Alert** — `alert/` (Dialog-based)
 - [ ] **Drawer** — `drawer/` (Overlay-based)

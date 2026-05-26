@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1749,6 +1749,71 @@ function ControlCardGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Dialog. Renders ONE dialog open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals dialog content to document.body. We use containerRef + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, header, body, footer, close button)
+ * after mount. The containerRef points to `.bp6-dialog-container`.
+ *
+ * Keys: dialog-panel, dialog-header, dialog-body, dialog-footer, dialog-close.
+ * Must match analyst-ui DialogGallery exactly.
+ */
+function DialogGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        function tag() {
+            const container = containerRef.current;
+            if (!container) return;
+            const panel = container.querySelector(`.${Classes.DIALOG}`);
+            const header = container.querySelector(`.${Classes.DIALOG_HEADER}`);
+            const body = container.querySelector(`.${Classes.DIALOG_BODY}`);
+            const footer = container.querySelector(`.${Classes.DIALOG_FOOTER}`);
+            const close = container.querySelector(`.${Classes.DIALOG_CLOSE_BUTTON}`);
+            if (panel) panel.setAttribute("data-compare", "dialog-panel");
+            if (header) header.setAttribute("data-compare", "dialog-header");
+            if (body) body.setAttribute("data-compare", "dialog-body");
+            if (footer) footer.setAttribute("data-compare", "dialog-footer");
+            if (close) close.setAttribute("data-compare", "dialog-close");
+        }
+        // Tag immediately and after a short delay to handle async portal rendering
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The dialog below is open by default for comparison harness screenshots.
+            </p>
+            <Dialog
+                isOpen={true}
+                title="Dialog Title"
+                icon="info-sign"
+                isCloseButtonShown={true}
+                containerRef={containerRef}
+                onClose={() => {}}
+            >
+                <DialogBody>
+                    <p style={{ margin: 0 }}>
+                        This is the dialog body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DialogBody>
+                <DialogFooter
+                    actions={
+                        <>
+                            <Button text="Cancel" />
+                            <Button intent="primary" text="Confirm" />
+                        </>
+                    }
+                />
+            </Dialog>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1773,6 +1838,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
+    { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

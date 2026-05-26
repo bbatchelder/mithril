@@ -1,8 +1,9 @@
 import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
+import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
@@ -23,6 +24,9 @@ import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinne
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
+
+/** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
+const DarkContext = createContext(false);
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -1750,6 +1754,49 @@ function ControlCardGallery() {
     );
 }
 
+/**
+ * Dialog showcase. Renders ONE dialog OPEN by default so the harness can screenshot and
+ * computed-style-diff the portaled panel, header, body, footer, and close button.
+ *
+ * Portal + dark-mode: the dialog receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (see dialog.tsx "Portal + dark-mode solution").
+ *
+ * data-compare keys: dialog-panel, dialog-header, dialog-body, dialog-footer, dialog-close.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function DialogGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The dialog below is open by default for comparison harness screenshots.
+            </p>
+            <Dialog
+                defaultOpen={true}
+                title="Dialog Title"
+                icon={<Icon icon="info-sign" />}
+                closeButton={true}
+                dark={dark}
+            >
+                <DialogBody>
+                    <p className="text-body text-foreground m-0">
+                        This is the dialog body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DialogBody>
+                <DialogFooter
+                    actions={
+                        <>
+                            <Button variant="minimal">Cancel</Button>
+                            <Button intent="primary">Confirm</Button>
+                        </>
+                    }
+                />
+            </Dialog>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1774,6 +1821,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
+    { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -1790,6 +1838,7 @@ export default function App() {
     const isolated = ONLY != null && shown.length > 0;
 
     return (
+        <DarkContext.Provider value={dark}>
         <div className={dark ? "dark" : ""}>
             <div className="min-h-screen bg-background text-foreground p-10">
                 <div className="mx-auto flex max-w-[760px] flex-col gap-8">
@@ -1811,5 +1860,6 @@ export default function App() {
                 </div>
             </div>
         </div>
+        </DarkContext.Provider>
     );
 }
