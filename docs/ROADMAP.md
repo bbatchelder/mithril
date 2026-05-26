@@ -89,7 +89,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Section** — `section/` (Card-based)
 - [x] **CardList** — `card-list/` (Card-based)
 - [x] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
-- [ ] **Tree** — `tree/` (Icon + Collapse)
+- [x] **Tree** — `tree/` (Icon + Collapse)
 - [ ] **PanelStack** — `panel-stack/`
 - [ ] **HTMLTable** — `html-table/`
 - [ ] **EditableText** — `editable-text/`

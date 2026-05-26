@@ -37,6 +37,7 @@ import { Collapse } from "@/components/ui/collapse";
 import { Section as BpSection, SectionCard as BpSectionCard } from "@/components/ui/section";
 import { CardList } from "@/components/ui/card-list";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2573,6 +2574,123 @@ function BreadcrumbsGallery() {
     );
 }
 
+/**
+ * Tree showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference TreeGallery exactly):
+ *   tree-node-content    — the default (non-selected, non-disabled) node row div
+ *   tree-node-selected   — the selected node row div
+ *   tree-node-caret      — the caret span on an expandable node
+ *   tree-node-caret-none — the spacer span on a leaf node
+ *   tree-node-icon       — the icon span on a node with an icon
+ *
+ * Fixed width (320px) so both galleries produce the same box dimensions.
+ *
+ * DOM tagging (via useEffect) tags equivalent nodes to the blueprint-reference gallery:
+ * Flattened DOM order (same as Blueprint):
+ *   0: Documents (depth 0, expanded, folder icon)
+ *   1: Annual Report 2025 (depth 1, doc icon + secondaryLabel) → tree-node-content, tree-node-icon
+ *   2: Projects (depth 1, expanded, folder icon)
+ *   3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+ *   4: blueprint-ref (depth 2)
+ *   5: Drafts (depth 0, collapsed)
+ *   6: Trash (depth 0, disabled)
+ */
+const TREE_INITIAL: TreeNodeInfo[] = [
+    {
+        id: 1,
+        label: "Documents",
+        icon: "folder-close",
+        isExpanded: true,
+        childNodes: [
+            {
+                id: 2,
+                label: "Annual Report 2025",
+                icon: "document",
+                secondaryLabel: <span style={{ fontSize: 12, opacity: 0.6 }}>4.2 MB</span>,
+            },
+            {
+                id: 3,
+                label: "Projects",
+                icon: "folder-close",
+                isExpanded: true,
+                childNodes: [
+                    {
+                        id: 4,
+                        label: "analyst-ui",
+                        isSelected: true,
+                    },
+                    {
+                        id: 5,
+                        label: "blueprint-ref",
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        id: 6,
+        label: "Drafts",
+        icon: "folder-close",
+    },
+    {
+        id: 7,
+        label: "Trash",
+        icon: "trash",
+        disabled: true,
+    },
+];
+
+function TreeGallery() {
+    const [contents, { handleNodeClick, handleNodeExpand, handleNodeCollapse }] = useTreeState(TREE_INITIAL);
+    const treeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!treeRef.current) return;
+        // analyst-ui Tree renders .bp6-tree-node-content divs for each node row.
+        // DOM order matches Blueprint reference exactly (pre-order traversal).
+        // 0: Documents (depth 0, expanded, has caret)
+        // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel) → tree-node-content
+        // 2: Projects (depth 1, expanded, has caret + icon)
+        // 3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+        // 4: blueprint-ref (depth 2, leaf)
+        // 5: Drafts (depth 0, collapsed)
+        // 6: Trash (depth 0, disabled)
+        const rows = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-content");
+        if (rows[1]) rows[1].setAttribute("data-compare", "tree-node-content");
+        if (rows[3]) rows[3].setAttribute("data-compare", "tree-node-selected");
+
+        // Caret spans (expandable nodes): Documents (0), Projects (2)
+        const carets = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret");
+        if (carets[0]) carets[0].setAttribute("data-compare", "tree-node-caret");
+
+        // Caret-none spans (leaf nodes): Annual Report 2025 is first leaf at depth 1
+        const caretNones = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret-none");
+        if (caretNones[0]) caretNones[0].setAttribute("data-compare", "tree-node-caret-none");
+
+        // Icon span on "Annual Report 2025" (second node in DOM order):
+        // .bp6-tree-node-icon is the class on icon spans within that content row.
+        const icons = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-icon");
+        if (icons[1]) icons[1].setAttribute("data-compare", "tree-node-icon");
+    }, []);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 320 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Default tree (multi-level, selected, icon, secondaryLabel)</p>
+                <div ref={treeRef}>
+                    <Tree
+                        contents={contents}
+                        onNodeClick={handleNodeClick}
+                        onNodeExpand={handleNodeExpand}
+                        onNodeCollapse={handleNodeCollapse}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2611,6 +2729,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "section", title: "Section", render: () => <SectionGallery /> },
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
     { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
+    { id: "tree", title: "Tree", render: () => <TreeGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

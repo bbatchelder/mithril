@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2799,6 +2799,140 @@ function BreadcrumbsGallery() {
     );
 }
 
+/**
+ * Blueprint Tree reference gallery.
+ *
+ * data-compare keys (must match analyst-ui TreeGallery exactly):
+ *   tree-node-content    — default node row div (.bp6-tree-node-content)
+ *   tree-node-selected   — selected node row div (selected node's content)
+ *   tree-node-caret      — caret span on an expandable node
+ *   tree-node-caret-none — caret-none spacer span on a leaf node
+ *   tree-node-icon       — icon span on a node that has an icon
+ *
+ * The specimen MUST be structurally identical to the analyst-ui TreeGallery:
+ *   - "Documents" (expanded) → "Annual Report 2025" (doc icon, secondaryLabel), "Projects" (expanded) → "analyst-ui" (SELECTED), "blueprint-ref"
+ *   - "Drafts" (collapsed, folder icon)
+ *   - "Trash" (disabled, trash icon)
+ */
+function TreeGallery() {
+    const [contents, setContents] = useState<BpTreeNodeInfo[]>([
+        {
+            id: 1,
+            label: "Documents",
+            icon: "folder-close",
+            isExpanded: true,
+            childNodes: [
+                {
+                    id: 2,
+                    label: "Annual Report 2025",
+                    icon: "document",
+                    secondaryLabel: <span style={{ fontSize: 12, opacity: 0.6 }}>4.2 MB</span>,
+                },
+                {
+                    id: 3,
+                    label: "Projects",
+                    icon: "folder-close",
+                    isExpanded: true,
+                    childNodes: [
+                        {
+                            id: 4,
+                            label: "analyst-ui",
+                            isSelected: true,
+                        },
+                        {
+                            id: 5,
+                            label: "blueprint-ref",
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            id: 6,
+            label: "Drafts",
+            icon: "folder-close",
+        },
+        {
+            id: 7,
+            label: "Trash",
+            icon: "trash",
+            disabled: true,
+        },
+    ]);
+
+    const treeRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!treeRef.current) return;
+        // Tag specific nodes for style diffing.
+        // Blueprint renders: .bp6-tree-node > .bp6-tree-node-content
+        // We tag specific content divs by looking at the tree structure.
+        const allContents = treeRef.current.querySelectorAll(".bp6-tree-node-content");
+        // Node order (flattened, in DOM order):
+        // 0: Documents (depth 0, has caret)
+        // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel)
+        // 2: Projects (depth 1, has caret + icon)
+        // 3: analyst-ui (depth 2, SELECTED)
+        // 4: blueprint-ref (depth 2)
+        // 5: Drafts (depth 0, has icon, collapsed)
+        // 6: Trash (depth 0, disabled)
+        if (allContents[1]) {
+            allContents[1].setAttribute("data-compare", "tree-node-content");
+        }
+        if (allContents[3]) {
+            allContents[3].setAttribute("data-compare", "tree-node-selected");
+        }
+        // Tag caret spans: first .bp6-tree-node-caret in DOM
+        const carets = treeRef.current.querySelectorAll(".bp6-tree-node-caret");
+        if (carets[0]) carets[0].setAttribute("data-compare", "tree-node-caret");
+        // Tag caret-none span: first leaf at depth 1
+        const caretNones = treeRef.current.querySelectorAll(".bp6-tree-node-caret-none");
+        if (caretNones[0]) caretNones[0].setAttribute("data-compare", "tree-node-caret-none");
+        // Tag icon span on "Annual Report 2025" node (.bp6-tree-node-icon)
+        const icons = treeRef.current.querySelectorAll(".bp6-tree-node-icon");
+        if (icons[1]) icons[1].setAttribute("data-compare", "tree-node-icon");
+    }, []);
+
+    return (
+        <div style={{ width: 320 }}>
+            <div ref={treeRef}>
+                <BpTree
+                    contents={contents}
+                    onNodeClick={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            clearSelected(next);
+                            BpTree.nodeFromPath(path, next).isSelected = true;
+                            return next;
+                        });
+                    }}
+                    onNodeExpand={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            BpTree.nodeFromPath(path, next).isExpanded = true;
+                            return next;
+                        });
+                    }}
+                    onNodeCollapse={(node, path) => {
+                        setContents((prev) => {
+                            const next = JSON.parse(JSON.stringify(prev)) as BpTreeNodeInfo[];
+                            BpTree.nodeFromPath(path, next).isExpanded = false;
+                            return next;
+                        });
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+function clearSelected(nodes: BpTreeNodeInfo[]) {
+    for (const n of nodes) {
+        n.isSelected = false;
+        if (n.childNodes) clearSelected(n.childNodes);
+    }
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2836,6 +2970,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "section", title: "Section", render: () => <SectionGallery /> },
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
     { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
+    { id: "tree", title: "Tree", render: () => <TreeGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
