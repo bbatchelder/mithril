@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3339,6 +3339,135 @@ function EntityTitleGallery() {
     );
 }
 
+/**
+ * Blueprint NonIdealState reference gallery.
+ *
+ * Mirrors analyst-ui NonIdealStateGallery exactly — same specimens, same data-compare keys,
+ * same container widths/heights.
+ *
+ * Blueprint's NonIdealState renders:
+ *   .bp6-non-ideal-state (root)
+ *     .bp6-non-ideal-state-visual (icon wrapper)
+ *     .bp6-non-ideal-state-text (title + description wrapper)
+ *       h4.bp6-heading (title)
+ *       div (description)
+ *     {action} (direct child)
+ *
+ * data-compare keys (must match analyst-ui NonIdealStateGallery exactly):
+ *   non-ideal-state-full    — the root div of the full-state specimen
+ *   non-ideal-state-minimal — the root div of the minimal specimen
+ *
+ * We use a wrapper div + useEffect to set data-compare on the .bp6-non-ideal-state root
+ * (Blueprint's NonIdealState doesn't forward arbitrary props in v6).
+ * A fixed 400px-wide, fixed-height container matches the analyst-ui gallery so
+ * centering and max-width dimensions compare cleanly.
+ */
+function BpNonIdealStateWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpNonIdealState> & { compareKey: string }) {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (wrapperRef.current) {
+            const inner = wrapperRef.current.querySelector(".bp6-non-ideal-state");
+            if (inner) inner.setAttribute("data-compare", compareKey);
+        }
+    }, [compareKey]);
+    return (
+        <div ref={wrapperRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+            <BpNonIdealState {...props} />
+        </div>
+    );
+}
+
+function NonIdealStateGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Full state: icon + title + description + action */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Full state (icon + title + description + action)</p>
+                <div style={{ width: 400, height: 300, position: "relative" }}>
+                    <BpNonIdealStateWithCompare
+                        compareKey="non-ideal-state-full"
+                        icon="search"
+                        title="No search results"
+                        description="Your query returned no results. Try a different search."
+                        action={<Button intent="primary" text="Clear search" />}
+                    />
+                </div>
+            </div>
+
+            {/* Minimal: icon + title only */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Minimal (icon + title)</p>
+                <div style={{ width: 400, height: 200, position: "relative" }}>
+                    <BpNonIdealStateWithCompare
+                        compareKey="non-ideal-state-minimal"
+                        icon="folder-close"
+                        title="Empty folder"
+                    />
+                </div>
+            </div>
+
+            {/* Title + description only (no icon) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Title + description (no icon)</p>
+                <div style={{ width: 400, height: 150, position: "relative" }}>
+                    <BpNonIdealState
+                        title="Nothing here"
+                        description="Come back later when there's something to show."
+                    />
+                </div>
+            </div>
+
+            {/* Horizontal layout */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Horizontal layout</p>
+                <div style={{ width: 400, height: 120, position: "relative" }}>
+                    <BpNonIdealState
+                        icon="warning-sign"
+                        title="Connection error"
+                        description="Could not connect to the server."
+                        layout="horizontal"
+                    />
+                </div>
+            </div>
+
+            {/* Icon size variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Icon sizes (STANDARD / SMALL / EXTRA_SMALL)</p>
+                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    {([
+                        ["STANDARD", BpNonIdealStateIconSize.STANDARD],
+                        ["SMALL", BpNonIdealStateIconSize.SMALL],
+                        ["EXTRA_SMALL", BpNonIdealStateIconSize.EXTRA_SMALL],
+                    ] as const).map(([label, size]) => (
+                        <div key={label} style={{ width: 160, height: 180, position: "relative", border: "1px dashed rgba(0,0,0,0.1)" }}>
+                            <BpNonIdealState
+                                icon="document"
+                                iconSize={size}
+                                title={label}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* iconMuted=false */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>iconMuted=false (inherits muted text color)</p>
+                <div style={{ width: 400, height: 180, position: "relative" }}>
+                    <BpNonIdealState
+                        icon="info-sign"
+                        title="Information"
+                        iconMuted={false}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3381,6 +3510,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
+    { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

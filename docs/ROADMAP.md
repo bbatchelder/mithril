@@ -94,7 +94,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **HTMLTable** — `html-table/`
 - [x] **EditableText** — `editable-text/`
 - [x] **EntityTitle** — `entity-title/`
-- [ ] **NonIdealState** — `non-ideal-state/` (Icon)
+- [x] **NonIdealState** — `non-ideal-state/` (Icon)
 - [ ] **Link** — `link/`
 - [ ] **Slider** — `slider/`
 - [ ] **Hotkeys** — `hotkeys/` (Dialog-based)

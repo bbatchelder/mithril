@@ -42,6 +42,7 @@ import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/p
 import { HTMLTable } from "@/components/ui/html-table";
 import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
 import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
+import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3057,6 +3058,114 @@ function EntityTitleGallery() {
     );
 }
 
+/**
+ * NonIdealState showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * Specimens cover:
+ *   - Full state (icon + title + description + action)
+ *   - Minimal (icon + title only)
+ *   - Title + description only (no icon)
+ *   - Horizontal layout
+ *   - Icon size variants (STANDARD, SMALL, EXTRA_SMALL)
+ *   - Custom ReactNode visual (non-string icon)
+ *
+ * data-compare keys (must match blueprint-reference NonIdealStateGallery exactly):
+ *   non-ideal-state-full          — full state: icon + title + description + action
+ *   non-ideal-state-minimal       — icon + title only
+ *   non-ideal-state-visual-full   — the visual div inside the full-state specimen
+ *   non-ideal-state-title-full    — the title h4 inside the full-state specimen
+ *   non-ideal-state-description   — the description div inside the full-state specimen
+ *
+ * Fixed width (400px) so centering + max-width compare cleanly on both sides.
+ */
+function NonIdealStateGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Full state: icon + title + description + action */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Full state (icon + title + description + action)</p>
+                <div style={{ width: 400, height: 300, position: "relative" }}>
+                    <NonIdealState
+                        icon="search"
+                        title="No search results"
+                        description="Your query returned no results. Try a different search."
+                        action={<Button intent="primary">Clear search</Button>}
+                        data-compare="non-ideal-state-full"
+                    />
+                </div>
+            </div>
+
+            {/* Minimal: icon + title only */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Minimal (icon + title)</p>
+                <div style={{ width: 400, height: 200, position: "relative" }}>
+                    <NonIdealState
+                        icon="folder-close"
+                        title="Empty folder"
+                        data-compare="non-ideal-state-minimal"
+                    />
+                </div>
+            </div>
+
+            {/* Title + description only (no icon) */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Title + description (no icon)</p>
+                <div style={{ width: 400, height: 150, position: "relative" }}>
+                    <NonIdealState
+                        title="Nothing here"
+                        description="Come back later when there's something to show."
+                    />
+                </div>
+            </div>
+
+            {/* Horizontal layout */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Horizontal layout</p>
+                <div style={{ width: 400, height: 120, position: "relative" }}>
+                    <NonIdealState
+                        icon="warning-sign"
+                        title="Connection error"
+                        description="Could not connect to the server."
+                        layout="horizontal"
+                    />
+                </div>
+            </div>
+
+            {/* Icon size variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Icon sizes (STANDARD / SMALL / EXTRA_SMALL)</p>
+                <div className="flex gap-4 flex-wrap">
+                    {([
+                        ["STANDARD", NonIdealStateIconSize.STANDARD],
+                        ["SMALL", NonIdealStateIconSize.SMALL],
+                        ["EXTRA_SMALL", NonIdealStateIconSize.EXTRA_SMALL],
+                    ] as const).map(([label, size]) => (
+                        <div key={label} style={{ width: 160, height: 180, position: "relative", border: "1px dashed rgba(0,0,0,0.1)" }}>
+                            <NonIdealState
+                                icon="document"
+                                iconSize={size}
+                                title={label}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* iconMuted=false */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">iconMuted=false (inherits muted text color)</p>
+                <div style={{ width: 400, height: 180, position: "relative" }}>
+                    <NonIdealState
+                        icon="info-sign"
+                        title="Information"
+                        iconMuted={false}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3100,6 +3209,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
+    { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
