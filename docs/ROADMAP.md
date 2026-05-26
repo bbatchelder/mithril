@@ -111,7 +111,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 - [x] **TimePicker** — `datetime/time-picker/`
 - [x] **DatePicker** — `datetime/date-picker/` (react-day-picker)
-- [ ] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
+- [x] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
 - [ ] **DateRangePicker** — `datetime/date-range-picker/`
 - [ ] **DateRangeInput** — `datetime/date-range-input/`
 - [ ] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)

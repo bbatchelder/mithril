@@ -1,6 +1,6 @@
 import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
-import { DatePicker as BpDatePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
+import { DateInput as BpDateInput, DatePicker as BpDatePicker, TimePicker as BpTimePicker } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -4512,6 +4512,111 @@ function DatePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateInput reference gallery
+// Blueprint DateInput with fixed date 2026-01-15, popover open.
+//
+// data-compare keys (MUST match analyst-ui DateInputGallery):
+//   date-input-field        → the InputGroup <input> element
+//   date-input-day          → a regular (non-selected, non-outside) day cell (Jan 4)
+//   date-input-day-selected → the selected day cell (Jan 15, 2026)
+//
+// Blueprint's DateInput renders a Popover with a DatePicker inside.
+// The popover content is portaled to document.body.
+// We use isOpen=true on popoverProps to force the popover open.
+// We use useEffect + querySelector to stamp data-compare on the portaled DOM.
+//
+// Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
+// so Blueprint's portaled DatePicker content gets dark styles.
+// ---------------------------------------------------------------------------
+
+function DateInputGallery() {
+    const dark = INITIAL_DARK;
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            // The portaled content is at document.body level (outside containerRef),
+            // so we search the whole document for the DatePicker cells.
+            // Blueprint's DateInput uses DatePicker → react-day-picker v8 internally.
+
+            // Input field: Blueprint renders an InputGroup with an <input>
+            const inputEl = containerRef.current?.querySelector<HTMLElement>("input");
+            if (inputEl) inputEl.setAttribute("data-compare", "date-input-field");
+
+            // DatePicker cells in the portaled popover:
+            // rdp v8: button.rdp-day_selected for selected, button.rdp-day for normal days
+            const selectedDay = document.querySelector<HTMLElement>(
+                ".bp6-date-input-popover button.rdp-day_selected, .bp6-datepicker button.rdp-day_selected"
+            );
+            if (selectedDay) selectedDay.setAttribute("data-compare", "date-input-day-selected");
+
+            // Normal day: pick Jan 4 (text "4", not selected, not outside, not disabled)
+            const dayButtons = document.querySelectorAll<HTMLElement>(
+                ".bp6-date-input-popover button.rdp-day:not(.rdp-day_outside):not(.rdp-day_selected):not(.rdp-day_disabled), " +
+                ".bp6-datepicker button.rdp-day:not(.rdp-day_outside):not(.rdp-day_selected):not(.rdp-day_disabled)"
+            );
+            let normalDay: HTMLElement | null = null;
+            for (let i = 0; i < dayButtons.length; i++) {
+                const btn = dayButtons[i];
+                if ((btn.textContent ?? "").trim() === "4") {
+                    normalDay = btn;
+                    break;
+                }
+            }
+            if (!normalDay && dayButtons[0]) normalDay = dayButtons[0];
+            if (normalDay) normalDay.setAttribute("data-compare", "date-input-day");
+        }
+
+        tag();
+        const t1 = setTimeout(tag, 100);
+        const t2 = setTimeout(tag, 300);
+        const t3 = setTimeout(tag, 600);
+        return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    });
+
+    const formatDate = (date: Date) => {
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const y = date.getFullYear();
+        return `${m}/${d}/${y}`;
+    };
+
+    const parseDate = (str: string) => {
+        const parts = str.trim().split(/[\/\-\.]/);
+        if (parts.length === 3) {
+            const m = parseInt(parts[0], 10);
+            const d = parseInt(parts[1], 10);
+            const y = parseInt(parts[2], 10);
+            if (!isNaN(m) && !isNaN(d) && !isNaN(y)) {
+                return new Date(y, m - 1, d);
+            }
+        }
+        return new Date(str);
+    };
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 200 }}>
+                <span style={{ fontSize: 12, opacity: 0.6 }}>DateInput (open, Jan 15 2026 selected)</span>
+                <BpDateInput
+                    value={FIXED_DATE_BP.toISOString()}
+                    onChange={() => {}}
+                    formatDate={formatDate}
+                    parseDate={parseDate}
+                    placeholder="M/d/yyyy"
+                    popoverProps={{
+                        isOpen: true,
+                        portalClassName: dark ? Classes.DARK : undefined,
+                        // Keep popover open — prevent close events
+                        onClose: () => {},
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -4565,6 +4670,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
+    { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

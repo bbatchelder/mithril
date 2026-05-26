@@ -53,6 +53,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { Omnibar } from "@/components/ui/omnibar";
 import { TimePicker } from "@/components/ui/time-picker";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DateInput } from "@/components/ui/date-input";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3988,6 +3989,137 @@ function DatePickerGallery() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// DateInput gallery
+// Fixed selected date: 2026-01-15. Popover OPEN (showing January 2026 calendar).
+// Harness sees both the input field AND the portaled calendar in the same page.
+//
+// data-compare keys:
+//   date-input-field        → the InputGroup <input> element
+//   date-input-day          → a regular (non-selected) day in the open calendar (Jan 4)
+//   date-input-day-selected → the selected day in the open calendar (Jan 15)
+// ---------------------------------------------------------------------------
+
+function DateInputGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-8">
+            {/* Interactive specimen — the real DateInput component */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateInput (interactive)</span>
+                <DateInput
+                    defaultValue={FIXED_DATE}
+                    dark={dark}
+                    placeholder="M/d/yyyy"
+                />
+            </div>
+
+            {/* Harness specimen — popover forced open for static diff */}
+            <div className="flex flex-col gap-2">
+                <span className="text-body-sm text-foreground-muted">DateInput (open, Jan 15 2026 selected)</span>
+                {/* Popover is forced open via open=true so the harness sees the calendar */}
+                <OpenDateInput dark={dark} />
+            </div>
+        </div>
+    );
+}
+
+/**
+ * DateInput with popover forced open for harness comparison.
+ * We use a wrapper because Popover needs open to be a controlled prop.
+ *
+ * The DatePicker inside the popover uses the same FIXED_DATE / FIXED_MONTH
+ * as the DatePicker gallery for a consistent January 2026 calendar view.
+ * data-compare keys on the day cells come from DatePicker's DayButton component.
+ * We override them here (date-input-day / date-input-day-selected) by
+ * adding a second DatePicker inside the gallery with its own keys.
+ */
+function OpenDateInput({ dark }: { dark: boolean }) {
+    // Wrap in inline JSX so we can render the Popover as always-open
+    // We use DatePicker directly inside Popover (instead of DateInput's controlled open)
+    // so the harness reliably sees both input + calendar in the DOM.
+    return (
+        <div className="flex flex-col gap-2 items-start">
+            {/* The input field with data-compare tag */}
+            <div
+                className="relative inline-block"
+                style={{ minWidth: 200 }}
+            >
+                {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
+                <InputGroup
+                    type="text"
+                    value="1/15/2026"
+                    onChange={() => {}}
+                    placeholder="M/d/yyyy"
+                    data-compare="date-input-field"
+                />
+            </div>
+
+            {/* Popover calendar always visible — portaled with dark support */}
+            <Popover
+                open={true}
+                onOpenChange={() => {}}
+                content={
+                    <DatePickerForDateInput dark={dark} />
+                }
+                side="bottom"
+                align="start"
+                sideOffset={4}
+                arrow={false}
+                minimal={true}
+                hasContentPadding={false}
+                dark={dark}
+            >
+                {/* Invisible anchor so Popover has a trigger (it won't be seen) */}
+                <span />
+            </Popover>
+        </div>
+    );
+}
+
+/**
+ * DatePicker for the DateInput gallery harness — uses date-input-day and
+ * date-input-day-selected keys (instead of date-picker-day / date-picker-day-selected)
+ * so they show as "date-input-*" pairs in the compare output.
+ */
+function DatePickerForDateInput({ dark: _dark }: { dark: boolean }) {
+    // Inline a tiny wrapper that re-tags the DayButton data-compare keys
+    // We render a standard DatePicker but override its day tags by using a wrapper div
+    // and then post-processing via useEffect.
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        // After render, re-stamp data-compare keys on the portaled calendar cells.
+        // DatePicker puts date-picker-day and date-picker-day-selected on cells.
+        // We replace those with date-input-day and date-input-day-selected.
+        const root = ref.current;
+        if (!root) return;
+
+        function retag() {
+            if (!root) return;
+            const sel = root.querySelector<HTMLElement>("[data-compare='date-picker-day-selected']");
+            if (sel) sel.setAttribute("data-compare", "date-input-day-selected");
+            const norm = root.querySelector<HTMLElement>("[data-compare='date-picker-day']");
+            if (norm) norm.setAttribute("data-compare", "date-input-day");
+        }
+
+        retag();
+        const t1 = setTimeout(retag, 50);
+        const t2 = setTimeout(retag, 200);
+        return () => { clearTimeout(t1); clearTimeout(t2); };
+    });
+
+    return (
+        <div ref={ref}>
+            <DatePicker
+                value={FIXED_DATE}
+                onChange={() => {}}
+                month={FIXED_MONTH}
+            />
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -4042,6 +4174,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "omnibar", title: "Omnibar", render: () => <OmnibarGallery /> },
     { id: "time-picker", title: "TimePicker", render: () => <TimePickerGallery /> },
     { id: "date-picker", title: "DatePicker", render: () => <DatePickerGallery /> },
+    { id: "date-input", title: "DateInput", render: () => <DateInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
