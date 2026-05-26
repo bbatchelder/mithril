@@ -35,6 +35,7 @@ import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/
 import { Tabs, Tab } from "@/components/ui/tabs";
 import { Collapse } from "@/components/ui/collapse";
 import { Section as BpSection, SectionCard as BpSectionCard } from "@/components/ui/section";
+import { CardList } from "@/components/ui/card-list";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2461,6 +2462,58 @@ function SectionGallery() {
     );
 }
 
+/**
+ * CardList showcase. Inline (no portal) — dark via .dark ancestor.
+ *
+ * data-compare keys (must match blueprint-reference CardListGallery exactly):
+ *   card-list        — the outer Card container (bg, radius, shadow / no radius when bordered=false)
+ *   card-list-item   — a middle Card row (padding, divider, min-height)
+ *
+ * We render: a bordered CardList with 3 rows (middle is interactive), and a compact one.
+ * Fixed width (400px) so both galleries produce the same box dimensions.
+ */
+function CardListGallery() {
+    return (
+        <div className="flex flex-col gap-8 text-foreground" style={{ width: 400 }}>
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Bordered (default)</p>
+                <CardList data-compare="card-list">
+                    <Card>
+                        <span>Item one — plain</span>
+                    </Card>
+                    <Card interactive data-compare="card-list-item">
+                        <span>Item two — interactive (hover me)</span>
+                    </Card>
+                    <Card>
+                        <span>Item three — plain</span>
+                    </Card>
+                    <Card>
+                        <span>Item four — plain</span>
+                    </Card>
+                </CardList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Compact</p>
+                <CardList compact>
+                    <Card>Compact item one</Card>
+                    <Card interactive>Compact item two — interactive</Card>
+                    <Card>Compact item three</Card>
+                </CardList>
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Flush (bordered=false)</p>
+                <CardList bordered={false}>
+                    <Card>Flush item one</Card>
+                    <Card interactive>Flush item two — interactive</Card>
+                    <Card>Flush item three</Card>
+                </CardList>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2497,6 +2550,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
     { id: "section", title: "Section", render: () => <SectionGallery /> },
+    { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

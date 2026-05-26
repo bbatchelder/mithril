@@ -1,4 +1,4 @@
-import { Alert, Alignment, Button, Callout, Card, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Alignment, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2655,6 +2655,74 @@ function SectionGallery() {
     );
 }
 
+/**
+ * Blueprint reference for CardList.
+ *
+ * data-compare keys (must match analyst-ui CardListGallery exactly):
+ *   card-list        — the outer .bp6-card.bp6-card-list container (bg, radius, shadow)
+ *   card-list-item   — a middle .bp6-card row (padding, divider, min-height)
+ *
+ * Identical content both sides. Tagged via useEffect since Blueprint renders these
+ * internal elements — we can't pass data-compare directly as a prop to Card children.
+ */
+function CardListGallery() {
+    const listRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!listRef.current) return;
+        // The CardList container: .bp6-card-list (which is also .bp6-card)
+        const list = listRef.current.querySelector(".bp6-card-list");
+        if (list) list.setAttribute("data-compare", "card-list");
+        // The middle (second) card row — index 1 (0-based)
+        const items = list?.querySelectorAll(":scope > .bp6-card");
+        if (items && items.length >= 2) {
+            items[1].setAttribute("data-compare", "card-list-item");
+        }
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, width: 400 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Bordered (default)</p>
+                <div ref={listRef}>
+                    <BpCardList>
+                        <Card>
+                            <span>Item one — plain</span>
+                        </Card>
+                        <Card interactive={true}>
+                            <span>Item two — interactive (hover me)</span>
+                        </Card>
+                        <Card>
+                            <span>Item three — plain</span>
+                        </Card>
+                        <Card>
+                            <span>Item four — plain</span>
+                        </Card>
+                    </BpCardList>
+                </div>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Compact</p>
+                <BpCardList compact={true}>
+                    <Card>Compact item one</Card>
+                    <Card interactive={true}>Compact item two — interactive</Card>
+                    <Card>Compact item three</Card>
+                </BpCardList>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Flush (bordered=false)</p>
+                <BpCardList bordered={false}>
+                    <Card>Flush item one</Card>
+                    <Card interactive={true}>Flush item two — interactive</Card>
+                    <Card>Flush item three</Card>
+                </BpCardList>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2690,6 +2758,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tabs", title: "Tabs", render: () => <TabsGallery /> },
     { id: "collapse", title: "Collapse", render: () => <CollapseGallery /> },
     { id: "section", title: "Section", render: () => <SectionGallery /> },
+    { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
