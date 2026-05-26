@@ -40,6 +40,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
 import { HTMLTable } from "@/components/ui/html-table";
+import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2876,6 +2877,91 @@ function HTMLTableGallery() {
     );
 }
 
+/**
+ * EditableText showcase.
+ *
+ * Specimens cover: resting with value, empty+placeholder, editing (isEditing),
+ * multiline, intent (primary), and disabled.
+ *
+ * data-compare keys:
+ *   editable-text-resting    — root div, resting state with value
+ *   editable-text-content    — the content span (resting, no-intent, has value)
+ *   editable-text-placeholder — content span showing placeholder (no value)
+ *   editable-text-editing    — root div with isEditing=true (shows editing ring)
+ *   editable-text-input      — the <input> inside the editing specimen
+ */
+function EditableTextGallery() {
+    const [editingValue, setEditingValue] = useState("Editing now");
+    const intents: EditableTextIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            {/* Resting state with value */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Resting (with value)</p>
+                <EditableText
+                    defaultValue="Hello, Blueprint"
+                    data-compare="editable-text-resting"
+                />
+            </div>
+
+            {/* Empty + placeholder */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Empty + placeholder</p>
+                <EditableText
+                    defaultValue=""
+                    placeholder="Click to Edit"
+                    data-compare="editable-text-placeholder"
+                />
+            </div>
+
+            {/* Editing state (controlled isEditing) */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Editing state</p>
+                <EditableText
+                    value={editingValue}
+                    isEditing={true}
+                    onChange={setEditingValue}
+                    data-compare="editable-text-editing"
+                />
+            </div>
+
+            {/* Multiline */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Multiline</p>
+                <EditableText
+                    defaultValue={"Line one\nLine two\nLine three"}
+                    multiline
+                    minLines={3}
+                />
+            </div>
+
+            {/* Intents */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Intents</p>
+                <div className="flex flex-col gap-2">
+                    {intents.map((intent) => (
+                        <EditableText
+                            key={intent}
+                            defaultValue={intent === "none" ? "No intent" : intent}
+                            intent={intent}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">Disabled</p>
+                <EditableText
+                    defaultValue="Cannot edit this"
+                    disabled
+                />
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2917,6 +3003,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

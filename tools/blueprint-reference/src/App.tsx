@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, FileInput, FormGroup, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3123,6 +3123,104 @@ function HTMLTableGallery() {
     );
 }
 
+/**
+ * Blueprint EditableText reference gallery.
+ *
+ * Mirrors analyst-ui EditableTextGallery exactly — same specimens, same data-compare keys.
+ *
+ * Blueprint's EditableText does not forward data-* to its root div, so we use the
+ * `elementRef` prop to get the root element ref and set `data-compare` imperatively.
+ *
+ * data-compare keys:
+ *   editable-text-resting    — root div, resting state with value
+ *   editable-text-placeholder — root div showing placeholder (no value)
+ *   editable-text-editing    — root div with isEditing=true (shows editing ring)
+ */
+function BpEditableTextWithCompare({
+    compareKey,
+    ...props
+}: React.ComponentProps<typeof BpEditableText> & { compareKey: string }) {
+    const elRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (elRef.current) {
+            elRef.current.setAttribute("data-compare", compareKey);
+        }
+    }, [compareKey]);
+    return <BpEditableText {...props} elementRef={elRef} />;
+}
+
+function EditableTextGallery() {
+    const [editingValue, setEditingValue] = useState("Editing now");
+    const intents: Intent[] = ["none", "primary", "success", "warning", "danger"];
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            {/* Resting state with value */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Resting (with value)</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-resting"
+                    defaultValue="Hello, Blueprint"
+                />
+            </div>
+
+            {/* Empty + placeholder */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Empty + placeholder</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-placeholder"
+                    defaultValue=""
+                    placeholder="Click to Edit"
+                />
+            </div>
+
+            {/* Editing state */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Editing state</p>
+                <BpEditableTextWithCompare
+                    compareKey="editable-text-editing"
+                    value={editingValue}
+                    isEditing={true}
+                    onChange={setEditingValue}
+                />
+            </div>
+
+            {/* Multiline */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Multiline</p>
+                <BpEditableText
+                    defaultValue={"Line one\nLine two\nLine three"}
+                    multiline
+                    minLines={3}
+                />
+            </div>
+
+            {/* Intents */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Intents</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {intents.map((intent) => (
+                        <BpEditableText
+                            key={intent}
+                            defaultValue={intent === "none" ? "No intent" : intent}
+                            intent={intent}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* Disabled */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Disabled</p>
+                <BpEditableText
+                    defaultValue="Cannot edit this"
+                    disabled={true}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3163,6 +3261,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

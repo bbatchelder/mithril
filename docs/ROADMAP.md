@@ -92,7 +92,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 - [x] **Tree** — `tree/` (Icon + Collapse)
 - [x] **PanelStack** — `panel-stack/`
 - [x] **HTMLTable** — `html-table/`
-- [ ] **EditableText** — `editable-text/`
+- [x] **EditableText** — `editable-text/`
 - [ ] **EntityTitle** — `entity-title/`
 - [ ] **NonIdealState** — `non-ideal-state/` (Icon)
 - [ ] **Link** — `link/`
