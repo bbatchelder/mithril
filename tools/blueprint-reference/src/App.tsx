@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3468,6 +3468,66 @@ function NonIdealStateGallery() {
     );
 }
 
+/**
+ * Blueprint Link reference gallery.
+ *
+ * Mirrors analyst-ui LinkGallery exactly — same specimens, same data-compare keys.
+ * Uses Blueprint's Link component directly (BpLink) which applies .bp6-link styles.
+ *
+ * data-compare keys (must match analyst-ui LinkGallery exactly):
+ *   link-default   — primary color, always underlined
+ *   link-hover     — primary color, hover underline
+ *   link-none      — primary color, no underline
+ *   link-inherit   — inherit color, always underlined
+ *   link-success   — success color
+ *   link-warning   — warning color
+ *   link-danger    — danger color
+ *   link-inline    — link in a sentence of body text
+ */
+function LinkGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            {/* Default — always underlined, primary color */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Default (underline=always, color=primary)</p>
+                <BpLink href="#" underline="always" data-compare="link-default">Blueprint Link</BpLink>
+            </div>
+
+            {/* Underline variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Underline variants</p>
+                <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
+                    <BpLink href="#" underline="always">always</BpLink>
+                    <BpLink href="#" underline="hover" data-compare="link-hover">hover</BpLink>
+                    <BpLink href="#" underline="none" data-compare="link-none">none</BpLink>
+                </div>
+            </div>
+
+            {/* Color variants */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Color variants</p>
+                <div style={{ display: "flex", gap: 24, alignItems: "baseline" }}>
+                    <BpLink href="#" color="primary">primary</BpLink>
+                    <BpLink href="#" color="success" data-compare="link-success">success</BpLink>
+                    <BpLink href="#" color="warning" data-compare="link-warning">warning</BpLink>
+                    <BpLink href="#" color="danger" data-compare="link-danger">danger</BpLink>
+                    <BpLink href="#" color="inherit" data-compare="link-inherit">inherit</BpLink>
+                </div>
+            </div>
+
+            {/* Inline in text */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <p style={{ fontSize: 12, opacity: 0.6, margin: 0 }}>Inline in body text</p>
+                <p style={{ fontSize: 14, lineHeight: "1.28581", margin: 0 }}>
+                    Visit the{" "}
+                    <BpLink href="#" data-compare="link-inline">Blueprint documentation</BpLink>
+                    {" "}for more details.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3511,6 +3571,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
+    { id: "link", title: "Link", render: () => <LinkGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

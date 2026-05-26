@@ -43,6 +43,7 @@ import { HTMLTable } from "@/components/ui/html-table";
 import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
 import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
+import { Link } from "@/components/ui/link";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3166,6 +3167,66 @@ function NonIdealStateGallery() {
     );
 }
 
+/**
+ * Link showcase.
+ *
+ * Blueprint spec: bp6-link with underline/color variants.
+ * Default: underline="always", color="primary" (blue-2 light / blue-5 dark).
+ *
+ * data-compare keys (must match blueprint-reference LinkGallery exactly):
+ *   link-default       — primary color, always underlined
+ *   link-hover         — primary color, hover underline
+ *   link-none          — primary color, no underline
+ *   link-inherit       — inherit color, always underlined
+ *   link-success       — success color, always underlined
+ *   link-warning       — warning color, always underlined
+ *   link-danger        — danger color, always underlined
+ *   link-inline        — link in a sentence of body text
+ */
+function LinkGallery() {
+    return (
+        <div className="flex flex-col gap-6">
+            {/* Default — always underlined, primary color */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Default (underline=always, color=primary)</p>
+                <Link href="#" data-compare="link-default">Blueprint Link</Link>
+            </div>
+
+            {/* Underline variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Underline variants</p>
+                <div className="flex gap-6 items-baseline">
+                    <Link href="#" underline="always" data-compare="link-hover-nope">always</Link>
+                    <Link href="#" underline="hover" data-compare="link-hover">hover</Link>
+                    <Link href="#" underline="none" data-compare="link-none">none</Link>
+                </div>
+            </div>
+
+            {/* Color variants */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Color variants</p>
+                <div className="flex gap-6 items-baseline">
+                    <Link href="#" color="primary">primary</Link>
+                    <Link href="#" color="success" data-compare="link-success">success</Link>
+                    <Link href="#" color="warning" data-compare="link-warning">warning</Link>
+                    <Link href="#" color="danger" data-compare="link-danger">danger</Link>
+                    <Link href="#" color="inherit" data-compare="link-inherit">inherit</Link>
+                </div>
+            </div>
+
+            {/* Inline in text */}
+            <div className="flex flex-col gap-2">
+                <p className="text-[12px] text-foreground-muted">Inline in body text</p>
+                <p className="text-[14px] leading-[1.28581]">
+                    Visit the{" "}
+                    <Link href="#" data-compare="link-inline">Blueprint documentation</Link>
+                    {" "}for more details.
+                </p>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3210,6 +3271,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
+    { id: "link", title: "Link", render: () => <LinkGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
