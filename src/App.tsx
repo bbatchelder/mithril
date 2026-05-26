@@ -1893,13 +1893,11 @@ function PopoverGallery() {
                 <Popover
                     defaultOpen={true}
                     content={
-                        <p className="text-body text-foreground m-0">
-                            Popover content. This is a floating panel anchored to the trigger button,
-                            the positioning primitive for Tooltip, Menu, Select, and ContextMenu.
-                        </p>
+                        <div style={{ width: 200 }}>Short popover content.</div>
                     }
                     side="bottom"
                     align="center"
+                    hasContentPadding={false}
                     dark={dark}
                 >
                     <Button intent="primary">Open Popover</Button>

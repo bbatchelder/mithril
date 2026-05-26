@@ -1991,10 +1991,7 @@ function PopoverGallery() {
                     isOpen={true}
                     placement="bottom"
                     content={
-                        <p style={{ margin: 0 }}>
-                            Popover content. This is a floating panel anchored to the trigger button,
-                            the positioning primitive for Tooltip, Menu, Select, and ContextMenu.
-                        </p>
+                        <div style={{ width: 200 }}>Short popover content.</div>
                     }
                     // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
                     // portaled popover renders light unless we put the dark class on the portal itself.

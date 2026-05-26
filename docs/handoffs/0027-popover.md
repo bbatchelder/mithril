@@ -191,6 +191,55 @@ The Radix `side`+`align` API is cleaner than Blueprint's Popper.js placement str
    - Props: `content`, `side`, `disabled`, hover delay, `dark`.
    - Same portal + dark-mode wrapper pattern applies.
 
+## Fix-up (orchestrator review)
+
+Two problems were identified and fixed:
+
+### Problem 1 — Gallery specimen equivalence
+
+**Root cause:** Both galleries used long wrapping text content without a fixed width.
+The analyst panel had `hasContentPadding={true}` (20px padding, default) making it 58px tall.
+The Blueprint panel had no padding (Blueprint's default Popover has no padding — only `bp6-popover-content-sizing` adds it), making it 36px.
+
+**Fix:**
+- Both galleries now render `<div style={{ width: 200 }}>Short popover content.</div>` — a fixed-width div with identical short text.
+- The analyst gallery uses `hasContentPadding={false}` to match Blueprint's raw `<Popover>` default (no padding).
+- Blueprint reference: unchanged (already has no padding by default).
+- Decision: The gallery specimen uses `hasContentPadding={false}` to match Blueprint's true zero-padding default. The analyst API keeps `hasContentPadding={true}` as its default (the common use case), which users can explicitly enable. The gallery is purely a comparison fixture.
+- Result: height delta resolved — both panels now measure identically for the content area.
+
+### Problem 2 — Arrow shape
+
+**Root cause:** The original implementation used `Radix.Popover.Arrow` (a simple triangle SVG, 15px height by default), which renders a basic polygon. Blueprint uses a 30×30 SVG with two custom curved paths from blueprint-core-kit.sketch — a shadow border path and a fill path.
+
+**Fix:**
+- Used `Radix.Popover.Arrow asChild` to replace Radix's default SVG entirely with our own.
+- Custom SVG: `width={30} height={30} viewBox="0 0 30 30"` — matches Blueprint's `POPOVER_ARROW_SVG_SIZE = 30`.
+- Two Blueprint-exact paths:
+  - Shadow path: `fill="black" fillOpacity={0.1}` — Blueprint's `$pt-border-shadow-opacity = 0.1`
+  - Fill path: `className="fill-white dark:fill-dark-gray-3"` — panel background color
+- Rotation: CSS `[[data-side=bottom]_&]:rotate-90` etc. via Radix's `data-side` attribute on Content.
+  This is collision-detection-aware (works even if Radix flips placement at viewport edges).
+- Result: `popover-arrow` height = 30px (matches Blueprint). `popover-arrow` now fully MATCHES.
+
+### Updated compare.sh results
+
+```
+popover · light:  1 match · 1 differ  — popover-arrow MATCH; popover-content: known-intentional deltas only
+popover · dark:   1 match · 1 differ  — popover-arrow MATCH; popover-content: known-intentional deltas only
+```
+
+**Resolved deltas:** height (58px vs 36px) RESOLVED; popover-arrow height (15px vs 30px) RESOLVED.
+
+**Remaining (all KNOWN-INTENTIONAL):**
+| Theme | Specimen | Property | Analyst | Blueprint | Status |
+|---|---|---|---|---|---|
+| Light | popover-content | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | KNOWN — pure black vs Blueprint's `$black=#111418` |
+| Light | popover-content | minWidth | `0px` | `auto` | KNOWN — Radix positioning reset |
+| Dark | popover-content | boxShadow border | `rgb(94,95,97)` | `rgb(94,96,100)` | KNOWN — HSL rounding |
+| Dark | popover-content | boxShadow order | layers differ | same values, different order | KNOWN — identical visual |
+| Dark | popover-content | minWidth | `0px` | `auto` | KNOWN — same as light |
+
 ## How to resume
 
 ```bash
@@ -206,8 +255,8 @@ tools/compare.sh popover both
 ```
 
 - Relevant files:
-  - `src/components/ui/popover.tsx` (new — Popover)
-  - `src/App.tsx` (PopoverGallery added + COMPONENTS entry + Popover import)
-  - `tools/blueprint-reference/src/App.tsx` (PopoverGallery added + COMPONENTS entry + Popover import)
+  - `src/components/ui/popover.tsx` (new — Popover; fix-up: Blueprint-exact arrow SVG paths)
+  - `src/App.tsx` (PopoverGallery added + COMPONENTS entry + Popover import; fix-up: fixed-width content + hasContentPadding=false)
+  - `tools/blueprint-reference/src/App.tsx` (PopoverGallery added + COMPONENTS entry; fix-up: fixed-width content)
   - `docs/ROADMAP.md` (Popover checked)
   - `package.json` / `pnpm-lock.yaml` (`@radix-ui/react-popover` added)

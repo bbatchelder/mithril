@@ -62,11 +62,19 @@
  * - Minimal: no arrow, no margin
  *
  * ### Arrow
- * Radix Popover.Arrow renders an SVG pointing at the trigger. We position it flush
- * with the panel edge and size it to ~30×15px (Blueprint arrow is 30px square at 45°,
- * so the visible height is ~21px / sqrt(2) ≈ 15px). We style it:
- *   fill: panel background color (white light / dark-gray3 dark)
- *   drop-shadow to match the popover box-shadow base.
+ * Blueprint uses a 30×30 SVG with two custom paths (from blueprint-core-kit.sketch):
+ *   1. Shadow border path: filled black at opacity 0.1 ($pt-border-shadow-opacity)
+ *   2. Fill path: filled with panel background color (white/dark-gray3)
+ * Source: packages/core/src/components/popover/popoverArrow.tsx (POPOVER_ARROW_SVG_SIZE=30)
+ * The SVG paths are right-pointing (rotate 0 = right side). Blueprint rotates:
+ *   top → -90°, right → 0°, bottom → 90°, left → 180°
+ *
+ * We use Radix Popover.Arrow asChild with our own 30×30 SVG using Blueprint's exact paths.
+ * Radix positions the SVG arrow automatically; we rotate via [[data-side=*]_&]:rotate CSS selectors
+ * on the Content element's data-side attribute (set by Radix Floating UI after collision detection).
+ * This makes the rotation correct even when Radix flips the placement.
+ *
+ * Arrow element size: 30×30px → matches Blueprint's .bp6-popover-arrow div (height: 30px).
  *
  * ### Shadow elevation choice
  * $pt-popover-box-shadow = $pt-elevation-shadow-3 (same as dialog).
@@ -291,27 +299,64 @@ export function Popover({
                             {content}
                         </div>
 
-                        {/* Arrow — Radix Popover.Arrow is an SVG element.
-                            Blueprint's arrow: a 30×30px square rotated 45° with popover bg fill.
-                            We use Radix's built-in arrow (a simple triangle SVG) styled to match:
-                              - width/height to match Blueprint's arrow visual size (~30×15px)
-                              - fill: popover background color
-                              - filter: drop-shadow matching the panel box-shadow glow
-                            The arrow is positioned automatically by Radix Floating UI. */}
+                        {/* Arrow — Blueprint-matching custom SVG arrow.
+                            Blueprint uses a 30×30 SVG (viewBox 0 0 30 30) with two custom paths:
+                            1. A shadow path (black at $pt-drop-shadow-opacity = 0.2 opacity)
+                            2. A fill path (panel background color: white light / dark-gray3 dark)
+                            Source: packages/core/src/components/popover/popoverArrow.tsx
+                            POPOVER_ARROW_SVG_SIZE = 30; paths use right-pointing orientation by default.
+                            Blueprint rotates: top→-90°, right→0°, bottom→90°, left→180°.
+
+                            We use Radix Popover.Arrow as the positioning anchor (asChild),
+                            providing our own SVG element with the exact Blueprint paths and viewBox.
+                            Radix measures the SVG element to offset the panel correctly, and positions
+                            it absolutely. We rotate based on [data-side] CSS selectors so it works
+                            even if Radix flips the popover due to collision detection.
+
+                            $popover-arrow-box-shadow = 1px 1px 6px rgba($black, 0.2)
+                            Applied to the ::before pseudo-element in Blueprint; we replicate with
+                            CSS filter drop-shadow on the fill path for a subtle glow effect.
+
+                            Arrow sizing:
+                            - width/height = 30px (POPOVER_ARROW_SVG_SIZE)
+                            - Blueprint .bp6-popover-arrow: height=30px, width=30px (the container div)
+                            - Our SVG is 30×30px → matches Blueprint arrow element height=30px */}
                         {showArrow && (
                             <RadixPopover.Arrow
+                                asChild
                                 data-compare="popover-arrow"
-                                width={30}
-                                height={15}
-                                className={cn(
-                                    // Arrow fill: matches panel bg (white light / dark-gray3 dark)
-                                    "fill-white dark:fill-dark-gray-3",
-                                    // Drop shadow to carry the panel's shadow down the arrow.
-                                    // Blueprint: $popover-arrow-box-shadow = 1px 1px 6px rgba($black, $pt-drop-shadow-opacity)
-                                    // We replicate this with a CSS filter drop-shadow.
-                                    "drop-shadow-[1px_1px_6px_rgba(0,0,0,0.2)]",
-                                )}
-                            />
+                            >
+                                <svg
+                                    width={30}
+                                    height={30}
+                                    viewBox="0 0 30 30"
+                                    style={{ overflow: "visible" }}
+                                    className={cn(
+                                        // Rotate based on which side the Content is placed on.
+                                        // Blueprint's SVG paths are right-pointing by default (rotate 0).
+                                        // [data-side] is set on the Content element by Radix.
+                                        // These selectors walk up to the nearest [data-side] ancestor.
+                                        "[[data-side=bottom]_&]:rotate-90",
+                                        "[[data-side=top]_&]:-rotate-90",
+                                        "[[data-side=left]_&]:rotate-180",
+                                        // data-side=right → 0 rotation (native orientation)
+                                    )}
+                                >
+                                    {/* Shadow path — matches Blueprint .bp6-popover-arrow-border
+                                        fill: $black, fill-opacity: $pt-border-shadow-opacity = 0.1 */}
+                                    <path
+                                        d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
+                                        fill="black"
+                                        fillOpacity={0.1}
+                                    />
+                                    {/* Fill path — matches Blueprint .bp6-popover-arrow-fill
+                                        fill: panel background color */}
+                                    <path
+                                        d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
+                                        className="fill-white dark:fill-dark-gray-3"
+                                    />
+                                </svg>
+                            </RadixPopover.Arrow>
                         )}
                     </RadixPopover.Content>
                 </div>
