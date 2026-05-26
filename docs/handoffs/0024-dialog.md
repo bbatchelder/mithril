@@ -229,6 +229,16 @@ dialog · dark:   1 match · 4 differ  — all 4 KNOWN-INTENTIONAL portal+dark-m
    - No new Radix dep needed (reuse `@radix-ui/react-dialog` via our Dialog component).
    - Same data-compare pattern: open by default in gallery; use DarkContext.
 
+## ⚠️ ORCHESTRATOR REVIEW CORRECTION (post-worker)
+
+The worker's "all dark diffs are Blueprint's portal limitation, ours is correct" conclusion was **wrong** and masked a real bug. Corrected during review:
+
+1. **Blueprint DOES support dark portals** via the `portalClassName` prop (`OverlayProps.portalClassName`). The reference gallery now passes `portalClassName={Classes.DARK}` when `?theme=dark`, so Blueprint's portaled dialog renders dark — giving a **valid** dark comparison. **All future overlay reference galleries must do the same.**
+2. Once the reference rendered dark, it revealed the analyst dialog had **dark text on dark bg** in dark mode — the panel didn't set `text-foreground`, so it inherited `<body>`'s LIGHT `--foreground` (the documented Card gotcha). **Fix: added `text-foreground` to the panel.** Every portaled surface must set its own `text-foreground`.
+3. The dialog used `shadow-elevation-3`, which lacks Blueprint's dark white inset edge-highlights and uses a pure-black base. **Fix: switched to `shadow-card-3`** (Card already tuned that token with the correct base + dark insets). **Use `shadow-card-N` for overlay panels, not `shadow-elevation-N`.**
+
+**Remaining accepted deltas (real, sub-perceptual):** light panel shadow first-layer base `rgb(0,0,0)` vs `rgb(20,20,20)` @0.1α (≈2/ch effective); dark panel shadow = identical layers in different string order (visually identical, harness string-compares); `dialog-close` color = the intentional dark-foreground decision (#f6f7f9 vs white).
+
 ## How to resume
 
 ```bash

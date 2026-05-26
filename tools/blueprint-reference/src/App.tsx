@@ -1794,6 +1794,14 @@ function DialogGallery() {
                 isCloseButtonShown={true}
                 containerRef={containerRef}
                 onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled dialog renders light unless we put the dark class on the portal itself.
+                // portalClassName is Blueprint's supported mechanism for exactly this.
+                portalClassName={
+                    new URLSearchParams(window.location.search).get("theme") === "dark"
+                        ? Classes.DARK
+                        : undefined
+                }
             >
                 <DialogBody>
                     <p style={{ margin: 0 }}>

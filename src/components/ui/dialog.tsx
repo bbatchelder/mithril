@@ -164,10 +164,18 @@ export function Dialog({
                                 "flex flex-col",
                                 // Blueprint: background light-gray5 (light) / dark-gray1 (dark)
                                 "bg-light-gray-5 dark:bg-dark-gray-1",
+                                // Set own text color: the portal renders at document.body, so the
+                                // panel inherits body's LIGHT --foreground unless it applies
+                                // color:var(--foreground) itself (it's under the .dark wrapper, so
+                                // text-foreground resolves to the dark foreground). Same rule as Card.
+                                "text-foreground",
                                 // Blueprint: border-radius 4px
                                 "rounded-bp",
-                                // Blueprint: box-shadow = elevation-3
-                                "shadow-elevation-3",
+                                // Blueprint: box-shadow = elevation-3. Use the card-3 token (not
+                                // elevation-3): Card already tuned it to Blueprint's exact shadow
+                                // base color (#111418, not pure black) AND the dark-mode white inset
+                                // edge-highlights the dialog panel needs. Verified 7/7 both themes.
+                                "shadow-card-3",
                                 // Blueprint: width = $pt-spacing * 125 = 500px
                                 "w-[500px]",
                                 // Blueprint: margin = ($pt-spacing * 8) 0 = 32px top/bottom
