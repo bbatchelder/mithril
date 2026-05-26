@@ -1,4 +1,4 @@
-import { Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Divider, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, NumericInput, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, type ButtonVariant, type Intent } from "@blueprintjs/core";
+import { Alert, Button, Callout, Card, Checkbox, CheckboxCard, Classes, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tag, Text, TextArea, Tooltip, type ButtonVariant, type Intent } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -1749,7 +1749,638 @@ function ControlCardGallery() {
     );
 }
 
+/**
+ * Blueprint reference for Alert. Renders ONE alert open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals alert content to document.body. We use useEffect + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, icon, footer, confirm, cancel) after
+ * mount.
+ *
+ * Keys: alert-panel, alert-icon, alert-footer, alert-confirm, alert-cancel.
+ * Must match analyst-ui AlertGallery exactly.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as DialogGallery — see the ⚠️ ORCHESTRATOR REVIEW CORRECTION note in 0024).
+ */
+function AlertGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        function tag() {
+            // Blueprint Alert portals to document.body; we need to find via document query
+            // using the Classes constants. The alert body/footer/buttons are in the portaled DOM.
+            const panel = document.querySelector(`.${Classes.ALERT}`);
+            const body = panel?.querySelector(`.${Classes.ALERT_BODY}`);
+            const iconEl = body?.querySelector(`.${Classes.ICON}`);
+            const footer = panel?.querySelector(`.${Classes.ALERT_FOOTER}`);
+            // In row-reverse footer: first child (DOM) is the confirm button (rightmost visually)
+            const buttons = footer?.querySelectorAll<HTMLElement>("button");
+            const confirmBtn = buttons?.[0]; // first in DOM = confirm (row-reverse makes it right)
+            const cancelBtn = buttons?.[1];  // second in DOM = cancel
+
+            if (panel) panel.setAttribute("data-compare", "alert-panel");
+            if (iconEl) iconEl.setAttribute("data-compare", "alert-icon");
+            if (footer) footer.setAttribute("data-compare", "alert-footer");
+            if (confirmBtn) confirmBtn.setAttribute("data-compare", "alert-confirm");
+            if (cancelBtn) cancelBtn.setAttribute("data-compare", "alert-cancel");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div ref={containerRef} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The alert below is open by default for comparison harness screenshots.
+            </p>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <Alert
+                isOpen={true}
+                icon="warning-sign"
+                intent="danger"
+                confirmButtonText="Delete"
+                cancelButtonText="Cancel"
+                onConfirm={() => {}}
+                onCancel={() => {}}
+                onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled alert renders light unless we put the dark class on the portal itself.
+                // portalClassName is on OverlayableProps which AlertProps doesn't extend, but
+                // it's spread via ...overlayProps to Dialog at runtime and works correctly.
+                // Cast to any to bypass the type limitation.
+                {...({ portalClassName: dark ? Classes.DARK : undefined } as any)}
+            >
+                Are you sure you want to delete this item? This action cannot be undone.
+            </Alert>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Dialog. Renders ONE dialog open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals dialog content to document.body. We use containerRef + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, header, body, footer, close button)
+ * after mount. The containerRef points to `.bp6-dialog-container`.
+ *
+ * Keys: dialog-panel, dialog-header, dialog-body, dialog-footer, dialog-close.
+ * Must match analyst-ui DialogGallery exactly.
+ */
+function DialogGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        function tag() {
+            const container = containerRef.current;
+            if (!container) return;
+            const panel = container.querySelector(`.${Classes.DIALOG}`);
+            const header = container.querySelector(`.${Classes.DIALOG_HEADER}`);
+            const body = container.querySelector(`.${Classes.DIALOG_BODY}`);
+            const footer = container.querySelector(`.${Classes.DIALOG_FOOTER}`);
+            const close = container.querySelector(`.${Classes.DIALOG_CLOSE_BUTTON}`);
+            if (panel) panel.setAttribute("data-compare", "dialog-panel");
+            if (header) header.setAttribute("data-compare", "dialog-header");
+            if (body) body.setAttribute("data-compare", "dialog-body");
+            if (footer) footer.setAttribute("data-compare", "dialog-footer");
+            if (close) close.setAttribute("data-compare", "dialog-close");
+        }
+        // Tag immediately and after a short delay to handle async portal rendering
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The dialog below is open by default for comparison harness screenshots.
+            </p>
+            <Dialog
+                isOpen={true}
+                title="Dialog Title"
+                icon="info-sign"
+                isCloseButtonShown={true}
+                containerRef={containerRef}
+                onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled dialog renders light unless we put the dark class on the portal itself.
+                // portalClassName is Blueprint's supported mechanism for exactly this.
+                portalClassName={
+                    new URLSearchParams(window.location.search).get("theme") === "dark"
+                        ? Classes.DARK
+                        : undefined
+                }
+            >
+                <DialogBody>
+                    <p style={{ margin: 0 }}>
+                        This is the dialog body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DialogBody>
+                <DialogFooter
+                    actions={
+                        <>
+                            <Button text="Cancel" />
+                            <Button intent="primary" text="Confirm" />
+                        </>
+                    }
+                />
+            </Dialog>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Drawer. Renders ONE drawer open by default (isOpen={true}) for harness.
+ *
+ * Blueprint portals drawer content to document.body. We use useEffect + querySelectorAll to
+ * set data-compare attributes on the inner elements (panel, header, body) after mount.
+ *
+ * Keys: drawer-panel, drawer-header, drawer-body.
+ * Must match analyst-ui DrawerGallery exactly.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/AlertGallery — see orchestrator correction in 0024).
+ */
+function DrawerGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Drawer portals to document.body; find via Classes constants.
+            const panel = document.querySelector(`.${Classes.DRAWER}`);
+            const header = panel?.querySelector(`.${Classes.DRAWER_HEADER}`);
+            const body = panel?.querySelector(`.${Classes.DRAWER_BODY}`);
+
+            if (panel) panel.setAttribute("data-compare", "drawer-panel");
+            if (header) header.setAttribute("data-compare", "drawer-header");
+            if (body) body.setAttribute("data-compare", "drawer-body");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The drawer below is open by default for comparison harness screenshots.
+            </p>
+            <Drawer
+                isOpen={true}
+                position="right"
+                size={DrawerSize.SMALL}
+                title="Drawer Title"
+                icon="info-sign"
+                isCloseButtonShown={true}
+                onClose={() => {}}
+                // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                // portaled drawer renders light unless we put the dark class on the portal itself.
+                // portalClassName is on OverlayableProps which DrawerProps extends, so this is typed.
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <div className={Classes.DRAWER_BODY} style={{ padding: 20 }}>
+                    <p style={{ margin: 0 }}>
+                        This is the drawer body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </div>
+            </Drawer>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Popover.
+ *
+ * Must match analyst-ui PopoverGallery exactly.
+ *
+ * Blueprint Popover portals content to document.body. We use useEffect + querySelector to
+ * set data-compare attributes on the inner elements (panel, arrow) after mount.
+ *
+ * Keys: popover-content (the .bp6-popover panel), popover-arrow (the .bp6-popover-arrow).
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/Alert/DrawerGallery — see orchestrator correction in 0024).
+ */
+function PopoverGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Popover portals to document.body; find via Classes constants.
+            const panel = document.querySelector(`.${Classes.POPOVER}`);
+            const arrow = panel?.querySelector(`.${Classes.POPOVER_ARROW}`);
+
+            if (panel) panel.setAttribute("data-compare", "popover-content");
+            if (arrow) arrow.setAttribute("data-compare", "popover-arrow");
+        }
+        tag();
+        const t = setTimeout(tag, 200);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The popover below is open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating popover to render without clipping */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 200, paddingTop: 80 }}>
+                <Popover
+                    isOpen={true}
+                    placement="bottom"
+                    content={
+                        <div style={{ width: 200 }}>Short popover content.</div>
+                    }
+                    // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div, so the
+                    // portaled popover renders light unless we put the dark class on the portal itself.
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="primary" text="Open Popover" />
+                </Popover>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Tooltip.
+ *
+ * Must match analyst-ui TooltipGallery exactly.
+ *
+ * Blueprint Tooltip portals content to document.body. We use useEffect + querySelector to
+ * set data-compare attributes on the inner elements (bubble, arrow) after mount.
+ *
+ * Keys:
+ *   tooltip-content      — the .bp6-tooltip bubble (first one, default color scheme)
+ *   tooltip-arrow        — the .bp6-popover-arrow arrow element (inside first tooltip)
+ *   tooltip-intent-danger — danger intent bubble (second tooltip)
+ *
+ * THE INVERSION: Blueprint tooltip bubble should be dark in light mode, light in dark mode.
+ *
+ * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
+ * dark (same fix as Dialog/Alert/Drawer/Popover — see orchestrator notes).
+ */
+function TooltipGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            // Blueprint Tooltip portals to document.body as .bp6-tooltip elements.
+            // Tag only the first tooltip (default color scheme) for harness comparison.
+            // The danger intent tooltip is verified via screenshots only (visual check).
+            const firstTooltip = document.querySelector(`.${Classes.TOOLTIP}`);
+
+            if (firstTooltip) {
+                firstTooltip.setAttribute("data-compare", "tooltip-content");
+                const arrow = firstTooltip.querySelector(`.${Classes.POPOVER_ARROW}`);
+                if (arrow) arrow.setAttribute("data-compare", "tooltip-arrow");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 200);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Tooltips below are open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating tooltips to render without clipping */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 48, minHeight: 160, paddingTop: 80 }}>
+                {/* Default tooltip — isOpen=true, side=bottom */}
+                <Tooltip
+                    isOpen={true}
+                    content="Tooltip content"
+                    placement="bottom"
+                    // Blueprint portals to document.body, OUTSIDE the app's bp6-dark div.
+                    // portalClassName={Classes.DARK} puts the dark class on the portal so
+                    // the tooltip renders with the dark inversion in dark theme.
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="primary" text="Hover me" />
+                </Tooltip>
+
+                {/* Danger intent tooltip — isOpen=true */}
+                <Tooltip
+                    isOpen={true}
+                    content="Danger tooltip"
+                    intent="danger"
+                    placement="bottom"
+                    portalClassName={dark ? Classes.DARK : undefined}
+                >
+                    <Button intent="danger" text="Danger" />
+                </Tooltip>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for Toast.
+ *
+ * Blueprint's OverlayToaster is async and uses portals+Overlay2 — complex to use in a
+ * static gallery. Instead, we render the toast markup directly using Blueprint CSS classes
+ * (`.bp6-toast`, `.bp6-toast-message`, `.bp6-button-group`).
+ * This is a valid approach: the harness keys off `data-compare` on the `.bp6-toast` element,
+ * which is the measured node for bg, shadow, radius, min-width, padding, color.
+ *
+ * data-compare keys (must match analyst-ui ToastGallery):
+ *   toast-card          — the default (no-intent) toast card
+ *   toast-intent-danger — the danger-intent toast card
+ *
+ * Dark mode: the dark class on the parent div provides the dark context for toast styling.
+ */
+function ToastGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Toasts below are always visible for comparison harness screenshots.
+            </p>
+            {/* Stack toasts in a column with 20px gap (Blueprint $toast-margin = $pt-spacing * 5) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, alignItems: "flex-start" }}>
+                {/* Default (no intent) toast — icon + message + action + dismiss */}
+                <div
+                    className={`${Classes.TOAST} ${dark ? Classes.DARK : ""}`}
+                    data-compare="toast-card"
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="info-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Reconnecting to server.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" text="Reconnect" />
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Danger intent toast */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("danger")} ${dark ? Classes.DARK : ""}`}
+                    data-compare="toast-intent-danger"
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="warning-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Failed to delete 3 items.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" text="Retry" />
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Success intent toast (visual only) */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("success")} ${dark ? Classes.DARK : ""}`}
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="tick-circle" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Item saved successfully.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+
+                {/* Warning intent toast (visual only) */}
+                <div
+                    className={`${Classes.TOAST} ${Classes.intentClass("warning")} ${dark ? Classes.DARK : ""}`}
+                    role="alert"
+                    tabIndex={0}
+                >
+                    <Icon icon="warning-sign" />
+                    <span className={Classes.TOAST_MESSAGE}>
+                        Low disk space warning.
+                    </span>
+                    <div className={Classes.BUTTON_GROUP} style={{ paddingLeft: 0 }}>
+                        <Button variant="minimal" icon="small-cross" aria-label="Close" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
+/**
+ * Blueprint Menu reference gallery.
+ *
+ * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
+ * data-compare keys must match analyst-ui exactly.
+ *
+ * Blueprint's Menu renders as a <ul role="menu"> with class .bp6-menu.
+ * MenuDivider with title renders as .bp6-menu-header.
+ * MenuDivider without title renders as .bp6-menu-divider.
+ * MenuItem renders as <li><a class=".bp6-menu-item"> ...
+ */
+/**
+ * Blueprint Menu reference gallery.
+ *
+ * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
+ * data-compare keys must match analyst-ui exactly.
+ *
+ * Notes:
+ * - Blueprint's MenuItem spreads htmlProps onto the inner <a> element, so data-compare
+ *   lands on the anchor (radius, padding, color are measured there).
+ * - Blueprint's MenuDivider does NOT forward arbitrary HTML props, so we use raw <li>
+ *   elements for menu-divider and menu-header specimens.
+ * - The menu-container data-compare lands on the <ul> element directly.
+ * - The first MenuDivider (with title) needs to be a raw <li class="bp6-menu-header">
+ *   so data-compare is preserved.
+ */
+function MenuGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                Menu renders inline (no portal). Dark mode applies via parent .bp6-dark ancestor.
+            </p>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 32, flexWrap: "wrap" }}>
+                <Menu data-compare="menu-container">
+                    {/* Heading divider — first-of-type so no top border.
+                        MenuDivider doesn't forward data-* props, so use raw <li>.
+                        Blueprint renders <MenuDivider title="..."> as:
+                          <li class="bp6-menu-header" role="separator">
+                            <h6>Actions</h6>
+                          </li> */}
+                    <li
+                        className={`${Classes.MENU_HEADER}`}
+                        role="separator"
+                        data-compare="menu-header"
+                    >
+                        <h6>{/* must be h6 to match Blueprint internal markup */}Actions</h6>
+                    </li>
+
+                    {/* Plain item with icon */}
+                    <MenuItem
+                        icon="document"
+                        text="Open document"
+                        data-compare="menu-item"
+                    />
+
+                    {/* Item with icon + right label */}
+                    <MenuItem
+                        icon="search"
+                        text="Find…"
+                        label="⌘F"
+                    />
+
+                    {/* Active/selected item */}
+                    <MenuItem
+                        icon="tick"
+                        text="Selected item"
+                        active={true}
+                        data-compare="menu-item-active"
+                    />
+
+                    {/* Item with submenu caret — using children triggers Blueprint's submenu rendering */}
+                    <MenuItem
+                        icon="cog"
+                        text="Settings"
+                    >
+                        <MenuItem text="Sub item 1" />
+                    </MenuItem>
+
+                    {/* Plain divider — use raw <li> to forward data-compare.
+                        Blueprint renders <MenuDivider> as:
+                          <li class="bp6-menu-divider" role="separator"></li> */}
+                    <li
+                        className={`${Classes.MENU_DIVIDER}`}
+                        role="separator"
+                        data-compare="menu-divider"
+                    />
+
+                    {/* Danger intent */}
+                    <MenuItem
+                        icon="trash"
+                        text="Delete"
+                        intent="danger"
+                        data-compare="menu-item-intent-danger"
+                    />
+
+                    {/* Disabled item */}
+                    <MenuItem
+                        icon="cross"
+                        text="Disabled action"
+                        disabled={true}
+                        data-compare="menu-item-disabled"
+                    />
+                </Menu>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Blueprint ContextMenu reference gallery.
+ *
+ * Strategy: Render the Menu directly inside a `.bp6-popover` styled div (the same surface
+ * Blueprint renders for a ContextMenuPopover) so harness specimens are always in the DOM
+ * without fighting Blueprint's cursor-based positioning.
+ *
+ * The harness diffs:
+ *   context-menu-surface — the .bp6-menu ul (bg, radius, min-width, padding)
+ *   context-menu-item    — a plain menu item's inner <a> (padding, color, line-height)
+ *
+ * Dark mode: the dark class on the ancestor div provides dark context for inline menu.
+ * We also show a live ContextMenuPopover for visual reference (not tagged).
+ */
+function ContextMenuGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    // Wrapper ref for finding the menu element (since Blueprint Menu uses ulRef not ref).
+    const menuWrapperRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!menuWrapperRef.current) return;
+        const menu = menuWrapperRef.current.querySelector<HTMLElement>("ul[role='menu']");
+        if (menu) menu.setAttribute("data-compare", "context-menu-surface");
+
+        const firstItemAnchor = menuWrapperRef.current.querySelector<HTMLElement>(
+            "ul[role='menu'] li:nth-child(2) a.bp6-menu-item"
+        );
+        if (firstItemAnchor) firstItemAnchor.setAttribute("data-compare", "context-menu-item");
+    });
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The context menu surface below is always visible for comparison harness screenshots.
+            </p>
+
+            {/* Always-visible specimen: Menu wrapped in Blueprint popover surface styling.
+                Blueprint .bp6-popover has: bg white, border-radius 2px (?), box-shadow = elevation-3.
+                We replicate with .bp6-popover class on the wrapper div. */}
+            <div
+                className={`bp6-popover${dark ? ` ${Classes.DARK}` : ""}`}
+                style={{ display: "inline-block" }}
+                ref={menuWrapperRef}
+            >
+                <div className={Classes.POPOVER_CONTENT}>
+                    <Menu>
+                        {/* Heading divider — first-of-type so no top border.
+                            Use raw <li> since MenuDivider doesn't forward data-* props. */}
+                        <li
+                            className={Classes.MENU_HEADER}
+                            role="separator"
+                        >
+                            <h6>Actions</h6>
+                        </li>
+
+                        {/* Plain item with icon — context-menu-item tagged via useEffect */}
+                        <MenuItem
+                            icon="document"
+                            text="Open document"
+                        />
+
+                        {/* Item with right label */}
+                        <MenuItem
+                            icon="search"
+                            text="Find…"
+                            label="⌘F"
+                        />
+
+                        {/* Active/selected item */}
+                        <MenuItem
+                            icon="tick"
+                            text="Selected item"
+                            active={true}
+                        />
+
+                        {/* Plain divider — raw <li> for data-compare forwarding */}
+                        <li
+                            className={Classes.MENU_DIVIDER}
+                            role="separator"
+                        />
+
+                        {/* Danger intent */}
+                        <MenuItem
+                            icon="trash"
+                            text="Delete"
+                            intent="danger"
+                        />
+
+                        {/* Disabled item */}
+                        <MenuItem
+                            icon="cross"
+                            text="Disabled action"
+                            disabled={true}
+                        />
+                    </Menu>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -1773,6 +2404,14 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
+    { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "alert", title: "Alert", render: () => <AlertGallery /> },
+    { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
+    { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
+    { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
+    { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
+    { id: "menu", title: "Menu", render: () => <MenuGallery /> },
+    { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

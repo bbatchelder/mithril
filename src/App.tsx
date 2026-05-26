@@ -1,8 +1,13 @@
 import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
+import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
+import { Popover } from "@/components/ui/popover";
+import { Tooltip } from "@/components/ui/tooltip";
 import { Divider } from "@/components/ui/divider";
 import { Icon, type IconIntent } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
@@ -23,6 +28,12 @@ import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinne
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
+import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
+import { ContextMenu } from "@/components/ui/context-menu";
+
+/** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
+const DarkContext = createContext(false);
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -1750,6 +1761,447 @@ function ControlCardGallery() {
     );
 }
 
+/**
+ * Alert showcase. Renders ONE alert OPEN by default so the harness can screenshot and
+ * computed-style-diff the portaled panel, icon, body, footer, and buttons.
+ *
+ * Portal + dark-mode: the alert receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Dialog).
+ *
+ * data-compare keys: alert-panel, alert-icon, alert-footer, alert-confirm, alert-cancel.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function AlertGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The alert below is open by default for comparison harness screenshots.
+            </p>
+            <Alert
+                defaultOpen={true}
+                icon="warning-sign"
+                intent="danger"
+                confirmButtonText="Delete"
+                cancelButtonText="Cancel"
+                onConfirm={() => {}}
+                onCancel={() => {}}
+                dark={dark}
+            >
+                Are you sure you want to delete this item? This action cannot be undone.
+            </Alert>
+        </div>
+    );
+}
+
+/**
+ * Dialog showcase. Renders ONE dialog OPEN by default so the harness can screenshot and
+ * computed-style-diff the portaled panel, header, body, footer, and close button.
+ *
+ * Portal + dark-mode: the dialog receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (see dialog.tsx "Portal + dark-mode solution").
+ *
+ * data-compare keys: dialog-panel, dialog-header, dialog-body, dialog-footer, dialog-close.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function DialogGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The dialog below is open by default for comparison harness screenshots.
+            </p>
+            <Dialog
+                defaultOpen={true}
+                title="Dialog Title"
+                icon={<Icon icon="info-sign" />}
+                closeButton={true}
+                dark={dark}
+            >
+                <DialogBody>
+                    <p className="text-body text-foreground m-0">
+                        This is the dialog body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DialogBody>
+                <DialogFooter
+                    actions={
+                        <>
+                            <Button variant="minimal">Cancel</Button>
+                            <Button intent="primary">Confirm</Button>
+                        </>
+                    }
+                />
+            </Dialog>
+        </div>
+    );
+}
+
+/**
+ * Drawer showcase. Renders ONE drawer OPEN by default (right edge, 360px = SMALL) so the
+ * harness can screenshot and computed-style-diff the portaled panel, header, body.
+ *
+ * Portal + dark-mode: the drawer receives `dark` from DarkContext (same as Dialog/Alert).
+ *
+ * data-compare keys: drawer-panel, drawer-header, drawer-body.
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function DrawerGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The drawer below is open by default for comparison harness screenshots.
+            </p>
+            <Drawer
+                defaultOpen={true}
+                position="right"
+                size={DrawerSize.SMALL}
+                title="Drawer Title"
+                icon={<Icon icon="info-sign" />}
+                closeButton={true}
+                dark={dark}
+            >
+                <DrawerBody className="p-5">
+                    <p className="text-body text-foreground m-0">
+                        This is the drawer body content. It can contain any elements — forms,
+                        messages, or complex layouts.
+                    </p>
+                </DrawerBody>
+            </Drawer>
+        </div>
+    );
+}
+
+/**
+ * Popover showcase.
+ *
+ * Portal + dark-mode: the popover receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Dialog/Alert/Drawer).
+ *
+ * The popover is rendered with `defaultOpen={true}` so it's always visible for
+ * the comparison harness screenshot without requiring a click interaction.
+ *
+ * data-compare keys: popover-content (the panel), popover-arrow (the arrow).
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function PopoverGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The popover below is open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating popover to render without clipping */}
+            <div className="flex items-center justify-center" style={{ minHeight: 200, paddingTop: 80 }}>
+                <Popover
+                    defaultOpen={true}
+                    content={
+                        <div style={{ width: 200 }}>Short popover content.</div>
+                    }
+                    side="bottom"
+                    align="center"
+                    hasContentPadding={false}
+                    dark={dark}
+                >
+                    <Button intent="primary">Open Popover</Button>
+                </Popover>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Tooltip showcase.
+ *
+ * Portal + dark-mode: the tooltip receives `dark` from DarkContext so it can apply the
+ * dark class to the portal wrapper (same pattern as Popover/Dialog/Alert/Drawer).
+ *
+ * The tooltip is rendered with `defaultOpen={true}` so it's always visible for the
+ * comparison harness screenshot without requiring hover interaction.
+ *
+ * THE INVERSION: verify that:
+ * - Light theme: dark bubble (#404854 bg, #f6f7f9 text) on a light page.
+ * - Dark theme: light bubble (#e5e8eb bg, #404854 text) on a dark page.
+ *
+ * data-compare keys:
+ *   tooltip-content — the .bp6-tooltip bubble (the Radix Tooltip.Content element)
+ *   tooltip-arrow   — the .bp6-popover-arrow arrow element
+ *   tooltip-intent-danger — danger intent bubble (bg=danger, text=white)
+ *
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function TooltipGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                Tooltips below are open by default for comparison harness screenshots.
+            </p>
+            {/* Wrapper provides space for the floating tooltips to render without clipping */}
+            <div className="flex items-center justify-center gap-12" style={{ minHeight: 160, paddingTop: 80 }}>
+                {/* Default tooltip — open by default, shows the inversion color scheme.
+                    data-compare="tooltip-content" marks the outer bubble element for the harness. */}
+                <Tooltip
+                    defaultOpen={true}
+                    content="Tooltip content"
+                    side="bottom"
+                    align="center"
+                    dark={dark}
+                    data-compare="tooltip-content"
+                >
+                    <Button intent="primary">Hover me</Button>
+                </Tooltip>
+
+                {/* Danger intent tooltip — open by default. No data-compare (unique key constraint). */}
+                <Tooltip
+                    defaultOpen={true}
+                    content="Danger tooltip"
+                    intent="danger"
+                    side="bottom"
+                    align="center"
+                    dark={dark}
+                >
+                    <Button intent="danger">Danger</Button>
+                </Tooltip>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Toast showcase.
+ *
+ * Portal + dark-mode: ToastProvider receives `dark` from DarkContext so the Viewport
+ * portal wrapper gets the dark class (same pattern as Popover/Dialog/Tooltip).
+ *
+ * We render static always-visible toasts using StaticToast (open={true}, infinite duration).
+ * This bypasses the Toaster imperative API for gallery purposes.
+ *
+ * data-compare keys:
+ *   toast-card         — the default (no-intent) toast card
+ *   toast-intent-danger — the danger-intent toast card
+ *
+ * These match the Blueprint reference gallery keys exactly.
+ */
+function ToastGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <ToastProvider dark={dark} position="top">
+            <div className="flex flex-col gap-4">
+                <p className="text-body text-foreground-muted">
+                    Toasts below are always visible for comparison harness screenshots.
+                </p>
+                {/* Stack toasts in a column, matching Blueprint container layout */}
+                <div className="flex flex-col gap-[20px] items-start">
+                    {/* Default (no intent) toast — icon + message + action + dismiss */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        icon="info-sign"
+                        message="Reconnecting to server."
+                        action={{ text: "Reconnect", onClick: () => {} }}
+                        data-compare="toast-card"
+                    />
+
+                    {/* Danger intent toast */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="danger"
+                        icon="warning-sign"
+                        message="Failed to delete 3 items."
+                        action={{ text: "Retry", onClick: () => {} }}
+                        data-compare="toast-intent-danger"
+                    />
+
+                    {/* Success intent toast (visual only — no data-compare) */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="success"
+                        icon="tick-circle"
+                        message="Item saved successfully."
+                    />
+
+                    {/* Warning intent toast (visual only) */}
+                    <Toast
+                        open={true}
+                        timeout={0}
+                        intent="warning"
+                        icon="warning-sign"
+                        message="Low disk space warning."
+                    />
+                </div>
+            </div>
+        </ToastProvider>
+    );
+}
+
+/**
+ * Menu showcase — renders the Menu inline (no portal) so dark mode works via ancestor `.dark`.
+ *
+ * data-compare keys (must match blueprint-reference MenuGallery):
+ *   menu-container       — the <ul> Menu element (bg, radius, min-width, padding)
+ *   menu-item            — a plain menu item (padding, color, line-height)
+ *   menu-item-active     — the active/selected item (bg, color)
+ *   menu-item-intent-danger — danger intent item (color)
+ *   menu-item-disabled   — disabled item (color, cursor)
+ *   menu-divider         — the horizontal rule divider (border, margin)
+ *   menu-header          — the heading section divider li (border, padding)
+ */
+function MenuGallery() {
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                Menu renders inline (no portal). Dark mode applies via parent .dark ancestor.
+            </p>
+            <div className="flex items-start gap-8 flex-wrap">
+                {/* Standard menu with all specimen types */}
+                <Menu data-compare="menu-container">
+                    {/* Heading divider — first-of-type so no top border */}
+                    <MenuDivider title="Actions" data-compare="menu-header" />
+
+                    {/* Plain item with icon */}
+                    <MenuItem
+                        icon="document"
+                        text="Open document"
+                        data-compare="menu-item"
+                    />
+
+                    {/* Item with icon + right label */}
+                    <MenuItem
+                        icon="search"
+                        text="Find…"
+                        label="⌘F"
+                    />
+
+                    {/* Active/selected item */}
+                    <MenuItem
+                        icon="tick"
+                        text="Selected item"
+                        active={true}
+                        data-compare="menu-item-active"
+                    />
+
+                    {/* Item with submenu caret */}
+                    <MenuItem
+                        icon="cog"
+                        text="Settings"
+                        hasSubmenu={true}
+                    />
+
+                    {/* Plain divider */}
+                    <MenuDivider data-compare="menu-divider" />
+
+                    {/* Danger intent */}
+                    <MenuItem
+                        icon="trash"
+                        text="Delete"
+                        intent="danger"
+                        data-compare="menu-item-intent-danger"
+                    />
+
+                    {/* Disabled item */}
+                    <MenuItem
+                        icon="cross"
+                        text="Disabled action"
+                        disabled={true}
+                        data-compare="menu-item-disabled"
+                    />
+                </Menu>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * ContextMenu showcase — renders the menu surface OPEN by default for harness comparison.
+ *
+ * Strategy: render the Menu directly inside a styled "popover surface" div (the same
+ * bg/shadow/radius treatment that ContextMenu applies to portaled content). This gives
+ * the harness stable, non-portaled `data-compare` specimens without fighting Radix's
+ * cursor-based positioning. We also show a live ContextMenu trigger area below it.
+ *
+ * Portal + dark-mode: dark comes from DarkContext; the inline surface uses `dark:` utilities
+ * directly since it's not portaled — no wrapper div needed for the always-visible specimen.
+ *
+ * data-compare keys (must match blueprint-reference ContextMenuGallery):
+ *   context-menu-surface  — the popover surface container (our inline Menu ul)
+ *   context-menu-item     — a plain menu item (the inner button element)
+ */
+function ContextMenuGallery() {
+    const dark = useContext(DarkContext);
+
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The context menu surface below is always visible for comparison harness screenshots.
+                Right-click the dashed area to open a live context menu.
+            </p>
+
+            {/* Always-visible specimen: Menu wrapped in popover surface styling.
+                This matches what ContextMenu renders portaled — same bg/shadow/radius.
+                We render it inline so data-compare targets are always in the DOM. */}
+            <div className="self-start rounded-bp shadow-card-3 dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]">
+                <div className="bg-white dark:bg-dark-gray-3 rounded-bp text-foreground">
+                    <Menu data-compare="context-menu-surface">
+                        <MenuDivider title="Actions" />
+                        <MenuItem
+                            icon="document"
+                            text="Open document"
+                            data-compare="context-menu-item"
+                        />
+                        <MenuItem
+                            icon="search"
+                            text="Find…"
+                            label="⌘F"
+                        />
+                        <MenuItem
+                            icon="tick"
+                            text="Selected item"
+                            active={true}
+                        />
+                        <MenuDivider />
+                        <MenuItem
+                            icon="trash"
+                            text="Delete"
+                            intent="danger"
+                        />
+                        <MenuItem
+                            icon="cross"
+                            text="Disabled action"
+                            disabled={true}
+                        />
+                    </Menu>
+                </div>
+            </div>
+
+            {/* Live ContextMenu trigger — right-click to open. For visual verification only. */}
+            <div className="mt-4">
+                <ContextMenu
+                    dark={dark}
+                    content={
+                        <Menu>
+                            <MenuDivider title="Actions" />
+                            <MenuItem icon="document" text="Open document" />
+                            <MenuItem icon="search" text="Find…" label="⌘F" />
+                            <MenuItem icon="tick" text="Selected item" active={true} />
+                            <MenuDivider />
+                            <MenuItem icon="trash" text="Delete" intent="danger" />
+                            <MenuItem icon="cross" text="Disabled action" disabled={true} />
+                        </Menu>
+                    }
+                >
+                    <div className="p-8 border border-dashed border-foreground-muted rounded text-foreground-muted text-body text-center cursor-context-menu">
+                        Right-click anywhere in this area to open the live context menu.
+                    </div>
+                </ContextMenu>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -1774,6 +2226,14 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
+    { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "alert", title: "Alert", render: () => <AlertGallery /> },
+    { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
+    { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
+    { id: "tooltip", title: "Tooltip", render: () => <TooltipGallery /> },
+    { id: "toast", title: "Toast / Toaster", render: () => <ToastGallery /> },
+    { id: "menu", title: "Menu", render: () => <MenuGallery /> },
+    { id: "context-menu", title: "ContextMenu", render: () => <ContextMenuGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -1790,6 +2250,7 @@ export default function App() {
     const isolated = ONLY != null && shown.length > 0;
 
     return (
+        <DarkContext.Provider value={dark}>
         <div className={dark ? "dark" : ""}>
             <div className="min-h-screen bg-background text-foreground p-10">
                 <div className="mx-auto flex max-w-[760px] flex-col gap-8">
@@ -1811,5 +2272,6 @@ export default function App() {
                 </div>
             </div>
         </div>
+        </DarkContext.Provider>
     );
 }
