@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -3720,6 +3720,103 @@ function HotkeysGallery() {
     );
 }
 
+/**
+ * Blueprint reference for TagInput.
+ *
+ * Uses Blueprint's TagInput component with identical values/placeholder to analyst-ui.
+ * data-compare keys must match analyst-ui TagInputGallery exactly:
+ *   tag-input-container  — the main .bp6-tag-input container box
+ *   tag-input-tag        — the first Tag chip inside the container
+ *   tag-input-ghost      — the ghost input (.bp6-input-ghost)
+ *
+ * Blueprint does not directly forward data-* to the internal tag or ghost input,
+ * so we use a wrapper div + useEffect + querySelector to stamp data-compare.
+ */
+function TagInputGallery() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function tag() {
+            if (!containerRef.current) return;
+            // Tag the container (.bp6-tag-input) — Blueprint renders it as the root div
+            const container = containerRef.current.querySelector(".bp6-tag-input");
+            if (container) container.setAttribute("data-compare", "tag-input-container");
+
+            // Tag the first Tag chip
+            const firstTag = containerRef.current.querySelector(".bp6-tag");
+            if (firstTag) firstTag.setAttribute("data-compare", "tag-input-tag");
+
+            // Tag the ghost input
+            const ghostInput = containerRef.current.querySelector(".bp6-input-ghost");
+            if (ghostInput) ghostInput.setAttribute("data-compare", "tag-input-ghost");
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Default (pre-populated)">
+                <div style={{ width: 400 }} ref={containerRef}>
+                    <BpTagInput
+                        values={["apple", "banana", "cherry"]}
+                        onChange={() => {}}
+                        placeholder="Add a tag…"
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["react", "typescript"]}
+                        onChange={() => {}}
+                        placeholder="Add a tag…"
+                        large={true}
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="Danger intent + fill">
+                <BpTagInput
+                    values={["error", "warning"]}
+                    onChange={() => {}}
+                    placeholder="Add a tag…"
+                    intent="danger"
+                    fill={true}
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["locked", "read-only"]}
+                        onChange={() => {}}
+                        placeholder="Disabled"
+                        disabled={true}
+                        fill={true}
+                    />
+                </div>
+            </Section>
+
+            <Section title="With left icon">
+                <div style={{ width: 400 }}>
+                    <BpTagInput
+                        values={["design", "ui", "ux"]}
+                        onChange={() => {}}
+                        placeholder="Tags…"
+                        leftIcon="tag"
+                        fill={true}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -3766,6 +3863,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
+    { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

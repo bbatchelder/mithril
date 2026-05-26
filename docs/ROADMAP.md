@@ -101,7 +101,7 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 5 — Composite selects (`@blueprintjs/select`)
 
-- [ ] **TagInput** — `tag-input/` (Tag + input handling) + QueryList *(infra)*
+- [x] **TagInput** — `tag-input/` (Tag + input handling) + QueryList *(infra)*
 - [ ] **Select** — `select/select/` (Popover + Menu + input)
 - [ ] **Suggest** — `select/suggest/`
 - [ ] **MultiSelect** — `select/multi-select/` (TagInput-based)

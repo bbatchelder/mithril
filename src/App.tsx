@@ -46,6 +46,7 @@ import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
 import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
+import { TagInput } from "@/components/ui/tag-input";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -3348,6 +3349,87 @@ function HotkeysGallery() {
     );
 }
 
+/**
+ * TagInput showcase.
+ *
+ * All specimens are pre-populated with tags so the static screenshot + diff is stable
+ * and meaningful. The same values appear on both sides.
+ *
+ * data-compare keys (must match blueprint-reference TagInputGallery exactly):
+ *   tag-input-container  — the main TagInput container box
+ *   tag-input-tag        — the first Tag chip inside the container
+ *   tag-input-ghost      — the ghost text input
+ */
+function TagInputGallery() {
+    const [values, setValues] = useState<string[]>(["apple", "banana", "cherry"]);
+    const [largeValues, setLargeValues] = useState<string[]>(["react", "typescript"]);
+    const [intentValues, setIntentValues] = useState<string[]>(["error", "warning"]);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <Section title="Default (pre-populated)">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={values}
+                        onChange={(v) => setValues(v as string[])}
+                        placeholder="Add a tag…"
+                        fill
+                        data-compare="tag-input-container"
+                        _firstTagCompare="tag-input-tag"
+                        _ghostCompare="tag-input-ghost"
+                    />
+                </div>
+            </Section>
+
+            <Section title="Large">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={largeValues}
+                        onChange={(v) => setLargeValues(v as string[])}
+                        placeholder="Add a tag…"
+                        large
+                        fill
+                    />
+                </div>
+            </Section>
+
+            <Section title="Danger intent + fill">
+                <TagInput
+                    values={intentValues}
+                    onChange={(v) => setIntentValues(v as string[])}
+                    placeholder="Add a tag…"
+                    intent="danger"
+                    fill
+                />
+            </Section>
+
+            <Section title="Disabled">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={["locked", "read-only"]}
+                        onChange={() => {}}
+                        placeholder="Disabled"
+                        disabled
+                        fill
+                    />
+                </div>
+            </Section>
+
+            <Section title="With left icon">
+                <div style={{ width: 400 }}>
+                    <TagInput
+                        values={["design", "ui", "ux"]}
+                        onChange={() => {}}
+                        placeholder="Tags…"
+                        leftIcon="search"
+                        fill
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -3395,6 +3477,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "link", title: "Link", render: () => <LinkGallery /> },
     { id: "slider", title: "Slider", render: () => <SliderGallery /> },
     { id: "hotkeys", title: "Hotkeys", render: () => <HotkeysGallery /> },
+    { id: "tag-input", title: "TagInput", render: () => <TagInputGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
