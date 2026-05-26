@@ -70,16 +70,16 @@ Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
 
 ## Phase 3 — Overlays & positioning
 
-- [ ] **Dialog** — `dialog/` (+ Portal/Overlay *(infra)*). First Radix-portal component — work out how the
+- [x] **Dialog** — `dialog/` (+ Portal/Overlay *(infra)*). First Radix-portal component — work out how the
       harness reaches portaled content; `@radix-ui/react-dialog`.
-- [ ] **Alert** — `alert/` (Dialog-based)
-- [ ] **Drawer** — `drawer/` (Overlay-based)
-- [ ] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
+- [x] **Alert** — `alert/` (Dialog-based)
+- [x] **Drawer** — `drawer/` (Overlay-based)
+- [x] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
       Menu dropdowns, Select family, DateInput, ContextMenu, Breadcrumbs overflow.
-- [ ] **Tooltip** — `tooltip/` (Popover-based)
-- [ ] **Toast / Toaster** — `toast/`
-- [ ] **Menu** (+ MenuItem, MenuDivider) — `menu/`
-- [ ] **ContextMenu** — `context-menu/` (Popover + Menu)
+- [x] **Tooltip** — `tooltip/` (Popover-based)
+- [x] **Toast / Toaster** — `toast/`
+- [x] **Menu** (+ MenuItem, MenuDivider) — `menu/`
+- [x] **ContextMenu** — `context-menu/` (Popover + Menu)
 
 ## Phase 4 — Navigation & structure
 

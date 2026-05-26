@@ -1,0 +1,415 @@
+/**
+ * Menu + MenuItem + MenuDivider — Blueprint v6.15 fidelity.
+ *
+ * Standalone styled list (not portaled). Compose inside a Popover/ContextMenu
+ * for dropdown behavior. Dark mode works via the ancestor `.dark` class.
+ *
+ * @see https://blueprintjs.com/docs/#core/components/menu
+ */
+
+import { forwardRef } from "react";
+
+import { cn } from "@/lib/utils";
+import { Icon, type IconName } from "./icon";
+
+/* ============================================================
+ * Types
+ * ============================================================ */
+
+export type MenuIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type MenuSize = "small" | "medium" | "large";
+
+/* ============================================================
+ * Menu container
+ *
+ * Blueprint metrics:
+ *   bg: white (light) / dark-gray3 (dark)
+ *   border-radius: 4px ($pt-border-radius)
+ *   min-width: 180px ($pt-spacing * 45)
+ *   padding: 4px ($pt-spacing) all sides
+ *   list-style: none
+ * ============================================================ */
+
+export interface MenuProps extends React.HTMLAttributes<HTMLUListElement> {
+    /** Size modifier — inherited by all MenuItem children. */
+    size?: MenuSize;
+    /** Forwarded ul ref. */
+    ulRef?: React.Ref<HTMLUListElement>;
+}
+
+export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
+    { className, size = "medium", ulRef, children, ...props },
+    ref,
+) {
+    return (
+        <ul
+            ref={ulRef ?? ref}
+            role="menu"
+            {...props}
+            className={cn(
+                // Blueprint .bp6-menu metrics:
+                // background: white (light) / dark-gray3 (dark)
+                "bg-white dark:bg-dark-gray-3",
+                // border-radius: 4px
+                "rounded-bp",
+                // color: $pt-text-color / $pt-dark-text-color
+                "text-foreground",
+                // list-style: none; margin: 0; padding: 4px; text-align: left
+                "list-none m-0 p-1 text-left",
+                // min-width: 180px ($pt-spacing * 45 = 4 * 45)
+                "min-w-[180px]",
+                // flex column for child spacing
+                "flex flex-col",
+                // Size context — pass via data attribute for MenuItem children
+                size !== "medium" && `menu-size-${size}`,
+                className,
+            )}
+            data-menu-size={size}
+        >
+            {children}
+        </ul>
+    );
+});
+
+/* ============================================================
+ * MenuItem
+ *
+ * Blueprint metrics:
+ *   display: flex; flex-direction: row; gap: 8px (menu-item-padding)
+ *   align-items: flex-start
+ *   border-radius: 4px ($menu-item-border-radius = $pt-border-radius)
+ *   padding: 4px 8px ($menu-item-padding-vertical $menu-item-padding)
+ *   line-height: 22px ($menu-item-line-height)
+ *   color: inherit
+ *   cursor: pointer
+ *
+ * States:
+ *   hover: rgba(gray3, 0.15) bg
+ *   active (mouse): rgba(gray3, 0.3) bg
+ *   .active (keyboard/selected): rgba(blue3, 0.1) bg + blue2 text (light)
+ *                                  rgba(blue3, 0.2) bg + blue5 text (dark)
+ *   intent: colored text; hover adds intent bg
+ *   intent + active: stronger intent bg + darker text
+ *   disabled: muted text, no pointer events
+ *
+ * Large: font-size 16px; padding-vertical 9px ($pt-spacing * 2.25)
+ * Small: line-height 20px; padding-vertical 2px ($pt-spacing * 0.5)
+ * ============================================================ */
+
+// Active (keyboard/selected) state colors per intent — Blueprint's menu-item-active mixin.
+// Light: rgba(intentBg, 0.1) bg, intentFg text
+// Dark:  rgba(intentBg, 0.2) bg, intentFg-dark text
+const ACTIVE_CLASSES: Record<MenuIntent, string> = {
+    // none → uses primary colors (Blueprint behavior: no-intent active = primary tinted)
+    none: [
+        // bg: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
+        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
+        // text: blue2 light / blue5 dark
+        "text-blue-2 dark:text-blue-5",
+        // icons inherit intent color
+        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+    ].join(" "),
+    primary: [
+        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
+        "text-blue-2 dark:text-blue-5",
+        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+    ].join(" "),
+    success: [
+        "bg-[rgba(35,133,81,0.1)] dark:bg-[rgba(35,133,81,0.2)]",
+        "text-green-2 dark:text-green-5",
+        "[&_.menu-icon]:text-green-2 dark:[&_.menu-icon]:text-green-5",
+    ].join(" "),
+    warning: [
+        "bg-[rgba(200,118,25,0.1)] dark:bg-[rgba(200,118,25,0.2)]",
+        "text-orange-2 dark:text-orange-5",
+        "[&_.menu-icon]:text-orange-2 dark:[&_.menu-icon]:text-orange-5",
+    ].join(" "),
+    danger: [
+        "bg-[rgba(205,66,70,0.1)] dark:bg-[rgba(205,66,70,0.2)]",
+        "text-red-2 dark:text-red-5",
+        "[&_.menu-icon]:text-red-2 dark:[&_.menu-icon]:text-red-5",
+    ].join(" "),
+};
+
+// Intent (non-active) text colors — Blueprint's menu-item-intent mixin.
+// Light: palette -2 tier; Dark: palette -5 tier
+const INTENT_CLASSES: Record<MenuIntent, string> = {
+    none: "",
+    primary: [
+        // text: blue2 light / blue5 dark
+        "text-blue-2 dark:text-blue-5",
+        // hover: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
+        "hover:bg-[rgba(45,114,210,0.1)] dark:hover:bg-[rgba(45,114,210,0.2)]",
+        // active (mouse press): rgba(blue3, 0.2) light / rgba(blue3, 0.3) dark
+        "active:bg-[rgba(45,114,210,0.2)] dark:active:bg-[rgba(45,114,210,0.3)]",
+    ].join(" "),
+    success: [
+        "text-green-2 dark:text-green-5",
+        "hover:bg-[rgba(35,133,81,0.1)] dark:hover:bg-[rgba(35,133,81,0.2)]",
+        "active:bg-[rgba(35,133,81,0.2)] dark:active:bg-[rgba(35,133,81,0.3)]",
+    ].join(" "),
+    warning: [
+        "text-orange-2 dark:text-orange-5",
+        "hover:bg-[rgba(200,118,25,0.1)] dark:hover:bg-[rgba(200,118,25,0.2)]",
+        "active:bg-[rgba(200,118,25,0.2)] dark:active:bg-[rgba(200,118,25,0.3)]",
+    ].join(" "),
+    danger: [
+        "text-red-2 dark:text-red-5",
+        "hover:bg-[rgba(205,66,70,0.1)] dark:hover:bg-[rgba(205,66,70,0.2)]",
+        "active:bg-[rgba(205,66,70,0.2)] dark:active:bg-[rgba(205,66,70,0.3)]",
+    ].join(" "),
+};
+
+export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>, "children"> {
+    /** Primary label text. Required for usability. */
+    text: React.ReactNode;
+    /** Blueprint icon name rendered on the left. */
+    icon?: IconName;
+    /** Right-aligned secondary label (e.g. hotkey). */
+    label?: React.ReactNode;
+    /** Intent color. Affects text; on active/hover adds intent bg. */
+    intent?: MenuIntent;
+    /** Whether this item appears as the keyboard-focused/selected item. */
+    active?: boolean;
+    /** Whether this item is non-interactive. */
+    disabled?: boolean;
+    /** If true, renders a caret-right icon indicating a submenu exists. */
+    hasSubmenu?: boolean;
+    /** Navigate to this URL when clicked. Renders as <a>. */
+    href?: string;
+    /** Click handler. */
+    onClick?: React.MouseEventHandler;
+    /** Large size — bigger font and vertical padding. */
+    large?: boolean;
+    /** Small size — tighter vertical padding. */
+    small?: boolean;
+    /** Size mode. Overrides large/small shorthands. */
+    size?: MenuSize;
+}
+
+export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuItem(
+    {
+        text,
+        icon,
+        label,
+        intent = "none",
+        active = false,
+        disabled = false,
+        hasSubmenu = false,
+        href,
+        onClick,
+        large = false,
+        small = false,
+        size,
+        className,
+        ...liProps
+    },
+    ref,
+) {
+    // Extract data-compare to forward to the inner interactive element
+    // (mirrors Blueprint: MenuItem spreads htmlProps onto the inner <a>, not the <li>)
+    const dataCompare = (liProps as Record<string, unknown>)["data-compare"] as string | undefined;
+    if (dataCompare !== undefined) {
+        delete (liProps as Record<string, unknown>)["data-compare"];
+    }
+    // Determine effective size
+    const effectiveSize = size ?? (large ? "large" : small ? "small" : "medium");
+
+    // Base classes for the inner anchor/button/div element
+    const innerClasses = cn(
+        // Blueprint .bp6-menu-item base layout
+        "flex flex-row items-start gap-[8px]",
+        // border-radius: 4px
+        "rounded-bp",
+        // padding: 4px 8px (medium); line-height: 22px
+        effectiveSize === "small" && "px-[8px] py-[2px] leading-[20px]",
+        effectiveSize === "medium" && "px-[8px] py-[4px] leading-[22px]",
+        effectiveSize === "large" && "px-[8px] py-[9px] text-body-lg leading-[22px]",
+        // text styling
+        "text-body no-underline select-none",
+        // default text color: inherit (from Menu which has text-foreground)
+        "text-inherit",
+        // transitions
+        "transition-colors duration-100 ease-bp",
+        // non-disabled hover/active
+        !disabled && !active && intent === "none" && [
+            "hover:bg-[rgba(143,153,168,0.15)] hover:cursor-pointer hover:no-underline",
+            "active:bg-[rgba(143,153,168,0.3)]",
+        ],
+        // intent coloring (only when not active — active overrides below)
+        !disabled && !active && intent !== "none" && INTENT_CLASSES[intent],
+        // active/selected state
+        !disabled && active && ACTIVE_CLASSES[intent],
+        // disabled
+        disabled && "text-foreground-disabled cursor-not-allowed",
+        // full width for block items
+        "w-full",
+    );
+
+    const iconNode = icon ? (
+        <span
+            className={cn(
+                "menu-icon flex flex-col justify-center shrink-0",
+                effectiveSize === "small" ? "h-[20px]" : "h-[22px]",
+                // Icon color: muted by default (Blueprint's $pt-icon-color = $pt-text-color-muted)
+                // active state overrides via parent's [&_.menu-icon] classes
+                !disabled && !active && "text-foreground-muted",
+                disabled && "text-foreground-disabled",
+            )}
+            aria-hidden="true"
+        >
+            <Icon icon={icon} size={16} />
+        </span>
+    ) : null;
+
+    const labelNode = label ? (
+        <span className={cn(
+            "menu-item-label ml-auto shrink-0 text-body",
+            disabled ? "text-foreground-disabled" : active ? "text-inherit" : "text-foreground-muted",
+        )}>
+            {label}
+        </span>
+    ) : null;
+
+    const caretNode = hasSubmenu ? (
+        <span className={cn(
+            "menu-icon flex flex-col justify-center shrink-0",
+            effectiveSize === "small" ? "h-[20px]" : "h-[22px]",
+            !disabled && !active && "text-foreground-muted",
+        )} aria-hidden="true">
+            <Icon icon="caret-right" size={16} />
+        </span>
+    ) : null;
+
+    const content = (
+        <>
+            {iconNode}
+            <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                {text}
+            </span>
+            {labelNode}
+            {caretNode}
+        </>
+    );
+
+    const inner = href && !disabled ? (
+        <a
+            href={href}
+            onClick={onClick}
+            className={innerClasses}
+            tabIndex={0}
+            role="menuitem"
+            data-compare={dataCompare}
+        >
+            {content}
+        </a>
+    ) : (
+        <button
+            type="button"
+            onClick={!disabled ? onClick : undefined}
+            disabled={disabled}
+            className={cn(innerClasses, "border-none bg-none text-left")}
+            tabIndex={disabled ? -1 : 0}
+            role="menuitem"
+            aria-disabled={disabled}
+            data-compare={dataCompare}
+        >
+            {content}
+        </button>
+    );
+
+    return (
+        <li
+            ref={ref}
+            role="none"
+            className={cn("block", className)}
+            {...liProps}
+        >
+            {inner}
+        </li>
+    );
+});
+
+/* ============================================================
+ * MenuDivider
+ *
+ * Blueprint metrics:
+ *   Without title (.bp6-menu-divider):
+ *     border-top: 1px solid rgba(17,20,24,0.15) — $pt-divider-black
+ *     dark: rgba(255,255,255,0.2) — $pt-dark-divider-white
+ *     margin: 4px -4px (negative margin to span full menu width)
+ *
+ *   With title (.bp6-menu-header = menu-divider + heading):
+ *     Same border, plus:
+ *     cursor: default
+ *     padding-left: 4px ($menu-item-padding - $pt-spacing = 8-4)
+ *     H6 heading: bold, font-size 14px, overflow ellipsis,
+ *       line-height 17px (16px icon + 1px), padding 8px 8px 0 8px
+ *       (first-of-type has no border-top)
+ *
+ * NOTE: Blueprint's first-of-type removes the top border on the first heading.
+ * We implement this via CSS directly — the &:first-of-type selector handles it.
+ * ============================================================ */
+
+export interface MenuDividerProps extends Omit<React.HTMLAttributes<HTMLLIElement>, "title"> {
+    /** Optional section heading text. When provided renders as a labeled header. */
+    title?: React.ReactNode;
+}
+
+export const MenuDivider = forwardRef<HTMLLIElement, MenuDividerProps>(function MenuDivider(
+    { title, className, ...props },
+    ref,
+) {
+    if (title) {
+        // .bp6-menu-header: divider + H6 heading
+        return (
+            <li
+                ref={ref}
+                role="separator"
+                className={cn(
+                    // border-top (same as divider), but first-of-type removes it
+                    "block border-t border-divider dark:border-[rgba(255,255,255,0.2)]",
+                    // negative margin to span full width (same as divider)
+                    "-mx-1 my-1",
+                    // cursor default + left padding
+                    "cursor-default pl-1",
+                    // first-of-type rule: no top border AND no top padding on h6 child
+                    "[&:first-of-type]:border-t-0 [&:first-of-type>h6]:pt-0",
+                    className,
+                )}
+                {...props}
+            >
+                <h6 className={cn(
+                    // Blueprint .menu-heading: bold, overflow-ellipsis
+                    "font-semibold overflow-hidden text-ellipsis whitespace-nowrap",
+                    // line-height: 17px (icon size 16px + 1px for descenders)
+                    "leading-[17px]",
+                    // font-size: 14px (same as body — Blueprint heading-typography
+                    // for H6 uses the same font size, just bold)
+                    "text-body",
+                    // margin: 0; padding: 8px 8px 0 8px
+                    "m-0 px-[8px] pt-[8px] pb-0",
+                    // color: foreground (heading color = text color in Blueprint)
+                    "text-foreground",
+                )}>
+                    {title}
+                </h6>
+            </li>
+        );
+    }
+
+    // .bp6-menu-divider: horizontal rule
+    return (
+        <li
+            ref={ref}
+            role="separator"
+            className={cn(
+                "block border-t border-divider dark:border-[rgba(255,255,255,0.2)]",
+                // margin: 4px -4px (spanning full menu padding)
+                "-mx-1 my-1",
+                className,
+            )}
+            {...props}
+        />
+    );
+});
