@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, FileInput, FormGroup, HTMLSelect, Icon, InputGroup, Label, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -2933,6 +2933,81 @@ function clearSelected(nodes: BpTreeNodeInfo[]) {
     }
 }
 
+/**
+ * Blueprint PanelStack reference gallery.
+ *
+ * Matches analyst-ui PanelStackGallery exactly:
+ *   - Controlled stack of depth 2: [Root, Detail]
+ *   - Fixed 320×240px container
+ *   - data-compare keys on header, back button, title
+ *
+ * Blueprint's PanelStack uses CSSTransition internally but the rendered STATE
+ * (back button + title) is identical to analyst-ui for diffing purposes.
+ */
+const BP_ROOT_PANEL: BpPanel<object> = {
+    title: "Root",
+    renderPanel: ({ openPanel }: any) => (
+        <div style={{ padding: 16 }}>
+            <p style={{ marginBottom: 8, fontSize: 14 }}>Root panel content.</p>
+            <Button
+                size="small"
+                onClick={() =>
+                    openPanel({
+                        title: "Detail",
+                        renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+                    })
+                }
+                text="Open Detail"
+            />
+        </div>
+    ),
+};
+
+const BP_DETAIL_PANEL: BpPanel<object> = {
+    title: "Detail",
+    renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+};
+
+// Controlled stack of [Root, Detail] — depth 2, back button visible.
+const BP_INITIAL_PANEL_STACK: BpPanel<object>[] = [BP_ROOT_PANEL, BP_DETAIL_PANEL];
+
+function PanelStackGallery() {
+    const [stack, setStack] = useState<BpPanel<object>[]>(BP_INITIAL_PANEL_STACK);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+        // Tag the header, back button, and title for the harness.
+        // Blueprint renders:
+        //   .bp6-panel-stack2-view > .bp6-panel-stack2-header > span > .bp6-panel-stack2-header-back (back btn)
+        //   .bp6-panel-stack2-view > .bp6-panel-stack2-header > h6.bp6-heading (title)
+        const header = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header");
+        if (header) header.setAttribute("data-compare", "panel-stack-header");
+
+        const backBtn = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header-back");
+        if (backBtn) backBtn.setAttribute("data-compare", "panel-stack-back");
+
+        const title = containerRef.current.querySelector<HTMLElement>(".bp6-panel-stack2-header .bp6-heading");
+        if (title) title.setAttribute("data-compare", "panel-stack-title");
+    }, []);
+
+    return (
+        <div style={{ width: 320 }}>
+            <div
+                ref={containerRef}
+                style={{ width: 320, height: 240, position: "relative", border: "1px solid rgba(0,0,0,0.1)" }}
+            >
+                <BpPanelStack
+                    stack={stack as any}
+                    onOpen={(p: any) => setStack((prev: any) => [...prev, p])}
+                    onClose={() => setStack((prev: any) => prev.slice(0, -1))}
+                    style={{ width: "100%", height: "100%" }}
+                />
+            </div>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
@@ -2971,6 +3046,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
     { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
+    { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);

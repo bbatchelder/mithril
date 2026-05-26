@@ -38,6 +38,7 @@ import { Section as BpSection, SectionCard as BpSectionCard } from "@/components
 import { CardList } from "@/components/ui/card-list";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
+import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
 
 /** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
 const DarkContext = createContext(false);
@@ -2691,6 +2692,73 @@ function TreeGallery() {
     );
 }
 
+/**
+ * PanelStack showcase.
+ *
+ * For a stable screenshot + computed-style diff, the specimen shows a stack of
+ * DEPTH 2 (root + one pushed panel) so the back button is visible in the header.
+ * We use a controlled `stack` prop with a fixed initial stack of 2 panels — no
+ * interaction needed. Both galleries show identical structure so the diff is valid.
+ *
+ * data-compare keys:
+ *   panel-stack-header  — the header div (height:30px, box-shadow bottom divider)
+ *   panel-stack-back    — the back button (minimal small, chevron-left + "Root" text)
+ *   panel-stack-title   — the centered title span
+ *
+ * Fixed container: 320×240px so screenshots are stable.
+ */
+
+const ROOT_PANEL: PanelInfo = {
+    title: "Root",
+    renderPanel: ({ openPanel }: PanelActions & object) => (
+        <div style={{ padding: 16 }}>
+            <p style={{ marginBottom: 8, fontSize: 14 }}>Root panel content.</p>
+            <Button
+                size="small"
+                onClick={() =>
+                    openPanel({
+                        title: "Detail",
+                        renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+                    })
+                }
+            >
+                Open Detail
+            </Button>
+        </div>
+    ),
+};
+
+const DETAIL_PANEL: PanelInfo = {
+    title: "Detail",
+    renderPanel: () => <div style={{ padding: 16, fontSize: 14 }}>Detail panel content.</div>,
+};
+
+// Controlled stack of [root, detail] — depth 2, back button visible.
+const INITIAL_PANEL_STACK: PanelInfo[] = [ROOT_PANEL, DETAIL_PANEL];
+
+function PanelStackGallery() {
+    const [stack, setStack] = useState<PanelInfo[]>(INITIAL_PANEL_STACK);
+
+    return (
+        <div className="flex flex-col gap-8 text-foreground">
+            <div className="flex flex-col gap-2">
+                <p className="text-body-sm text-foreground-muted">
+                    Controlled stack (depth 2) — back button + centered title visible
+                </p>
+                {/* Fixed size so the harness gets a stable layout */}
+                <div style={{ width: 320, height: 240, position: "relative", border: "1px solid rgba(0,0,0,0.1)" }}>
+                    <PanelStack
+                        stack={stack}
+                        onOpen={(p) => setStack((prev) => [...prev, p])}
+                        onClose={() => setStack((prev) => prev.slice(0, -1))}
+                        style={{ width: "100%", height: "100%" }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
@@ -2730,6 +2798,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "card-list", title: "CardList", render: () => <CardListGallery /> },
     { id: "breadcrumbs", title: "Breadcrumbs", render: () => <BreadcrumbsGallery /> },
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
+    { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
