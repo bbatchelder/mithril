@@ -342,35 +342,49 @@ export function Popover({
                                 asChild
                                 data-compare="popover-arrow"
                             >
+                                {/* Arrow element box is 30×11 (cross-axis × protrusion), NOT 30×30.
+                                    Why: Radix reserves the gap between trigger and panel equal to the
+                                    arrow element's box extent on the side-axis (its height for
+                                    top/bottom). A 30×30 box reserved 30px but the rotated wedge is only
+                                    ~11px tall, leaving ~19px of empty gap (the old "detached arrow" bug).
+                                    Sizing the box to the wedge → gap = sideOffset(4) + 11 ≈ 15px,
+                                    matching Blueprint.
+
+                                    Orientation: the SVG points DOWN by default (via the inner <g>
+                                    rotate), which is what Radix's arrow wrapper expects — Radix then
+                                    rotates the wrapper per side (0° top, 180° bottom, ±90° left/right)
+                                    to point it at the trigger. We do NOT add our own per-side rotation.
+
+                                    The viewBox crops to the wedge: Blueprint's paths are a west-pointing
+                                    sliver (x∈[1,11], y∈[0,30]); rotate(-90 15 15) maps it to a
+                                    down-pointing wedge occupying x∈[0,30], y∈[19,29], so we view
+                                    "0 19 30 11".
+
+                                    Note (documented tradeoff): a fixed 30×11 box is tuned for the
+                                    top/bottom placements (all the galleries use, and the dominant case).
+                                    Left/right placement reserves the 30px width instead, so its gap is
+                                    larger — acceptable since side placement is rare and untested here. */}
                                 <svg
                                     width={30}
-                                    height={30}
-                                    viewBox="0 0 30 30"
+                                    height={11}
+                                    viewBox="0 19 30 11"
                                     style={{ overflow: "visible" }}
-                                    className={cn(
-                                        // Rotate based on which side the Content is placed on.
-                                        // Blueprint's SVG paths are right-pointing by default (rotate 0).
-                                        // [data-side] is set on the Content element by Radix.
-                                        // These selectors walk up to the nearest [data-side] ancestor.
-                                        "[[data-side=bottom]_&]:rotate-90",
-                                        "[[data-side=top]_&]:-rotate-90",
-                                        "[[data-side=left]_&]:rotate-180",
-                                        // data-side=right → 0 rotation (native orientation)
-                                    )}
                                 >
-                                    {/* Shadow path — matches Blueprint .bp6-popover-arrow-border
-                                        fill: $black, fill-opacity: $pt-border-shadow-opacity = 0.1 */}
-                                    <path
-                                        d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
-                                        fill="black"
-                                        fillOpacity={0.1}
-                                    />
-                                    {/* Fill path — matches Blueprint .bp6-popover-arrow-fill
-                                        fill: panel background color */}
-                                    <path
-                                        d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
-                                        className="fill-white dark:fill-dark-gray-3"
-                                    />
+                                    <g transform="rotate(-90 15 15)">
+                                        {/* Shadow path — Blueprint .bp6-popover-arrow-border
+                                            fill: $black, fill-opacity: $pt-border-shadow-opacity = 0.1 */}
+                                        <path
+                                            d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
+                                            fill="black"
+                                            fillOpacity={0.1}
+                                        />
+                                        {/* Fill path — Blueprint .bp6-popover-arrow-fill
+                                            fill: panel background color */}
+                                        <path
+                                            d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
+                                            className="fill-white dark:fill-dark-gray-3"
+                                        />
+                                    </g>
                                 </svg>
                             </RadixPopover.Arrow>
                         )}
