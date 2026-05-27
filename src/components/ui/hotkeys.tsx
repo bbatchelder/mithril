@@ -53,6 +53,7 @@
 
 import { cn } from "@/lib/utils";
 import { Dialog } from "./dialog";
+import { Icon, type IconName } from "./icon";
 
 // ---------------------------------------------------------------------------
 // Key combo parser
@@ -113,6 +114,20 @@ const KEY_SYMBOLS: Record<string, string> = {
     right: "→",
     delete: "⌫",
     escape: "Esc",
+};
+
+/**
+ * Modifier keys that Blueprint renders as a platform-glyph ICON paired with the
+ * modifier WORD inside one key cap (e.g. ⌘+"cmd", ⇧+"shift", ⌃+"ctrl", ⌥+"alt").
+ * The parser yields these lowercase tokens (`meta` is normalized to `cmd` on Mac,
+ * `ctrl` elsewhere), so we key on the resolved token.
+ */
+const MODIFIER_ICONS: Record<string, IconName> = {
+    cmd: "key-command",
+    meta: "key-command",
+    ctrl: "key-control",
+    alt: "key-option",
+    shift: "key-shift",
 };
 
 /**
@@ -193,14 +208,16 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
             {...props}
         >
             {keys.map((key, i) => {
-                const symbol = KEY_SYMBOLS[key.toLowerCase()];
+                const lower = key.toLowerCase();
+                const modIcon = MODIFIER_ICONS[lower];
+                const symbol = KEY_SYMBOLS[lower];
                 const display = symbol ?? key;
 
                 if (minimal) {
-                    // Minimal: just the symbol/text, no key cap styling
+                    // Minimal: glyph icon for modifiers, else the symbol/text — no cap styling.
                     return (
-                        <span key={i} className="text-body-sm font-normal">
-                            {display}
+                        <span key={i} className="inline-flex items-center text-body-sm font-normal">
+                            {modIcon ? <Icon icon={modIcon} size={14} aria-hidden className="!text-current" /> : display}
                         </span>
                     );
                 }
@@ -215,6 +232,9 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
                             // display: inline-flex; align-items: center; justify-content: center;
                             // vertical-align: middle; font-family: inherit;
                             "inline-flex items-center justify-center align-middle font-sans",
+                            // Modifier caps pair a platform glyph icon with the word (⌘ cmd, ⇧ shift,
+                            // ⌃ ctrl, ⌥ alt) — Blueprint puts ~4px between the icon and the label.
+                            modIcon && "gap-1",
                             // font-size: $pt-font-size-small = 12px
                             "text-body-sm",
                             // height: $pt-button-height-small = 24px; min-width: 24px; line-height: 24px
@@ -237,7 +257,16 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
                             "font-normal",
                         )}
                     >
-                        {display}
+                        {modIcon ? (
+                            <>
+                                {/* Inherit the cap's text color (gray-1 / gray-4) — Icon defaults
+                                    to text-foreground even at intent="none", so force currentColor. */}
+                                <Icon icon={modIcon} size={16} aria-hidden className="!text-current" />
+                                {key}
+                            </>
+                        ) : (
+                            display
+                        )}
                     </kbd>
                 );
             })}
