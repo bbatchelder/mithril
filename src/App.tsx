@@ -1,4 +1,3 @@
-import { ChevronDown, ExternalLink, Plus, Settings } from "lucide-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
@@ -134,14 +133,17 @@ function ButtonGallery() {
 
             <Section title="With icons">
                 <Row label="">
-                    <Button icon={<Plus />} aria-label="Add" />
-                    <Button icon={<Plus />} intent="primary">
+                    <Button icon={<Icon icon="plus" className="!text-current" />} aria-label="Add" />
+                    <Button icon={<Icon icon="plus" className="!text-current" />} intent="primary">
                         Start icon
                     </Button>
-                    <Button endIcon={<ExternalLink />} intent="primary">
+                    <Button endIcon={<Icon icon="share" className="!text-current" />} intent="primary">
                         End icon
                     </Button>
-                    <Button icon={<Settings />} endIcon={<ChevronDown />}>
+                    <Button
+                        icon={<Icon icon="cog" className="!text-current" />}
+                        endIcon={<Icon icon="chevron-down" className="!text-current" />}
+                    >
                         Both
                     </Button>
                 </Row>

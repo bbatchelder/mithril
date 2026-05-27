@@ -1,9 +1,9 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { LoaderCircle } from "lucide-react";
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import { Spinner } from "./spinner";
 
 export type ButtonIntent = "none" | "primary" | "success" | "warning" | "danger";
 export type ButtonVariant = "solid" | "outlined" | "minimal";
@@ -125,8 +125,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
             {...props}
         >
             {loading && (
-                <span className="absolute inset-0 inline-flex items-center justify-center" aria-hidden="true">
-                    <LoaderCircle className="animate-spin" />
+                // Blueprint's button spinner head inherits the button's text color
+                // (`stroke: $text-color`); `[&_path:last-child]` targets the head path
+                // (the track stays faint). Size tracks the button's icon size (16/20).
+                <span
+                    className="absolute inset-0 inline-flex items-center justify-center [&_path:last-child]:!stroke-current"
+                    aria-hidden="true"
+                >
+                    <Spinner size={size === "large" ? 20 : 16} />
                 </span>
             )}
             {icon != null && <span className={cn("inline-flex", hidden)}>{icon}</span>}
