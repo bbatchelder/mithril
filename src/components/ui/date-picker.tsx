@@ -116,12 +116,11 @@ function NavButton({
             data-compare={dc}
             aria-label={direction === "prev" ? "Previous month" : "Next month"}
             className={cn(
-                // Blueprint: .bp6-button.bp6-minimal
-                // min-height=30px ($pt-button-height=7.5*4), min-width=30px
-                // padding: 5px 10px → but Blueprint minimal icon-only buttons show 8px px
-                // From computed diff: paddingLeft=8px, paddingRight=8px, minWidth=30px
+                // Blueprint: .bp6-button.bp6-minimal — an icon-only 30×30 nav button.
+                // Measured Blueprint nav button = 30×30, so pin width to 30px (px-2 + the 16px
+                // chevron summed to 32px, 2px too wide). The icon centers via justify-center.
                 "inline-flex items-center justify-center",
-                "h-[30px] min-w-[30px] px-2 py-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-bp",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -194,10 +193,16 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                 classNames.month_caption,
             )}
         >
-            {/* Dropdowns group: [Month ▼] [Year ▼] — Blueprint puts these on the LEFT */}
-            <div className="flex flex-row items-center gap-1">
-                {/* Month select */}
+            {/* Dropdowns group: [Month ▼] [Year ▼] — Blueprint puts these on the LEFT.
+                No inter-select gap: the minimal selects already carry their own caret padding,
+                and Blueprint's caption packs them tight (keeping the caption ≈ the 210px grid
+                width so the nav buttons sit at the grid's right edge). */}
+            <div className="flex flex-row items-center">
+                {/* Month select — Blueprint uses the MINIMAL HTMLSelect in the caption
+                    (transparent bg, no border/shadow ring, just text + double-caret),
+                    NOT the default bordered select. */}
                 <HTMLSelect
+                    minimal
                     value={currentMonth}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const newMonth = new Date(calendarMonth.date);
@@ -214,8 +219,9 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                     ))}
                 </HTMLSelect>
 
-                {/* Year select */}
+                {/* Year select — minimal, same as the month select above. */}
                 <HTMLSelect
+                    minimal
                     value={currentYear}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const newMonth = new Date(calendarMonth.date);
@@ -404,17 +410,18 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         months: "flex flex-col",
                         month: "flex flex-col mx-1",
                         month_caption: "",
-                        // Blueprint: table is NOT w-full — it is content-sized (inline-block rdp).
-                        // Setting w-auto prevents the table from stretching to its container,
-                        // which was causing spread-out columns. Blueprint's min-width = 210px
-                        // (7 columns × 30px) is achieved naturally by the 30px day cells.
-                        month_grid: "border-collapse",
+                        // Blueprint's grid is a fixed 210px (7 × 30px), and it does NOT stretch
+                        // to the caption width. Our table is a flex child, so without an explicit
+                        // width it stretches to the caption (~220px), spreading the columns to
+                        // ~31.4px. `w-[210px] table-fixed` pins it to Blueprint's 210px → exact
+                        // 30px columns, matching the weekday/day cell metrics.
+                        month_grid: "border-collapse w-[210px] table-fixed",
                         weekdays: "",
                         weekday: cn(
                             // Blueprint .rdp-head_cell: font-weight:600, padding-top:4px
                             // color inherits parent (normal text, NOT muted)
                             "text-center text-body font-semibold text-foreground",
-                            "w-[30px] h-[30px] pt-1 p-0",
+                            "w-[30px] h-[30px] px-0 pb-0 pt-1",
                         ),
                         weeks: "",
                         week: "",
@@ -522,7 +529,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                                     //   text-decoration: none, text-transform: none
                                     //   color: inherits parent = $pt-text-color (NOT muted)
                                     "text-center text-body font-semibold text-foreground",
-                                    "w-[30px] h-[30px] pt-1 p-0",
+                                    "w-[30px] h-[30px] px-0 pb-0 pt-1",
                                 )}
                             >
                                 {children}

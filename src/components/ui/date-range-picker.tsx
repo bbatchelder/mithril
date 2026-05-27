@@ -120,7 +120,7 @@ function NavButton({
             aria-label={direction === "prev" ? "Previous month" : "Next month"}
             className={cn(
                 "inline-flex items-center justify-center",
-                "h-[30px] min-w-[30px] px-2 py-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-bp",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -194,10 +194,14 @@ function DateRangePickerCaption({
                 "flex flex-row items-center",
                 "border-b border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
                 "pb-1",
-                // Blueprint: for contiguous mode, left caption is row-reverse (prev on left, dropdowns right)
-                // right caption is row (dropdowns left, next on right)
-                // For single month: standard [dropdowns] [prev] [next]
-                isSingleMonth ? "justify-between" : isLeft ? "flex-row-reverse justify-between" : "flex-row justify-between",
+                // Blueprint contiguous layout is symmetric — the nav button hugs the OUTER
+                // edge of each calendar, dropdowns inset on the inner edge:
+                //   left caption:  [prev][month][year] packed left  → justify-start
+                //   right caption: [month][year][next] packed right → justify-end
+                // (DOM order already puts prev first in the left branch and next last in the
+                // right branch, so plain flex-row + start/end matches; no row-reverse.)
+                // Single month: [dropdowns] … [prev][next] → justify-between.
+                isSingleMonth ? "justify-between" : isLeft ? "justify-start" : "justify-end",
                 classNames.month_caption,
             )}
         >
@@ -207,6 +211,7 @@ function DateRangePickerCaption({
                 <>
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -221,6 +226,7 @@ function DateRangePickerCaption({
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -263,6 +269,7 @@ function DateRangePickerCaption({
                     {/* Dropdowns — appear on the RIGHT in row-reverse */}
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -277,6 +284,7 @@ function DateRangePickerCaption({
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -297,6 +305,7 @@ function DateRangePickerCaption({
                 <>
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -311,6 +320,7 @@ function DateRangePickerCaption({
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -466,12 +476,13 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                         months: "flex flex-row gap-4",
                         month: "flex flex-col mx-1",
                         month_caption: "",
-                        // NO w-full on month_grid — keeps table content-sized (compact fix)
-                        month_grid: "border-collapse",
+                        // Pin each grid to Blueprint's fixed 210px (7 × 30px) so the table
+                        // doesn't stretch to the caption width and spread the columns.
+                        month_grid: "border-collapse w-[210px] table-fixed",
                         weekdays: "",
                         weekday: cn(
                             "text-center text-body font-semibold text-foreground",
-                            "w-[30px] h-[30px] pt-1 p-0",
+                            "w-[30px] h-[30px] px-0 pb-0 pt-1",
                         ),
                         weeks: "",
                         week: "",
@@ -594,7 +605,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                 {...wdRest}
                                 className={cn(
                                     "text-center text-body font-semibold text-foreground",
-                                    "w-[30px] h-[30px] pt-1 p-0",
+                                    "w-[30px] h-[30px] px-0 pb-0 pt-1",
                                 )}
                             >
                                 {children}
