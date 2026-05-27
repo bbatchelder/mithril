@@ -11,8 +11,16 @@
 # tools/comparison/screenshots/:
 #   <component>.<theme>.analyst.png     full-page screenshot (analyst-ui  :5173)
 #   <component>.<theme>.blueprint.png   full-page screenshot (Blueprint   :5174)
+#   <component>.<theme>.diff.png        full-page pixel-diff image (auto-aligned)
+#   <component>.<theme>.<key>.spec.png  per-specimen diff crop (only for flagged keys)
 #   <component>.<theme>.{analyst,blueprint}.styles.json
-# then prints a computed-style diff for every paired [data-compare] specimen.
+#   <component>.<theme>.{analyst,blueprint}.rects.json
+# then prints, per theme:
+#   1. a computed-style diff for every paired [data-compare] specimen,
+#   2. a PER-SPECIMEN visual diff — each [data-compare]/[data-vcompare] element cropped
+#      by its own rect and compared (the reliable gate; see diff-specimens.mjs), and
+#   3. a full-page visual diff — SSIM over the auto-aligned screenshots, a holistic
+#      catch-all (a guide, not a gate; see diff-pixels.mjs).
 #
 # Dev servers are auto-started if not already reachable (and left running).
 
@@ -65,6 +73,8 @@ ensure_server "$BP_PORT" blueprint "$ROOT/tools/blueprint-reference"
 
 # Computed-style capture expression (color-normalized; see capture-styles.js).
 STYLE_EVAL="$(cat "$ROOT/tools/comparison/capture-styles.js")"
+# Bounding-rect capture expression (per-specimen crops; see capture-rects.js).
+RECT_EVAL="$(cat "$ROOT/tools/comparison/capture-rects.js")"
 
 capture() {
     local side="$1" port="$2" theme="$3" session="$4"
@@ -83,6 +93,7 @@ capture() {
     fi
     agent-browser --session "$session" screenshot --full "$stem.png" >/dev/null
     agent-browser --session "$session" eval "$STYLE_EVAL" --json >"$stem.styles.json"
+    agent-browser --session "$session" eval "$RECT_EVAL" --json >"$stem.rects.json"
 }
 
 for theme in "${THEMES[@]}"; do
@@ -94,6 +105,20 @@ for theme in "${THEMES[@]}"; do
     node "$ROOT/tools/comparison/diff-styles.mjs" \
         "$OUT/$COMPONENT.$theme.analyst.styles.json" \
         "$OUT/$COMPONENT.$theme.blueprint.styles.json" \
+        "$COMPONENT · $theme"
+    echo
+    node "$ROOT/tools/comparison/diff-specimens.mjs" \
+        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.blueprint.png" \
+        "$OUT/$COMPONENT.$theme.analyst.rects.json" \
+        "$OUT/$COMPONENT.$theme.blueprint.rects.json" \
+        "$OUT/$COMPONENT.$theme" \
+        "$COMPONENT · $theme"
+    echo
+    node "$ROOT/tools/comparison/diff-pixels.mjs" \
+        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.blueprint.png" \
+        "$OUT/$COMPONENT.$theme.diff.png" \
         "$COMPONENT · $theme"
 done
 

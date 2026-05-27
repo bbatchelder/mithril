@@ -26,7 +26,7 @@ Ordering is **dependency-first**: a component is only listed after everything it
 *(infra)* are behavioral helpers, not standalone fidelity targets — build them inline when the first
 consumer needs them.
 
-Blueprint source (design spec, v6.15): `/Users/bbatchelder/Code/blueprint`
+Blueprint source (design spec, v6.15): a local clone of `palantir/blueprint`, referenced via `$BLUEPRINT_SRC` (defaults to `../blueprint`)
 - core: `packages/core/src/components/`
 - select: `packages/select/src/components/`
 - datetime: `packages/datetime/src/components/`

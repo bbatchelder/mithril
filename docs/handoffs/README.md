@@ -23,7 +23,13 @@ up with full context.
 - Capture **gotchas** discovered this session (build quirks, tooling, fidelity traps).
 - State what was **verified** (and how) vs. what is assumed.
 
-## Index
+## Reading order
 
-<!-- newest first -->
-- `0001-foundation-tokens-harness-button.md` — scaffold, design tokens, comparison harness, handoff process, and the Button slice; next: Card, Input, Dialog.
+Handoffs are numbered `0001`…`NNNN` in build order. Rather than maintain a hand-written index
+here (it drifts), just sort the directory — the files are zero-padded, so lexical order is build order.
+
+- **Start here:** the highest-numbered file is always the current entry point.
+- `0001-foundation-tokens-harness-button.md` — where it began: scaffold, design tokens, the comparison
+  harness, the handoff process, and the Button slice.
+- `0058-project-complete.md` — the milestone marking the full Blueprint surface (~54 components) complete.
+- Everything after `0058` is post-completion work (e.g. `0059` — the full 706-glyph icon port).

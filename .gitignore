@@ -15,3 +15,7 @@ coverage/
 
 # comparison harness artifacts (screenshots + style dumps)
 tools/comparison/screenshots/
+
+# Claude Code local runtime artifacts
+.claude/scheduled_tasks.lock
+.claude/settings.local.json

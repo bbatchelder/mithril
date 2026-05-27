@@ -160,8 +160,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
                     !alignRight && (large ? "-ml-7 mr-2" : "-ml-6 mr-2"),
                     // Right-aligned: margin-left = 8px (= ml-2)
                     alignRight && "ml-2",
-                    // Flex centering for dot child
-                    "flex items-center justify-center",
+                    // Inline-flex centering for the dot child. MUST be inline-flex, not flex:
+                    // a block-level flex breaks the label's inline flow and drops the text to
+                    // the next line. inline-flex keeps the indicator inline AND wins the
+                    // display-utility merge over the `inline-block` above (tailwind-merge keeps last).
+                    "inline-flex items-center justify-center",
 
                     // === UNCHECKED resting ===
                     // Background: transparent

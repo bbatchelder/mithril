@@ -888,6 +888,19 @@ function CheckboxGallery() {
                 </div>
             </Section>
 
+            {/* Whole-control specimens — data-compare on an inline-block wrapper so the
+                per-specimen crop covers box + label (mirrors analyst-ui's CheckboxGallery). */}
+            <Section title="Whole control (box + label)">
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+                    <span data-vcompare="cb-control-unchecked" style={{ display: "inline-block" }}>
+                        <Checkbox label="Unchecked" />
+                    </span>
+                    <span data-vcompare="cb-control-checked" style={{ display: "inline-block" }}>
+                        <Checkbox label="Checked" defaultChecked={true} />
+                    </span>
+                </div>
+            </Section>
+
             <Section title="Large">
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <TaggedCheckbox dataCompare="cb-large" label="Large unchecked" large={true} />
@@ -4994,32 +5007,208 @@ const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
 
+/**
+ * Sidebar category grouping — kept in lock-step with the analyst-ui gallery
+ * (src/App.tsx) so the two galleries navigate identically for side-by-side comparison.
+ * Any id missing from every group falls into "Other" so nothing is dropped.
+ */
+const CATEGORIES: { label: string; ids: string[] }[] = [
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
+    { label: "Overlays", ids: ["dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
+    { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
+    { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
+    { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+];
+
+type ComponentEntry = (typeof COMPONENTS)[number];
+
+const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
+    const byId = new Map(COMPONENTS.map((c) => [c.id, c]));
+    const groups = CATEGORIES.map((g) => ({
+        label: g.label,
+        items: g.ids.map((id) => byId.get(id)).filter((c): c is ComponentEntry => c != null),
+    }));
+    const seen = new Set(CATEGORIES.flatMap((g) => g.ids));
+    const leftover = COMPONENTS.filter((c) => !seen.has(c.id));
+    if (leftover.length) groups.push({ label: "Other", items: leftover });
+    return groups;
+})();
+
+/**
+ * Components whose specimens render an overlay OPEN by default (for the harness). In the
+ * sidebar view these are gated behind a Show/Hide toggle so navigating to them doesn't
+ * trap the page behind a modal. Mirrors analyst-ui's OVERLAY_IDS.
+ */
+const OVERLAY_IDS = new Set([
+    "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
+    "select", "suggest", "multi-select", "timezone-select", "date-input", "date-range-input",
+]);
+
+function OverlaySpecimen({ title, children }: { title: string; children: React.ReactNode }) {
+    const [show, setShow] = useState(false);
+    return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+            <Button
+                intent="primary"
+                icon={show ? "chevron-down" : "chevron-right"}
+                text={show ? `Hide ${title}` : `Show ${title}`}
+                onClick={() => setShow((s) => !s)}
+            />
+            {show && children}
+        </div>
+    );
+}
+
+/** Selected component is driven by the URL hash (`#button`) — shareable, matches analyst-ui. */
+function useHash(): string {
+    const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
+    useEffect(() => {
+        const onChange = () => setHash(decodeURIComponent(window.location.hash.replace(/^#/, "")));
+        window.addEventListener("hashchange", onChange);
+        return () => window.removeEventListener("hashchange", onChange);
+    }, []);
+    return hash;
+}
+
+function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark: boolean; onToggleDark: () => void }) {
+    const c = dark
+        ? { bg: "#252a31", border: "rgba(255,255,255,0.15)", text: "#f6f7f9", muted: "#abb3bf" }
+        : { bg: "#ffffff", border: "rgba(17,20,24,0.15)", text: "#1c2127", muted: "#5f6b7c" };
+    return (
+        <aside
+            style={{
+                position: "sticky",
+                top: 0,
+                height: "100vh",
+                width: 240,
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+                borderRight: `1px solid ${c.border}`,
+                background: c.bg,
+                overflow: "hidden",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "12px 16px",
+                    borderBottom: `1px solid ${c.border}`,
+                }}
+            >
+                <span style={{ fontSize: 16, fontWeight: 600, color: c.text }}>Blueprint reference</span>
+                <Button
+                    variant="minimal"
+                    size="small"
+                    aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                    icon={dark ? "lightbulb" : "moon"}
+                    onClick={onToggleDark}
+                />
+            </div>
+            <nav style={{ flex: 1, overflowY: "auto", padding: "12px 8px" }}>
+                {CATEGORY_GROUPS.map((group) => (
+                    <div key={group.label} style={{ marginBottom: 16 }}>
+                        <div
+                            style={{
+                                padding: "0 8px 4px",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                                color: c.muted,
+                            }}
+                        >
+                            {group.label}
+                        </div>
+                        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 1 }}>
+                            {group.items.map((item) => {
+                                const active = item.id === selectedId;
+                                return (
+                                    <li key={item.id}>
+                                        <a
+                                            href={`#${item.id}`}
+                                            aria-current={active ? "page" : undefined}
+                                            style={{
+                                                display: "block",
+                                                padding: "4px 8px",
+                                                borderRadius: 2,
+                                                fontSize: 14,
+                                                textDecoration: "none",
+                                                background: active ? "#2d72d2" : "transparent",
+                                                color: active ? "#ffffff" : c.text,
+                                            }}
+                                        >
+                                            {item.title}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+            </nav>
+        </aside>
+    );
+}
+
+function ComponentView({ component }: { component: ComponentEntry }) {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, [component.id]);
+    return (
+        <div id={component.id} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{component.title}</h2>
+            {OVERLAY_IDS.has(component.id) ? (
+                <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
+            ) : (
+                component.render()
+            )}
+        </div>
+    );
+}
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
+    const hash = useHash();
 
-    const shown = ONLY ? COMPONENTS.filter((c) => c.id === ONLY) : COMPONENTS;
-    const isolated = ONLY != null && shown.length > 0;
+    // Isolated single-component view (harness mode): no chrome, just the specimens.
+    // This path MUST stay behavior-identical for tools/compare.sh.
+    if (ONLY != null && COMPONENTS.some((c) => c.id === ONLY)) {
+        const c = COMPONENTS.find((x) => x.id === ONLY)!;
+        return (
+            <div className={dark ? "bp6-dark" : ""} style={{ minHeight: "100vh", background: dark ? "#1c2127" : "#f6f7f9", padding: 40 }}>
+                <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
+                    <div id={c.id} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {c.render()}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const selected = COMPONENTS.find((c) => c.id === hash) ?? COMPONENTS[0];
 
     return (
         <div
             className={dark ? "bp6-dark" : ""}
-            style={{ minHeight: "100vh", background: dark ? "#1c2127" : "#f6f7f9", padding: 40 }}
+            style={{
+                minHeight: "100vh",
+                display: "flex",
+                background: dark ? "#1c2127" : "#f6f7f9",
+                color: dark ? "#f6f7f9" : "#1c2127",
+            }}
         >
-            <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
-                {!isolated && (
-                    <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h1 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>Blueprint reference</h1>
-                        <Button text={`Toggle ${dark ? "light" : "dark"}`} onClick={() => setDark((d) => !d)} />
-                    </header>
-                )}
-
-                {shown.map((c) => (
-                    <div key={c.id} id={c.id} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {!isolated && <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{c.title}</h2>}
-                        {c.render()}
-                    </div>
-                ))}
-            </div>
+            <Sidebar selectedId={selected.id} dark={dark} onToggleDark={() => setDark((d) => !d)} />
+            <main style={{ flex: 1, padding: "32px 40px", overflowX: "hidden" }}>
+                <div style={{ maxWidth: 820, margin: "0 auto" }}>
+                    <ComponentView component={selected} />
+                </div>
+            </main>
         </div>
     );
 }

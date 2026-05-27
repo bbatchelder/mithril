@@ -29,8 +29,9 @@ A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's desi
   (`cd tools/blueprint-reference && pnpm dev` → :5174). React 18 there to satisfy Blueprint's peer dep.
 - `tools/compare.sh` + `tools/comparison/` — the comparison harness (see its README). Drives `agent-browser`
   to screenshot **and** computed-style-diff a component against Blueprint in one command.
-- Blueprint source clone (the design spec): `/Users/bbatchelder/Code/blueprint` (v6.15, Apache-2.0).
-  Authoritative tokens: `packages/core/src/design-tokens/tokens/`.
+- Blueprint source clone (the design spec) — clone `palantir/blueprint` (v6.15, Apache-2.0) locally and
+  set its path via the `BLUEPRINT_SRC` env var (defaults to `../blueprint`).
+  Authoritative tokens live at `packages/core/src/design-tokens/tokens/`.
 - `docs/handoffs/` — session handoff docs; newest bootstraps the next session.
 
 ## The development loop (autonomous)

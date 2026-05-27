@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
@@ -895,6 +896,20 @@ function CheckboxGallery() {
                         defaultChecked
                         indicatorProps={{ "data-compare": "cb-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
                     />
+                </div>
+            </Section>
+
+            {/* Whole-control specimens: the data-compare is on an inline-block wrapper so the
+                per-specimen crop covers the box AND its label — this is what catches layout-flow
+                bugs (e.g. a label wrapping below the indicator) that an indicator-only tag misses. */}
+            <Section title="Whole control (box + label)">
+                <div className="flex flex-col items-start gap-3">
+                    <span data-vcompare="cb-control-unchecked" className="inline-block">
+                        <Checkbox label="Unchecked" />
+                    </span>
+                    <span data-vcompare="cb-control-checked" className="inline-block">
+                        <Checkbox label="Checked" defaultChecked />
+                    </span>
                 </div>
             </Section>
 
@@ -4493,40 +4508,147 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
     );
 }
 
+/**
+ * Sidebar category grouping. Each COMPONENTS id should appear in exactly one group;
+ * any id missing from every group is collected into "Other" so nothing is silently
+ * dropped from the gallery (a guard against this list drifting from COMPONENTS).
+ */
+const CATEGORIES: { label: string; ids: string[] }[] = [
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
+    { label: "Overlays", ids: ["dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
+    { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
+    { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
+    { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+];
+
+type ComponentEntry = (typeof COMPONENTS)[number];
+
+const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
+    const byId = new Map(COMPONENTS.map((c) => [c.id, c]));
+    const groups = CATEGORIES.map((g) => ({
+        label: g.label,
+        items: g.ids.map((id) => byId.get(id)).filter((c): c is ComponentEntry => c != null),
+    }));
+    const seen = new Set(CATEGORIES.flatMap((g) => g.ids));
+    const leftover = COMPONENTS.filter((c) => !seen.has(c.id));
+    if (leftover.length) groups.push({ label: "Other", items: leftover });
+    return groups;
+})();
+
+/** The selected component is driven by the URL hash (`#button`) so links are shareable. */
+function useHash(): string {
+    const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
+    useEffect(() => {
+        const onChange = () => setHash(decodeURIComponent(window.location.hash.replace(/^#/, "")));
+        window.addEventListener("hashchange", onChange);
+        return () => window.removeEventListener("hashchange", onChange);
+    }, []);
+    return hash;
+}
+
+function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark: boolean; onToggleDark: () => void }) {
+    return (
+        <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+                <span className="text-heading-sm font-semibold text-foreground">analyst-ui</span>
+                <Button
+                    size="small"
+                    variant="minimal"
+                    aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                    icon={<Icon icon={dark ? "lightbulb" : "moon"} className="!text-current" />}
+                    onClick={onToggleDark}
+                />
+            </div>
+            <nav className="flex-1 overflow-y-auto px-2 py-3">
+                {CATEGORY_GROUPS.map((group) => (
+                    <div key={group.label} className="mb-4">
+                        <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                            {group.label}
+                        </div>
+                        <ul className="flex flex-col gap-px">
+                            {group.items.map((c) => {
+                                const active = c.id === selectedId;
+                                return (
+                                    <li key={c.id}>
+                                        <a
+                                            href={`#${c.id}`}
+                                            aria-current={active ? "page" : undefined}
+                                            className={cn(
+                                                "block rounded-bp px-2 py-1 text-body-sm transition-colors",
+                                                active
+                                                    ? "bg-primary text-primary-foreground"
+                                                    : "text-foreground hover:bg-[var(--interactive-hover)]",
+                                            )}
+                                        >
+                                            {c.title}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+            </nav>
+        </aside>
+    );
+}
+
+/** Main pane: title + the selected component's gallery. Overlays stay behind a Show toggle. */
+function ComponentView({ component }: { component: ComponentEntry }) {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, [component.id]);
+    return (
+        <div id={component.id} className="flex flex-col gap-5">
+            <h2 className="text-heading-lg font-semibold text-foreground">{component.title}</h2>
+            {OVERLAY_IDS.has(component.id) ? (
+                <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
+            ) : (
+                component.render()
+            )}
+        </div>
+    );
+}
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
+    const hash = useHash();
 
-    const shown = ONLY ? COMPONENTS.filter((c) => c.id === ONLY) : COMPONENTS;
-    // Isolated single-component view (harness mode): no header, just the specimens.
-    const isolated = ONLY != null && shown.length > 0;
+    // Isolated single-component view (harness mode): no chrome, just the specimens.
+    // This path MUST stay behavior-identical for tools/compare.sh.
+    if (ONLY != null && COMPONENTS.some((c) => c.id === ONLY)) {
+        const c = COMPONENTS.find((x) => x.id === ONLY)!;
+        return (
+            <DarkContext.Provider value={dark}>
+                <div className={dark ? "dark" : ""}>
+                    <div className="min-h-screen bg-background text-foreground p-10">
+                        <div className="mx-auto flex max-w-[760px] flex-col gap-8">
+                            <div id={c.id} className="flex flex-col gap-2.5">
+                                {c.render()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </DarkContext.Provider>
+        );
+    }
+
+    const selected = COMPONENTS.find((c) => c.id === hash) ?? COMPONENTS[0];
 
     return (
         <DarkContext.Provider value={dark}>
-        <div className={dark ? "dark" : ""}>
-            <div className="min-h-screen bg-background text-foreground p-10">
-                <div className="mx-auto flex max-w-[760px] flex-col gap-8">
-                    {!isolated && (
-                        <header className="flex items-center justify-between">
-                            <h1 className="text-heading-lg font-semibold text-foreground">analyst-ui</h1>
-                            <Button onClick={() => setDark((d) => !d)}>Toggle {dark ? "light" : "dark"}</Button>
-                        </header>
-                    )}
-
-                    {shown.map((c) => (
-                        <div key={c.id} id={c.id} className="flex flex-col gap-2.5">
-                            {!isolated && (
-                                <h2 className="text-heading-lg font-semibold text-foreground">{c.title}</h2>
-                            )}
-                            {!isolated && OVERLAY_IDS.has(c.id) ? (
-                                <OverlaySpecimen title={c.title}>{c.render()}</OverlaySpecimen>
-                            ) : (
-                                c.render()
-                            )}
+            <div className={dark ? "dark" : ""}>
+                <div className="flex min-h-screen bg-background text-foreground">
+                    <Sidebar selectedId={selected.id} dark={dark} onToggleDark={() => setDark((d) => !d)} />
+                    <main className="flex-1 overflow-x-hidden px-10 py-8">
+                        <div className="mx-auto max-w-[820px]">
+                            <ComponentView component={selected} />
                         </div>
-                    ))}
+                    </main>
                 </div>
             </div>
-        </div>
         </DarkContext.Provider>
     );
 }

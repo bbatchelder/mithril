@@ -31,21 +31,61 @@ It writes to `tools/comparison/screenshots/` (git-ignored):
 | --- | --- |
 | `<id>.<theme>.analyst.png` | full-page screenshot of analyst-ui |
 | `<id>.<theme>.blueprint.png` | full-page screenshot of the Blueprint reference |
+| `<id>.<theme>.<key>.spec.png` | per-specimen diff crop (written only for flagged keys) |
+| `<id>.<theme>.diff.png` | full-page pixel-diff image (auto-aligned) |
 | `<id>.<theme>.{analyst,blueprint}.styles.json` | captured computed styles |
+| `<id>.<theme>.{analyst,blueprint}.rects.json` | captured specimen bounding rects |
 
-…then prints a **computed-style diff** of every paired specimen. Read the two PNGs
-side-by-side for the visual check; read the diff for exact color/size drift.
+…then prints, per theme, **three** complementary diffs:
 
-## How specimens are paired
+1. a **computed-style diff** of every paired specimen (exact color/size drift), then
+2. a **per-specimen visual diff** (the reliable gate), then
+3. a **full-page visual diff** (a holistic catch-all guide).
 
-Each gallery tags key specimens with a `data-compare="<key>"` attribute. The harness
-pairs specimens **by key**, so the same key must exist in both galleries:
+### Why three
 
-- analyst-ui: `src/App.tsx`
-- Blueprint:  `tools/blueprint-reference/src/App.tsx`
+The computed-style diff is precise but only sees the tagged `[data-compare]` elements,
+so it is **blind to layout-flow bugs** — e.g. the real regression where a Checkbox label
+wrapped *below* its indicator: the indicator's own styles matched perfectly (6/6), yet
+the control was visibly broken.
 
-When you add a component, register it in both galleries' `COMPONENTS` arrays (same
-`id`) and tag matching specimens with identical `data-compare` keys.
+The **per-specimen visual diff** (`diff-specimens.mjs`) is the reliable visual gate. It
+crops each tagged specimen from each screenshot **by its own bounding rect** and compares
+the crops, so gallery-level layout is removed entirely — only the component's own pixels
+are compared, aligned by content. A faithful specimen lands at **SSIM ≈ 1.000 and ~0%
+mismatch**; a real difference drops it sharply and/or shows a **size mismatch**. In the
+checkbox case: the indicator crops stay 1.000 either way (the box is fine), but a
+*whole-control* specimen goes **0.994 → 0.071** (and height 18→31px) the moment the label
+wraps — a huge, unambiguous signal. (See the size note below for tagging.)
+
+The **full-page visual diff** (`diff-pixels.mjs`) is the catch-all: it auto-aligns the two
+screenshots and writes `diff.png`. Read its SSIM as a guide, **not** a gate — the two
+galleries have slightly different row spacing, so a faithful multi-row component drifts and
+won't reach 1.0 (the Checkbox gallery sits ~0.92 regardless). Eyeball `diff.png` to judge.
+
+(The full-page diff first applies one global `(dx, dy)` shift to register the two
+screenshots — without it every text edge shows up "doubled" from the few-pixel offset
+between the two independent galleries. The shift cancels that benign offset while
+preserving real structural differences, so they pop in `diff.png`.)
+
+## Tagging specimens
+
+Tag key specimens so the harness can pair them **by key** (the same key must exist in
+both galleries — `src/App.tsx` and `tools/blueprint-reference/src/App.tsx`):
+
+- `data-compare="<key>"` — paired in the computed-style diff **and** the per-specimen
+  visual diff. Use for the element whose styles you want checked (e.g. a control's box).
+- `data-vcompare="<key>"` — **visual-only** (skipped by the computed-style diff). Use for
+  a whole-control wrapper or any region you only want compared as pixels, where running it
+  through the style diff would just add noise.
+
+**A specimen is only as good as what its tag covers.** Tagging an inner box (a checkbox
+indicator) compares that box precisely but can't see a mislaid sibling label — wrap the
+whole control in an `inline-block` span with `data-vcompare` to catch layout-flow bugs
+(the rect then spans box + label, so a wrap shows up as a size mismatch + SSIM collapse).
+
+When you add a component, register it in both galleries' `COMPONENTS` arrays (same `id`)
+and tag matching specimens with identical keys on both sides.
 
 ## The color-normalization trick (important)
 
@@ -68,5 +108,12 @@ component needs different coverage.
 
 - `compare.sh` — entry point (in `tools/`, not here).
 - `capture-styles.js` — in-page computed-style capture + color normalization.
-- `diff-styles.mjs` — pairs specimens by key and prints the tolerant diff.
+- `capture-rects.js` — in-page bounding-rect capture for `[data-compare]`/`[data-vcompare]`.
+- `diff-styles.mjs` — pairs specimens by key and prints the tolerant computed-style diff.
+- `diff-specimens.mjs` — crops each specimen by its rect and prints the per-specimen
+  SSIM/size/mismatch table (the reliable gate). Writes `*.spec.png` for flagged keys.
+- `diff-pixels.mjs` — registers the two full-page screenshots and emits SSIM + pixel-mismatch +
+  the `diff.png` (holistic guide).
+- `diff-specimens.mjs` and `diff-pixels.mjs` need `pixelmatch` + `pngjs` (dev deps); both
+  soft-skip with a note if those aren't installed.
 - `screenshots/` — generated artifacts (git-ignored).
