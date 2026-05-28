@@ -4061,22 +4061,10 @@ function OpenDateInput({ dark }: { dark: boolean }) {
     // so the harness reliably sees both input + calendar in the DOM.
     return (
         <div className="flex flex-col gap-2 items-start">
-            {/* The input field with data-compare tag */}
-            <div
-                className="relative inline-block"
-                style={{ minWidth: 200 }}
-            >
-                {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
-                <InputGroup
-                    type="text"
-                    value="1/15/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="date-input-field"
-                />
-            </div>
-
-            {/* Popover calendar always visible — portaled with dark support */}
+            {/* Popover calendar always visible — portaled with dark support.
+                Mirrors DateInput's own Popover config: arrow visible, no minimal,
+                no inner padding. The input field is the Popover trigger so the arrow
+                centers over the input (matching the live component's behavior). */}
             <Popover
                 open={true}
                 onOpenChange={() => {}}
@@ -4086,13 +4074,24 @@ function OpenDateInput({ dark }: { dark: boolean }) {
                 side="bottom"
                 align="start"
                 sideOffset={4}
-                arrow={false}
-                minimal={true}
+                arrow={true}
+                minimal={false}
                 hasContentPadding={false}
                 dark={dark}
             >
-                {/* Invisible anchor so Popover has a trigger (it won't be seen) */}
-                <span />
+                <div
+                    className="relative inline-block"
+                    style={{ minWidth: 200 }}
+                >
+                    {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
+                    <InputGroup
+                        type="text"
+                        value="1/15/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="date-input-field"
+                    />
+                </div>
             </Popover>
         </div>
     );
