@@ -94,6 +94,19 @@ export interface DatePickerProps {
 const DEFAULT_MIN_DATE = new Date(1900, 0, 1);
 const DEFAULT_MAX_DATE = new Date(2100, 11, 31);
 
+// Caption HTMLSelect styling (Blueprint _date-picker-caption.scss):
+//   select: font-weight 600; padding-left $datepicker-padding (4px);
+//           padding-right $pt-icon-size-standard (16px)
+//   caret:  right $pt-spacing * 0.5 (2px) — narrower than the standalone select's 8px,
+//           so the displayed value doesn't collide with the double-caret. `[&>span]`
+//           targets the absolutely-positioned Icon span inside HTMLSelect's wrapper.
+const CAPTION_SELECT_CLS = "[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4 [&>span]:right-0.5";
+// Year select additionally pins min-width $pt-spacing * 15 (60px). Unlike the month
+// select (whose widest option, "September", is wider than the shown value and so
+// leaves slack before the caret), every year option is 4 digits, so without a
+// min-width the value butts right against the caret. (.bp6-datepicker-year-select)
+const CAPTION_YEAR_SELECT_CLS = `${CAPTION_SELECT_CLS} min-w-[60px]`;
+
 // ---------------------------------------------------------------------------
 // NavButton sub-component
 // ---------------------------------------------------------------------------
@@ -210,7 +223,7 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                         goToMonth(newMonth);
                     }}
                     aria-label={labelMonthDropdown()}
-                    className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                    className={CAPTION_SELECT_CLS}
                 >
                     {monthOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -229,7 +242,7 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                         goToMonth(newMonth);
                     }}
                     aria-label={labelYearDropdown({})}
-                    className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                    className={CAPTION_YEAR_SELECT_CLS}
                 >
                     {yearOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>

@@ -41,6 +41,12 @@ import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
 import { HTMLSelect } from "./html-select";
 
+// Caption HTMLSelect styling — see DatePicker's CAPTION_SELECT_CLS for the rationale.
+// caret right 2px ([&>span]:right-0.5) so the displayed value clears the double-caret;
+// year select pins min-width 60px since all year options are the same 4-digit width.
+const CAPTION_SELECT_CLS = "[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4 [&>span]:right-0.5";
+const CAPTION_YEAR_SELECT_CLS = `${CAPTION_SELECT_CLS} min-w-[60px]`;
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -219,7 +225,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -234,7 +240,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -277,7 +283,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -292,7 +298,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -313,7 +319,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -328,7 +334,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
