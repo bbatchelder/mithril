@@ -8,6 +8,11 @@ Worst offenders had their `*.spec.png` crops and full-page screenshots eyeballed
 
 > Originally a findings report — now annotated with remediation status as of 2026-05-28.
 
+> **Follow-up (2026-05-28):** after this audit closed, live-app eyeballing surfaced a few more
+> nits beyond the original 10 — NumericInput stepper details, missing date-popover arrows, the
+> calendar year/caret overlap, and the absent popover open/close animation. Those are tracked
+> and fixed in `docs/handoffs/0061-post-audit-polish.md` (not re-listed here).
+
 ## Remediation status (2026-05-28)
 
 All 10 Tier 1 + Tier 2 items in the TL;DR are addressed. Per-item state:
