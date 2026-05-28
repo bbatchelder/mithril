@@ -221,6 +221,10 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         "flex flex-row items-start gap-[8px]",
         // border-radius: 4px
         "rounded-bp",
+        // Suppress browser default focus ring — Blueprint's .bp6-menu-item is `outline:none`.
+        // The active/hover bg + intent text already provide the focus indication, so the
+        // browser ring on top reads as a duplicate "outline + filled bg" treatment.
+        "outline-none focus:outline-none focus-visible:outline-none",
         // padding: 4px 8px (medium); line-height: 22px
         effectiveSize === "small" && "px-[8px] py-[2px]",
         effectiveSize === "medium" && "px-[8px] py-[4px]",

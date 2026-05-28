@@ -302,18 +302,17 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                 {/* Handle (Blueprint .bp6-slider-handle) */}
                 <RadixSlider.Thumb
                     className={cn(
-                        // 16×16px, border-radius:4px, position:absolute
+                        // 16×16px, border-radius:4px (Blueprint .bp6-slider-handle), position:absolute
                         // overflow:visible so the value badge can show outside the handle bounds
                         "block h-4 w-4 rounded-bp overflow-visible",
                         // Light: button-like bg + handle box-shadow
-                        // bg = pt-button default ≈ light-gray-5 (#f6f7f9)
+                        // Blueprint computed: rgba(18,20,24,0.502) 0 0 0 1px, rgba(18,20,24,0.502) 0 1px 1px 0
                         "bg-[#f6f7f9]",
-                        // handle-box-shadow: 0 0 0 1px rgba(black,0.5), 0 1px 1px rgba(black,0.5)
-                        "shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_1px_1px_rgba(0,0,0,0.5)]",
+                        "shadow-[0_0_0_1px_rgba(18,20,24,0.5),0_1px_1px_rgba(18,20,24,0.5)]",
                         // hover: slightly deeper shadow
-                        "hover:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.6)] hover:cursor-grab hover:z-[2]",
+                        "hover:shadow-[0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.6)] hover:cursor-grab hover:z-[2]",
                         // active (grabbed): inset shadow + border + drop shadow
-                        "active:shadow-[inset_0_1px_1px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.2)] active:cursor-grabbing",
+                        "active:shadow-[inset_0_1px_1px_rgba(18,20,24,0.1),0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.2)] active:cursor-grabbing",
                         // focus: z-index
                         "focus:z-[1] focus:outline-none",
                         // Dark: gray-4 bg + dark-button-box-shadow
@@ -359,7 +358,9 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                             )}
                             style={{
                                 // margin-left: handle-size/2 = 8px (centers within handle)
-                                // transform: translate(-50%, label-offset) = translate(-50%, 20px)
+                                // translate(-50%, 20px) puts the pill at y = thumbTop(12) + 20 = 32,
+                                // just below the handle (handle ends at y=28). The tick-axis container
+                                // below positions axis labels at the same y=32 so they share a row.
                                 marginLeft: "8px",
                                 transform: "translate(-50%, 20px)",
                                 top: 0,
@@ -395,10 +396,11 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                                     // Blueprint's .bp6-slider-label has no color set, inherits body text
                                 )}
                                 style={{
-                                    // Blueprint: transform: translate(-50%, $label-offset)
-                                    // label-offset = 20px (= handle-size(16) + pt-spacing(4))
+                                    // Place axis labels at y=32 to share a row with the handle's value pill
+                                    // (handle top y=12 + pill translateY(20) = 32). 32px is also "below
+                                    // the handle" (handle bottom = y=28) so the row doesn't overlap the thumb.
                                     left: `${pct}%`,
-                                    transform: "translate(-50%, 20px)",
+                                    transform: "translate(-50%, 32px)",
                                 }}
                                 {...(_tagInternals && i === 0 ? { "data-compare": "slider-axis-label" } : {})}
                             >

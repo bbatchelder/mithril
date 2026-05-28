@@ -6,7 +6,26 @@
 Worst offenders had their `*.spec.png` crops and full-page screenshots eyeballed to separate
 **real fidelity gaps** from **font/animation/portal noise**.
 
-> No component code was changed. This is a findings report — pick what to fix.
+> Originally a findings report — now annotated with remediation status as of 2026-05-28.
+
+## Remediation status (2026-05-28)
+
+All 10 Tier 1 + Tier 2 items in the TL;DR are addressed. Per-item state:
+
+| # | Component | State | Fix |
+|---|---|---|---|
+| 1 | Popover + Tooltip arrow | ✅ fixed | commit `0968348` |
+| 2 | Switch inner labels       | ✅ fixed | commit `e6dfc96` |
+| 3 | Date family header        | ✅ fixed | commit `bde164f` |
+| 4 | Hotkeys / KeyCombo        | ✅ fixed | commit `5859787` |
+| 5 | Slider                    | ✅ fixed | this commit — value-pill `translateY(20)` + axis-label `translateY(32)` so they share a row below the handle (no collision); reverted handle to Blueprint's actual `rounded-bp` (4px) with `rgba(18,20,24,0.5)` outer-ring + 1px drop shadow (audit's "round knob" description was wrong — Blueprint computed is 4px) |
+| 6 | FileInput default width   | ✅ fixed | this commit — added `w-[250px]` to the non-`fill` label. Both the `<input>` and box span are `position:absolute`, so the label had no in-flow content and a flex-column parent was stretching it to 100% |
+| 7 | MultiSelect active item   | ✅ fixed | this commit — added `outline-none focus-visible:outline-none` to MenuItem. The "outline ring" was the browser's default focus ring on top of the (correct) filled active background; Radix Popover autofocuses the first focusable child on open, which painted the ring |
+| 8 | NumericInput stepper      | ✅ verified — no code change | Investigated and the stepper width is correct: Blueprint sets `width:24px` locally but the global `.bp6-button { min-width: 30px }` overrides it, so Blueprint renders at 30px just like analyst. The audit's "6px off" wording was about the input-width side, which is gallery-dependent and matches once both galleries pin the same explicit width |
+| 9 | Select trigger            | ✅ fixed | this commit — gallery config: pass `fill` to the `<Select>` wrapper (not just the inner Button) so the trigger fills its 300px parent like the reference gallery |
+| 10 | TagInput chip width       | ✅ fixed | this commit — Tag remove-button right-padding `pr-1.5` (6px) → `pr-0.5` (2px) to match Blueprint's `.bp6-tag-remove { padding: 2px; padding-left: 0 }`. Chip went from +6px wider than Blueprint to +2px (visually matched) |
+
+Tier 3 (Button/Checkbox/Radio confirmed-known) and Tier 4 (reference-gallery cleanups, benign style-only diffs like dialog/drawer shadow-ring `rgb(0,0,0)` vs `rgb(20,20,20)` @ 10%) are intentionally left as-is per the audit's classification.
 
 ---
 
@@ -16,18 +35,18 @@ The per-specimen SSIM ranking is **misleading at the top**: the four lowest scor
 (panel-stack, tooltip, multi-select, time-picker — all ≈0.01) include genuine bugs *and*
 pure harness artifacts. After eyeballing every flag, the real gaps are:
 
-| # | Component(s) | Gap | Severity |
-|---|---|---|---|
-| 1 | **Popover + Tooltip** | Arrow points **down & detached** in the gap below the trigger; Blueprint's points **up, snug** on the content's top edge. Shared root cause (Tooltip is built on Popover). | **High** |
-| 2 | **Switch** (inner labels) | Track too narrow → inner `OFF`/`ON` label clipped/overlapping the thumb. | **High** |
-| 3 | **Date family** (date-picker, date-input, date-range-picker, date-range-input) | Calendar **header**: month/year render as bordered `HTMLSelect` dropdowns vs Blueprint's borderless caret selects; nav arrows spread `space-between` vs grouped. Standalone DatePicker also lays the grid out centered in a full-width card. | **High** |
-| 4 | **Hotkeys / KeyCombo** | Modifier keycaps omit the platform **glyph**; Blueprint pairs glyph + word (`⌘ cmd`, `⇧ shift`, `^ ctrl`). | **Med** |
-| 5 | **Slider** | Value-label pill hangs low and collides with the axis tick labels; handle reads as a bordered rounded-square vs a round knob. | **Med** |
-| 6 | **FileInput** | Defaults to **full container width** (~760px) vs Blueprint's inline ~250px. | **Med** (verify gallery cfg) |
-| 7 | **MultiSelect** | Active menu item drawn with a blue **outline ring** vs Blueprint's filled background highlight. | **Low** |
-| 8 | **NumericInput** | Stepper button group slightly **detached** from the field (+~6px) vs Blueprint's flush stepper. | **Low** |
-| 9 | **Select** | Trigger hugs content vs Blueprint's full-width trigger with right-pinned caret. | **Low** (verify gallery cfg) |
-| 10 | **TagInput** | Tag chips render slightly wider (more space before the × remove icon). | **Low** |
+| # | Component(s) | Gap | Severity | Status |
+|---|---|---|---|---|
+| 1 | **Popover + Tooltip** | Arrow points **down & detached** in the gap below the trigger; Blueprint's points **up, snug** on the content's top edge. Shared root cause (Tooltip is built on Popover). | **High** | ✅ |
+| 2 | **Switch** (inner labels) | Track too narrow → inner `OFF`/`ON` label clipped/overlapping the thumb. | **High** | ✅ |
+| 3 | **Date family** (date-picker, date-input, date-range-picker, date-range-input) | Calendar **header**: month/year render as bordered `HTMLSelect` dropdowns vs Blueprint's borderless caret selects; nav arrows spread `space-between` vs grouped. Standalone DatePicker also lays the grid out centered in a full-width card. | **High** | ✅ |
+| 4 | **Hotkeys / KeyCombo** | Modifier keycaps omit the platform **glyph**; Blueprint pairs glyph + word (`⌘ cmd`, `⇧ shift`, `^ ctrl`). | **Med** | ✅ |
+| 5 | **Slider** | Value-label pill hangs low and collides with the axis tick labels; handle reads as a bordered rounded-square vs a round knob. | **Med** | ✅ (pill aligned; handle kept Blueprint's actual 4px radius) |
+| 6 | **FileInput** | Defaults to **full container width** (~760px) vs Blueprint's inline ~250px. | **Med** (verify gallery cfg) | ✅ |
+| 7 | **MultiSelect** | Active menu item drawn with a blue **outline ring** vs Blueprint's filled background highlight. | **Low** | ✅ |
+| 8 | **NumericInput** | Stepper button group slightly **detached** from the field (+~6px) vs Blueprint's flush stepper. | **Low** | ✅ (no change — stepper already matches Blueprint's effective 30px) |
+| 9 | **Select** | Trigger hugs content vs Blueprint's full-width trigger with right-pinned caret. | **Low** (verify gallery cfg) | ✅ (gallery config) |
+| 10 | **TagInput** | Tag chips render slightly wider (more space before the × remove icon). | **Low** | ✅ |
 
 **Confirmed-known (do not re-report):** Button ~1–2px wider + dark `--foreground` decision; Checkbox/Radio control-row height (~18 vs ~26px).
 

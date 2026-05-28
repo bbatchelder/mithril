@@ -3538,6 +3538,7 @@ function SelectGallery() {
                             <MenuItem disabled text="No results." />
                         }
                         dark={dark}
+                        fill
                         popoverProps={{ open: true, onOpenChange: () => {} }}
                     >
                         <Button

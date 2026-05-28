@@ -273,8 +273,10 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
                         "opacity-70 hover:opacity-100 active:opacity-100",
                         // Negative right margin to stay within the tag padding zone.
                         size === "medium" ? "-mr-1 -my-0.5" : "-mr-2 -my-1.5",
-                        // Padding on the remove button itself (click-area enlarger).
-                        size === "medium" ? "pl-0 pr-1.5 py-0.5" : "pl-0 pr-2 py-1.5",
+                        // Padding on the remove button — matches Blueprint's .bp6-tag-remove:
+                        //   `padding: 2px; padding-left: 0;`
+                        // Earlier we used pr-1.5 (6px) which inflated chip width by ~6px.
+                        size === "medium" ? "pl-0 pr-0.5 py-0.5" : "pl-0 pr-1 py-1.5",
                     )}
                 >
                     <Icon

@@ -245,9 +245,10 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
 
     // ── Stepper button common classes ───────────────────────────────────────
     // shadow-button = Blueprint's solid button shadow (matches .bp6-button)
-    // Blueprint's numeric-input buttons: flex:1 1 11px, min-h-0, p-0, w-24px
-    // min-width in Blueprint is the standard $pt-button-height = 30px (from global .bp6-button)
-    // We match with min-w-[30px] so that computed minWidth=30px equals Blueprint.
+    // Blueprint sets `width: 24px` on the .bp6-numeric-input stepper button, but
+    // the global `.bp6-button { min-width: 30px }` rule still applies because
+    // they're different properties — final rendered width = max(min,width) = 30px.
+    // Match that with min-w-[30px] so the stepper sits at 30px like Blueprint.
     const stepperButtonBase = cn(
         // Layout — flex split: each button takes half the input height
         "flex-1 flex items-center justify-center",
