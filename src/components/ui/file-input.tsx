@@ -128,12 +128,11 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
             className={cn(
                 // Wrapper: inline-block by default; fill → block/100%
                 "relative",
-                // Blueprint default width = $pt-spacing * 50 = 200px; analyst goes a touch
-                // wider (matches Blueprint's hidden-input min-width contribution + browse
-                // button gutter at ~250px). Required because both the native input and the
+                // Blueprint's computed width is 253px (input min-width + button gutter +
+                // 3px border accounting). Required because both the native input and the
                 // visible box span are position:absolute — the label has no in-flow content,
                 // so without an explicit width a flex-column parent stretches it to 100%.
-                fill ? "block w-full" : "inline-block w-[250px]",
+                fill ? "block w-full" : "inline-block w-[253px]",
                 // Height matches the box span (sized by size variant)
                 size === "small" && "h-6",
                 size === "medium" && "h-7.5",
