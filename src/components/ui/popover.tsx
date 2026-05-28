@@ -274,6 +274,10 @@ export function Popover({
                             "dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]",
                             // Blueprint: z-index: $pt-z-index-overlay
                             "z-[20]",
+                            // Open/close animation (globals.css). Full scale+fade for normal
+                            // popovers (with arrow); fade-only for minimal ones — matches
+                            // Blueprint's scale-transition vs minimal-animation split.
+                            showArrow ? "bp-popover-animated" : "bp-popover-animated-minimal",
                             // Suppress Radix focus outline
                             "outline-none",
                             // Set text color: portaled content needs explicit color.
