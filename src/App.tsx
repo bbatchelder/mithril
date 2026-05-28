@@ -4231,27 +4231,11 @@ function DateRangeInputGallery() {
 function OpenDateRangeInput({ dark }: { dark: boolean }) {
     return (
         <div className="flex flex-col gap-2 items-start">
-            {/* Two input fields side-by-side, matching Blueprint's control-group layout */}
-            <div className="inline-flex flex-row items-stretch">
-                {/* Start input — tagged for harness */}
-                <InputGroup
-                    type="text"
-                    value="1/8/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="dri-start"
-                />
-                {/* End input — tagged for harness */}
-                <InputGroup
-                    type="text"
-                    value="1/20/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="dri-end"
-                />
-            </div>
-
-            {/* Popover always visible — portaled DateRangePicker */}
+            {/* Popover always visible — portaled DateRangePicker.
+                Mirrors DateRangeInput's own Popover config: arrow visible, no minimal,
+                no inner padding (the calendar carries its own). Trigger is the
+                inline-flex row containing both inputs so the arrow centers over the
+                trigger row (matching the live component's behavior). */}
             <Popover
                 open={true}
                 onOpenChange={() => {}}
@@ -4261,12 +4245,29 @@ function OpenDateRangeInput({ dark }: { dark: boolean }) {
                 side="bottom"
                 align="start"
                 sideOffset={4}
-                arrow={false}
-                minimal={true}
+                arrow={true}
+                minimal={false}
                 hasContentPadding={false}
                 dark={dark}
             >
-                <span />
+                <div className="inline-flex flex-row items-stretch">
+                    {/* Start input — tagged for harness */}
+                    <InputGroup
+                        type="text"
+                        value="1/8/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="dri-start"
+                    />
+                    {/* End input — tagged for harness */}
+                    <InputGroup
+                        type="text"
+                        value="1/20/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="dri-end"
+                    />
+                </div>
             </Popover>
         </div>
     );

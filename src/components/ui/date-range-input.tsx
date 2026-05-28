@@ -16,7 +16,7 @@
  *   - Blueprint wraps both in a .bp6-control-group div (flex row, align-items: stretch)
  *   - No divider between the two inputs — they are adjacent with no gap (Blueprint: control-group)
  *   - Both inputs have the same height/style as a standard InputGroup (30px medium)
- *   - Popover placement: bottom-start, minimal (no padding, no arrow)
+ *   - Popover placement: bottom-start; arrow visible; no inner padding (calendar carries its own)
  *   - The popover contains a DateRangePicker (two-calendar compact layout)
  *   - Focus start → open popover, clicking a start date; then click end date → both filled, close
  *   - Default format: M/d/yyyy (e.g. "1/8/2026" for Jan 8, 2026)
@@ -535,8 +535,8 @@ export function DateRangeInput({
             side={popoverProps.side ?? "bottom"}
             align={popoverProps.align ?? "start"}
             sideOffset={popoverProps.sideOffset ?? 4}
-            arrow={false}
-            minimal={true}
+            arrow={true}
+            minimal={false}
             hasContentPadding={false}
             dark={dark}
             disabled={disabled}
