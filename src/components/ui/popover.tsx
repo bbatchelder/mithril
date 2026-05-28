@@ -181,6 +181,24 @@ export interface PopoverProps {
     /** Prevent the popover from opening when true. @default false */
     disabled?: boolean;
 
+    /**
+     * Render `children` as a positioning *anchor* (`Popover.Anchor`) instead of a
+     * *trigger* (`Popover.Trigger`). An anchor only provides the positioning
+     * reference — it does NOT toggle the popover on click.
+     *
+     * Use this when the consumer drives `open` itself (focus / blur / selection)
+     * and Radix's click-to-toggle would fight that. The canonical case is
+     * DateRangeInput: focusing an input opens the popover, but the trailing click
+     * bubbles to the wrapping trigger and Radix toggles it straight back closed —
+     * so the popover only stayed open while the mouse button was held down. With
+     * an anchor there is no toggle, so the focus-driven open survives the click.
+     *
+     * Open/close still works: outside-click (`onPointerDownOutside`) and Escape
+     * (`onEscapeKeyDown`) are handled by Content, independent of the trigger.
+     * @default false
+     */
+    anchorOnly?: boolean;
+
     /** Additional class on the popover panel element. */
     className?: string;
     /** Inline styles on the popover panel element. */
@@ -223,6 +241,7 @@ export function Popover({
     matchTargetWidth = false,
     dark = false,
     disabled = false,
+    anchorOnly = false,
     className,
     style,
     children,
@@ -240,8 +259,14 @@ export function Popover({
             defaultOpen={disabled ? false : defaultOpen}
             onOpenChange={disabled ? undefined : onOpenChange}
         >
-            {/* Trigger — asChild forwards Radix's accessibility props onto the child element */}
-            <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
+            {/* Trigger vs Anchor — both forward via asChild. Anchor positions only
+                (no click-to-toggle); use it when the consumer drives `open` and the
+                trigger's toggle would fight that (see `anchorOnly`). */}
+            {anchorOnly ? (
+                <RadixPopover.Anchor asChild>{children}</RadixPopover.Anchor>
+            ) : (
+                <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
+            )}
 
             <RadixPopover.Portal>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.

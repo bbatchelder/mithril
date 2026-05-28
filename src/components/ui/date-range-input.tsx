@@ -540,6 +540,11 @@ export function DateRangeInput({
             hasContentPadding={false}
             dark={dark}
             disabled={disabled}
+            /* The two inputs share one popover and open it on focus; the wrapping
+               trigger would otherwise toggle the popover back closed on the trailing
+               click (the popover only survived while the mouse was held). Use an
+               anchor instead so focus-driven open survives. See popover.tsx anchorOnly. */
+            anchorOnly
         >
             {/*
              * Blueprint wraps both inputs in a .bp6-control-group div (flex row, align-items:stretch).
