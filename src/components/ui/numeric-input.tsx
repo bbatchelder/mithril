@@ -255,13 +255,20 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
         "basis-[11px] min-h-0 p-0",
         stepperWidth,
         "min-w-[30px]",
-        // Colors from intent map
+        // Colors from intent map (resting/hover/active). Disabled overrides below.
         stepperColors,
         // Shadow: Blueprint's solid button shadow
         "shadow-button",
         // Misc
         "outline-none cursor-pointer select-none transition-colors duration-100 ease-bp",
-        "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+        // Disabled — match the input's disabled treatment regardless of intent
+        // (Blueprint resets intent colors on disabled steppers to the neutral disabled tone).
+        "disabled:cursor-not-allowed disabled:shadow-none",
+        "disabled:bg-[rgba(211,216,222,0.5)] dark:disabled:bg-[rgba(64,72,84,0.5)]",
+        "disabled:hover:bg-[rgba(211,216,222,0.5)] dark:disabled:hover:bg-[rgba(64,72,84,0.5)]",
+        "disabled:text-foreground-disabled",
+        // SVG sizing — Icon's own wrapper span carries text-foreground; pass `!text-current`
+        // on each Icon below so it inherits the button's intent-foreground (white on colored bg).
         "[&_svg]:size-[12px] [&_svg]:shrink-0",
     );
 
@@ -277,7 +284,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(1, e);
             }}
         >
-            <Icon icon="chevron-up" size={12} aria-hidden />
+            <Icon icon="chevron-up" size={12} className="!text-current" aria-hidden />
         </button>
     );
 
@@ -293,16 +300,23 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(-1, e);
             }}
         >
-            <Icon icon="chevron-down" size={12} aria-hidden />
+            <Icon icon="chevron-down" size={12} className="!text-current" aria-hidden />
         </button>
     );
 
     // ── Stepper column ──────────────────────────────────────────────────────
     // Vertical flex column, self-stretch so it matches the input height.
     // NO overflow-hidden — buttons carry their own corner radii.
+    // Blueprint's ControlGroup adds `margin-right: $pt-spacing * 0.5 = 2px` between
+    // non-last children; the stepper inherits that gap from the input. Mirror it
+    // with an ml-/mr- on the stepper depending on which side it sits.
     const stepper = (
         <div
-            className="flex flex-col self-stretch"
+            className={cn(
+                "flex flex-col self-stretch",
+                buttonPosition === "right" && "ml-[2px]",
+                buttonPosition === "left" && "mr-[2px]",
+            )}
             aria-hidden
         >
             {incrementBtn}
