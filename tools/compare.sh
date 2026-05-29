@@ -23,6 +23,13 @@
 #      catch-all (a guide, not a gate; see diff-pixels.mjs).
 #
 # Dev servers are auto-started if not already reachable (and left running).
+#
+# NOTE: do NOT pipe this script to `tail`/`head` — if it has to auto-start a dev
+# server, the spawned vite/esbuild can inherit the pipe's write end and the pipe
+# never closes (the script looks hung). Redirect to a file instead and grep it:
+#   tools/compare.sh <id> both > /tmp/cmp-<id>.log 2>&1 ; grep -E 'SSIM|match ·' /tmp/cmp-<id>.log
+# (When the servers are already up — e.g. managed by `tap` — nothing is spawned
+# and piping is safe, but the file-redirect habit is the reliable default.)
 
 set -euo pipefail
 
@@ -56,7 +63,10 @@ ensure_server() {
         return
     fi
     echo "… starting $name dev server on :$port"
-    (cd "$dir" && nohup pnpm dev >"/tmp/analyst-compare-$name.log" 2>&1 &)
+    # Detach stdin from /dev/null too (not just stdout/stderr → file): otherwise the
+    # spawned vite/esbuild can keep this script's stdout pipe open and a `| tail`
+    # caller deadlocks (see header note). Full redirection makes piping safe.
+    (cd "$dir" && nohup pnpm dev >"/tmp/analyst-compare-$name.log" 2>&1 </dev/null &)
     for _ in $(seq 1 60); do
         if curl -sf -o /dev/null --max-time 1 "http://localhost:$port"; then
             echo "✓ $name up on :$port"

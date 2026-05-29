@@ -1926,10 +1926,15 @@ function DrawerGallery() {
             const panel = document.querySelector(`.${Classes.DRAWER}`);
             const header = panel?.querySelector(`.${Classes.DRAWER_HEADER}`);
             const body = panel?.querySelector(`.${Classes.DRAWER_BODY}`);
+            // Blueprint's drawer close button reuses the dialog close-button class
+            // (drawer.tsx → className={Classes.DIALOG_CLOSE_BUTTON}). analyst's Drawer
+            // tags its close button drawer-close, so pair it here for the harness.
+            const close = panel?.querySelector(`.${Classes.DIALOG_CLOSE_BUTTON}`);
 
             if (panel) panel.setAttribute("data-compare", "drawer-panel");
             if (header) header.setAttribute("data-compare", "drawer-header");
             if (body) body.setAttribute("data-compare", "drawer-body");
+            if (close) close.setAttribute("data-compare", "drawer-close");
         }
         tag();
         const t = setTimeout(tag, 100);
