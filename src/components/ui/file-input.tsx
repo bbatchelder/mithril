@@ -254,7 +254,7 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                         // Default/none solid Button colors (mirrors HTMLSelect and Button solid/none)
                         "bg-light-gray-5 shadow-button",
                         "text-foreground",
-                        "dark:bg-dark-gray-3 dark:shadow-button",
+                        "dark:bg-[#303740] dark:shadow-button",
                         "dark:text-foreground",
                         // Hover: Blueprint pt-button-hover (via label:hover → span:hover inheritance)
                         // Note: hover is verified visually; the harness only captures resting state.

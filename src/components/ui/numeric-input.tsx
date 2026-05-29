@@ -91,7 +91,9 @@ export interface NumericInputProps
 // ── Intent color maps for solid stepper buttons ──────────────────────────────
 // Mirrors Button component's SOLID map for none+intents (literal utility strings).
 const STEPPER_COLORS: Record<NumericInputIntent, string> = {
-    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-dark-gray-3 dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-foreground",
+    // Dark rest bg is Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740,
+    // a hair lighter than the flat dark-gray-3 (#2f343c) used for *panels*. See handoff 0063.
+    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-foreground",
     primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground",
     success: "bg-success hover:bg-success-hover active:bg-success-active text-success-foreground",
     warning: "bg-orange-5 hover:bg-orange-4 active:bg-orange-3 text-warning-foreground",

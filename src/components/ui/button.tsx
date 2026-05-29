@@ -17,7 +17,9 @@ const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "dange
  * pressed (`:active`) fill so the `active` prop renders the same look.
  */
 const SOLID: Record<ButtonIntent, string> = {
-    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-dark-gray-3 dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
+    // Dark rest bg = Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740
+    // (a hair lighter than the flat dark-gray-3 #2f343c used for panels). See handoff 0063.
+    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
     primary:
         "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active data-[active=true]:bg-primary-active",
     success:
