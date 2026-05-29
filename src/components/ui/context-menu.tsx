@@ -41,6 +41,34 @@ import * as RadixContextMenu from "@radix-ui/react-context-menu";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { MenuItemSlotContext, type MenuItemSlotProps } from "./menu";
+
+/**
+ * Slot that renders a MenuItem's interactive element as a Radix ContextMenu.Item, so
+ * Radix supplies roving focus, arrow-key navigation, typeahead, and Escape. Provided to
+ * the consumer's `<Menu>`/`<MenuItem>` content via MenuItemSlotContext — consumers keep
+ * authoring `content={<Menu><MenuItem/></Menu>}` unchanged.
+ */
+function RadixMenuItemSlot({
+    className,
+    disabled,
+    textValue,
+    onSelect,
+    children,
+    "data-compare": dataCompare,
+}: MenuItemSlotProps) {
+    return (
+        <RadixContextMenu.Item
+            className={className}
+            disabled={disabled}
+            textValue={textValue}
+            onSelect={(event) => onSelect?.(event)}
+            data-compare={dataCompare}
+        >
+            {children}
+        </RadixContextMenu.Item>
+    );
+}
 
 export interface ContextMenuProps {
     /**
@@ -188,7 +216,11 @@ export function ContextMenu({
                                 "rounded-bp",
                             )}
                         >
-                            {content}
+                            {/* Inject the Radix item slot so the consumer's MenuItems
+                                become Radix ContextMenu.Items (keyboard nav + typeahead). */}
+                            <MenuItemSlotContext.Provider value={RadixMenuItemSlot}>
+                                {content}
+                            </MenuItemSlotContext.Provider>
                         </div>
                     </RadixContextMenu.Content>
                 </div>
