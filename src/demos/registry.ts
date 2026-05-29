@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import { ProjectBoard } from "./board/ProjectBoard";
 import { SocConsole } from "./soc/SocConsole";
 
 export interface DemoEntry {
@@ -19,5 +20,11 @@ export const DEMOS: DemoEntry[] = [
         title: "SOC Console",
         description: "Security Operations Center analyst console — triage, investigate, and respond to alerts.",
         component: SocConsole,
+    },
+    {
+        id: "board",
+        title: "Project Board",
+        description: "Kanban project board — drag tasks across columns, filter, and edit details inline.",
+        component: ProjectBoard,
     },
 ];
