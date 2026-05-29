@@ -19,3 +19,5 @@ tools/comparison/screenshots/
 # Claude Code local runtime artifacts
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+.tap
