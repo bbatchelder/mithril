@@ -83,9 +83,21 @@
  */
 
 import * as RadixPopover from "@radix-ui/react-popover";
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, useCallback, useRef, useState } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+/** Compose two optional event handlers into one. */
+function composeHandlers<E>(
+    theirs: ((e: E) => void) | undefined,
+    ours: (e: E) => void,
+): (e: E) => void {
+    return (e: E) => {
+        theirs?.(e);
+        ours(e);
+    };
+}
 
 export type PopoverSide = "top" | "right" | "bottom" | "left";
 export type PopoverAlign = "start" | "center" | "end";
@@ -199,6 +211,19 @@ export interface PopoverProps {
      */
     anchorOnly?: boolean;
 
+    /**
+     * How the popover opens:
+     * - `"click"` (default): Radix's click-to-toggle on the trigger.
+     * - `"hover"`: opens on pointer enter of the trigger, closes on leave (with a short
+     *   grace delay so the pointer can travel to the content). Renders `children` as an
+     *   anchor so click does not also toggle. Escape still closes.
+     * @default "click"
+     */
+    interactionKind?: "click" | "hover";
+
+    /** Grace period (ms) before a hover popover closes after the pointer leaves. @default 100 */
+    hoverCloseDelay?: number;
+
     /** Additional class on the popover panel element. */
     className?: string;
     /** Inline styles on the popover panel element. */
@@ -242,6 +267,8 @@ export function Popover({
     dark = false,
     disabled = false,
     anchorOnly = false,
+    interactionKind = "click",
+    hoverCloseDelay = 100,
     className,
     style,
     children,
@@ -253,17 +280,78 @@ export function Popover({
     // Radix sideOffset still provides a small gap so the panel doesn't overlap the trigger.
     const resolvedSideOffset = minimal ? 0 : sideOffset;
 
+    // ── Hover interaction mode ────────────────────────────────────────────────
+    // Radix Popover is click-only, so we drive open state from pointer enter/leave.
+    // Uncontrolled hover popovers track their own state; controlled ones defer to `open`.
+    const isHover = interactionKind === "hover";
+    const isControlled = open !== undefined;
+    const [hoverOpen, setHoverOpen] = useState(defaultOpen ?? false);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearCloseTimer = useCallback(() => {
+        if (closeTimer.current) {
+            clearTimeout(closeTimer.current);
+            closeTimer.current = null;
+        }
+    }, []);
+
+    const hoverOpenNow = useCallback(() => {
+        if (disabled) return;
+        clearCloseTimer();
+        if (!isControlled) setHoverOpen(true);
+        onOpenChange?.(true);
+    }, [disabled, isControlled, onOpenChange, clearCloseTimer]);
+
+    const hoverCloseSoon = useCallback(() => {
+        clearCloseTimer();
+        closeTimer.current = setTimeout(() => {
+            if (!isControlled) setHoverOpen(false);
+            onOpenChange?.(false);
+        }, hoverCloseDelay);
+    }, [hoverCloseDelay, isControlled, onOpenChange, clearCloseTimer]);
+
+    // Radix-initiated changes (Escape) keep our hover state in sync.
+    const handleRootOpenChange = useCallback(
+        (next: boolean) => {
+            if (isHover && !isControlled) setHoverOpen(next);
+            onOpenChange?.(next);
+        },
+        [isHover, isControlled, onOpenChange],
+    );
+
+    // Resolve the open prop passed to Radix.
+    const rootOpen = disabled ? false : isHover && !isControlled ? hoverOpen : open;
+    // Hover mode uses an anchor (no click-toggle); otherwise honor anchorOnly.
+    const useAnchor = anchorOnly || isHover;
+
+    // In hover mode, attach pointer handlers to the trigger element (merged with any
+    // the consumer already set), so click is never the open mechanism.
+    const triggerChild =
+        isHover && isValidElement(children)
+            ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+                  onPointerEnter: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerEnter as ((e: unknown) => void) | undefined,
+                      hoverOpenNow,
+                  ),
+                  onPointerLeave: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerLeave as ((e: unknown) => void) | undefined,
+                      hoverCloseSoon,
+                  ),
+              })
+            : children;
+
     return (
         <RadixPopover.Root
-            open={disabled ? false : open}
+            open={isHover ? rootOpen : disabled ? false : open}
             defaultOpen={disabled ? false : defaultOpen}
-            onOpenChange={disabled ? undefined : onOpenChange}
+            onOpenChange={disabled ? undefined : isHover ? handleRootOpenChange : onOpenChange}
         >
             {/* Trigger vs Anchor — both forward via asChild. Anchor positions only
-                (no click-to-toggle); use it when the consumer drives `open` and the
-                trigger's toggle would fight that (see `anchorOnly`). */}
-            {anchorOnly ? (
-                <RadixPopover.Anchor asChild>{children}</RadixPopover.Anchor>
+                (no click-to-toggle); used for `anchorOnly` and for hover mode. */}
+            {useAnchor ? (
+                <RadixPopover.Anchor asChild>{triggerChild}</RadixPopover.Anchor>
             ) : (
                 <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
             )}
@@ -323,6 +411,9 @@ export function Popover({
                         onPointerDownOutside={
                             canOutsideClickClose ? undefined : (e) => e.preventDefault()
                         }
+                        // Hover mode: keep open while the pointer is over the panel; close on leave.
+                        onPointerEnter={isHover ? clearCloseTimer : undefined}
+                        onPointerLeave={isHover ? hoverCloseSoon : undefined}
                     >
                         {/* Popover content inner div — Blueprint: .bp6-popover-content
                             background is here (not on the outer .bp6-popover which is transparent).

@@ -365,6 +365,12 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                     disabled={disabled}
                     leftIcon={leftIcon}
                     value={displayValue}
+                    // WAI-ARIA spinbutton: expose the current value and bounds to AT.
+                    role="spinbutton"
+                    aria-valuenow={Number.isNaN(parseFloat(displayValue)) ? undefined : parseFloat(displayValue)}
+                    aria-valuemin={min}
+                    aria-valuemax={max}
+                    aria-valuetext={displayValue === "" ? undefined : displayValue}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     onKeyPress={handleKeyPress}

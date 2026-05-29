@@ -189,6 +189,9 @@ export function Alert({
                     <div className="fixed inset-0 flex items-center justify-center z-overlay pointer-events-none">
                         <RadixDialog.Content
                             data-compare="alert-panel"
+                            // Blueprint Alert is an alertdialog (a modal that interrupts to
+                            // confirm/warn), not a plain dialog. Override Radix's role="dialog".
+                            role="alertdialog"
                             className={cn(
                                 // Layout
                                 "flex flex-col",
