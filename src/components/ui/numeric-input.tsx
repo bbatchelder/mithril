@@ -326,6 +326,12 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
 
     // ── Outer wrapper (horizontal flex row, items-stretch) ──────────────────
     // items-stretch makes children match the tallest child (the input's height).
+    //
+    // Width semantics match Blueprint: `style` (and its `width`) is forwarded to the
+    // inner <input>, NOT the wrapper. Blueprint's NumericInput spreads htmlInputProps
+    // (incl. style) onto its InputGroup, so a `width` sizes the field and the ~30px
+    // stepper sits *outside* it (total ≈ width + 2px gap + 30). When `fill`, the
+    // control instead stretches to 100% and the input flexes to fill the row.
     return (
         <div
             className={cn(
@@ -333,12 +339,13 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 fill ? "w-full" : "inline-flex",
                 className,
             )}
-            style={style}
+            style={fill ? style : undefined}
         >
             {buttonPosition === "left" && stepper}
 
-            {/* Flex-1 wrapper so the InputGroup (with fill) takes the remaining row space */}
-            <div className={cn("min-w-0", buttonPosition !== "none" ? "flex-1" : "")}>
+            {/* When `fill`, flex-1 lets the InputGroup take the remaining row space.
+                Otherwise the field is content/width-sized and the wrapper shrinks to it. */}
+            <div className={cn("min-w-0", fill && buttonPosition !== "none" ? "flex-1" : "")}>
                 <InputGroup
                     ref={(el) => {
                         // Forward ref to both our internal ref and the caller's forwarded ref
@@ -350,7 +357,8 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                     inputMode="decimal"
                     size={resolvedSize}
                     intent={intent}
-                    fill
+                    fill={fill}
+                    style={fill ? undefined : style}
                     disabled={disabled}
                     leftIcon={leftIcon}
                     value={displayValue}
