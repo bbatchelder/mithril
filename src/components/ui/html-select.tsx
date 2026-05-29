@@ -122,8 +122,9 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                     // Default: right = input-padding-horizontal * 3 = 24px
                     // Large:   right = input-padding-horizontal * 3.5 = 28px
                     large ? "pl-2 pr-7" : "pl-2 pr-6",
-                    // Text color: foreground (dark-gray-1 light / light-gray-5 dark)
-                    "text-foreground",
+                    // Text color: foreground in light; white in dark to match Blueprint's
+                    // dark control text (not #f6f7f9). Delta #1 — see handoff 0064.
+                    "text-foreground dark:text-white",
                     // Font size: large uses body-lg (16px), default uses body (14px)
                     large ? "text-body-lg" : "text-body",
                     // Background + shadow: mirrors solid/none Button

@@ -4885,12 +4885,18 @@ function TimezoneSelectGallery() {
             if (!menuUl) return;
             menuUl.setAttribute("data-compare", "tz-menu");
 
-            // tz-item: "New York" — index 6 in the minimal list
-            // Blueprint's MINIMAL_TIMEZONE_ITEMS order:
-            //   0=UTC, 1=Hawaii(Honolulu), 2=Alaska(Anchorage), 3=LA, 4=Denver, 5=Chicago, 6=NewYork
-            const nyLi = menuUl.children[6] as HTMLElement | undefined;
-            if (nyLi) {
-                const anchor = nyLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
+            // NOTE: we deliberately do NOT tag .bp6-popover-content as "popover-content" here.
+            // Analyst's Popover auto-tags its transparent transition WRAPPER (shadow, no bg/radius),
+            // which sits at a different nesting level than Blueprint's styled .bp6-popover-content
+            // panel — pairing them yields a false bg/shadow/radius diff. The harness's benign
+            // "only in analyst: popover-content" note is the honest signal.
+
+            // tz-item: "Denver" — index 6 in Blueprint's MINIMAL_TIMEZONE_ITEMS.
+            // Real order: 0=UTC, 1=Pago Pago, 2=Hawaii(Honolulu), 3=Marquesas, 4=Alaska(Anchorage),
+            //   5=LA, 6=Denver, 7=Mexico City, 8=New York … (analyst's minimal list now matches this order).
+            const itemLi = menuUl.children[6] as HTMLElement | undefined;
+            if (itemLi) {
+                const anchor = itemLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
                 if (anchor) {
                     anchor.setAttribute("data-compare", "tz-item");
                     // tz-item-offset: Blueprint renders the label (shortName) as a span.bp6-menu-item-label

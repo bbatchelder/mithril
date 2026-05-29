@@ -255,7 +255,8 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                         "bg-light-gray-5 shadow-button",
                         "text-foreground",
                         "dark:bg-[#303740] dark:shadow-button",
-                        "dark:text-foreground",
+                        // White in dark to match Blueprint's none-control text (Delta #1, handoff 0064).
+                        "dark:text-white",
                         // Hover: Blueprint pt-button-hover (via label:hover → span:hover inheritance)
                         // Note: hover is verified visually; the harness only captures resting state.
                         // Disabled: muted appearance

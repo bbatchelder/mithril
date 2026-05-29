@@ -93,7 +93,8 @@ export interface NumericInputProps
 const STEPPER_COLORS: Record<NumericInputIntent, string> = {
     // Dark rest bg is Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740,
     // a hair lighter than the flat dark-gray-3 (#2f343c) used for *panels*. See handoff 0063.
-    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-foreground",
+    // Dark stepper text/chevrons are white (#fff) to match Blueprint, not #f6f7f9 (Delta #1, handoff 0064).
+    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-white",
     primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground",
     success: "bg-success hover:bg-success-hover active:bg-success-active text-success-foreground",
     warning: "bg-orange-5 hover:bg-orange-4 active:bg-orange-3 text-warning-foreground",

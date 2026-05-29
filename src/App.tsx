@@ -4364,11 +4364,12 @@ function TimezoneSelectGallery() {
             if (!menuUl) return;
             menuUl.setAttribute("data-compare", "tz-menu");
 
-            // tz-item: "New York" — index 6 in the minimal list (0-based)
-            // Order: 0=UTC, 1=Honolulu, 2=Anchorage, 3=LA, 4=Denver, 5=Chicago, 6=NewYork
-            const nyLi = menuUl.children[6] as HTMLElement | undefined;
-            if (nyLi) {
-                const btn = nyLi.querySelector("button,a");
+            // tz-item: "Denver" — index 6 in the minimal list (0-based).
+            // Order now matches Blueprint's MINIMAL_TIMEZONE_ITEMS exactly:
+            //   0=UTC, 1=Pago Pago, 2=Honolulu, 3=Marquesas, 4=Anchorage, 5=LA, 6=Denver, 7=Mexico City, 8=New York …
+            const itemLi = menuUl.children[6] as HTMLElement | undefined;
+            if (itemLi) {
+                const btn = itemLi.querySelector("button,a");
                 if (btn) {
                     btn.setAttribute("data-compare", "tz-item");
                     // tz-item-offset: the label span (offset text) inside the item

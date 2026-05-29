@@ -60,6 +60,9 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
                 "min-w-[180px]",
                 // flex column for child spacing
                 "flex flex-col",
+                // Blueprint's .bp6-menu is block, so its li children resolve min-width to 0px.
+                // Our flex-col makes them flex items (min-width: auto); reset to 0 to match.
+                "[&>li]:min-w-0",
                 // Size context — pass via data attribute for MenuItem children
                 size !== "medium" && `menu-size-${size}`,
                 className,

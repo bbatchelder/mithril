@@ -391,28 +391,43 @@ function buildTimezoneItems(date: Date): TimezoneItem[] {
  * Matches Blueprint's MINIMAL_TIMEZONE_ITEMS.
  * ============================================================ */
 
+// Exactly Blueprint 6.15's MINIMAL_TIMEZONE_ITEMS (timezoneItems.ts → minimalTimezonesWithoutOffset),
+// in the same order. Three entries use the older IANA aliases that our allItems data carries:
+// Asia/Calcutta (≙ Asia/Kolkata), Asia/Katmandu (≙ Asia/Kathmandu), Asia/Rangoon (≙ Asia/Yangon).
 const MINIMAL_IANA_CODES = [
     "Etc/UTC",
+    "Pacific/Pago_Pago",
     "Pacific/Honolulu",
+    "Pacific/Marquesas",
     "America/Anchorage",
     "America/Los_Angeles",
     "America/Denver",
-    "America/Chicago",
+    "America/Mexico_City",
     "America/New_York",
-    "America/Halifax",
+    "America/Puerto_Rico",
+    "America/St_Johns",
     "America/Argentina/Buenos_Aires",
-    "Atlantic/Azores",
-    "Europe/London",
+    "America/Sao_Paulo",
+    "Atlantic/Cape_Verde",
     "Europe/Paris",
+    "Africa/Cairo",
     "Europe/Moscow",
+    "Asia/Tehran",
     "Asia/Dubai",
     "Asia/Karachi",
     "Asia/Calcutta",
-    "Asia/Bangkok",
-    "Asia/Shanghai",
+    "Asia/Katmandu",
+    "Asia/Dhaka",
+    "Asia/Rangoon",
+    "Asia/Jakarta",
+    "Asia/Manila",
     "Asia/Tokyo",
+    "Australia/Brisbane",
+    "Australia/Adelaide",
     "Australia/Sydney",
+    "Pacific/Nauru",
     "Pacific/Auckland",
+    "Pacific/Kiritimati",
 ];
 
 /* ============================================================
@@ -601,7 +616,11 @@ export function TimezoneSelect({
 
     // Initial (empty-query) items — Blueprint's "minimal" subset + optional local timezone
     const initialItems = useMemo(() => {
-        const minimalItems = allItems.filter((tz) => MINIMAL_IANA_CODES.includes(tz.ianaCode));
+        // Map over MINIMAL_IANA_CODES (not filter allItems) so the order matches Blueprint's
+        // MINIMAL_TIMEZONE_ITEMS exactly, not allItems' geographic order.
+        const minimalItems = MINIMAL_IANA_CODES.map((code) =>
+            allItems.find((tz) => tz.ianaCode === code),
+        ).filter((tz): tz is TimezoneItem => tz != null);
         if (!showLocalTimezone) return minimalItems;
         // Detect local timezone
         let localIana: string | undefined;

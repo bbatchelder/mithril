@@ -19,7 +19,9 @@ const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "dange
 const SOLID: Record<ButtonIntent, string> = {
     // Dark rest bg = Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740
     // (a hair lighter than the flat dark-gray-3 #2f343c used for panels). See handoff 0063.
-    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
+    // Dark "none"-control text + icon are white (#fff) to match Blueprint, not #f6f7f9.
+    // Body/menu text stays #f6f7f9; only the control text goes white. See handoff 0064 (Delta #1).
+    none: "bg-light-gray-5 text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
     primary:
         "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active data-[active=true]:bg-primary-active",
     success:
@@ -34,7 +36,7 @@ const SOLID: Record<ButtonIntent, string> = {
 // in light, Blueprint's color-mix-with-white shade in dark). Outlined borders are that
 // same color at 60% alpha — Blueprint's `color-mix(in oklch, text 60%, transparent)`.
 const OUTLINED: Record<ButtonIntent, string> = {
-    none: "border-border-strong text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
+    none: "border-border-strong text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
         "border-intent-primary-text/60 text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
     success:
@@ -45,7 +47,7 @@ const OUTLINED: Record<ButtonIntent, string> = {
 };
 
 const MINIMAL: Record<ButtonIntent, string> = {
-    none: "text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
+    none: "text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
         "text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
     success: "text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
