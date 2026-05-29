@@ -188,6 +188,20 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     small?: boolean;
     /** Size mode. Overrides large/small shorthands. */
     size?: MenuSize;
+    /**
+     * ARIA role structure (ports Blueprint's `roleStructure`):
+     * - `"menuitem"` (default): `<li role="none"><button role="menuitem">` — for a `role="menu"` parent.
+     * - `"listoption"`: `<li role="option" aria-selected>` (inner role removed) — for a `role="listbox"`
+     *   parent (the combobox listbox of Select/Suggest/MultiSelect/Omnibar).
+     * - `"none"`: `<li role="none">` with no inner role — for wrapping in a custom list.
+     * @default "menuitem"
+     */
+    roleStructure?: "menuitem" | "listoption" | "none";
+    /**
+     * Whether this option is selected. Only applies when `roleStructure="listoption"`; sets
+     * `aria-selected` on the option. (Show your own tick via the `icon` prop.)
+     */
+    selected?: boolean;
 }
 
 export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuItem(
@@ -204,11 +218,24 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         large = false,
         small = false,
         size,
+        roleStructure = "menuitem",
+        selected,
         className,
         ...liProps
     },
     ref,
 ) {
+    // Role structure (mirrors Blueprint): [liRole, targetRole, ariaSelected].
+    const [liRole, targetRole, ariaSelected]: [
+        string | undefined,
+        string | undefined,
+        boolean | undefined,
+    ] =
+        roleStructure === "listoption"
+            ? ["option", undefined, Boolean(selected)]
+            : roleStructure === "none"
+              ? ["none", undefined, undefined]
+              : ["none", "menuitem", undefined];
     // Extract data-compare to forward to the inner interactive element
     // (mirrors Blueprint: MenuItem spreads htmlProps onto the inner <a>, not the <li>)
     const dataCompare = (liProps as Record<string, unknown>)["data-compare"] as string | undefined;
@@ -309,7 +336,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
             onClick={onClick}
             className={innerClasses}
             tabIndex={0}
-            role="menuitem"
+            role={targetRole}
             data-compare={dataCompare}
         >
             {content}
@@ -321,7 +348,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
             disabled={disabled}
             className={cn(innerClasses, "border-none bg-none text-left")}
             tabIndex={disabled ? -1 : 0}
-            role="menuitem"
+            role={targetRole}
             aria-disabled={disabled}
             data-compare={dataCompare}
         >
@@ -332,7 +359,8 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
     return (
         <li
             ref={ref}
-            role="none"
+            role={liRole}
+            aria-selected={ariaSelected}
             className={cn("block", className)}
             {...liProps}
         >
