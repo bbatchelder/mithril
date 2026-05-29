@@ -229,6 +229,15 @@ export interface PopoverProps {
     /** Inline styles on the popover panel element. */
     style?: React.CSSProperties;
 
+    /**
+     * Accessible name for the popover panel. Radix gives the Content `role="dialog"`
+     * when it holds focusable content, and a dialog needs a name (axe aria-dialog-name /
+     * WCAG 4.1.2). Provide this (or `ariaLabelledby`) for interactive popovers.
+     */
+    ariaLabel?: string;
+    /** Id of an element that labels the popover panel (alternative to `ariaLabel`). */
+    ariaLabelledby?: string;
+
     /** The trigger element. Use a Button or any interactive element. */
     children: ReactNode;
 }
@@ -271,6 +280,8 @@ export function Popover({
     hoverCloseDelay = 100,
     className,
     style,
+    ariaLabel,
+    ariaLabelledby,
     children,
 }: PopoverProps) {
     // In minimal mode: no arrow.
@@ -364,6 +375,8 @@ export function Popover({
                 <div className={dark ? "dark" : ""} style={{ pointerEvents: "none" }}>
                     <RadixPopover.Content
                         data-compare="popover-content"
+                        aria-label={ariaLabel}
+                        aria-labelledby={ariaLabelledby}
                         side={side}
                         align={align}
                         sideOffset={resolvedSideOffset}

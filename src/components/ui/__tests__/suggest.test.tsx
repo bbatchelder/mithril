@@ -85,9 +85,9 @@ describe("Suggest — combobox ARIA", () => {
         render(<SuggestHarness onSelect={onSelect} />);
 
         await openByFocus();
-        // The clickable element is the option's inner control.
-        const bananaControl = screen.getByRole("option", { name: "Banana" }).querySelector("button")!;
-        await user.click(bananaControl);
+        // The option (role="option") is itself the click target — in a listbox the option
+        // must NOT contain a nested interactive control (focus stays on the combobox input).
+        await user.click(screen.getByRole("option", { name: "Banana" }));
         expect(onSelect).toHaveBeenCalledWith("Banana");
 
         const combobox = await openByFocus();

@@ -485,6 +485,8 @@ export function Suggest<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
+            ariaLabel="Suggestions"
             {...restPopoverProps}
         >
             {/* Trigger wrapper — Popover.Trigger wraps this as asChild */}

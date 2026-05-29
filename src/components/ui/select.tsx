@@ -644,13 +644,20 @@ export function Select<T>({
             hasContentPadding={false}
             dark={dark}
             disabled={disabled}
+            // Radix gives the Popover panel role="dialog"; name it so it isn't an
+            // anonymous dialog (axe aria-dialog-name). Override via popoverProps.
+            ariaLabel="Options"
             {...popoverProps}
         >
-            {/* Trigger wrapper: thin wrapper only needed for fill behavior.
-                data-compare is placed on the trigger element (Button etc.) by the caller. */}
-            <div className={cn("inline-block", fill && "w-full")}>
-                {children}
-            </div>
+            {/* The trigger child IS the Popover trigger (asChild), so Radix's trigger ARIA
+                (aria-haspopup/expanded/controls) lands on the consumer's interactive element
+                — valid only on a real control, not a wrapper <div> (axe aria-allowed-attr).
+                For `fill`, merge w-full into the child instead of wrapping it. */}
+            {fill && isValidElement<{ className?: string }>(children)
+                ? cloneElement(children, {
+                      className: cn(children.props.className, "w-full"),
+                  })
+                : children}
         </Popover>
     );
 }

@@ -483,6 +483,8 @@ export function MultiSelect<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
+            ariaLabel="Options"
             {...restPopoverProps}
         >
             {/* Trigger: the TagInput-like container with chips + ghost input */}

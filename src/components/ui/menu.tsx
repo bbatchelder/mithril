@@ -370,6 +370,16 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         >
             {content}
         </Slot>
+    ) : roleStructure === "listoption" ? (
+        // Listbox option (Select/Suggest/MultiSelect): the <li role="option"> IS the
+        // option. Focus stays on the combobox input (aria-activedescendant), so the
+        // inner element must NOT be a focusable button/anchor — that would nest an
+        // interactive control inside the option (axe nested-interactive / WCAG 4.1.2).
+        // The click handler lives on the <li> (below) so a click anywhere in the option
+        // selects; keyboard selection happens on the input. This inner div is presentational.
+        <div className={innerClasses} data-compare={dataCompare}>
+            {content}
+        </div>
     ) : href && !disabled ? (
         <a
             href={href}
@@ -401,6 +411,9 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
             ref={ref}
             role={liRole}
             aria-selected={ariaSelected}
+            // In listbox mode the option itself is the click target (its inner div is
+            // presentational), so a click anywhere in the option selects it.
+            onClick={roleStructure === "listoption" && !disabled ? onClick : undefined}
             className={cn("block", className)}
             {...liProps}
         >

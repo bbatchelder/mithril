@@ -451,6 +451,7 @@ function ProgressBarGallery() {
                     {/* value=0.5 — track + meter keyed */}
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.5}
                             data-compare="pb-track-50"
                             meterProps={{ "data-compare": "pb-meter-50" }}
@@ -458,12 +459,14 @@ function ProgressBarGallery() {
                     </div>
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.25}
                             meterProps={{ "data-compare": "pb-meter-25" }}
                         />
                     </div>
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.75}
                             meterProps={{ "data-compare": "pb-meter-75" }}
                         />
@@ -476,6 +479,7 @@ function ProgressBarGallery() {
                     {PB_INTENTS.map((intent) => (
                         <div key={intent} style={containerStyle}>
                             <ProgressBar
+                                aria-label={`${intent} progress`}
                                 value={0.6}
                                 intent={intent}
                                 meterProps={{ "data-compare": `pb-meter-${intent}` }}
@@ -487,18 +491,18 @@ function ProgressBarGallery() {
 
             <Section title="No stripes / no animation (visual only)">
                 <div className="flex flex-col gap-3" style={containerStyle}>
-                    <ProgressBar value={0.4} stripes={false} />
-                    <ProgressBar value={0.4} animate={false} />
-                    <ProgressBar value={0.4} stripes={false} animate={false} />
+                    <ProgressBar aria-label="No stripes" value={0.4} stripes={false} />
+                    <ProgressBar aria-label="No animation" value={0.4} animate={false} />
+                    <ProgressBar aria-label="No stripes or animation" value={0.4} stripes={false} animate={false} />
                 </div>
             </Section>
 
             <Section title="Indeterminate (visual only — not diff'd)">
                 <div style={containerStyle}>
-                    <ProgressBar />
+                    <ProgressBar aria-label="Loading" />
                 </div>
                 <div style={containerStyle}>
-                    <ProgressBar intent="primary" />
+                    <ProgressBar aria-label="Loading" intent="primary" />
                 </div>
             </Section>
         </div>
@@ -1347,6 +1351,7 @@ function HTMLSelectGallery() {
         <div className="flex flex-col gap-6">
             <Section title="Default">
                 <HTMLSelect
+                    aria-label="Default select"
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-default")}
                 />
@@ -1354,6 +1359,7 @@ function HTMLSelectGallery() {
 
             <Section title="Large">
                 <HTMLSelect
+                    aria-label="Large select"
                     large
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-large")}
@@ -1362,6 +1368,7 @@ function HTMLSelectGallery() {
 
             <Section title="Minimal">
                 <HTMLSelect
+                    aria-label="Minimal select"
                     minimal
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-minimal")}
@@ -1370,6 +1377,7 @@ function HTMLSelectGallery() {
 
             <Section title="Disabled">
                 <HTMLSelect
+                    aria-label="Disabled select"
                     disabled
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-disabled")}
@@ -1379,6 +1387,7 @@ function HTMLSelectGallery() {
             <Section title="Fill">
                 <div style={{ width: 280 }}>
                     <HTMLSelect
+                        aria-label="Fill select"
                         fill
                         options={HS_OPTIONS}
                         ref={(el) => el?.setAttribute("data-compare", "hs-fill")}
@@ -1504,6 +1513,7 @@ function NumericInputGallery() {
                 <div ref={defaultRef}>
                     <div ref={stepBtnRef} className="inline-block">
                         <NumericInput
+                            aria-label="Default number"
                             value={val}
                             onValueChange={(_, s) => setVal(s)}
                             min={0}
@@ -1517,6 +1527,7 @@ function NumericInputGallery() {
 
             <Section title="Large">
                 <NumericInput
+                    aria-label="Large number"
                     defaultValue={5}
                     size="large"
                     min={0}
@@ -1528,6 +1539,7 @@ function NumericInputGallery() {
 
             <Section title="Disabled">
                 <NumericInput
+                    aria-label="Disabled number"
                     defaultValue={5}
                     disabled
                     style={{ width: 120 }}
@@ -1540,6 +1552,7 @@ function NumericInputGallery() {
                     {NI_INTENTS.map((intent) => (
                         <NumericInput
                             key={intent}
+                            aria-label={`${intent} number`}
                             defaultValue={5}
                             intent={intent}
                             style={{ width: 120 }}
@@ -1551,6 +1564,7 @@ function NumericInputGallery() {
 
             <Section title="Buttons left">
                 <NumericInput
+                    aria-label="Buttons-left number"
                     defaultValue={5}
                     buttonPosition="left"
                     style={{ width: 120 }}
@@ -1560,6 +1574,7 @@ function NumericInputGallery() {
 
             <Section title="Buttons none">
                 <NumericInput
+                    aria-label="Buttons-none number"
                     defaultValue={5}
                     buttonPosition="none"
                     style={{ width: 120 }}
@@ -1569,6 +1584,7 @@ function NumericInputGallery() {
             <Section title="Fill">
                 <div style={{ width: 300 }}>
                     <NumericInput
+                        aria-label="Fill number"
                         defaultValue={5}
                         fill
                         ref={(el) => el?.setAttribute("data-compare", "ni-fill")}
@@ -1578,6 +1594,7 @@ function NumericInputGallery() {
 
             <Section title="Left icon">
                 <NumericInput
+                    aria-label="Left-icon number"
                     defaultValue={5}
                     leftIcon="search"
                     style={{ width: 140 }}
@@ -1939,6 +1956,7 @@ function PopoverGallery() {
             <div className="flex items-center justify-center" style={{ minHeight: 200, paddingTop: 80 }}>
                 <Popover
                     defaultOpen={true}
+                    ariaLabel="Example popover"
                     content={
                         <div style={{ width: 200 }}>Short popover content.</div>
                     }
@@ -3280,6 +3298,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Default (primary, value=5)</p>
                 <div className="w-[320px]" data-compare="slider-default">
                     <Slider
+                        aria-label="Default slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3297,6 +3316,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Success intent (value=6)</p>
                 <div className="w-[320px]" data-compare="slider-success">
                     <Slider
+                        aria-label="Success slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3312,6 +3332,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Disabled (value=3)</p>
                 <div className="w-[320px]" data-compare="slider-disabled">
                     <Slider
+                        aria-label="Disabled slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3400,6 +3421,7 @@ function TagInputGallery() {
                         values={values}
                         onChange={(v) => setValues(v as string[])}
                         placeholder="Add a tag…"
+                        inputProps={{ "aria-label": "Tags" }}
                         fill
                         data-compare="tag-input-container"
                         _firstTagCompare="tag-input-tag"
@@ -3414,6 +3436,7 @@ function TagInputGallery() {
                         values={largeValues}
                         onChange={(v) => setLargeValues(v as string[])}
                         placeholder="Add a tag…"
+                        inputProps={{ "aria-label": "Tags" }}
                         large
                         fill
                     />
@@ -3425,6 +3448,7 @@ function TagInputGallery() {
                     values={intentValues}
                     onChange={(v) => setIntentValues(v as string[])}
                     placeholder="Add a tag…"
+                    inputProps={{ "aria-label": "Tags" }}
                     intent="danger"
                     fill
                 />
@@ -3436,6 +3460,7 @@ function TagInputGallery() {
                         values={["locked", "read-only"]}
                         onChange={() => {}}
                         placeholder="Disabled"
+                        inputProps={{ "aria-label": "Tags" }}
                         disabled
                         fill
                     />
@@ -3448,6 +3473,7 @@ function TagInputGallery() {
                         values={["design", "ui", "ux"]}
                         onChange={() => {}}
                         placeholder="Tags…"
+                        inputProps={{ "aria-label": "Tags" }}
                         leftIcon="search"
                         fill
                     />
@@ -3494,18 +3520,18 @@ function SelectGallery() {
                 if (filterInput) filterInput.setAttribute("data-compare", "select-filter");
             }
 
-            // select-item-active: Apple is index 0 (first item, active by default)
+            // select-item-active: Apple is index 0 (first item, active by default).
+            // The option's inner content element (a listbox option renders a presentational
+            // <div>, not an interactive button/anchor) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "select-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "select-item-active");
             }
 
             // select-item: Cherry is index 2 (0-based) in the list
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "select-item");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "select-item");
             }
         }
         tag();
@@ -3642,18 +3668,17 @@ function SuggestGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="suggest-menu"]');
             if (!menuUl) return;
 
-            // suggest-item: Apple is index 0 (non-active, non-selected)
+            // suggest-item: Apple is index 0 (non-active, non-selected). The option's inner
+            // content element (presentational <div> for a listbox option) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "suggest-item");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "suggest-item");
             }
 
             // suggest-item-active: Cherry is index 2 (active because it's the selectedItem)
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "suggest-item-active");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "suggest-item-active");
             }
         }
         tag();
@@ -3756,18 +3781,18 @@ function MultiSelectGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="multi-select-menu"]');
             if (!menuUl) return;
 
-            // multi-select-item-active: Apple is index 0 (first item = active by default)
+            // multi-select-item-active: Apple is index 0 (first item = active by default).
+            // The option's inner content element (presentational <div> for a listbox option)
+            // is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "multi-select-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "multi-select-item-active");
             }
 
             // multi-select-item: Durian is index 3 (non-active, non-selected)
             const durianLi = menuUl.children[3] as HTMLElement | undefined;
-            if (durianLi) {
-                const btn = durianLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "multi-select-item");
+            if (durianLi?.firstElementChild) {
+                durianLi.firstElementChild.setAttribute("data-compare", "multi-select-item");
             }
         }
         tag();
@@ -3870,18 +3895,17 @@ function OmnibarGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="omnibar-menu"]');
             if (!menuUl) return;
 
-            // omnibar-item-active: Apple is index 0 (first item, active by default)
+            // omnibar-item-active: Apple is index 0 (first item, active by default). The
+            // option's inner content element (presentational <div>) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "omnibar-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "omnibar-item-active");
             }
 
             // omnibar-item: Cherry is index 2 (non-active, non-first item)
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "omnibar-item");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "omnibar-item");
             }
         }
         tag();
@@ -4068,6 +4092,7 @@ function OpenDateInput({ dark }: { dark: boolean }) {
             <Popover
                 open={true}
                 onOpenChange={() => {}}
+                ariaLabel="Choose date"
                 content={
                     <DatePickerForDateInput dark={dark} />
                 }
@@ -4238,6 +4263,7 @@ function OpenDateRangeInput({ dark }: { dark: boolean }) {
             <Popover
                 open={true}
                 onOpenChange={() => {}}
+                ariaLabel="Choose date range"
                 content={
                     <DateRangePickerForDRI />
                 }
@@ -4368,14 +4394,14 @@ function TimezoneSelectGallery() {
             // Order now matches Blueprint's MINIMAL_TIMEZONE_ITEMS exactly:
             //   0=UTC, 1=Pago Pago, 2=Honolulu, 3=Marquesas, 4=Anchorage, 5=LA, 6=Denver, 7=Mexico City, 8=New York …
             const itemLi = menuUl.children[6] as HTMLElement | undefined;
-            if (itemLi) {
-                const btn = itemLi.querySelector("button,a");
-                if (btn) {
-                    btn.setAttribute("data-compare", "tz-item");
-                    // tz-item-offset: the label span (offset text) inside the item
-                    const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
-                    if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
-                }
+            // The option's inner content element (presentational <div> for a listbox option)
+            // is the measured node.
+            const btn = itemLi?.firstElementChild;
+            if (btn) {
+                btn.setAttribute("data-compare", "tz-item");
+                // tz-item-offset: the label span (offset text) inside the item
+                const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
+                if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
             }
         }
         tag();

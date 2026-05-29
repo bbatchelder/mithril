@@ -118,7 +118,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         );
     }
 
-    const hidden = loading ? "invisible" : undefined;
+    // While loading, hide the label visually but keep it in the accessibility tree so the
+    // button retains its name (WCAG 4.1.2). `opacity-0` stays in the a11y tree and keeps
+    // layout/width stable; `invisible` (visibility:hidden) would drop the name entirely.
+    const hidden = loading ? "opacity-0" : undefined;
 
     return (
         <button
@@ -126,6 +129,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
             className={classes}
             data-active={active || undefined}
             disabled={disabled || loading}
+            aria-busy={loading || undefined}
             {...props}
         >
             {loading && (
