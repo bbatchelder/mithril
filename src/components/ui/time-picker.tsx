@@ -157,8 +157,14 @@ function ArrowButton({
     "data-compare"?: string;
 }) {
     return (
+        // Decorative mouse affordance: the same increment/decrement is available from the
+        // keyboard via the segment input's ArrowUp/ArrowDown (see keyOf). aria-label on a
+        // roleless span is prohibited (axe aria-prohibited-attr), and exposing a click-only,
+        // non-focusable control to assistive tech would be misleading — so hide it from the
+        // a11y tree and keep `label` only as a mouse-hover title.
         <span
-            aria-label={label}
+            aria-hidden="true"
+            title={label}
             tabIndex={-1}
             onClick={disabled ? undefined : onClick}
             data-compare={dc}
@@ -176,6 +182,7 @@ function ArrowButton({
 
 function SegmentInput({
     id,
+    ariaLabel,
     value,
     onChange,
     onBlur,
@@ -186,6 +193,7 @@ function SegmentInput({
     "data-compare": dc,
 }: {
     id: string;
+    ariaLabel: string;
     value: string;
     onChange: (t: string) => void;
     onBlur: () => void;
@@ -196,8 +204,11 @@ function SegmentInput({
     "data-compare"?: string;
 }) {
     return (
+        // type=number → implicit role=spinbutton; aria-label gives it an accessible name
+        // and the value is announced. ArrowUp/Down adjust it (see onKeyDown / keyOf).
         <input
             id={id}
+            aria-label={ariaLabel}
             type="number"
             value={value}
             disabled={disabled}
@@ -446,6 +457,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
                 {/* Hour */}
                 <SegmentInput
                     id="tp-hour"
+                    ariaLabel="Hour"
                     value={state.hourText}
                     onChange={(t) => setState((s) => ({ ...s, hourText: t }))}
                     onBlur={() => blurSegment(state.hourText, useAmPm ? 1 : 0, useAmPm ? 12 : 23, (n, base) => base.setHours(useAmPm ? to24Hour(n, state.isPm) : n))}
@@ -461,6 +473,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
                 {/* Minute */}
                 <SegmentInput
                     id="tp-minute"
+                    ariaLabel="Minute"
                     value={state.minuteText}
                     onChange={(t) => setState((s) => ({ ...s, minuteText: t }))}
                     onBlur={() => blurSegment(state.minuteText, 0, 59, (n, base) => base.setMinutes(n))}
@@ -474,6 +487,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
                 {showSeconds && (
                     <SegmentInput
                         id="tp-second"
+                        ariaLabel="Second"
                         value={state.secondText}
                         onChange={(t) => setState((s) => ({ ...s, secondText: t }))}
                         onBlur={() => blurSegment(state.secondText, 0, 59, (n, base) => base.setSeconds(n))}
@@ -488,6 +502,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
                 {showMs && (
                     <SegmentInput
                         id="tp-ms"
+                        ariaLabel="Millisecond"
                         value={state.millisecondText}
                         onChange={(t) => setState((s) => ({ ...s, millisecondText: t }))}
                         onBlur={() => blurSegment(state.millisecondText, 0, 999, (n, base) => base.setMilliseconds(n))}
@@ -501,6 +516,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
             {/* ── AM/PM select ───────────────────────────────────── */}
             {useAmPm && (
                 <HTMLSelect
+                    aria-label="AM/PM"
                     value={state.isPm ? "pm" : "am"}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const nextIsPm = e.currentTarget.value === "pm";

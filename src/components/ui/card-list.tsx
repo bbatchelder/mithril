@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { Children, cloneElement, forwardRef, isValidElement } from "react";
 
 import { cn } from "@/lib/utils";
 import { Card } from "./card";
@@ -101,6 +101,15 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
     { bordered = true, compact = false, className, children, ...htmlProps },
     ref,
 ) {
+    // The container is role="list", so its direct children must be role="listitem"
+    // (axe aria-required-children / WCAG 1.3.1). Each child Card forwards `role`, so
+    // stamp it here unless the consumer already set an explicit role.
+    const items = Children.map(children, (child) =>
+        isValidElement<{ role?: string }>(child) && child.props.role == null
+            ? cloneElement(child, { role: "listitem" })
+            : child,
+    );
+
     return (
         <Card
             ref={ref}
@@ -183,7 +192,7 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
             )}
             {...htmlProps}
         >
-            {children}
+            {items}
         </Card>
     );
 });

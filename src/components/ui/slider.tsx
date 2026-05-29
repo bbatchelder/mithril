@@ -168,6 +168,10 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
         vertical = false,
         _tagInternals = false,
         className,
+        // role="slider" lives on the Thumb, so pull the naming attrs out of the root
+        // spread and forward them there (axe aria-input-field-name / WCAG 4.1.2).
+        "aria-label": ariaLabel,
+        "aria-labelledby": ariaLabelledby,
         ...htmlProps
     },
     ref,
@@ -301,6 +305,8 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
 
                 {/* Handle (Blueprint .bp6-slider-handle) */}
                 <RadixSlider.Thumb
+                    aria-label={ariaLabel}
+                    aria-labelledby={ariaLabelledby}
                     className={cn(
                         // 16×16px, border-radius:4px (Blueprint .bp6-slider-handle), position:absolute
                         // overflow:visible so the value badge can show outside the handle bounds
