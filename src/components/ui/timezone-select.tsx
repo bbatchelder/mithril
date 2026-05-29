@@ -19,6 +19,15 @@
  * offsets computed via Intl.DateTimeFormat for the given `date`. This avoids the date-fns-tz
  * dependency. Offsets are date-sensitive (DST is accounted for).
  *
+ * ## Design decision — cleaner labels (intentional deviation from Blueprint)
+ * Per this project's "fresh, modern API" goal, the item labels are deliberately the plain
+ * place name ("Calcutta", "Sydney") rather than Blueprint's verbose composite strings
+ * ("India - Kolkata", "Melbourne, Sydney"). This is the ONE place TimezoneSelect intentionally
+ * diverges from pixel-fidelity: the minimal-list menu renders ~23px narrower than Blueprint's
+ * (and the trigger ~6px narrower) because our labels are shorter. That width delta is ACCEPTED,
+ * not a bug — it is the visible cost of the cleaner labels, and we keep the labels. Do not
+ * "fix" the width by reintroducing Blueprint's verbose labels.
+ *
  * ## Portal + dark-mode
  * Delegates to Select → Popover, which wraps portaled content in a div.dark.
  * Pass `dark={dark}` (from DarkContext) so portaled items render in dark theme.

@@ -2237,7 +2237,11 @@ function MenuGallery() {
                         role="separator"
                         data-compare="menu-header"
                     >
-                        <h6>{/* must be h6 to match Blueprint internal markup */}Actions</h6>
+                        {/* Use the real <H6> component, not a bare <h6>: Blueprint's
+                            MenuDivider renders <H6> which carries class="bp6-heading"
+                            (font-size 14px). A bare <h6> falls back to the UA default
+                            (~9.38px), which made this specimen falsely diff. */}
+                        <H6>Actions</H6>
                     </li>
 
                     {/* Plain item with icon */}

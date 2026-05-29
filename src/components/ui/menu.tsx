@@ -393,11 +393,14 @@ export const MenuDivider = forwardRef<HTMLLIElement, MenuDividerProps>(function 
                 <h6 className={cn(
                     // Blueprint .menu-heading: bold, overflow-ellipsis
                     "font-semibold overflow-hidden text-ellipsis whitespace-nowrap",
-                    // line-height: 17px (icon size 16px + 1px for descenders)
-                    "leading-[17px]",
                     // font-size: 14px (same as body — Blueprint heading-typography
                     // for H6 uses the same font size, just bold)
                     "text-body",
+                    // line-height: 17px (icon size 16px + 1px for descenders).
+                    // MUST come AFTER text-body so tailwind-merge keeps it — text-body
+                    // otherwise shadows leading-* with the default --leading-bp (~18px).
+                    // See the matching note on MenuItem above.
+                    "leading-[17px]",
                     // margin: 0; padding: 8px 8px 0 8px
                     "m-0 px-[8px] pt-[8px] pb-0",
                     // color: foreground (heading color = text color in Blueprint)
