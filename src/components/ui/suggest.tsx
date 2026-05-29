@@ -509,6 +509,10 @@ export function Suggest<T>({
                     aria-activedescendant={activeDescendantId}
                     aria-autocomplete="list"
                     aria-haspopup="listbox"
+                    // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6).
+                    // Default the combobox's name to the placeholder; consumers can
+                    // override via inputProps["aria-label"] (spread wins below).
+                    aria-label={placeholder}
                     {...restInputProps}
                 />
             </div>

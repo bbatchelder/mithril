@@ -57,6 +57,13 @@ describe("MultiSelect — combobox ARIA", () => {
         expect(within(listbox).getAllByRole("option")).toHaveLength(3);
     });
 
+    it("gives the combobox an accessible name (not just a placeholder)", () => {
+        // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6), and the visible
+        // placeholder vanishes once tags are present — so name it from the raw placeholder.
+        render(<MultiSelectHarness />);
+        expect(screen.getByRole("combobox", { name: "Search..." })).toBeInTheDocument();
+    });
+
     it("marks chosen options aria-selected (multiple)", async () => {
         // Drive selectedItems directly — clicking a portaled option in jsdom races the
         // blur-close, so assert the aria-selected wiring with controlled selection.
@@ -75,8 +82,16 @@ describe("MultiSelect — combobox ARIA", () => {
         );
 
         await openByFocus();
-        expect(screen.getByRole("option", { name: "Apple" })).toHaveAttribute("aria-selected", "true");
-        expect(screen.getByRole("option", { name: "Cherry" })).toHaveAttribute("aria-selected", "true");
-        expect(screen.getByRole("option", { name: "Banana" })).toHaveAttribute("aria-selected", "false");
+        // findAllBy (not getBy): under parallel-run CPU contention the options can commit a
+        // tick after the listbox element appears, so await the full set before asserting.
+        const listbox = await screen.findByRole("listbox");
+        await within(listbox).findAllByRole("option");
+        const optionByName = (name: string) =>
+            within(listbox)
+                .getAllByRole("option")
+                .find((el) => el.textContent?.includes(name))!;
+        expect(optionByName("Apple")).toHaveAttribute("aria-selected", "true");
+        expect(optionByName("Cherry")).toHaveAttribute("aria-selected", "true");
+        expect(optionByName("Banana")).toHaveAttribute("aria-selected", "false");
     });
 });

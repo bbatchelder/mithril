@@ -313,8 +313,10 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                         "hover:shadow-[0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.6)] hover:cursor-grab hover:z-[2]",
                         // active (grabbed): inset shadow + border + drop shadow
                         "active:shadow-[inset_0_1px_1px_rgba(18,20,24,0.1),0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.2)] active:cursor-grabbing",
-                        // focus: z-index
-                        "focus:z-[1] focus:outline-none",
+                        // focus: raise above siblings + a visible focus-visible ring
+                        // (WCAG 2.4.7). Matches Button's focus treatment; the bare
+                        // :focus state stays ring-free so visual parity holds.
+                        "focus:z-[1] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                         // Dark: gray-4 bg + dark-button-box-shadow
                         "dark:bg-[#abb3bf]",
                         "dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.2)]",

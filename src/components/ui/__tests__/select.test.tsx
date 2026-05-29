@@ -64,6 +64,13 @@ describe("Select — combobox ARIA", () => {
         expect(options[0]).toHaveTextContent("Apple");
     });
 
+    it("gives the combobox an accessible name (not just a placeholder)", async () => {
+        // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6); default it to
+        // the placeholder text so the combobox resolves a non-empty name.
+        await open();
+        expect(screen.getByRole("combobox", { name: "Filter..." })).toBeInTheDocument();
+    });
+
     it("tracks the highlighted option via aria-activedescendant", async () => {
         const user = await open();
         const combobox = screen.getByRole("combobox");

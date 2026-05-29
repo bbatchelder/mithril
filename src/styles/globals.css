@@ -93,3 +93,24 @@
         background-color: var(--selection);
     }
 }
+
+/* Respect prefers-reduced-motion (WCAG 2.3.3). Neutralize decorative motion —
+ * Popover scale/fade, Skeleton glow, ProgressBar stripes, and every CSS transition.
+ * Animations are applied via Tailwind `[animation:…]` utilities, so a blanket reset
+ * is the maintainable hook. The Spinner is an essential loading-status indicator
+ * (not interaction-triggered), so it's explicitly allowed to keep rotating. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .bp-spinner-animation {
+        animation-duration: 500ms !important;
+        animation-iteration-count: infinite !important;
+    }
+}

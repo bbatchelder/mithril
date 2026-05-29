@@ -569,6 +569,10 @@ export function MultiSelect<T>({
                         aria-activedescendant={activeDescendantId}
                         aria-autocomplete="list"
                         aria-haspopup="listbox"
+                        // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6),
+                        // and resolvedPlaceholder goes undefined once items are picked —
+                        // so name the combobox from the raw placeholder.
+                        aria-label={placeholder}
                         className={cn(
                             "flex-[1_1_auto] bg-transparent border-none outline-none shadow-none",
                             "text-foreground placeholder:text-foreground-muted placeholder:opacity-100",

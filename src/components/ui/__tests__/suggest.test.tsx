@@ -59,6 +59,13 @@ describe("Suggest — combobox ARIA", () => {
         expect(combobox).toHaveAttribute("aria-activedescendant", options[0].id);
     });
 
+    it("gives the combobox an accessible name (not just a placeholder)", async () => {
+        // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6); default it to
+        // the placeholder text so the combobox resolves a non-empty name.
+        render(<SuggestHarness />);
+        expect(screen.getByRole("combobox", { name: "Search…" })).toBeInTheDocument();
+    });
+
     it("filters options as the user types", async () => {
         const user = userEvent.setup();
         render(<SuggestHarness />);

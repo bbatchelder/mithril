@@ -39,6 +39,13 @@ describe("Omnibar — combobox ARIA", () => {
         expect(screen.getByRole("dialog")).toBeInTheDocument();
     });
 
+    it("gives the search combobox its own accessible name", () => {
+        // The dialog is labelled "Omnibar", but a placeholder is not an accessible name
+        // for the input (WCAG 4.1.2 / 2.4.6) — it carries an explicit "Search" name.
+        render(<OmnibarHarness />);
+        expect(screen.getByRole("combobox", { name: "Search" })).toBeInTheDocument();
+    });
+
     it("tracks the highlighted option and selects on Enter", async () => {
         const onSelect = vi.fn();
         const user = userEvent.setup();

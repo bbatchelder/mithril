@@ -316,6 +316,10 @@ export function Omnibar<T>({
                     aria-activedescendant={activeDescendantId}
                     aria-autocomplete="list"
                     aria-haspopup="listbox"
+                    // The placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6).
+                    // The dialog is labelled "Omnibar"; give the input its own name too.
+                    // Consumers can override via inputProps["aria-label"] (spread wins).
+                    aria-label="Search"
                     {...inputProps}
                     style={{
                         backgroundColor: "transparent",

@@ -19,5 +19,11 @@ export default defineConfig({
         globals: true,
         setupFiles: ["./src/test/setup.ts"],
         include: ["src/**/*.{test,spec}.{ts,tsx}"],
+        // Run test files sequentially. Several suites open a Radix Popover (Floating-UI
+        // positioning + portal) via focus; under parallel forks on a contended machine
+        // that occasionally stalls past the async timeout — a jsdom resource-starvation
+        // flake, not a behavior bug (it's instant in a real browser and 100% green
+        // sequentially). The whole suite runs in a few seconds either way.
+        fileParallelism: false,
     },
 });
