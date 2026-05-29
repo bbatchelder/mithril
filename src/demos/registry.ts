@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import { ProjectBoard } from "./board/ProjectBoard";
+import { MissionControl } from "./mission/MissionControl";
 import { SocConsole } from "./soc/SocConsole";
 
 export interface DemoEntry {
@@ -26,5 +27,11 @@ export const DEMOS: DemoEntry[] = [
         title: "Project Board",
         description: "Kanban project board — drag tasks across columns, filter, and edit details inline.",
         component: ProjectBoard,
+    },
+    {
+        id: "mission",
+        title: "Mission Control",
+        description: "Skylark drone-swarm mission control — a live MapLibre map and streaming telemetry powered by a seeded mock-data engine.",
+        component: MissionControl,
     },
 ];
