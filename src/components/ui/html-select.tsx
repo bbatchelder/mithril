@@ -143,8 +143,10 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                               "bg-light-gray-5 shadow-button",
                               "hover:bg-light-gray-4",
                               "active:bg-light-gray-2",
-                              // Dark solid / none: dark-gray-3 bg + dark button shadow
-                              "dark:bg-dark-gray-3 dark:shadow-button",
+                              // Dark solid / none: Blueprint's oklch-derived default-control
+                              // surface rgb(48,55,64) = #303740 (not the flat dark-gray-3 panel
+                              // value) + dark button shadow. See handoff 0063.
+                              "dark:bg-[#303740] dark:shadow-button",
                               "dark:hover:bg-dark-gray-2",
                               "dark:active:bg-dark-gray-1",
                           ],

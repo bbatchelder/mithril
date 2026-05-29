@@ -46,14 +46,21 @@ pattern. Each site carries a short comment pointing here.
 
 ## Verification (compare.sh <id> dark)
 
-| Component | Before | After | Remaining |
-|---|---|---|---|
-| html-select | bg 47,52,60 → 48,55,64 | **6 match · 0 differ** | none |
-| file-input | bg flagged | **7 match · 0 differ** | none |
-| button | bg + color | **3 match · 1 differ** | only Delta #1 (intentional fg) |
-| numeric-input | bg + color | **6 match · 1 differ** | only Delta #1 (intentional fg) |
+| Component | After (dark, computed-style) | Remaining |
+|---|---|---|
+| html-select | **5 match · 0 differ** | none |
+| file-input | **5 match · 0 differ** | none |
+| button | **15 match · 3 differ** | only Delta #1 — fg `color` on the 3 `none` variants |
+| numeric-input | **6 match · 1 differ** | only Delta #1 (intentional fg) |
 
 html-select now reports `analyst rgb(48,55,64) == blueprint rgb(48,55,64)`. Build/typecheck green.
+
+> **Landed in two commits.** The first commit (`e13f688`) carried button/numeric-input/file-input;
+> the html-select edit silently failed there (a garbled `grep` gave a wrong multi-line `old_string`
+> describing a second `intent !== "none"` branch that doesn't exist — html-select has a single
+> control-bg site). html-select was fixed and verified in the follow-up commit. Lesson reinforced:
+> when the session is garbling I/O, confirm every `Edit` landed via `grep`/commit object, not the
+> claimed success — see gotcha #2.
 
 ## Decisions made (and why)
 
