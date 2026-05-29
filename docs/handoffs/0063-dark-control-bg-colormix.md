@@ -48,12 +48,16 @@ pattern. Each site carries a short comment pointing here.
 
 | Component | After (dark, computed-style) | Remaining |
 |---|---|---|
-| html-select | **5 match · 0 differ** | none |
-| file-input | **5 match · 0 differ** | none |
+| file-input | **5 match · 0 differ** | none (no fg text in captured specimens) |
+| numeric-input | **6 match · 1 differ** | only Delta #1 — fg `color` on the stepper |
 | button | **15 match · 3 differ** | only Delta #1 — fg `color` on the 3 `none` variants |
-| numeric-input | **6 match · 1 differ** | only Delta #1 (intentional fg) |
+| html-select | **1 match · 4 differ** | only Delta #1 — fg `color` on all 4 text specimens |
 
-html-select now reports `analyst rgb(48,55,64) == blueprint rgb(48,55,64)`. Build/typecheck green.
+**The backgroundColor delta is eliminated on all four** (`grep -L "47, 52, 60"` over the four dark
+logs returns all four). The remaining dark computed-style diffs are *exclusively* Delta #1, the
+intentional `#f6f7f9` foreground — which is being kept. html-select/button "differ" counts are non-zero
+only because every text specimen carries that one intentional fg diff; that is expected, not a gap.
+Build/typecheck green.
 
 > **Landed in two commits.** The first commit (`e13f688`) carried button/numeric-input/file-input;
 > the html-select edit silently failed there (a garbled `grep` gave a wrong multi-line `old_string`
