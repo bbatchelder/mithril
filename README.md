@@ -6,9 +6,9 @@ design language — rebuilt from scratch on a contemporary foundation, then dist
 
 - **React 19** + TypeScript
 - **Tailwind v4** (CSS-first `@theme`) + **CVA** for variants
-- **Radix UI** primitives for behavior & accessibility
+- **Radix UI** primitives under the overlay/positioning components (Dialog, Drawer, Alert, Popover, Tooltip, Toast, Slider, ContextMenu); the rest are hand-rolled on native elements
 - **No runtime icon dependency** — the full Blueprint icon set (706 glyphs) is vendored
-- Distributed **shadcn-style**: components are copied into your project via a registry, not pulled in as a black-box package
+- Distributed **shadcn-style**: you copy and **own** the component source, not pull in a black-box package
 
 Blueprint is treated as a **design spec, not a code source**. We port its visual DNA — color, density,
 elevation, typography, motion — precisely, then re-implement every component with a clean, modern API.
@@ -18,12 +18,28 @@ The legacy SCSS/BEM machinery is left behind entirely.
 >
 > Ported tokens derive from Blueprint (Apache-2.0). See [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE) for attribution.
 
-## Status — complete
+## Status
 
-The full Blueprint surface across `core`, `select`, and `datetime` is implemented: **~56 components**,
-each verified against Blueprint v6.15 via a computed-style + screenshot comparison harness, in both light
-and dark themes. See [`docs/ROADMAP.md`](./docs/ROADMAP.md) for the per-component checklist and
-[`docs/handoffs/`](./docs/handoffs/) for the build history.
+Every component on the [build roadmap](./docs/ROADMAP.md) is implemented — **~56 components** across
+`core`, `select`, and `datetime`, each diffed against Blueprint v6.15 with a computed-style **and**
+screenshot harness in both light and dark themes. See [`docs/handoffs/`](./docs/handoffs/) for the
+per-session build history.
+
+**Visual fidelity is the verified strength.** What it does *not* yet cover: behavior is not unit-tested
+(verification is visual only), and a few hand-rolled components have known keyboard/ARIA gaps. We'd rather
+be straight about that than oversell — so before adopting, read the honest comparison below.
+
+### Honest comparison vs. Blueprint
+
+- **[analyst-ui vs. Blueprint — an honest appraisal](./docs/comparison-vs-blueprint.md)** — an
+  evidence-backed look at where each library wins, its limitations, and a decision guide for *which to
+  pick for your project*.
+- **[Roadmap to a hands-down recommendation](./docs/blueprint-parity-roadmap.md)** — the prioritized plan
+  to close every gap (accessibility, tests, completeness, distribution).
+
+In one line: analyst-ui wins the **authoring experience** (cleaner API, ~16.6 KB CSS, lean deps, owned
+source, React 19); Blueprint still wins on **engineering maturity** (out-of-the-box accessibility,
+breadth — incl. a data grid — and a real test suite). Choose accordingly.
 
 ## Component catalog
 
@@ -51,9 +67,13 @@ any component with a URL hash (e.g. `#button`).
 ## Using the components
 
 analyst-ui follows the shadcn model: you copy the source into your own project and own it from then on.
-There are two paths.
 
-### 1. Manual copy (works today)
+> **Prerequisite:** the components are styled with Tailwind v4 utility classes and are inert without it —
+> your project must be on **Tailwind v4**. This is a deliberate trade (see the
+> [appraisal](./docs/comparison-vs-blueprint.md)); if you need framework-agnostic drop-in CSS, that's a
+> reason to prefer Blueprint.
+
+### Copy the source (the working path today)
 
 1. Copy [`src/styles/tokens.css`](./src/styles/tokens.css) into your project and `@import` it after Tailwind:
    ```css
@@ -65,14 +85,19 @@ There are two paths.
    peer deps (each component's npm + cross-component dependencies are listed in
    [`registry.json`](./registry.json)).
 
-### 2. shadcn registry
+### shadcn registry (generated, not yet hosted)
 
 [`registry.json`](./registry.json) is a complete shadcn-style registry — one entry per component, with its
 npm `dependencies` and internal `registryDependencies` (e.g. `Select` pulls in `Popover`, `Menu`, and
-`InputGroup`) resolved automatically. It is generated from the source by `pnpm gen:registry`, so it never
-drifts. When served behind a registry URL, components install with:
+`InputGroup`) resolved automatically. Regenerate it from source with `pnpm gen:registry`.
+
+> ⚠️ **The registry is not yet served anywhere** — only the demo gallery is deployed, so the
+> `npx shadcn add` command below does **not** work yet. Until the registry is hosted at a stable URL,
+> copying the source (above) is the only install method. Hosting it is tracked in the
+> [roadmap](./docs/blueprint-parity-roadmap.md) (P2.1).
 
 ```bash
+# once the registry is hosted at <registry-url>:
 npx shadcn@latest add <registry-url>/button
 ```
 
@@ -94,6 +119,10 @@ shadcn + Tailwind v4 pattern:
 Palette, intents, type, radius, motion, and elevation shadows are ported **1:1** from Blueprint's DTCG token
 set and SCSS variables. Dark surface colors were verified against Blueprint's OKLCH-derived values.
 
+> Note: those OKLCH-derived dark values are currently **baked as resolved literals** (frozen to Blueprint
+> v6.15) rather than computed at runtime. Runtime re-derivable theming and `@supports` fallbacks for the
+> raw `oklch()`/`color-mix()` usages are on the [roadmap](./docs/blueprint-parity-roadmap.md) (P2.5–P2.6).
+
 > **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
 > (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), not runtime `var()` in inline styles — those get dropped.
 
@@ -113,8 +142,11 @@ src/
   lib/utils.ts        the cn() class-merge helper
   App.tsx             the gallery
 docs/
-  ROADMAP.md          the component checklist (build order)
-  handoffs/           per-session build history
+  ROADMAP.md                    the component checklist (build order)
+  comparison-vs-blueprint.md    honest appraisal vs Blueprint (when to pick which)
+  blueprint-parity-roadmap.md   prioritized plan to close the gaps
+  fidelity-audit-2026-05-27.md  the fidelity audit
+  handoffs/                     per-session build history
 tools/
   gen-icons.mjs       regenerate the icon glyph map
   gen-registry.mjs    regenerate registry.json from source
@@ -129,6 +161,24 @@ Components aren't "done" by eyeballing — each is diffed against the real Bluep
 spins up this gallery and a reference [`@blueprintjs/core@6.15`](./tools/blueprint-reference) gallery,
 screenshots matched specimens, and reports a computed-style diff in both themes. See
 [`tools/comparison/README.md`](./tools/comparison/README.md).
+
+## Known limitations
+
+Being upfront (full detail + the fix plan are in the [appraisal](./docs/comparison-vs-blueprint.md) and
+[roadmap](./docs/blueprint-parity-roadmap.md)):
+
+- **No test suite.** Verification is visual (fidelity harness) only — there are no unit/behavior tests, so
+  keyboard/ARIA regressions aren't guarded. Owning the source means you inherit this.
+- **Accessibility gaps in hand-rolled components.** Radix-backed overlays + native form controls are solid,
+  but **Tabs** (no keyboard nav), **Menu**, the **Select/Suggest/MultiSelect/Omnibar** family (no combobox
+  ARIA), and **ContextMenu** (no arrow-key/submenu nav) need work; **Hotkeys** is display-only (no binding
+  engine).
+- **Missing capabilities.** No data grid (Blueprint's `Table2` has no equivalent — `HTMLTable` is styling
+  only), no `MultistepDialog`, `ButtonGroup`, or `AnchorButton`.
+- **Icons don't tree-shake.** All 706 glyphs are one static map; importing `Icon` pulls them all (~195 KB
+  gzip) unless you trim the map by hand.
+- **Tailwind v4 required**, **registry not yet hosted** (copy-the-source is the only install path today),
+  and **tokens are frozen** to Blueprint v6.15 (see above).
 
 ## Contributing
 
