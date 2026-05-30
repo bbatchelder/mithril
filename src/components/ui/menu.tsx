@@ -201,8 +201,6 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     active?: boolean;
     /** Whether this item is non-interactive. */
     disabled?: boolean;
-    /** If true, renders a caret-right icon indicating a submenu exists. */
-    hasSubmenu?: boolean;
     /** Navigate to this URL when clicked. Renders as <a>. */
     href?: string;
     /** Click handler. */
@@ -237,7 +235,6 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         intent = "none",
         active = false,
         disabled = false,
-        hasSubmenu = false,
         href,
         onClick,
         large = false,
@@ -337,16 +334,6 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         </span>
     ) : null;
 
-    const caretNode = hasSubmenu ? (
-        <span className={cn(
-            "menu-icon flex flex-col justify-center shrink-0",
-            effectiveSize === "small" ? "h-[20px]" : "h-[22px]",
-            !disabled && !active && "text-foreground-muted",
-        )} aria-hidden="true">
-            <Icon icon="caret-right" size={16} />
-        </span>
-    ) : null;
-
     const content = (
         <>
             {iconNode}
@@ -354,7 +341,6 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
                 {text}
             </span>
             {labelNode}
-            {caretNode}
         </>
     );
 

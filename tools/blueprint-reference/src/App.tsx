@@ -2266,13 +2266,12 @@ function MenuGallery() {
                         data-compare="menu-item-active"
                     />
 
-                    {/* Item with submenu caret — using children triggers Blueprint's submenu rendering */}
+                    {/* Item with a secondary label (analyst-ui dropped the no-op submenu caret) */}
                     <MenuItem
                         icon="cog"
                         text="Settings"
-                    >
-                        <MenuItem text="Sub item 1" />
-                    </MenuItem>
+                        label="⌘,"
+                    />
 
                     {/* Plain divider — use raw <li> to forward data-compare.
                         Blueprint renders <MenuDivider> as:

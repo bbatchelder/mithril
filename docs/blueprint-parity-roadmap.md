@@ -185,8 +185,10 @@ See **P0.3** (cross-listed).
 
 ### P2.8 — MenuItem submenus + Popover hover; controlled-input safety
 
-- **MenuItem submenus:** today `hasSubmenu` only draws a caret. Build declarative children-driven
-  submenus (like Blueprint's auto hover-Popover) once Menu keyboard nav (P0.2) lands.
+- **MenuItem submenus:** the no-op `hasSubmenu` caret was **removed** (it was a misleading affordance —
+  see handoff 0071). Submenus remain unbuilt: add declarative children-driven submenus (like Blueprint's
+  auto hover-Popover) — for the ContextMenu case via Radix `*.Sub` through `MenuItemSlotContext`, and a
+  hosted model (likely Radix `DropdownMenu`) for standalone menus.
 - **Popover `interactionKind`:** add `hover`/`hover-target-only` modes (+ open/close delays) so
   hovercards can be Popovers. analyst already has `matchTargetWidth`; this fills the remaining behavioral
   gap. (Radix Popover is click/focus-only — may need a small hover wrapper or Floating UI for hover.)

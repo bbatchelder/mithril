@@ -1,6 +1,8 @@
 // Vitest setup — registers jest-dom matchers (toBeInTheDocument, toHaveAttribute, …)
 // and cleans up the DOM between tests.
 import "@testing-library/jest-dom/vitest";
+// Registers the `toHaveNoViolations` axe matcher (see ./axe.ts) for every test file.
+import "./axe";
 import { cleanup, configure } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
 

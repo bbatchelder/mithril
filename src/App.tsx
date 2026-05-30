@@ -2145,11 +2145,11 @@ function MenuGallery() {
                         data-compare="menu-item-active"
                     />
 
-                    {/* Item with submenu caret */}
+                    {/* Item with a secondary label */}
                     <MenuItem
                         icon="cog"
                         text="Settings"
-                        hasSubmenu={true}
+                        label="⌘,"
                     />
 
                     {/* Plain divider */}
