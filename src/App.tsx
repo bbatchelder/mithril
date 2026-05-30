@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinne
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
-import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Toast, ToastProvider, Toaster } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
@@ -57,9 +57,9 @@ import { DateInput } from "@/components/ui/date-input";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
+import { DEMOS } from "@/demos/registry";
 
-/** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
-const DarkContext = createContext(false);
+import { DarkContext } from "@/lib/dark-context";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -4575,7 +4575,19 @@ function useHash(): string {
     return hash;
 }
 
-function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark: boolean; onToggleDark: () => void }) {
+function Sidebar({
+    selectedId,
+    dark,
+    onToggleDark,
+    view,
+    onViewChange,
+}: {
+    selectedId: string;
+    dark: boolean;
+    onToggleDark: () => void;
+    view: "showcase" | "demos";
+    onViewChange: (v: "showcase" | "demos") => void;
+}) {
     return (
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
@@ -4588,6 +4600,36 @@ function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark:
                     onClick={onToggleDark}
                 />
             </div>
+            <div className="border-b border-border px-3 py-2">
+                <SegmentedControl
+                    fill
+                    options={[
+                        { label: "Showcase", value: "showcase" },
+                        { label: "Demos", value: "demos" },
+                    ]}
+                    value={view}
+                    onValueChange={(v) => onViewChange(v as "showcase" | "demos")}
+                />
+            </div>
+            {view === "demos" ? (
+                <nav className="flex-1 overflow-y-auto px-2 py-3">
+                    <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                        Demo apps
+                    </div>
+                    <ul className="flex flex-col gap-px">
+                        {DEMOS.map((d) => (
+                            <li key={d.id}>
+                                <a
+                                    href={`#demo-${d.id}`}
+                                    className="block rounded-bp px-2 py-1 text-body-sm text-foreground transition-colors hover:bg-[var(--interactive-hover)]"
+                                >
+                                    {d.title}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            ) : (
             <nav className="flex-1 overflow-y-auto px-2 py-3">
                 {CATEGORY_GROUPS.map((group) => (
                     <div key={group.label} className="mb-4">
@@ -4618,7 +4660,28 @@ function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark:
                     </div>
                 ))}
             </nav>
+            )}
         </aside>
+    );
+}
+
+/** The Demos view: renders the demo selected via the URL hash (`#demo-<id>`), full-bleed. */
+function DemosView() {
+    const dark = useContext(DarkContext);
+    const hash = useHash();
+    const demoId = hash.startsWith("demo-") ? hash.slice("demo-".length) : "";
+    const demo = DEMOS.find((d) => d.id === demoId) ?? DEMOS[0];
+    if (!demo) {
+        return (
+            <div className="p-10 text-body text-foreground-muted">No demos registered.</div>
+        );
+    }
+    const DemoComponent = demo.component;
+    // Each demo gets its own Toaster so `useToaster()` works inside the demo subtree.
+    return (
+        <Toaster dark={dark} position="top">
+            <DemoComponent />
+        </Toaster>
     );
 }
 
@@ -4639,10 +4702,20 @@ function ComponentView({ component }: { component: ComponentEntry }) {
     );
 }
 
+type AppView = "showcase" | "demos";
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    const [view, setView] = useState<AppView>(() =>
+        decodeURIComponent(window.location.hash.replace(/^#/, "")).startsWith("demo-") ? "demos" : "showcase",
+    );
     // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
     const hash = useHash();
+
+    // If the hash points at a demo (e.g. via a shared in-session link), switch to the Demos view.
+    useEffect(() => {
+        if (hash.startsWith("demo-")) setView("demos");
+    }, [hash]);
 
     // Isolated single-component view (harness mode): no chrome, just the specimens.
     // This path MUST stay behavior-identical for tools/compare.sh.
@@ -4669,12 +4742,24 @@ export default function App() {
         <DarkContext.Provider value={dark}>
             <div className={dark ? "dark" : ""}>
                 <div className="flex min-h-screen bg-background text-foreground">
-                    <Sidebar selectedId={selected.id} dark={dark} onToggleDark={() => setDark((d) => !d)} />
-                    <main className="flex-1 overflow-x-hidden px-10 py-8">
-                        <div className="mx-auto max-w-[820px]">
-                            <ComponentView component={selected} />
-                        </div>
-                    </main>
+                    <Sidebar
+                        selectedId={selected.id}
+                        dark={dark}
+                        onToggleDark={() => setDark((d) => !d)}
+                        view={view}
+                        onViewChange={setView}
+                    />
+                    {view === "showcase" ? (
+                        <main className="flex-1 overflow-x-hidden px-10 py-8">
+                            <div className="mx-auto max-w-[820px]">
+                                <ComponentView component={selected} />
+                            </div>
+                        </main>
+                    ) : (
+                        <main className="flex-1 min-w-0 overflow-x-hidden">
+                            <DemosView />
+                        </main>
+                    )}
                 </div>
             </div>
         </DarkContext.Provider>
