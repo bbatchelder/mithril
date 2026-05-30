@@ -5,7 +5,7 @@
     "description": "A modern, pixel-faithful reimplementation of Palantir Blueprint's design language — built on React 19, Radix primitives, Tailwind v4, and CVA. Distributed shadcn-style as owned source.",
     "type": "module",
     "license": "Apache-2.0",
-    "packageManager": "pnpm@10.30.3",
+    "packageManager": "pnpm@11.4.0",
     "homepage": "https://github.com/bbatchelder/analyst-ui",
     "repository": {
         "type": "git",
