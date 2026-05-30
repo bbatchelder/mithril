@@ -84,6 +84,40 @@ describe("Select — combobox ARIA", () => {
         expect(combobox).toHaveAttribute("aria-activedescendant", options[1].id);
     });
 
+    it("reflects a consumer-controlled popoverProps.open in the combobox ARIA", () => {
+        // When a consumer drives open via popoverProps.open (e.g. the gallery force-open
+        // specimens), the internal isOpen state never flips — but the visible listbox means
+        // the combobox must still report expanded + a tracked active option, or its ARIA
+        // goes stale ("collapsed" while open). Regression for the 0071 controlled-open fix.
+        render(
+            <Select<string>
+                items={ITEMS}
+                itemPredicate={(q, item) => item.toLowerCase().includes(q.toLowerCase())}
+                selectedItem={null}
+                onItemSelect={() => {}}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />
+                )}
+                popoverProps={{ open: true, onOpenChange: () => {} }}
+            >
+                <Button>Pick a fruit</Button>
+            </Select>,
+        );
+
+        // The trigger was never clicked, so internal isOpen is false — the ARIA must
+        // track the controlled open state instead.
+        const combobox = screen.getByRole("combobox");
+        expect(combobox).toHaveAttribute("aria-expanded", "true");
+
+        const listbox = screen.getByRole("listbox");
+        const optionIds = within(listbox)
+            .getAllByRole("option")
+            .map((o) => o.id);
+        const activeId = combobox.getAttribute("aria-activedescendant");
+        expect(activeId).toBeTruthy();
+        expect(optionIds).toContain(activeId);
+    });
+
     it("filters options as the query changes", async () => {
         const user = await open();
         await user.keyboard("an"); // matches "Banana"

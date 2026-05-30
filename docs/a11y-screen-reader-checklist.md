@@ -87,12 +87,10 @@ real name (label or `aria-label`) — a placeholder alone is **not** a name.
 
 ## Known / watch-items (from the 2026-05-30 live a11y-tree spot-check)
 
-- **Select with consumer-controlled open** (`popoverProps.open`): Select's internal `isOpen` does
-  **not** sync to an externally-controlled open prop, so the inner combobox reports
-  `aria-expanded="false"` / no `aria-activedescendant` while the listbox is visibly open. Only affects
-  consumers who drive open themselves (and the gallery's force-open specimens) — normal
-  click/keyboard open is correct (proven by `select.test.tsx`). Low priority; documented in
-  handoff 0071. If a consumer needs controlled-open, sync `isOpen` from `popoverProps.open`.
+- **Select with consumer-controlled open** (`popoverProps.open`): **fixed in handoff 0071** — the
+  combobox ARIA now derives from `resolvedOpen = popoverProps?.open ?? isOpen`, so `aria-expanded` /
+  `aria-activedescendant` track an externally-controlled open (and the gallery force-open specimens),
+  matching Suggest/MultiSelect. Confirm the force-open specimens now read "expanded".
 - The `aria-allowed-attr` residual on Suggest/MultiSelect trigger wrapper divs (handoff 0070) is
   cosmetic in the tree; verify the SR still announces the *inner* combobox correctly (it carries the
   authoritative ARIA).

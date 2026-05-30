@@ -549,9 +549,17 @@ export function Select<T>({
         [disabled, resetOnClose],
     );
 
+    // The popup may be governed internally (isOpen) OR controlled by a consumer via
+    // popoverProps.open (e.g. the gallery force-open specimens). The combobox's ARIA must
+    // track whichever actually shows the listbox, else aria-expanded / aria-activedescendant
+    // go stale (reporting "collapsed" / no active option) while the listbox is visible.
+    // (Suggest/MultiSelect already do this; Select was the outlier.)
+    const controlledOpen = popoverProps?.open;
+    const resolvedOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
+
     // The id of the active (keyboard-highlighted) option, for aria-activedescendant.
     const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
-    const activeDescendantId = isOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
+    const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
 
     // Render the menu content (filter input + menu items)
     const popoverContent = (
@@ -569,7 +577,7 @@ export function Select<T>({
                     ref={inputRef}
                     // WAI-ARIA combobox: input owns the listbox + tracks the active option.
                     role="combobox"
-                    aria-expanded={isOpen}
+                    aria-expanded={resolvedOpen}
                     aria-controls={listboxId}
                     aria-activedescendant={activeDescendantId}
                     aria-autocomplete="list"

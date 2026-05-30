@@ -46,12 +46,14 @@ human-run artifact; I did the programmatic half — a live a11y-tree read over t
   while the listbox is visibly open — a **showcase artifact**, because the popover is held open
   externally while Select's internal `isOpen` stays false.
 
-## Finding logged (not fixed — your call)
-**Select doesn't sync internal `isOpen` to a consumer-controlled `popoverProps.open`.** So a consumer
-who drives open externally (or the gallery's force-open specimens) gets a combobox whose
-`aria-expanded`/`aria-activedescendant` don't reflect the visible listbox. Normal click/keyboard open
-is unaffected. Low priority, edge-case. Fix would be to derive/sync `isOpen` from a controlled
-`popoverProps.open`. Documented in the SR checklist's "watch-items" too.
+## Finding — FIXED
+**Select didn't sync internal `isOpen` to a consumer-controlled `popoverProps.open`.** A consumer
+driving open externally (or the gallery's force-open specimens) got a combobox whose
+`aria-expanded`/`aria-activedescendant` didn't reflect the visible listbox. **Fixed** in `select.tsx`
+by deriving `resolvedOpen = popoverProps?.open ?? isOpen` and using it for the combobox `aria-expanded`
+and activedescendant gating — mirroring the pattern Suggest/MultiSelect already had (Select was the
+outlier; Omnibar is controlled-only and returns null unless open, so it had no desync). Regression test
+added to `select.test.tsx` ("reflects a consumer-controlled popoverProps.open in the combobox ARIA").
 
 ## Verification
 - `pnpm test` → **70 passed** (12 files; +17 axe smokes, +menu still 6). `pnpm typecheck` ✓
@@ -69,7 +71,6 @@ is unaffected. Low priority, edge-case. Fix would be to derive/sync `isOpen` fro
    `pnpm add` are blocked.
 2. Run `tools/compare.sh menu both` (expect unchanged baseline) once #1 is fixed.
 3. Run the SR checklist with a real screen reader; log results in its table.
-4. (Optional) Fix the Select controlled-open sync finding above.
 
 ## Files
 - New: `src/test/axe.ts`, `src/components/ui/__tests__/axe-smoke.test.tsx`,
