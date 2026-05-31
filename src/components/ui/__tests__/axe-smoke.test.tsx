@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { axe } from "@/test/axe";
 import { Alert } from "../alert";
+import { AnchorButton } from "../anchor-button";
 import { Button } from "../button";
 import { ButtonGroup } from "../button-group";
 import { Callout } from "../callout";
@@ -46,6 +47,15 @@ describe("axe smoke — inline components", () => {
 
     it("Button (icon-only needs an accessible name)", async () => {
         const { container } = render(<Button icon="cog" aria-label="Settings" />);
+        expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("AnchorButton (link styled as a button)", async () => {
+        const { container } = render(
+            <AnchorButton href="#" intent="primary">
+                Continue
+            </AnchorButton>,
+        );
         expect(await axe(container)).toHaveNoViolations();
     });
 

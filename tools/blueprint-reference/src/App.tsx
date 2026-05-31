@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
@@ -177,6 +177,49 @@ function CardGallery() {
                         Compact (16px padding)
                     </Card>
                 </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for AnchorButton. `data-compare` keys MUST match analyst-ui's
+ * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
+ */
+function AnchorButtonGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Variant × Intent">
+                {VARIANTS.map((variant) => (
+                    <Row key={variant} label={variant}>
+                        {INTENTS.map((intent) => (
+                            <AnchorButton
+                                key={intent}
+                                href="#"
+                                variant={variant}
+                                intent={intent}
+                                text={intent}
+                                data-compare={`anchorbtn-${variant}-${intent}`}
+                            />
+                        ))}
+                    </Row>
+                ))}
+            </Section>
+
+            <Section title="States (solid / primary)">
+                <Row label="">
+                    <AnchorButton href="#" intent="primary" text="Default" data-compare="anchorbtn-solid" />
+                    <AnchorButton href="#" intent="primary" text="Disabled" disabled={true} data-compare="anchorbtn-disabled" />
+                    <AnchorButton href="#" intent="primary" text="Loading" loading={true} />
+                    <AnchorButton href="#" intent="primary" text="Active" active={true} />
+                </Row>
+            </Section>
+
+            <Section title="With icons">
+                <Row label="">
+                    <AnchorButton href="#" icon="add" text="Start icon" intent="primary" data-compare="anchorbtn-icon" />
+                    <AnchorButton href="#" endIcon="share" text="End icon" intent="primary" />
+                </Row>
             </Section>
         </div>
     );
@@ -5025,6 +5068,7 @@ function TimezoneSelectGallery() {
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
+    { id: "anchor-button", title: "AnchorButton", render: () => <AnchorButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
@@ -5047,6 +5091,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "multistep-dialog", title: "MultistepDialog", render: () => <MultistepDialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },

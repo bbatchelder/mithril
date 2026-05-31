@@ -56,6 +56,28 @@
             ]
         },
         {
+            "name": "anchor-button",
+            "type": "registry:ui",
+            "title": "AnchorButton",
+            "description": "AnchorButton — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/anchor-button.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/anchor-button.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "button",
+                "spinner",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "breadcrumbs",
             "type": "registry:ui",
             "title": "Breadcrumbs",

@@ -112,7 +112,7 @@ See **P0.3** (cross-listed) — resolved.
 | --- | --- | --- |
 | **MultistepDialog / DialogStep** | Build on existing Dialog: step state, footer nav (Back/Next/Submit), per-step panels | Multi-step wizard works; registry + gallery + tests |
 | **ButtonGroup** ✅ done (handoff 0075) | Layout/segmentation wrapper around Button (attached borders, vertical, fill) | Matches Blueprint visuals; registry entry |
-| **AnchorButton** | `<a>`-rendered button variant (Button already forwards refs; add an `as`/anchor path) | Renders `<a>` with button styling + disabled semantics |
+| **AnchorButton** ✅ done (handoff 0076) | `<a>`-rendered button variant reusing Button's `buttonVariants` | Renders `<a role="button">` with button styling + disabled semantics; registry entry |
 | **Standalone `ResizeSensor`, `OverflowList`, `Portal`/provider** | Promote the privately-inlined behaviors (OverflowList exists inside Breadcrumbs) to exported, reusable components/hooks | Each is independently importable + registered + tested |
 
 ---

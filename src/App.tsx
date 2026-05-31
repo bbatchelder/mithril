@@ -3,9 +3,11 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { AnchorButton } from "@/components/ui/anchor-button";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
+import { MultistepDialog, DialogStep } from "@/components/ui/multistep-dialog";
 import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { Popover } from "@/components/ui/popover";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -222,6 +224,68 @@ function ButtonGroupGallery() {
                     <Button>Center</Button>
                     <Button>Right</Button>
                 </ButtonGroup>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * AnchorButton showcase — an `<a>` styled exactly like `Button` (reuses `buttonVariants`)
+ * with correct anchor + disabled semantics. `data-compare` keys mirror the Blueprint
+ * reference gallery (tools/blueprint-reference/src/App.tsx) one-for-one.
+ */
+function AnchorButtonGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Variant × Intent">
+                {VARIANTS.map((variant) => (
+                    <Row key={variant} label={variant}>
+                        {INTENTS.map((intent) => (
+                            <AnchorButton
+                                key={intent}
+                                href="#"
+                                variant={variant}
+                                intent={intent}
+                                data-compare={`anchorbtn-${variant}-${intent}`}
+                            >
+                                {intent}
+                            </AnchorButton>
+                        ))}
+                    </Row>
+                ))}
+            </Section>
+
+            <Section title="States (solid / primary)">
+                <Row label="">
+                    <AnchorButton href="#" intent="primary" data-compare="anchorbtn-solid">
+                        Default
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" disabled data-compare="anchorbtn-disabled">
+                        Disabled
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" loading>
+                        Loading
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" active>
+                        Active
+                    </AnchorButton>
+                </Row>
+            </Section>
+
+            <Section title="With icons">
+                <Row label="">
+                    <AnchorButton
+                        href="#"
+                        icon={<Icon icon="plus" className="!text-current" />}
+                        intent="primary"
+                        data-compare="anchorbtn-icon"
+                    >
+                        Start icon
+                    </AnchorButton>
+                    <AnchorButton href="#" endIcon={<Icon icon="share" className="!text-current" />} intent="primary">
+                        End icon
+                    </AnchorButton>
+                </Row>
             </Section>
         </div>
     );
@@ -1961,6 +2025,64 @@ function DialogGallery() {
                     }
                 />
             </Dialog>
+        </div>
+    );
+}
+
+/**
+ * MultistepDialog showcase. Renders ONE wizard OPEN by default (step 2 of 3 active, so the
+ * harness captures a viewed/active step and the Back+Next footer simultaneously) so the
+ * harness can screenshot and computed-style-diff the portaled rail, active step, panel, footer.
+ *
+ * Portal + dark-mode: the wizard composes Dialog and receives `dark` from DarkContext.
+ *
+ * data-compare keys: multistep-panels, multistep-rail, multistep-step-active,
+ * multistep-circle-active, multistep-panel, multistep-footer. These match the Blueprint
+ * reference gallery keys exactly.
+ */
+function MultistepDialogGallery() {
+    const dark = useContext(DarkContext);
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The wizard below is open by default (on step 2) for comparison harness screenshots.
+            </p>
+            <MultistepDialog
+                defaultOpen={true}
+                title="Create project"
+                icon={<Icon icon="projects" />}
+                initialStepIndex={1}
+                dark={dark}
+                finalButtonProps={{ children: "Create", onClick: () => {} }}
+            >
+                <DialogStep
+                    id="info"
+                    title="Project info"
+                    panel={
+                        <p className="text-body text-foreground m-0">
+                            Step 1 — name your project and pick a workspace.
+                        </p>
+                    }
+                />
+                <DialogStep
+                    id="members"
+                    title="Members"
+                    panel={
+                        <p className="text-body text-foreground m-0">
+                            Step 2 — invite collaborators and assign roles.
+                        </p>
+                    }
+                />
+                <DialogStep
+                    id="review"
+                    title="Review"
+                    panel={
+                        <p className="text-body text-foreground m-0">
+                            Step 3 — review your settings, then create the project.
+                        </p>
+                    }
+                />
+            </MultistepDialog>
         </div>
     );
 }
@@ -4585,6 +4707,7 @@ function TimezoneSelectGallery() {
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
+    { id: "anchor-button", title: "AnchorButton", render: () => <AnchorButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
@@ -4607,6 +4730,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "multistep-dialog", title: "MultistepDialog", render: () => <MultistepDialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
@@ -4656,7 +4780,7 @@ const INITIAL_DARK = params.get("theme") === "dark";
  * so screenshots + computed-style diffs are unaffected.
  */
 const OVERLAY_IDS = new Set([
-    "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
+    "dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
     "select", "suggest", "multi-select", "timezone-select", "date-input", "date-range-input",
 ]);
 
@@ -4681,7 +4805,7 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
 const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
     { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
-    { label: "Overlays", ids: ["dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
+    { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
     { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
     { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
