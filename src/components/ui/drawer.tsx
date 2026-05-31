@@ -206,8 +206,9 @@ export function Drawer({
                             // so dark mode resolves to the correct dark --foreground.
                             "text-foreground",
                             // Blueprint drawer uses elevation-4 in LIGHT but elevation-3 in DARK
-                            // (Blueprint quirk). card-N tokens have the correct base + dark insets.
-                            "shadow-card-4 dark:shadow-card-3",
+                            // (Blueprint quirk). overlay-N tokens carry the rgba(20,20,20) light
+                            // hairline ring + Blueprint's dark drop/highlight layer order.
+                            "shadow-overlay-4 dark:shadow-overlay-3",
                             // Blueprint: no padding, no margin, no border-radius
                             "p-0 m-0",
                             // Blueprint: &:focus { outline: 0 }
@@ -234,8 +235,8 @@ export function Drawer({
                                     "p-[5px] pl-5",
                                     // Blueprint header has NO border-radius (drawer has no rounded corners)
                                     // Light: box-shadow: 0 1px 0 rgba(17,20,24,0.15) = $pt-divider-black
-                                    // Dark:  box-shadow: 0 1px 0 rgba(0,0,0,0.4) = $pt-dark-divider-black
-                                    "shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[0_1px_0_rgba(0,0,0,0.4)]",
+                                    // Dark:  box-shadow: 0 1px 0 rgba(17,20,25,0.4) = $pt-dark-divider-black
+                                    "shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[0_1px_0_rgba(17,20,25,0.4)]",
                                 )}
                             >
                                 {/* Icon — Blueprint: color $pt-icon-color (muted); margin-right: $drawer-padding*0.5 = 10px */}
@@ -334,8 +335,8 @@ export function DrawerFooter({ className, children, ...props }: DrawerFooterProp
                 // Blueprint: padding = 10px 20px
                 "py-[10px] px-5",
                 // Blueprint: inset 0 1px 0 $pt-divider-black = rgba(17,20,24,0.15)
-                // Dark: inset 0 1px 0 $pt-dark-divider-black = rgba(0,0,0,0.4)
-                "shadow-[inset_0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_1px_0_rgba(0,0,0,0.4)]",
+                // Dark: inset 0 1px 0 $pt-dark-divider-black = rgba(17,20,25,0.4)
+                "shadow-[inset_0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_1px_0_rgba(17,20,25,0.4)]",
                 className,
             )}
             {...props}

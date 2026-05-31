@@ -7,8 +7,10 @@
 // is itself a JSON string of { "<compare-key>": { "<cssProp>": "<value>", ... } }.
 
 import { readFileSync } from "node:fs";
+import { waiversFor, isStyleWaived, isUnpairedWaived } from "./waivers.mjs";
 
 const [analystPath, blueprintPath, label = ""] = process.argv.slice(2);
+const waivers = waiversFor(label);
 if (!analystPath || !blueprintPath) {
     console.error("usage: diff-styles.mjs <analyst.styles.json> <blueprint.styles.json> [label]");
     process.exit(2);
@@ -63,16 +65,25 @@ const C = { dim: "\x1b[2m", red: "\x1b[31m", green: "\x1b[32m", yellow: "\x1b[33
 const keys = [...new Set([...Object.keys(A), ...Object.keys(B)])].sort();
 let mismatchCount = 0;
 let matchCount = 0;
+let waivedProps = 0; // accepted (value-pinned) property deltas suppressed this run
 const onlyA = [];
 const onlyB = [];
+const waivedUnpaired = [];
 
 console.log(`${C.bold}computed-style diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(analyst → blueprint)${C.reset}`);
 
 for (const key of keys) {
-    if (!(key in B)) { onlyA.push(key); continue; }
+    if (!(key in B)) {
+        (isUnpairedWaived(waivers, key) ? waivedUnpaired : onlyA).push(key);
+        continue;
+    }
     if (!(key in A)) { onlyB.push(key); continue; }
     const props = [...new Set([...Object.keys(A[key]), ...Object.keys(B[key])])];
-    const diffs = props.filter((p) => !valuesEqual(A[key][p], B[key][p]));
+    const allDiffs = props.filter((p) => !valuesEqual(A[key][p], B[key][p]));
+    // A delta is suppressed only while its live values still match a recorded waiver pair;
+    // any drift (a regression) falls through to `diffs` and re-surfaces.
+    const diffs = allDiffs.filter((p) => !isStyleWaived(waivers, key, p, A[key][p], B[key][p]));
+    waivedProps += allDiffs.length - diffs.length;
     if (diffs.length === 0) {
         matchCount++;
         continue;
@@ -88,6 +99,12 @@ for (const key of keys) {
 
 if (onlyA.length) console.log(`\n${C.dim}only in analyst:  ${onlyA.join(", ")}${C.reset}`);
 if (onlyB.length) console.log(`${C.dim}only in blueprint: ${onlyB.join(", ")}${C.reset}`);
+
+const accepted =
+    (waivedProps ? `${waivedProps} accepted delta${waivedProps === 1 ? "" : "s"}` : "") +
+    (waivedProps && waivedUnpaired.length ? ", " : "") +
+    (waivedUnpaired.length ? `${waivedUnpaired.length} accepted unpaired` : "");
+if (accepted) console.log(`\n${C.dim}waived: ${accepted} (see accepted-deltas.json)${C.reset}`);
 
 const summary = `${matchCount} match · ${mismatchCount} differ`;
 console.log(`\n${mismatchCount ? C.yellow : C.green}${summary}${C.reset}`);

@@ -24,8 +24,10 @@
 // — tag the whole control for that. The full-page diff image remains the catch-all.
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { waiversFor, isVisualWaived, isUnpairedWaived } from "./waivers.mjs";
 
 const [aPng, bPng, aRectsPath, bRectsPath, outPrefix, label = ""] = process.argv.slice(2);
+const waivers = waiversFor(label);
 if (!aPng || !bPng || !aRectsPath || !bRectsPath || !outPrefix) {
     console.error("usage: diff-specimens.mjs <a.png> <b.png> <a.rects.json> <b.rects.json> <out-prefix> [label]");
     process.exit(2);
@@ -122,10 +124,14 @@ function ssim(a, b, w, h) {
 const keys = [...new Set([...Object.keys(rectsA), ...Object.keys(rectsB)])].sort();
 const onlyA = [];
 const onlyB = [];
+const waivedUnpaired = [];
 const rows = [];
 
 for (const key of keys) {
-    if (!(key in rectsB)) { onlyA.push(key); continue; }
+    if (!(key in rectsB)) {
+        (isUnpairedWaived(waivers, key) ? waivedUnpaired : onlyA).push(key);
+        continue;
+    }
     if (!(key in rectsA)) { onlyB.push(key); continue; }
     const ca = cropRect(imgA, rectsA[key]);
     const cb = cropRect(imgB, rectsB[key]);
@@ -149,14 +155,21 @@ for (const key of keys) {
     const score = ssim(subA, subB, w, h);
 
     // A specimen is "off" if it differs in size, or the crops diverge in content.
-    const flagged = sizeMismatch || score < 0.97 || ratio > 0.02;
+    const rawFlagged = sizeMismatch || score < 0.97 || ratio > 0.02;
+    // A reviewed-benign specimen is waived — but only while its size signature still
+    // matches what's recorded (expectSize), or while no NEW size mismatch appeared
+    // (ssimArtifact). A drift past those re-flags, so layout regressions still surface.
+    const waived =
+        rawFlagged &&
+        isVisualWaived(waivers, key, { aw: ca.w, ah: ca.h, bw: cb.w, bh: cb.h, sizeMismatch });
+    const flagged = rawFlagged && !waived;
     if (flagged) {
         const out = new PNG({ width: w, height: h });
         diff.copy(out.data);
         const safe = key.replace(/[^a-z0-9._-]/gi, "_");
         writeFileSync(`${outPrefix}.${safe}.spec.png`, PNG.sync.write(out));
     }
-    rows.push({ key, aw: ca.w, ah: ca.h, bw: cb.w, bh: cb.h, sizeMismatch, score, ratio, flagged });
+    rows.push({ key, aw: ca.w, ah: ca.h, bw: cb.w, bh: cb.h, sizeMismatch, score, ratio, flagged, waived });
 }
 
 // --- report ---
@@ -175,20 +188,24 @@ for (const r of rows) {
     const size = r.sizeMismatch ? `${C.red}${r.aw}×${r.ah} → ${r.bw}×${r.bh}${C.reset}` : `${r.aw}×${r.ah}`;
     const sizeCol = r.sizeMismatch ? size + " ".repeat(Math.max(0, 18 - `${r.aw}×${r.ah} → ${r.bw}×${r.bh}`.length)) : pad(size, 18);
     const sc = r.score >= 0.97 ? C.green : r.score >= 0.9 ? C.yellow : C.red;
-    const mark = r.flagged ? `${C.yellow} ⚠${C.reset}` : "";
+    const mark = r.flagged ? `${C.yellow} ⚠${C.reset}` : r.waived ? `${C.dim} ✓ waived${C.reset}` : "";
     console.log(`  ${pad(r.key, 28)}${sizeCol}${sc}${pad(r.score.toFixed(3), 9)}${C.reset}${(r.ratio * 100).toFixed(2)}%${mark}`);
 }
 
 if (onlyA.length) console.log(`\n  ${C.dim}only in analyst:  ${onlyA.join(", ")}${C.reset}`);
 if (onlyB.length) console.log(`  ${C.dim}only in blueprint: ${onlyB.join(", ")}${C.reset}`);
 
+// "off" SSIM rows that aren't size-mismatched and weren't waived are guide-level noise
+// (the visual diff is a guide, not a gate) — report the count but don't make it a gate.
 const worst = diffed.reduce((m, r) => (r.score < m.score ? r : m), { score: 1, key: "—" });
-const sizeMismatches = diffed.filter((r) => r.sizeMismatch).length;
+const sizeMismatches = diffed.filter((r) => r.sizeMismatch && !r.waived).length;
 const flaggedCount = diffed.filter((r) => r.flagged).length;
+const waivedCount = diffed.filter((r) => r.waived).length + waivedUnpaired.length;
 const allGood = flaggedCount === 0 && diffed.length > 0;
 const summaryColor = allGood ? C.green : C.yellow;
 console.log(
     `\n  ${summaryColor}${diffed.length} specimens · min SSIM ${worst.score.toFixed(3)} (${worst.key})` +
         `${sizeMismatches ? ` · ${sizeMismatches} size mismatch` : ""}` +
-        `${flaggedCount ? ` · ${flaggedCount} flagged → see *.spec.png` : " · all clean"}${C.reset}`,
+        `${flaggedCount ? ` · ${flaggedCount} flagged → see *.spec.png` : " · all clean"}` +
+        `${waivedCount ? `${C.dim} · ${waivedCount} waived${C.reset}${summaryColor}` : ""}${C.reset}`,
 );

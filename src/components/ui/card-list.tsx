@@ -145,10 +145,11 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
                 compact ? "[&>div]:px-4" : "[&>div]:px-5",
 
                 // ── Divider between rows ─────────────────────────────────────────────────
-                // Use $pt-divider-black-muted (rgba(0,0,0,0.1)) — lighter than Section's 0.15.
-                // Dark: $pt-dark-divider-white-muted (rgba(255,255,255,0.1)).
+                // Use $pt-divider-black-muted — Blueprint v6.15 renders this as
+                // rgba(20,20,20,0.1) (matches the elevation hairline ring), lighter than
+                // Section's 0.15. Dark: $pt-dark-divider-white-muted (rgba(255,255,255,0.1)).
                 "[&>div:not(:last-child)]:border-b",
-                "[&>div:not(:last-child)]:border-b-[rgba(0,0,0,0.1)]",
+                "[&>div:not(:last-child)]:border-b-[rgba(20,20,20,0.1)]",
                 "dark:[&>div:not(:last-child)]:border-b-[rgba(255,255,255,0.1)]",
 
                 // ── Interactive child Card hover/active ──────────────────────────────────

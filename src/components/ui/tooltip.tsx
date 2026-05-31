@@ -314,8 +314,8 @@ export function Tooltip({
                                 // Blueprint light: $pt-tooltip-box-shadow = $pt-elevation-shadow-3 → shadow-card-3
                                 // Blueprint dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba($black, 0.4), 0 8px 24px rgba($black, 0.4)
                                 // Note: dark tooltip uses a SIMPLER shadow (2 layers, no inset border) unlike dark popover.
-                                // We use shadow-card-3 for light (matches elevation-3 exactly) and override dark separately.
-                                "shadow-card-3",
+                                // We use shadow-overlay-3 for light (rgba(20,20,20) hairline ring) and override dark separately.
+                                "shadow-overlay-3",
                                 // Dark tooltip shadow override: Blueprint's $pt-dark-tooltip-box-shadow =
                                 // 0 2px 4px rgba(#111418, 0.4), 0 8px 24px rgba(#111418, 0.4)
                                 // This is lighter/simpler than dark popover shadow (no outset border ring, no inset).

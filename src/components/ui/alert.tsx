@@ -206,7 +206,7 @@ export function Alert({
                                 // Blueprint: box-shadow = card-3 (Dialog verified this is correct;
                                 // shadow-elevation-N uses pure-black base, shadow-card-N uses
                                 // $black=#111418 base + dark-mode white inset edge-highlights)
-                                "shadow-card-3",
+                                "shadow-overlay-3",
                                 // Blueprint: max-width = $pt-spacing * 100 = 400px (Alert is narrower than Dialog's 500px)
                                 "w-full max-w-[400px]",
                                 // Blueprint: padding = $pt-spacing * 5 = 20px (all sides)

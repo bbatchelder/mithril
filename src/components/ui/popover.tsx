@@ -393,11 +393,12 @@ export function Popover({
                             // In dark mode: Blueprint's $pt-dark-popover-box-shadow adds an extra
                             // outset border: 0 0 0 1px hsl(215,3%,38%) = rgb(94,95,97).
                             // We replicate this with a compound dark shadow utility override.
-                            "shadow-card-3",
-                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%))
-                            // that Blueprint's $pt-dark-popover-box-shadow includes in addition
-                            // to $pt-dark-elevation-shadow-3.
-                            "dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]",
+                            "shadow-overlay-3",
+                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%) =
+                            // rgb(94,96,100)) that Blueprint's $pt-dark-popover-box-shadow includes
+                            // in addition to $pt-dark-elevation-shadow-3. Layer order matches
+                            // Blueprint: ring, inset-ring, drop1, inset-highlights, drop2.
+                            "dark:[box-shadow:rgb(94,96,100)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px,rgba(0,0,0,0.302)_0px_10px_30px_-5px]",
                             // Blueprint: z-index: $pt-z-index-overlay
                             "z-[20]",
                             // Open/close animation (globals.css). Full scale+fade for normal

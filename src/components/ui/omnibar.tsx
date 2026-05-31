@@ -276,8 +276,9 @@ export function Omnibar<T>({
                     "text-foreground",
                     // Blueprint: border-radius: $pt-border-radius = 4px
                     "rounded-bp",
-                    // Blueprint: box-shadow: $pt-elevation-shadow-4
-                    "shadow-card-4",
+                    // Blueprint: box-shadow: $pt-elevation-shadow-4 (overlay variant —
+                    // rgba(20,20,20) light hairline ring; dark = card-4, single drop).
+                    "shadow-overlay-4",
                     // Restore pointer events (parent wrapper disables them)
                     "pointer-events-auto",
                     // Focus outline

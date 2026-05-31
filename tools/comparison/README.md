@@ -104,9 +104,34 @@ the two implementations diverge structurally but look identical (`fontFamily`,
 strips Tailwind's transparent no-op shadow layers. Adjust the `PROPS` list there if a
 component needs different coverage.
 
+## Accepted-delta waivers (`accepted-deltas.json`)
+
+Some deltas are reviewed and **accepted** — visually identical / sub-perceptual / a Blueprint
+quirk (e.g. `popover` `minWidth:auto`→`0px` on an `inline-block`, tag spacing done via `gap`
+instead of per-child `margin-right`, the radix arrow box-sizing). `accepted-deltas.json` waives
+them so they stop showing as `differ` / `flagged`, **without going blind to regressions** — a
+waiver only applies while the live values still match what's pinned:
+
+- **styles** — value-pinned `[ [analystVal, blueprintVal], … ]` per `specimen.cssProp`. Suppressed
+  only while the live pair still matches (color-tolerant). Change the component and the value drifts
+  → the waiver misses → it re-surfaces as a `differ` for re-review. New, unwaived props always flag.
+- **unpaired** — specimen keys expected `only in analyst` (each verified under its own component id,
+  e.g. the hotkeys dialog is covered by `dialog`). A *new* unpaired key still flags.
+- **visual** — `expectSize: [aw,ah,bw,bh]` suppresses a known size mismatch only while the sizes
+  still match (±3px); `ssimArtifact: true` suppresses a low-SSIM flag only while the specimen is
+  **not** size-mismatched. Either way a *new* size mismatch (the layout-flow regression signal —
+  e.g. a wrapped label going 18→31px) always re-flags.
+
+The summary then reads e.g. `2 match · 0 differ` + a dim `waived: …` note, and `… all clean · N
+waived`. Run `CMP_NO_WAIVERS=1 tools/compare.sh <id>` to see the **raw**, un-waived output (use this
+to re-audit an accepted delta). The "why" for each entry lives in
+`docs/component-fidelity-deltas.md` (Resolution).
+
 ## Files
 
 - `compare.sh` — entry point (in `tools/`, not here).
+- `accepted-deltas.json` — reviewed-delta waivers (see "Accepted-delta waivers" above).
+- `waivers.mjs` — shared waiver loader + value/size matchers used by the two diff scripts.
 - `capture-styles.js` — in-page computed-style capture + color normalization.
 - `capture-rects.js` — in-page bounding-rect capture for `[data-compare]`/`[data-vcompare]`.
 - `diff-styles.mjs` — pairs specimens by key and prints the tolerant computed-style diff.

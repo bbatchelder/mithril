@@ -325,9 +325,10 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                         "focus:z-[1] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                         // Dark: gray-4 bg + dark-button-box-shadow
                         "dark:bg-[#abb3bf]",
-                        "dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.2)]",
-                        "dark:hover:bg-[#8f99a8] dark:hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.4)]",
-                        "dark:active:bg-[#738091] dark:active:shadow-[inset_0_1px_1px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.4)]",
+                        // Dark drop-shadow base = Blueprint's $pt-dark-elevation shadow color rgba(15,20,25,…), not pure black.
+                        "dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.2)]",
+                        "dark:hover:bg-[#8f99a8] dark:hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.4)]",
+                        "dark:active:bg-[#738091] dark:active:shadow-[inset_0_1px_1px_rgba(15,20,25,0.1),inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.4)]",
                         // Disabled state (handled by parent opacity, also pointer-events:none)
                         disabled && "pointer-events-none bg-[#c5cbd3] shadow-none dark:bg-[#5f6b7c] dark:shadow-none",
                     )}
@@ -357,10 +358,11 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                                 // Dark: light-gray-3 bg (#e5e8eb) + dark-gray-5 text (#404854)
                                 "dark:bg-[#e5e8eb] dark:text-[#404854]",
                                 // box-shadow: $pt-tooltip-box-shadow (light) / $pt-dark-tooltip-box-shadow (dark)
-                                // Light: elevation-shadow-3 = 0 0 0 1px rgba(black,10%), 0 20px 25px -5px rgba(0,0,0,10%), ...
-                                "shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)]",
-                                // Dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba(black,0.4), 0 8px 24px rgba(black,0.4)
-                                "dark:shadow-[0_2px_4px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.4)]",
+                                // Light: $pt-tooltip-box-shadow = elevation-shadow-3 — the hairline
+                                // ring uses Blueprint's rgba(20,20,20) elevation-border color.
+                                "shadow-[0_0_0_1px_rgba(20,20,20,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)]",
+                                // Dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba(#0f1419,0.4), 0 8px 24px rgba(#0f1419,0.4)
+                                "dark:shadow-[0_2px_4px_rgba(17,20,25,0.4),0_8px_24px_rgba(17,20,25,0.4)]",
                                 // Disabled: no box-shadow (Blueprint .bp6-disabled .bp6-slider-label { box-shadow: none })
                                 disabled && "shadow-none dark:shadow-none",
                             )}
