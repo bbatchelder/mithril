@@ -92,11 +92,22 @@ export const buttonVariants = cva(
                 large: "h-10 min-w-10 px-4 text-body-lg [&_svg]:size-5",
             },
             fill: { true: "w-full", false: "" },
+            // Icon-only buttons render square (no text to widen them). Blueprint keeps the
+            // default horizontal padding and pulls the icon in with negative margins so the
+            // button collapses to its square `min-width`; we instead pin `width` to the same
+            // square dimension (width is not a fidelity-compared prop, and padding/min-width
+            // stay intact). The icon centers and may overflow the content box, as in Blueprint.
+            iconOnly: { true: "", false: "" },
         },
-        compoundVariants: (["solid", "outlined", "minimal"] as const).flatMap((variant) =>
-            INTENTS.map((intent) => ({ variant, intent, class: VARIANT_MAP[variant][intent] })),
-        ),
-        defaultVariants: { variant: "solid", intent: "none", size: "medium", fill: false },
+        compoundVariants: [
+            ...(["solid", "outlined", "minimal"] as const).flatMap((variant) =>
+                INTENTS.map((intent) => ({ variant, intent, class: VARIANT_MAP[variant][intent] })),
+            ),
+            { iconOnly: true, fill: false, size: "small", class: "w-6" },
+            { iconOnly: true, fill: false, size: "medium", class: "w-7.5" },
+            { iconOnly: true, fill: false, size: "large", class: "w-10" },
+        ],
+        defaultVariants: { variant: "solid", intent: "none", size: "medium", fill: false, iconOnly: false },
     },
 );
 
@@ -126,7 +137,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     const resolvedVariant = variant ?? group?.variant;
     const resolvedSize = size ?? group?.size;
 
-    const classes = cn(buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill }), className);
+    // Icon-only (no text children): render square so the button matches Blueprint's
+    // square icon buttons instead of growing 2px wider than its min-width.
+    const iconOnly = !asChild && children == null && (icon != null || endIcon != null);
+
+    const classes = cn(
+        buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill, iconOnly }),
+        className,
+    );
 
     if (asChild) {
         return (
