@@ -123,7 +123,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 disabled ? "text-foreground-disabled" : "text-foreground",
                 large ? "text-body-lg" : "text-body",

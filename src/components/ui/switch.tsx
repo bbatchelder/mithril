@@ -168,7 +168,9 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 // Text color on the label itself (inherited by inner text if any)
                 disabled

@@ -2042,6 +2042,7 @@ function DialogGallery() {
  */
 function MultistepDialogGallery() {
     const dark = useContext(DarkContext);
+    const [role, setRole] = useState("editor");
     return (
         <div className="flex flex-col gap-4">
             <p className="text-body text-foreground-muted">
@@ -2059,10 +2060,39 @@ function MultistepDialogGallery() {
                     id="info"
                     title="Project info"
                     panel={
-                        <div className="p-5">
-                            <p className="text-body text-foreground m-0">
-                                Step 1 — name your project and pick a workspace.
-                            </p>
+                        <div className="flex flex-col gap-4 p-5">
+                            <FormGroup
+                                label="Project name"
+                                labelInfo="(required)"
+                                labelFor="ms-project-name"
+                                helperText="Shown in the workspace sidebar and in URLs."
+                            >
+                                <InputGroup
+                                    id="ms-project-name"
+                                    leftIcon="projects"
+                                    defaultValue="Apollo Initiative"
+                                    fill
+                                />
+                            </FormGroup>
+                            <FormGroup label="Workspace" labelFor="ms-workspace">
+                                <HTMLSelect
+                                    id="ms-workspace"
+                                    fill
+                                    options={["Engineering", "Design", "Research", "Operations"]}
+                                />
+                            </FormGroup>
+                            <FormGroup
+                                label="Description"
+                                labelFor="ms-description"
+                                helperText="Optional — a short summary of the project's goals."
+                            >
+                                <TextArea
+                                    id="ms-description"
+                                    rows={3}
+                                    fill
+                                    placeholder="What is this project about?"
+                                />
+                            </FormGroup>
                         </div>
                     }
                 />
@@ -2070,10 +2100,32 @@ function MultistepDialogGallery() {
                     id="members"
                     title="Members"
                     panel={
-                        <div className="p-5">
-                            <p className="text-body text-foreground m-0">
-                                Step 2 — invite collaborators and assign roles.
-                            </p>
+                        <div className="flex flex-col gap-4 p-5">
+                            <FormGroup
+                                label="Invite by email"
+                                labelFor="ms-invite"
+                                helperText="Separate multiple addresses with commas."
+                            >
+                                <InputGroup
+                                    id="ms-invite"
+                                    type="email"
+                                    leftIcon="envelope"
+                                    placeholder="name@company.com"
+                                    fill
+                                />
+                            </FormGroup>
+                            <RadioGroup
+                                name="ms-role"
+                                label="Default role"
+                                selectedValue={role}
+                                onChange={(val) => setRole(val)}
+                                options={[
+                                    { value: "owner", label: "Owner — full access, can manage members" },
+                                    { value: "editor", label: "Editor — can create and edit content" },
+                                    { value: "viewer", label: "Viewer — read-only access" },
+                                ]}
+                            />
+                            <Switch label="Send an invitation email" defaultChecked />
                         </div>
                     }
                 />
@@ -2081,10 +2133,20 @@ function MultistepDialogGallery() {
                     id="review"
                     title="Review"
                     panel={
-                        <div className="p-5">
-                            <p className="text-body text-foreground m-0">
-                                Step 3 — review your settings, then create the project.
-                            </p>
+                        <div className="flex flex-col gap-4 p-5">
+                            <Callout intent="primary" title="Ready to create">
+                                Review the summary below, then choose Create to set up your project.
+                            </Callout>
+                            <dl className="m-0 grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-body">
+                                <dt className="text-foreground-muted">Project name</dt>
+                                <dd className="m-0 text-foreground">Apollo Initiative</dd>
+                                <dt className="text-foreground-muted">Workspace</dt>
+                                <dd className="m-0 text-foreground">Engineering</dd>
+                                <dt className="text-foreground-muted">Default role</dt>
+                                <dd className="m-0 text-foreground capitalize">{role}</dd>
+                                <dt className="text-foreground-muted">Notifications</dt>
+                                <dd className="m-0 text-foreground">Invitation email on</dd>
+                            </dl>
                         </div>
                     }
                 />

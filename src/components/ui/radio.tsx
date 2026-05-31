@@ -96,7 +96,9 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 disabled ? "text-foreground-disabled" : "text-foreground",
                 large ? "text-body-lg" : "text-body",
@@ -330,7 +332,7 @@ export function RadioGroup({
     return (
         <div className={cn("flex", inline ? "flex-row flex-wrap gap-5" : "flex-col", className)}>
             {label && (
-                <label className="block text-body text-foreground mb-2 font-semibold">
+                <label className="block text-body text-foreground mb-4 font-semibold">
                     {label}
                 </label>
             )}

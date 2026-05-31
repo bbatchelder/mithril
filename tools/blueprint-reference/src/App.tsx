@@ -2095,6 +2095,7 @@ function DrawerGallery() {
  */
 function MultistepDialogGallery() {
     const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [role, setRole] = useState("editor");
 
     useEffect(() => {
         function tag() {
@@ -2144,8 +2145,39 @@ function MultistepDialogGallery() {
                     id="info"
                     title="Project info"
                     panel={
-                        <div style={{ padding: 20 }}>
-                            <p style={{ margin: 0 }}>Step 1 — name your project and pick a workspace.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <FormGroup
+                                label="Project name"
+                                labelInfo="(required)"
+                                labelFor="ms-project-name"
+                                helperText="Shown in the workspace sidebar and in URLs."
+                            >
+                                <InputGroup
+                                    id="ms-project-name"
+                                    leftIcon="projects"
+                                    defaultValue="Apollo Initiative"
+                                    fill
+                                />
+                            </FormGroup>
+                            <FormGroup label="Workspace" labelFor="ms-workspace">
+                                <HTMLSelect
+                                    id="ms-workspace"
+                                    fill
+                                    options={["Engineering", "Design", "Research", "Operations"]}
+                                />
+                            </FormGroup>
+                            <FormGroup
+                                label="Description"
+                                labelFor="ms-description"
+                                helperText="Optional — a short summary of the project's goals."
+                            >
+                                <TextArea
+                                    id="ms-description"
+                                    rows={3}
+                                    fill
+                                    placeholder="What is this project about?"
+                                />
+                            </FormGroup>
                         </div>
                     }
                 />
@@ -2153,8 +2185,32 @@ function MultistepDialogGallery() {
                     id="members"
                     title="Members"
                     panel={
-                        <div style={{ padding: 20 }}>
-                            <p style={{ margin: 0 }}>Step 2 — invite collaborators and assign roles.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <FormGroup
+                                label="Invite by email"
+                                labelFor="ms-invite"
+                                helperText="Separate multiple addresses with commas."
+                            >
+                                <InputGroup
+                                    id="ms-invite"
+                                    type="email"
+                                    leftIcon="envelope"
+                                    placeholder="name@company.com"
+                                    fill
+                                />
+                            </FormGroup>
+                            <RadioGroup
+                                name="ms-role"
+                                label="Default role"
+                                selectedValue={role}
+                                onChange={(e) => setRole((e.target as HTMLInputElement).value)}
+                                options={[
+                                    { value: "owner", label: "Owner — full access, can manage members" },
+                                    { value: "editor", label: "Editor — can create and edit content" },
+                                    { value: "viewer", label: "Viewer — read-only access" },
+                                ]}
+                            />
+                            <Switch label="Send an invitation email" defaultChecked />
                         </div>
                     }
                 />
@@ -2162,8 +2218,29 @@ function MultistepDialogGallery() {
                     id="review"
                     title="Review"
                     panel={
-                        <div style={{ padding: 20 }}>
-                            <p style={{ margin: 0 }}>Step 3 — review your settings, then create the project.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <Callout intent="primary" title="Ready to create">
+                                Review the summary below, then choose Create to set up your project.
+                            </Callout>
+                            <dl
+                                style={{
+                                    margin: 0,
+                                    display: "grid",
+                                    gridTemplateColumns: "140px 1fr",
+                                    columnGap: 16,
+                                    rowGap: 8,
+                                    fontSize: 14,
+                                }}
+                            >
+                                <dt className={Classes.TEXT_MUTED}>Project name</dt>
+                                <dd style={{ margin: 0 }}>Apollo Initiative</dd>
+                                <dt className={Classes.TEXT_MUTED}>Workspace</dt>
+                                <dd style={{ margin: 0 }}>Engineering</dd>
+                                <dt className={Classes.TEXT_MUTED}>Default role</dt>
+                                <dd style={{ margin: 0, textTransform: "capitalize" }}>{role}</dd>
+                                <dt className={Classes.TEXT_MUTED}>Notifications</dt>
+                                <dd style={{ margin: 0 }}>Invitation email on</dd>
+                            </dl>
                         </div>
                     }
                 />
