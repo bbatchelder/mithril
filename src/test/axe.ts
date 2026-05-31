@@ -12,11 +12,19 @@
 import axeCore, { type AxeResults, type RunOptions, type Result } from "axe-core";
 import { expect } from "vitest";
 
-// Rules that cannot be meaningfully evaluated in jsdom (no layout / paint). Turning them
-// off keeps results focused on the ARIA/role/name wiring this layer is meant to protect.
+// Rules that cannot be meaningfully evaluated in jsdom (no layout / paint) or that judge
+// page-level structure rather than the component's own ARIA/role/name wiring this layer
+// protects. Turning them off keeps results focused on the wiring we actually want to lock in.
 const JSDOM_DISABLED_RULES = [
     "color-contrast", // no computed color/layout in jsdom
     "target-size", // no geometry in jsdom
+    // Best-practice landmark rule: "all page content should be contained by landmarks". A bare
+    // test document has no <main>/landmarks, and a portaled overlay (Radix renders the popover
+    // panel at document.body) sits outside any landmark by design — so it fires here for the
+    // combobox family even though the real-browser sweep (handoff 0070, real app shell with
+    // landmarks) does not flag it. It judges page composition, not a component's ARIA wiring;
+    // same class of dev-harness artifact as page-has-heading-one / heading-order.
+    "region",
 ] as const;
 
 const DEFAULT_OPTIONS: RunOptions = {

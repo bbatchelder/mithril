@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { axe } from "@/test/axe";
@@ -15,7 +15,9 @@ import { Menu, MenuDivider, MenuItem } from "../menu";
 import { NumericInput } from "../numeric-input";
 import { Popover } from "../popover";
 import { Radio } from "../radio";
+import { MultiSelect } from "../multi-select";
 import { Slider } from "../slider";
+import { Suggest } from "../suggest";
 import { Switch } from "../switch";
 import { Tab, Tabs } from "../tabs";
 import { Tag } from "../tag";
@@ -179,6 +181,52 @@ describe("axe smoke — open overlays", () => {
                 <Button>Open</Button>
             </Popover>,
         );
+        expect(await axe(document.body)).toHaveNoViolations();
+    });
+});
+
+// ---- Combobox family, opened (the trigger surface must carry no disallowed ARIA) --------
+// Suggest/MultiSelect anchor their popover to a roleless wrapper. If that wrapper is a Radix
+// Popover.Trigger it gets stamped aria-haspopup/expanded/controls — invalid on a div with no
+// role (aria-allowed-attr). These open the listbox and assert the whole tree is clean.
+
+const FRUITS = ["Apple", "Banana", "Cherry"];
+
+describe("axe smoke — combobox triggers (open)", () => {
+    it("Suggest (open listbox)", async () => {
+        render(
+            <Suggest<string>
+                items={FRUITS}
+                inputValueRenderer={(i) => i}
+                itemPredicate={(q, i) => i.toLowerCase().includes(q.toLowerCase())}
+                onItemSelect={() => {}}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />
+                )}
+                inputProps={{ placeholder: "Search…" }}
+            />,
+        );
+        screen.getByRole("combobox").focus();
+        await screen.findByRole("listbox");
+        expect(await axe(document.body)).toHaveNoViolations();
+    });
+
+    it("MultiSelect (open listbox)", async () => {
+        render(
+            <MultiSelect<string>
+                items={FRUITS}
+                selectedItems={[]}
+                tagRenderer={(i) => i}
+                itemPredicate={(q, i) => i.toLowerCase().includes(q.toLowerCase())}
+                onItemSelect={() => {}}
+                onRemove={() => {}}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />
+                )}
+            />,
+        );
+        screen.getByRole("combobox").focus();
+        await screen.findByRole("listbox");
         expect(await axe(document.body)).toHaveNoViolations();
     });
 });

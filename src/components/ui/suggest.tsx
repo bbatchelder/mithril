@@ -485,11 +485,19 @@ export function Suggest<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Anchor (not Trigger): the combobox input owns all the popup ARIA
+            // (aria-haspopup/expanded/controls). A Trigger would stamp those onto the
+            // roleless wrapper <div> — invalid there (axe aria-allowed-attr). Open/close is
+            // driven by focus/typing here, so we don't need Radix's click-to-toggle.
+            anchorOnly
+            // Keep DOM focus on the input when the listbox opens (combobox contract) — Radix
+            // would otherwise move focus into the panel and break type-to-filter.
+            autoFocusContent={false}
             // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
             ariaLabel="Suggestions"
             {...restPopoverProps}
         >
-            {/* Trigger wrapper — Popover.Trigger wraps this as asChild */}
+            {/* Anchor wrapper — Popover.Anchor wraps this as asChild (positioning only, no ARIA) */}
             <div
                 className={cn("inline-block", fill && "w-full")}
                 style={fill ? { width: "100%" } : undefined}

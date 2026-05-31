@@ -483,11 +483,19 @@ export function MultiSelect<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Anchor (not Trigger): the ghost input owns all the popup ARIA
+            // (aria-haspopup/expanded/controls). A Trigger would stamp those onto the roleless
+            // container <div> — invalid there (axe aria-allowed-attr). Open/close is driven by
+            // focus/typing here, so we don't need Radix's click-to-toggle.
+            anchorOnly
+            // Keep DOM focus on the ghost input when the listbox opens (combobox contract) —
+            // Radix would otherwise move focus into the panel and break type-to-filter.
+            autoFocusContent={false}
             // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
             ariaLabel="Options"
             {...restPopoverProps}
         >
-            {/* Trigger: the TagInput-like container with chips + ghost input */}
+            {/* Anchor: the TagInput-like container with chips + ghost input (positioning only, no ARIA) */}
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
                 ref={containerRef}

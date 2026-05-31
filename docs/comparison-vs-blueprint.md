@@ -110,10 +110,13 @@ keyboard/ARIA coverage (53 tests) and an axe-core audit over the gallery in both
 Still open (tracked, larger efforts): **Hotkeys** is display-only (no key-binding/dispatch engine), and
 `MenuItem`'s submenu caret opens nothing — see §2 (these are completeness gaps with a11y impact).
 
-**One known residual axe item:** `aria-allowed-attr` on the Suggest/MultiSelect trigger wrappers —
-Radix's `Popover.Trigger` puts redundant trigger ARIA (`aria-haspopup`/`expanded`/`controls`) on the
-wrapper `<div>` while the inner combobox input carries the authoritative ARIA. The clean fix (`anchorOnly`)
-regresses focus-driven filtering, so it's left documented rather than risk the interaction.
+**Resolved (was a known residual):** `aria-allowed-attr` on the Suggest/MultiSelect trigger wrappers.
+Radix's `Popover.Trigger` stamped trigger ARIA (`aria-haspopup`/`expanded`/`controls`) onto the roleless
+wrapper `<div>` while the inner combobox input already carried the authoritative ARIA. Both now anchor the
+popover via `Popover.Anchor` (`anchorOnly`) — which adds no ARIA — and pass `autoFocusContent={false}` so
+the popover's open-autofocus is prevented (Radix `onOpenAutoFocus` → `preventDefault`) and DOM focus stays
+on the combobox input. That keeps type-to-filter working (the earlier blocker: bare `anchorOnly` let the
+panel steal focus on open). Locked in by jsdom-axe smokes that open each listbox (`axe-smoke.test.tsx`).
 
 #### Color-contrast posture (WCAG 1.4.3)
 

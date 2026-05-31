@@ -212,6 +212,21 @@ export interface PopoverProps {
     anchorOnly?: boolean;
 
     /**
+     * Whether the popover content grabs focus when it opens (Radix's default
+     * `onOpenAutoFocus`). Set `false` to keep DOM focus on whatever opened the popover.
+     *
+     * This is the WAI-ARIA combobox contract: the `role="combobox"` input must retain
+     * focus while its `role="listbox"` panel is open, with the active option conveyed via
+     * `aria-activedescendant` (not by moving focus into the list). Suggest/MultiSelect anchor
+     * the popover to the input's wrapper and drive open/close themselves, so letting the
+     * content steal focus on open would break type-to-filter. Preventing the open-autofocus
+     * (Radix `onOpenAutoFocus` → `preventDefault`) keeps focus on the input deterministically,
+     * independent of whether the panel has any tabbable children.
+     * @default true
+     */
+    autoFocusContent?: boolean;
+
+    /**
      * How the popover opens:
      * - `"click"` (default): Radix's click-to-toggle on the trigger.
      * - `"hover"`: opens on pointer enter of the trigger, closes on leave (with a short
@@ -276,6 +291,7 @@ export function Popover({
     dark = false,
     disabled = false,
     anchorOnly = false,
+    autoFocusContent = true,
     interactionKind = "click",
     hoverCloseDelay = 100,
     className,
@@ -419,6 +435,9 @@ export function Popover({
                                 : {}),
                             ...style,
                         }}
+                        onOpenAutoFocus={
+                            autoFocusContent ? undefined : (e) => e.preventDefault()
+                        }
                         onEscapeKeyDown={
                             canEscapeKeyClose ? undefined : (e) => e.preventDefault()
                         }
