@@ -1,0 +1,122 @@
+{
+  "_doc": [
+    "Accepted fidelity deltas — waivers for the comparison harness (tools/compare.sh).",
+    "Each entry suppresses a KNOWN, reviewed delta so it stops showing as a 'differ'/'flagged',",
+    "while still catching REGRESSIONS: a waiver only applies while the live values still match",
+    "what's pinned here. Change the component and the value drifts → the waiver misses → it",
+    "re-surfaces for re-review. See docs/component-fidelity-deltas.md (Resolution) for the why.",
+    "",
+    "Shape per component id:",
+    "  styles:   { '<specimen>': { '<cssProp>': [ ['<analystVal>','<blueprintVal>'], ... ] } }",
+    "            (value-pinned; accepts any listed analyst/blueprint pair, color-tolerant)",
+    "  unpaired: ['<specimen>', ...]   specimens expected only in analyst (covered under their own id)",
+    "  visual:   { '<specimen>': { 'expectSize': [aw,ah,bw,bh] } | { 'ssimArtifact': true } }",
+    "            expectSize  → suppress the flag only while the size mismatch matches (±3px); else re-flag",
+    "            ssimArtifact→ suppress low-SSIM flag while NOT size-mismatched (text-shift/crop artifact);",
+    "                          a NEW size mismatch always re-flags (the layout-flow regression signal)."
+  ],
+
+  "popover": {
+    "styles": {
+      "popover-arrow": { "height": [["11px", "30px"]] },
+      "popover-content": { "minWidth": [["0px", "auto"]] }
+    },
+    "visual": {
+      "popover-arrow": { "expectSize": [30, 11, 30, 30] }
+    }
+  },
+
+  "tooltip": {
+    "styles": {
+      "tooltip-arrow": { "height": [["8px", "22px"]] },
+      "tooltip-content": { "minWidth": [["0px", "auto"]] }
+    },
+    "visual": {
+      "tooltip-arrow": { "expectSize": [22, 8, 22, 22] }
+    }
+  },
+
+  "segmented-control": {
+    "styles": {
+      "sc-default": { "minWidth": [["auto", "0px"]] }
+    }
+  },
+
+  "slider": {
+    "styles": {
+      "slider-handle": { "color": [["rgb(246, 247, 249)", "rgb(165, 170, 179)"]] }
+    }
+  },
+
+  "hotkeys": {
+    "styles": {
+      "hotkey-key": { "marginRight": [["0px", "4px"]] }
+    },
+    "unpaired": ["dialog-body", "dialog-close", "dialog-header", "dialog-panel"],
+    "visual": {
+      "hotkey-combo": { "ssimArtifact": true },
+      "hotkey-key": { "ssimArtifact": true },
+      "hotkey-label": { "expectSize": [359, 18, 100, 18] }
+    }
+  },
+
+  "multi-select": {
+    "styles": {
+      "multi-select-tag": { "marginRight": [["0px", "4px"]] }
+    },
+    "unpaired": ["popover-content"],
+    "visual": {
+      "multi-select-tag": { "expectSize": [45, 20, 70, 20] },
+      "multi-select-container": { "ssimArtifact": true }
+    }
+  },
+
+  "tag-input": {
+    "styles": {
+      "tag-input-tag": { "marginRight": [["0px", "4px"]] },
+      "tag-input-ghost": {
+        "fontSize": [["14px", "13.3333px"]],
+        "color": [["rgb(28, 33, 39)", "rgb(0, 0, 0)"], ["rgb(246, 247, 249)", "rgb(165, 170, 179)"]]
+      }
+    },
+    "visual": {
+      "tag-input-ghost": { "expectSize": [179, 20, 185, 20] },
+      "tag-input-tag": { "expectSize": [61, 20, 59, 20] },
+      "tag-input-container": { "ssimArtifact": true }
+    }
+  },
+
+  "date-input": {
+    "styles": {
+      "date-input-field": { "paddingRight": [["8px", "0px"]] },
+      "date-input-day": { "color": [["rgb(246, 247, 249)", "rgb(255, 255, 255)"]] }
+    },
+    "unpaired": ["date-picker-nav", "date-picker-weekday", "popover-arrow", "popover-content"]
+  },
+
+  "date-picker": {
+    "styles": {
+      "date-picker-nav": {
+        "paddingLeft": [["0px", "8px"]],
+        "paddingRight": [["0px", "8px"]],
+        "minWidth": [["auto", "30px"]],
+        "color": [["rgb(246, 247, 249)", "rgb(255, 255, 255)"]]
+      },
+      "date-picker-day": { "color": [["rgb(246, 247, 249)", "rgb(255, 255, 255)"]] }
+    },
+    "unpaired": ["time-picker-divider", "time-picker-input"]
+  },
+
+  "date-range-picker": {
+    "styles": {
+      "drp-day": { "color": [["rgb(246, 247, 249)", "rgb(255, 255, 255)"]] }
+    },
+    "unpaired": ["drp-nav-next", "drp-nav-prev"]
+  },
+
+  "time-picker": {
+    "styles": {
+      "time-picker-input": { "fontSize": [["14px", "13.3333px"]] }
+    }
+  }
+}

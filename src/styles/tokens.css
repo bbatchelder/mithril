@@ -307,6 +307,15 @@
     --elevation-3: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --elevation-4: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
 
+    /* Overlay / floating-panel shadows (light) — used by popover, dialog, alert,
+     * drawer, navbar, omnibar, tooltip & the slider value pill. Identical to the
+     * card elevations EXCEPT the hairline ring uses Blueprint's elevation-border
+     * color rgba(20,20,20,…) (cards use pure rgba(0,0,0,…) — verified distinct via
+     * the comparison harness). See docs/component-fidelity-deltas.md (Cluster A). */
+    --overlay-shadow-1: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --overlay-shadow-3: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --overlay-shadow-4: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+
     /* Card shadows (light) — the surface elevations, plus a primary selection ring.
      * Blueprint derives the ring from intent.primary.rest (blue-3) via relative oklch;
      * we mirror the exact offsets so both implementations resolve to identical colors. */
@@ -417,6 +426,16 @@
     --card-shadow-selected:
         0 0 0 3px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h / 0.4),
         0 0 0 1px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h);
+
+    /* Overlay / floating-panel shadows (dark). Same layers as the card elevations,
+     * but Blueprint orders the trailing drop AFTER the two inset edge-highlights
+     * (cards place both drops first, then the highlights). We interleave to match
+     * exactly. Level 4 has a single drop, so it equals card-shadow-4 untouched. */
+    --overlay-shadow-1: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 10px 0 rgba(0, 0, 0, 0.2),
+        var(--card-highlight), 0 1px 10px -1px rgba(0, 0, 0, 0.2);
+    --overlay-shadow-3: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        var(--card-highlight), 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+    --overlay-shadow-4: var(--card-shadow-4);
 }
 
 /* =============================================================================
@@ -465,6 +484,9 @@
     --shadow-elevation-2: var(--elevation-2);
     --shadow-elevation-3: var(--elevation-3);
     --shadow-elevation-4: var(--elevation-4);
+    --shadow-overlay-1: var(--overlay-shadow-1);
+    --shadow-overlay-3: var(--overlay-shadow-3);
+    --shadow-overlay-4: var(--overlay-shadow-4);
     --shadow-input: var(--input-shadow);
     --shadow-input-intent-primary: var(--input-intent-primary);
     --shadow-input-intent-success: var(--input-intent-success);

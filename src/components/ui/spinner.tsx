@@ -208,11 +208,14 @@ export const Spinner = forwardRef<HTMLElement, SpinnerProps>(function Spinner(
             {
                 // Animation wrapper — isolated from the outer display layout.
                 // Blueprint rotates this inner element; SVG itself stays a static block.
+                // `bp-spinner-animation` is a stable hook so the reduced-motion reset in
+                // globals.css can keep the spinner rotating — it's an essential loading
+                // status indicator, exempt from WCAG 2.3.3 (interaction animation).
                 className: isDeterminate
                     ? // Determinate: no spin.
-                      "[animation:none]"
+                      "bp-spinner-animation [animation:none]"
                     : // Indeterminate: rotate 360° over 500ms (5 × $pt-transition-duration=100ms).
-                      "[animation:bp-spinner-spin_500ms_linear_infinite]",
+                      "bp-spinner-animation [animation:bp-spinner-spin_500ms_linear_infinite]",
             },
             <svg
                 width={sizePx}

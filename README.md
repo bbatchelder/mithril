@@ -64,6 +64,24 @@ pnpm typecheck
 The gallery groups every component by category in a sidebar. Toggle light/dark from the header; deep-link to
 any component with a URL hash (e.g. `#button`).
 
+### Example apps
+
+Beyond the per-component gallery, the **Demos** toggle in the sidebar shows full example applications that
+compose the owned components into realistic product UIs (deep-link with `#demo-<id>`):
+
+- **SOC Console** (`#demo-soc`) — a security-operations analyst console: alert queue table, investigation
+  drawer with tabs, filters, and toasts.
+- **Project Board** (`#demo-board`) — a kanban board with drag-and-drop between columns, label/assignee
+  filtering, a new-task dialog, and an inline-editable task detail panel.
+- **Mission Control** (`#demo-mission`) — *Skylark*, a drone-swarm operations console with **live streaming
+  data**: a [MapLibre](https://maplibre.org/) basemap (via mapcn-style CARTO tiles, no API key) shows drones
+  moving along patrol routes while telemetry and events stream in from a seeded, deterministic mock-data
+  engine. Exercises the structural slice of the library — `Tree`, `Section`, `CardList`, `Skeleton`,
+  `Breadcrumbs`, `PanelStack` — plus demo-local SVG sparklines and gauges. The only demo with a runtime
+  dependency (`maplibre-gl`) and network calls (map tiles).
+
+Each demo lives under `src/demos/<slug>/` and is registered in `src/demos/registry.ts`.
+
 ## Using the components
 
 analyst-ui follows the shadcn model: you copy the source into your own project and own it from then on.

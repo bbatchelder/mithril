@@ -31,8 +31,8 @@
  * @see https://blueprintjs.com/docs/#select/select
  */
 
-import { useCallback, useRef, useState } from "react";
-import type { ReactNode, KeyboardEvent, ChangeEvent } from "react";
+import { cloneElement, isValidElement, useCallback, useId, useRef, useState } from "react";
+import type { ReactElement, ReactNode, KeyboardEvent, ChangeEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { Popover } from "./popover";
@@ -308,6 +308,13 @@ export function useQueryList<T>(options: UseQueryListOptions<T>): QueryListState
     };
 }
 
+/** The subset of MenuItem props Select injects onto each rendered option. */
+type MenuItemAriaProps = {
+    id?: string;
+    roleStructure?: "menuitem" | "listoption" | "none";
+    selected?: boolean;
+};
+
 /* ============================================================
  * Select props
  * ============================================================ */
@@ -483,6 +490,11 @@ export function Select<T>({
     const inputRef = useRef<HTMLInputElement>(null);
     const menuRef = useRef<HTMLUListElement>(null);
 
+    // Stable ids for the WAI-ARIA combobox wiring (listbox + per-option ids that
+    // aria-activedescendant points at).
+    const listboxId = useId();
+    const optionId = (index: number) => `${listboxId}-option-${index}`;
+
     const ql = useQueryList<T>({
         items,
         itemPredicate,
@@ -537,6 +549,18 @@ export function Select<T>({
         [disabled, resetOnClose],
     );
 
+    // The popup may be governed internally (isOpen) OR controlled by a consumer via
+    // popoverProps.open (e.g. the gallery force-open specimens). The combobox's ARIA must
+    // track whichever actually shows the listbox, else aria-expanded / aria-activedescendant
+    // go stale (reporting "collapsed" / no active option) while the listbox is visible.
+    // (Suggest/MultiSelect already do this; Select was the outlier.)
+    const controlledOpen = popoverProps?.open;
+    const resolvedOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
+
+    // The id of the active (keyboard-highlighted) option, for aria-activedescendant.
+    const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
+    const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
+
     // Render the menu content (filter input + menu items)
     const popoverContent = (
         <div
@@ -551,6 +575,17 @@ export function Select<T>({
                     value={ql.query}
                     onChange={ql.handleQueryChange}
                     ref={inputRef}
+                    // WAI-ARIA combobox: input owns the listbox + tracks the active option.
+                    role="combobox"
+                    aria-expanded={resolvedOpen}
+                    aria-controls={listboxId}
+                    aria-activedescendant={activeDescendantId}
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6).
+                    // Default the combobox's name to the placeholder; consumers can
+                    // override via inputProps["aria-label"] (spread wins below).
+                    aria-label={placeholder}
                     {...inputProps}
                     className={cn("mb-0", inputProps?.className)}
                 />
@@ -560,6 +595,8 @@ export function Select<T>({
             {/* padding: 0 4px; padding-top: 4px if not first child (i.e. filter present) */}
             <Menu
                 ulRef={menuRef}
+                id={listboxId}
+                role="listbox"
                 data-compare="select-menu"
                 className={cn(
                     "-mx-1 overflow-auto",
@@ -572,7 +609,7 @@ export function Select<T>({
                 {ql.filteredItems.length === 0
                     ? noResults
                     : ql.filteredItems.map((item, index) => {
-                          const isActive = ql.activeItem != null && ql.filteredItems.indexOf(ql.activeItem) === index;
+                          const isActive = activeIndex === index;
                           const isDisabled = isItemDisabled(item, index, itemDisabled);
                           const rendered = itemRenderer(item, {
                               item,
@@ -589,7 +626,16 @@ export function Select<T>({
                                   }
                               },
                           });
-                          return rendered;
+                          // Inject the WAI-ARIA option semantics so consumers' itemRenderers
+                          // don't each have to: role=option (via roleStructure), a stable id for
+                          // aria-activedescendant, and aria-selected from the selected item.
+                          return isValidElement(rendered)
+                              ? cloneElement(rendered as ReactElement<MenuItemAriaProps>, {
+                                    id: optionId(index),
+                                    roleStructure: "listoption",
+                                    selected: _selectedItem != null && item === _selectedItem,
+                                })
+                              : rendered;
                       })}
             </Menu>
         </div>
@@ -606,13 +652,20 @@ export function Select<T>({
             hasContentPadding={false}
             dark={dark}
             disabled={disabled}
+            // Radix gives the Popover panel role="dialog"; name it so it isn't an
+            // anonymous dialog (axe aria-dialog-name). Override via popoverProps.
+            ariaLabel="Options"
             {...popoverProps}
         >
-            {/* Trigger wrapper: thin wrapper only needed for fill behavior.
-                data-compare is placed on the trigger element (Button etc.) by the caller. */}
-            <div className={cn("inline-block", fill && "w-full")}>
-                {children}
-            </div>
+            {/* The trigger child IS the Popover trigger (asChild), so Radix's trigger ARIA
+                (aria-haspopup/expanded/controls) lands on the consumer's interactive element
+                — valid only on a real control, not a wrapper <div> (axe aria-allowed-attr).
+                For `fill`, merge w-full into the child instead of wrapping it. */}
+            {fill && isValidElement<{ className?: string }>(children)
+                ? cloneElement(children, {
+                      className: cn(children.props.className, "w-full"),
+                  })
+                : children}
         </Popover>
     );
 }

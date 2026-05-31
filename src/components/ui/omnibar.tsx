@@ -31,14 +31,20 @@
  */
 
 import * as ReactDOM from "react-dom";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode, KeyboardEvent } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ReactElement, ReactNode, KeyboardEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { useQueryList } from "./select";
 import type { UseQueryListOptions, ItemRendererProps } from "./select";
 import { InputGroup } from "./input-group";
 import { Menu } from "./menu";
+
+/** The subset of MenuItem props Omnibar injects onto each rendered option. */
+type OmnibarOptionAriaProps = {
+    id?: string;
+    roleStructure?: "menuitem" | "listoption" | "none";
+};
 
 /* ============================================================
  * Props
@@ -154,6 +160,10 @@ export function Omnibar<T>({
     const panelRef = useRef<HTMLDivElement>(null);
     const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
+    // Stable ids for the WAI-ARIA combobox wiring.
+    const listboxId = useId();
+    const optionId = (index: number) => `${listboxId}-option-${index}`;
+
     useEffect(() => {
         setPortalTarget(document.body);
     }, []);
@@ -227,6 +237,9 @@ export function Omnibar<T>({
 
     if (!portalTarget || !isOpen) return null;
 
+    const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
+    const activeDescendantId = activeIndex >= 0 ? optionId(activeIndex) : undefined;
+
     // Blueprint _omnibar.scss metrics:
     // width: $pt-spacing * 125 = 500px
     // left: calc(50% - 250px)  (centered)
@@ -263,8 +276,9 @@ export function Omnibar<T>({
                     "text-foreground",
                     // Blueprint: border-radius: $pt-border-radius = 4px
                     "rounded-bp",
-                    // Blueprint: box-shadow: $pt-elevation-shadow-4
-                    "shadow-card-4",
+                    // Blueprint: box-shadow: $pt-elevation-shadow-4 (overlay variant —
+                    // rgba(20,20,20) light hairline ring; dark = card-4, single drop).
+                    "shadow-overlay-4",
                     // Restore pointer events (parent wrapper disables them)
                     "pointer-events-auto",
                     // Focus outline
@@ -296,6 +310,17 @@ export function Omnibar<T>({
                     value={ql.query}
                     onChange={ql.handleQueryChange}
                     ref={inputRef}
+                    // WAI-ARIA combobox: the search input owns the results listbox.
+                    role="combobox"
+                    aria-expanded={isOpen}
+                    aria-controls={listboxId}
+                    aria-activedescendant={activeDescendantId}
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    // The placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6).
+                    // The dialog is labelled "Omnibar"; give the input its own name too.
+                    // Consumers can override via inputProps["aria-label"] (spread wins).
+                    aria-label="Search"
                     {...inputProps}
                     style={{
                         backgroundColor: "transparent",
@@ -318,6 +343,8 @@ export function Omnibar<T>({
                     Tailwind v4 CSS order. Inline style always wins over class-based styles. */}
                 <Menu
                     ulRef={menuRef}
+                    id={listboxId}
+                    role="listbox"
                     data-compare="omnibar-menu"
                     style={{
                         // Blueprint: background-color: transparent (no menu bg — panel bg shows through)
@@ -368,7 +395,14 @@ export function Omnibar<T>({
                                       }
                                   },
                               });
-                              return rendered;
+                              // Inject WAI-ARIA option semantics (see Select). A command
+                              // palette has no persistent selection, so only role + id.
+                              return isValidElement(rendered)
+                                  ? cloneElement(rendered as ReactElement<OmnibarOptionAriaProps>, {
+                                        id: optionId(index),
+                                        roleStructure: "listoption",
+                                    })
+                                  : rendered;
                           })}
                 </Menu>
             </div>

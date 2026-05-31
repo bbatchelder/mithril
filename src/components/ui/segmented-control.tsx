@@ -233,9 +233,13 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
                         );
                     } else {
                         // Unselected: muted text, transparent bg (minimal). Override default foreground.
+                        // Must re-assert the dark color too: baseClasses (minimal/none) carries
+                        // `dark:text-white`/`dark:[&_svg]:fill-white`, whose `.dark`-scoped selector
+                        // out-specifies a plain `text-foreground-muted` in dark mode (would render
+                        // the unselected segment white). Blueprint's unselected segment is muted.
                         segmentClasses = cn(
                             baseClasses,
-                            "text-foreground-muted",
+                            "text-foreground-muted dark:text-foreground-muted dark:[&_svg]:fill-current",
                             // disabled segments stay disabled text (opacity is handled by button disabled:opacity-50)
                         );
                     }

@@ -36,7 +36,10 @@ export type FileInputSize = "small" | "medium" | "large";
 export interface FileInputProps extends Omit<React.LabelHTMLAttributes<HTMLLabelElement>, "onChange"> {
     /**
      * Display text when no file is selected (or when hasSelection is false).
-     * Color is foreground-muted (placeholder-like).
+     * Rendered in `--foreground-disabled` (rgba(95,107,124,0.6) light / rgba(171,179,191,0.6)
+     * dark) — Blueprint's exact empty-state prompt color (`.bp6-file-upload-input`). Note this
+     * is a faithful Blueprint-parity delta that sits below WCAG AA (~2.45:1 light); consumers
+     * who need AA can darken this class. See the contrast posture in docs/comparison-vs-blueprint.
      * @default "Choose file..."
      */
     text?: React.ReactNode;

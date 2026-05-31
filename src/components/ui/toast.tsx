@@ -330,8 +330,7 @@ export function Toast({
                 // Blueprint: border-radius 4px ($pt-border-radius)
                 "rounded-bp",
                 // Blueprint: min-width min(300px,100%), max-width min(500px,100%)
-                // We use 300px / 500px since the viewport constrains total width already.
-                "min-w-[300px] max-w-[500px]",
+                "min-w-[min(300px,100%)] max-w-[min(500px,100%)]",
                 // Blueprint: margin-top 20px (margin between stacked toasts)
                 // NOTE: The viewport uses gap-[20px] for spacing, so this matches.
                 // Blueprint .bp6-toast has margin: $toast-margin 0 0 (20px top).
@@ -343,14 +342,14 @@ export function Toast({
                 // Dark: $pt-dark-toast-box-shadow = $pt-dark-elevation-shadow-3 = shadow-card-3 dark
                 !hasIntent && [
                     "shadow-[inset_0_0_0_1px_rgba(17,20,24,0.2),_0_2px_4px_rgba(17,20,24,0.2),_0_8px_24px_rgba(17,20,24,0.2)]",
-                    "dark:shadow-card-3",
+                    "dark:shadow-overlay-3",
                 ],
                 // Intent card: intent-specific bg + text
                 hasIntent && intentCls?.card,
                 // Intent cards use the same toast box-shadow (Blueprint: same mixin, different bg)
                 hasIntent && [
                     "shadow-[inset_0_0_0_1px_rgba(17,20,24,0.2),_0_2px_4px_rgba(17,20,24,0.2),_0_8px_24px_rgba(17,20,24,0.2)]",
-                    "dark:shadow-card-3",
+                    "dark:shadow-overlay-3",
                 ],
                 // Text color for no-intent toast — set explicitly for portal context
                 !hasIntent && "text-foreground",

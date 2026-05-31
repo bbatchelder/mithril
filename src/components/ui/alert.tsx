@@ -189,6 +189,9 @@ export function Alert({
                     <div className="fixed inset-0 flex items-center justify-center z-overlay pointer-events-none">
                         <RadixDialog.Content
                             data-compare="alert-panel"
+                            // Blueprint Alert is an alertdialog (a modal that interrupts to
+                            // confirm/warn), not a plain dialog. Override Radix's role="dialog".
+                            role="alertdialog"
                             className={cn(
                                 // Layout
                                 "flex flex-col",
@@ -203,7 +206,7 @@ export function Alert({
                                 // Blueprint: box-shadow = card-3 (Dialog verified this is correct;
                                 // shadow-elevation-N uses pure-black base, shadow-card-N uses
                                 // $black=#111418 base + dark-mode white inset edge-highlights)
-                                "shadow-card-3",
+                                "shadow-overlay-3",
                                 // Blueprint: max-width = $pt-spacing * 100 = 400px (Alert is narrower than Dialog's 500px)
                                 "w-full max-w-[400px]",
                                 // Blueprint: padding = $pt-spacing * 5 = 20px (all sides)

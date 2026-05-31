@@ -39,7 +39,7 @@ Neither is strictly better. analyst-ui wins the **authoring experience**; Bluepr
 | **Distribution / ownership** | *Double-edged* | analyst: in-tree, auditable, minimal deps. Blueprint: `npm update` ships fixes; analyst's `npx shadcn add` path **is not actually wired up yet** |
 | **Accessibility & behavior** | **Blueprint (decisive)** | analyst's Radix-backed components are solid; its **hand-rolled** Tabs/Menu/Select-family/Hotkeys have real keyboard & ARIA gaps |
 | **Visual fidelity** | **analyst matches** | Palette/intents/type are an exact 1:1 port; dark surfaces correctly OKLCH-derived. But values are *frozen* to v6.15 |
-| **Completeness & maturity** | **Blueprint (decisive)** | No data grid, no hotkey engine, no MultistepDialog; analyst is new, single-author, **0 tests** vs Blueprint's **152** |
+| **Completeness & maturity** | **Blueprint (decisive)** | No data grid, no hotkey engine, no MultistepDialog; analyst is new, single-author, **53 tests** vs Blueprint's **152** |
 | **Bundle size** | *Split* | analyst leaner on CSS always & on JS for icon-light apps; **Blueprint far leaner on icons** (per-glyph tree-shaking) |
 
 ---
@@ -89,26 +89,47 @@ primitives, which are at genuine parity-or-better:
 - ✅ **SegmentedControl** (a faithful port of Blueprint's accessible radiogroup)
 - ✅ **Date pickers** (calendar grid delegated to `react-day-picker` v10)
 
-But it **breaks down** wherever analyst hand-rolls the widget or feeds Radix non-Radix children:
+It previously **broke down** wherever analyst hand-rolled the widget or fed Radix non-Radix children.
+As of the `a11y-behavior-gaps` work (handoffs 0066–0070) those gaps are **closed**, each with Vitest
+keyboard/ARIA coverage (53 tests) and an axe-core audit over the gallery in both themes:
 
-- ❌ **Tabs** — no `onKeyDown` at all. A keyboard user **cannot move between tabs.** Blueprint does
-  arrow-key focus movement with wrap.
-- ❌ **Menu** — hardcodes `role="menuitem"` on every item with **no roving-tabindex / arrow-key model**
-  and no `roleStructure` (Blueprint emits correct `menuitem`/`option`/`aria-selected`).
-- ❌ **Select / Suggest / MultiSelect / Omnibar** — **missing the entire combobox WAI-ARIA pattern**
+- ✅ **Tabs** — rebuilt on `@radix-ui/react-tabs` (arrow-key focus movement with wrap, roving tabindex).
+- ✅ **Menu** — real `roleStructure` (`menuitem`/`option`/`aria-selected`); listbox options are
+  non-interactive (no nested control inside `role="option"`).
+- ✅ **Select / Suggest / MultiSelect / Omnibar** — full combobox WAI-ARIA pattern
   (`role=combobox/listbox/option`, `aria-activedescendant`, `aria-expanded`, `aria-controls`,
-  `aria-haspopup`, `aria-autocomplete`). They keyboard-navigate but announce as a plain menu with no
-  active-option feedback.
-- ❌ **ContextMenu** — wraps Radix's primitive but renders analyst's own `<Menu>` instead of
-  `RadixContextMenu.Item`, so it gets right-click/positioning/Escape but **not** arrow-key navigation,
-  typeahead, or submenus.
-- ❌ **Hotkeys** — **display-only.** It renders key-caps and a dialog but has no key-binding/dispatch
-  engine. Blueprint's `useHotkeys` actually parses combos and fires callbacks.
-- ❌ Smaller: **NumericInput** lacks `spinbutton`/`aria-value*`; **Alert** is `role="dialog"` instead of
-  `alertdialog`; **Popover** has no hover interaction mode.
+  `aria-haspopup`, `aria-autocomplete`), accessible names on the inputs, and named popover panels.
+- ✅ **ContextMenu** — renders real `RadixContextMenu.Item` (arrow-key navigation, typeahead, Escape).
+- ✅ **NumericInput** `spinbutton`/`aria-value*`; **Alert** is `role="alertdialog"`; **Popover** has a
+  hover interaction mode and forwards an accessible name to its dialog panel.
+- ✅ Cross-cutting: combobox inputs carry accessible names (not placeholder-only); the **Slider** thumb
+  has a visible focus ring + forwardable name; **ProgressBar**/**Slider**/**TimePicker** are nameable;
+  **CardList** emits `role="listitem"` children; a loading **Button** keeps its accessible name; and a
+  global `prefers-reduced-motion` reset neutralizes decorative animation (the Spinner stays).
 
-Because analyst has **0 tests** and you **own the source**, these gaps are yours to discover and fix —
-and the visual comparison harness cannot catch a missing keyboard handler.
+Still open (tracked, larger efforts): **Hotkeys** is display-only (no key-binding/dispatch engine), and
+`MenuItem`'s submenu caret opens nothing — see §2 (these are completeness gaps with a11y impact).
+
+**Resolved (was a known residual):** `aria-allowed-attr` on the Suggest/MultiSelect trigger wrappers.
+Radix's `Popover.Trigger` stamped trigger ARIA (`aria-haspopup`/`expanded`/`controls`) onto the roleless
+wrapper `<div>` while the inner combobox input already carried the authoritative ARIA. Both now anchor the
+popover via `Popover.Anchor` (`anchorOnly`) — which adds no ARIA — and pass `autoFocusContent={false}` so
+the popover's open-autofocus is prevented (Radix `onOpenAutoFocus` → `preventDefault`) and DOM focus stays
+on the combobox input. That keeps type-to-filter working (the earlier blocker: bare `anchorOnly` let the
+panel steal focus on open). Locked in by jsdom-axe smokes that open each listbox (`axe-smoke.test.tsx`).
+
+#### Color-contrast posture (WCAG 1.4.3)
+
+The palette is a 1:1 port of Blueprint, so contrast tracks Blueprint exactly. An axe sweep (both themes)
+found no AA failures on active body/control text. The deltas it *does* surface are:
+
+- **Disabled / inactive text** (`text-foreground-disabled`, outside-month calendar days): below 4.5:1, but
+  **WCAG-exempt** — 1.4.3 excludes text that is part of an inactive UI component. Matches Blueprint.
+- **File-input prompt** ("Choose file…"): 2.45:1 (light) / 3.75:1 (dark), and a **Tree** secondary/muted
+  label: ~4.2:1 (light, 12px). These are below AA on *non*-disabled text but **match Blueprint's palette**
+  exactly; fixing them would break the fidelity gate. Documented as conscious Blueprint-parity deltas —
+  consumers needing strict AA can darken `--foreground-muted` / the file-input prompt color (they own the
+  source). Non-text contrast (1.4.11) of muted icon carets is likewise Blueprint-faithful and not chased.
 
 ### 2. Completeness
 
@@ -125,8 +146,9 @@ parity** — they are shells.
 
 ### 3. Maturity, testing & risk
 
-- **Tests: 0 vs 152.** analyst has no test runner; verification is screenshot-only. Blueprint has 152
-  colocated test files covering keyboard/ARIA behavior.
+- **Tests: 53 vs 152.** analyst now has a Vitest + Testing Library suite (53 keyboard/ARIA tests) plus
+  an axe-core audit and the screenshot/computed-style harness; Blueprint has 152 colocated test files.
+  Coverage is targeted at the remediated behaviors, not yet exhaustive.
 - analyst is a young, single-author project; Blueprint is a years-old, multi-package production library
   with published versions, an issue history, and a large user base.
 
@@ -198,8 +220,9 @@ you want to *consume* a UI library and get on with your product, it is not.
   needs, willing to harden a11y →** analyst-ui is a great fit and a genuinely nicer authoring experience.
 - **You need a data grid, a global hotkey system, or multi-step dialogs →** Blueprint (or pair Blueprint
   with analyst-ui only for the surface analyst covers well).
-- **Accessibility/Section-508/WCAG is a hard requirement out of the box →** Blueprint today; analyst-ui
-  only after the §1 gaps are closed and tested.
+- **Accessibility/Section-508/WCAG is a hard requirement out of the box →** the §1 keyboard/ARIA gaps are
+  now closed and tested, so analyst-ui is viable for most surfaces; verify the two remaining items
+  (Hotkeys engine, the documented contrast deltas) against your specific requirements.
 - **You're not on Tailwind, or you want drop-in CSS with no build coupling →** Blueprint.
 - **You want to own, audit, and restyle every line, and you'll invest in maintenance →** analyst-ui.
 

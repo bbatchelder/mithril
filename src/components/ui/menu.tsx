@@ -7,7 +7,7 @@
  * @see https://blueprintjs.com/docs/#core/components/menu
  */
 
-import { forwardRef } from "react";
+import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "./icon";
@@ -17,6 +17,27 @@ import { Icon, type IconName } from "./icon";
  * ============================================================ */
 
 export type MenuIntent = "none" | "primary" | "success" | "warning" | "danger";
+
+/**
+ * Slot for integrating MenuItem with a parent menu *system* that owns keyboard
+ * navigation — e.g. Radix ContextMenu. When a slot is provided via context, each
+ * MenuItem renders its interactive element through the slot (a Radix `Item`) so the
+ * parent supplies roving focus, typeahead, and Escape. ContextMenu sets this; in all
+ * other contexts it is null and MenuItem renders its own `<button>`/`<a>`.
+ */
+export interface MenuItemSlotProps {
+    className?: string;
+    disabled?: boolean;
+    /** Plain-text label for the parent's typeahead. */
+    textValue?: string;
+    /** Activation (click / Enter / Space), driven by the parent menu system. */
+    onSelect?: (event: Event) => void;
+    /** Forwarded to the rendered item for the comparison harness. */
+    "data-compare"?: string;
+    children: React.ReactNode;
+}
+export type MenuItemSlot = React.ComponentType<MenuItemSlotProps>;
+export const MenuItemSlotContext = createContext<MenuItemSlot | null>(null);
 export type MenuSize = "small" | "medium" | "large";
 
 /* ============================================================
@@ -41,10 +62,14 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
     { className, size = "medium", ulRef, children, ...props },
     ref,
 ) {
+    // When inside a parent menu system (Radix ContextMenu sets the slot), that parent's
+    // Content element is the role="menu"; this <ul> is then presentational to avoid a
+    // nested/duplicate menu role.
+    const slotted = useContext(MenuItemSlotContext) != null;
     return (
         <ul
             ref={ulRef ?? ref}
-            role="menu"
+            role={slotted ? "none" : "menu"}
             {...props}
             className={cn(
                 // Blueprint .bp6-menu metrics:
@@ -176,8 +201,6 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     active?: boolean;
     /** Whether this item is non-interactive. */
     disabled?: boolean;
-    /** If true, renders a caret-right icon indicating a submenu exists. */
-    hasSubmenu?: boolean;
     /** Navigate to this URL when clicked. Renders as <a>. */
     href?: string;
     /** Click handler. */
@@ -188,6 +211,20 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     small?: boolean;
     /** Size mode. Overrides large/small shorthands. */
     size?: MenuSize;
+    /**
+     * ARIA role structure (ports Blueprint's `roleStructure`):
+     * - `"menuitem"` (default): `<li role="none"><button role="menuitem">` — for a `role="menu"` parent.
+     * - `"listoption"`: `<li role="option" aria-selected>` (inner role removed) — for a `role="listbox"`
+     *   parent (the combobox listbox of Select/Suggest/MultiSelect/Omnibar).
+     * - `"none"`: `<li role="none">` with no inner role — for wrapping in a custom list.
+     * @default "menuitem"
+     */
+    roleStructure?: "menuitem" | "listoption" | "none";
+    /**
+     * Whether this option is selected. Only applies when `roleStructure="listoption"`; sets
+     * `aria-selected` on the option. (Show your own tick via the `icon` prop.)
+     */
+    selected?: boolean;
 }
 
 export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuItem(
@@ -198,17 +235,32 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         intent = "none",
         active = false,
         disabled = false,
-        hasSubmenu = false,
         href,
         onClick,
         large = false,
         small = false,
         size,
+        roleStructure = "menuitem",
+        selected,
         className,
         ...liProps
     },
     ref,
 ) {
+    // A parent menu system (Radix ContextMenu) may inject a slot to own keyboard nav.
+    const Slot = useContext(MenuItemSlotContext);
+
+    // Role structure (mirrors Blueprint): [liRole, targetRole, ariaSelected].
+    const [liRole, targetRole, ariaSelected]: [
+        string | undefined,
+        string | undefined,
+        boolean | undefined,
+    ] =
+        roleStructure === "listoption"
+            ? ["option", undefined, Boolean(selected)]
+            : roleStructure === "none"
+              ? ["none", undefined, undefined]
+              : ["none", "menuitem", undefined];
     // Extract data-compare to forward to the inner interactive element
     // (mirrors Blueprint: MenuItem spreads htmlProps onto the inner <a>, not the <li>)
     const dataCompare = (liProps as Record<string, unknown>)["data-compare"] as string | undefined;
@@ -282,16 +334,6 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         </span>
     ) : null;
 
-    const caretNode = hasSubmenu ? (
-        <span className={cn(
-            "menu-icon flex flex-col justify-center shrink-0",
-            effectiveSize === "small" ? "h-[20px]" : "h-[22px]",
-            !disabled && !active && "text-foreground-muted",
-        )} aria-hidden="true">
-            <Icon icon="caret-right" size={16} />
-        </span>
-    ) : null;
-
     const content = (
         <>
             {iconNode}
@@ -299,17 +341,38 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
                 {text}
             </span>
             {labelNode}
-            {caretNode}
         </>
     );
 
-    const inner = href && !disabled ? (
+    const inner = Slot ? (
+        // Inside a parent menu system (Radix ContextMenu): render the interactive element
+        // through the slot so the parent owns roving focus, typeahead, and activation.
+        <Slot
+            className={cn(innerClasses, "text-left")}
+            disabled={disabled}
+            textValue={typeof text === "string" ? text : undefined}
+            onSelect={(event) => onClick?.(event as unknown as React.MouseEvent)}
+            data-compare={dataCompare}
+        >
+            {content}
+        </Slot>
+    ) : roleStructure === "listoption" ? (
+        // Listbox option (Select/Suggest/MultiSelect): the <li role="option"> IS the
+        // option. Focus stays on the combobox input (aria-activedescendant), so the
+        // inner element must NOT be a focusable button/anchor — that would nest an
+        // interactive control inside the option (axe nested-interactive / WCAG 4.1.2).
+        // The click handler lives on the <li> (below) so a click anywhere in the option
+        // selects; keyboard selection happens on the input. This inner div is presentational.
+        <div className={innerClasses} data-compare={dataCompare}>
+            {content}
+        </div>
+    ) : href && !disabled ? (
         <a
             href={href}
             onClick={onClick}
             className={innerClasses}
             tabIndex={0}
-            role="menuitem"
+            role={targetRole}
             data-compare={dataCompare}
         >
             {content}
@@ -321,7 +384,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
             disabled={disabled}
             className={cn(innerClasses, "border-none bg-none text-left")}
             tabIndex={disabled ? -1 : 0}
-            role="menuitem"
+            role={targetRole}
             aria-disabled={disabled}
             data-compare={dataCompare}
         >
@@ -332,7 +395,11 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
     return (
         <li
             ref={ref}
-            role="none"
+            role={liRole}
+            aria-selected={ariaSelected}
+            // In listbox mode the option itself is the click target (its inner div is
+            // presentational), so a click anywhere in the option selects it.
+            onClick={roleStructure === "listoption" && !disabled ? onClick : undefined}
             className={cn("block", className)}
             {...liProps}
         >

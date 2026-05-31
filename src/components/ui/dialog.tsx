@@ -175,7 +175,9 @@ export function Dialog({
                                 // elevation-3): Card already tuned it to Blueprint's exact shadow
                                 // base color (#111418, not pure black) AND the dark-mode white inset
                                 // edge-highlights the dialog panel needs. Verified 7/7 both themes.
-                                "shadow-card-3",
+                                // overlay-3: rgba(20,20,20) hairline ring (light) + reordered
+                                // dark drop/highlight layers to match Blueprint exactly.
+                                "shadow-overlay-3",
                                 // Blueprint: width = $pt-spacing * 125 = 500px
                                 "w-[500px]",
                                 // Blueprint: margin = ($pt-spacing * 8) 0 = 32px top/bottom

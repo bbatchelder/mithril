@@ -31,8 +31,8 @@
  * @see https://blueprintjs.com/docs/#select/suggest
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode, KeyboardEvent } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ReactElement, ReactNode, KeyboardEvent } from "react";
 
 import { cn } from "@/lib/utils";
 import { Popover } from "./popover";
@@ -41,6 +41,13 @@ import { InputGroup, type InputGroupProps } from "./input-group";
 import { type ItemModifiers, type ItemRendererProps, useQueryList } from "./select";
 
 export type { ItemModifiers, ItemRendererProps };
+
+/** The subset of MenuItem props Suggest injects onto each rendered option. */
+type SuggestOptionAriaProps = {
+    id?: string;
+    roleStructure?: "menuitem" | "listoption" | "none";
+    selected?: boolean;
+};
 
 /* ============================================================
  * Types
@@ -235,6 +242,10 @@ export function Suggest<T>({
     const inputRef = useRef<HTMLInputElement>(null);
     const menuRef = useRef<HTMLUListElement>(null);
 
+    // Stable ids for the WAI-ARIA combobox wiring.
+    const listboxId = useId();
+    const optionId = (index: number) => `${listboxId}-option-${index}`;
+
     // When popoverProps.open is explicitly provided, honour it for gallery mode
     const controlledOpen = popoverProps?.open;
     const resolvedOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
@@ -388,9 +399,14 @@ export function Suggest<T>({
 
     // ── Popover content ──────────────────────────────────────────────────────
 
+    const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
+    const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
+
     const popoverContent = (
         <Menu
             ulRef={menuRef}
+            id={listboxId}
+            role="listbox"
             data-compare="suggest-menu"
             className={cn(
                 "overflow-auto",
@@ -403,9 +419,7 @@ export function Suggest<T>({
             {ql.filteredItems.length === 0
                 ? noResults
                 : ql.filteredItems.map((item, index) => {
-                      const isActive =
-                          ql.activeItem != null &&
-                          ql.filteredItems.indexOf(ql.activeItem) === index;
+                      const isActive = activeIndex === index;
                       const isDisabled = isItemDisabledFn(item, index, itemDisabled);
                       const rendered = itemRenderer(item, {
                           item,
@@ -425,7 +439,14 @@ export function Suggest<T>({
                               }
                           },
                       });
-                      return rendered;
+                      // Inject WAI-ARIA option semantics (see Select for rationale).
+                      return isValidElement(rendered)
+                          ? cloneElement(rendered as ReactElement<SuggestOptionAriaProps>, {
+                                id: optionId(index),
+                                roleStructure: "listoption",
+                                selected: selectedItem != null && item === selectedItem,
+                            })
+                          : rendered;
                   })}
         </Menu>
     );
@@ -464,9 +485,19 @@ export function Suggest<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Anchor (not Trigger): the combobox input owns all the popup ARIA
+            // (aria-haspopup/expanded/controls). A Trigger would stamp those onto the
+            // roleless wrapper <div> — invalid there (axe aria-allowed-attr). Open/close is
+            // driven by focus/typing here, so we don't need Radix's click-to-toggle.
+            anchorOnly
+            // Keep DOM focus on the input when the listbox opens (combobox contract) — Radix
+            // would otherwise move focus into the panel and break type-to-filter.
+            autoFocusContent={false}
+            // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
+            ariaLabel="Suggestions"
             {...restPopoverProps}
         >
-            {/* Trigger wrapper — Popover.Trigger wraps this as asChild */}
+            {/* Anchor wrapper — Popover.Anchor wraps this as asChild (positioning only, no ARIA) */}
             <div
                 className={cn("inline-block", fill && "w-full")}
                 style={fill ? { width: "100%" } : undefined}
@@ -481,6 +512,17 @@ export function Suggest<T>({
                     autoComplete={autoComplete}
                     disabled={disabled}
                     fill={fill}
+                    // WAI-ARIA combobox: the type-ahead input owns the listbox.
+                    role="combobox"
+                    aria-expanded={resolvedOpen}
+                    aria-controls={listboxId}
+                    aria-activedescendant={activeDescendantId}
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6).
+                    // Default the combobox's name to the placeholder; consumers can
+                    // override via inputProps["aria-label"] (spread wins below).
+                    aria-label={placeholder}
                     {...restInputProps}
                 />
             </div>

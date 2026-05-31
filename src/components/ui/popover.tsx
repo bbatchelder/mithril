@@ -83,9 +83,21 @@
  */
 
 import * as RadixPopover from "@radix-ui/react-popover";
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, useCallback, useRef, useState } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+/** Compose two optional event handlers into one. */
+function composeHandlers<E>(
+    theirs: ((e: E) => void) | undefined,
+    ours: (e: E) => void,
+): (e: E) => void {
+    return (e: E) => {
+        theirs?.(e);
+        ours(e);
+    };
+}
 
 export type PopoverSide = "top" | "right" | "bottom" | "left";
 export type PopoverAlign = "start" | "center" | "end";
@@ -199,10 +211,47 @@ export interface PopoverProps {
      */
     anchorOnly?: boolean;
 
+    /**
+     * Whether the popover content grabs focus when it opens (Radix's default
+     * `onOpenAutoFocus`). Set `false` to keep DOM focus on whatever opened the popover.
+     *
+     * This is the WAI-ARIA combobox contract: the `role="combobox"` input must retain
+     * focus while its `role="listbox"` panel is open, with the active option conveyed via
+     * `aria-activedescendant` (not by moving focus into the list). Suggest/MultiSelect anchor
+     * the popover to the input's wrapper and drive open/close themselves, so letting the
+     * content steal focus on open would break type-to-filter. Preventing the open-autofocus
+     * (Radix `onOpenAutoFocus` → `preventDefault`) keeps focus on the input deterministically,
+     * independent of whether the panel has any tabbable children.
+     * @default true
+     */
+    autoFocusContent?: boolean;
+
+    /**
+     * How the popover opens:
+     * - `"click"` (default): Radix's click-to-toggle on the trigger.
+     * - `"hover"`: opens on pointer enter of the trigger, closes on leave (with a short
+     *   grace delay so the pointer can travel to the content). Renders `children` as an
+     *   anchor so click does not also toggle. Escape still closes.
+     * @default "click"
+     */
+    interactionKind?: "click" | "hover";
+
+    /** Grace period (ms) before a hover popover closes after the pointer leaves. @default 100 */
+    hoverCloseDelay?: number;
+
     /** Additional class on the popover panel element. */
     className?: string;
     /** Inline styles on the popover panel element. */
     style?: React.CSSProperties;
+
+    /**
+     * Accessible name for the popover panel. Radix gives the Content `role="dialog"`
+     * when it holds focusable content, and a dialog needs a name (axe aria-dialog-name /
+     * WCAG 4.1.2). Provide this (or `ariaLabelledby`) for interactive popovers.
+     */
+    ariaLabel?: string;
+    /** Id of an element that labels the popover panel (alternative to `ariaLabel`). */
+    ariaLabelledby?: string;
 
     /** The trigger element. Use a Button or any interactive element. */
     children: ReactNode;
@@ -242,8 +291,13 @@ export function Popover({
     dark = false,
     disabled = false,
     anchorOnly = false,
+    autoFocusContent = true,
+    interactionKind = "click",
+    hoverCloseDelay = 100,
     className,
     style,
+    ariaLabel,
+    ariaLabelledby,
     children,
 }: PopoverProps) {
     // In minimal mode: no arrow.
@@ -253,17 +307,78 @@ export function Popover({
     // Radix sideOffset still provides a small gap so the panel doesn't overlap the trigger.
     const resolvedSideOffset = minimal ? 0 : sideOffset;
 
+    // ── Hover interaction mode ────────────────────────────────────────────────
+    // Radix Popover is click-only, so we drive open state from pointer enter/leave.
+    // Uncontrolled hover popovers track their own state; controlled ones defer to `open`.
+    const isHover = interactionKind === "hover";
+    const isControlled = open !== undefined;
+    const [hoverOpen, setHoverOpen] = useState(defaultOpen ?? false);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearCloseTimer = useCallback(() => {
+        if (closeTimer.current) {
+            clearTimeout(closeTimer.current);
+            closeTimer.current = null;
+        }
+    }, []);
+
+    const hoverOpenNow = useCallback(() => {
+        if (disabled) return;
+        clearCloseTimer();
+        if (!isControlled) setHoverOpen(true);
+        onOpenChange?.(true);
+    }, [disabled, isControlled, onOpenChange, clearCloseTimer]);
+
+    const hoverCloseSoon = useCallback(() => {
+        clearCloseTimer();
+        closeTimer.current = setTimeout(() => {
+            if (!isControlled) setHoverOpen(false);
+            onOpenChange?.(false);
+        }, hoverCloseDelay);
+    }, [hoverCloseDelay, isControlled, onOpenChange, clearCloseTimer]);
+
+    // Radix-initiated changes (Escape) keep our hover state in sync.
+    const handleRootOpenChange = useCallback(
+        (next: boolean) => {
+            if (isHover && !isControlled) setHoverOpen(next);
+            onOpenChange?.(next);
+        },
+        [isHover, isControlled, onOpenChange],
+    );
+
+    // Resolve the open prop passed to Radix.
+    const rootOpen = disabled ? false : isHover && !isControlled ? hoverOpen : open;
+    // Hover mode uses an anchor (no click-toggle); otherwise honor anchorOnly.
+    const useAnchor = anchorOnly || isHover;
+
+    // In hover mode, attach pointer handlers to the trigger element (merged with any
+    // the consumer already set), so click is never the open mechanism.
+    const triggerChild =
+        isHover && isValidElement(children)
+            ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+                  onPointerEnter: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerEnter as ((e: unknown) => void) | undefined,
+                      hoverOpenNow,
+                  ),
+                  onPointerLeave: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerLeave as ((e: unknown) => void) | undefined,
+                      hoverCloseSoon,
+                  ),
+              })
+            : children;
+
     return (
         <RadixPopover.Root
-            open={disabled ? false : open}
+            open={isHover ? rootOpen : disabled ? false : open}
             defaultOpen={disabled ? false : defaultOpen}
-            onOpenChange={disabled ? undefined : onOpenChange}
+            onOpenChange={disabled ? undefined : isHover ? handleRootOpenChange : onOpenChange}
         >
             {/* Trigger vs Anchor — both forward via asChild. Anchor positions only
-                (no click-to-toggle); use it when the consumer drives `open` and the
-                trigger's toggle would fight that (see `anchorOnly`). */}
-            {anchorOnly ? (
-                <RadixPopover.Anchor asChild>{children}</RadixPopover.Anchor>
+                (no click-to-toggle); used for `anchorOnly` and for hover mode. */}
+            {useAnchor ? (
+                <RadixPopover.Anchor asChild>{triggerChild}</RadixPopover.Anchor>
             ) : (
                 <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
             )}
@@ -276,6 +391,8 @@ export function Popover({
                 <div className={dark ? "dark" : ""} style={{ pointerEvents: "none" }}>
                     <RadixPopover.Content
                         data-compare="popover-content"
+                        aria-label={ariaLabel}
+                        aria-labelledby={ariaLabelledby}
                         side={side}
                         align={align}
                         sideOffset={resolvedSideOffset}
@@ -292,11 +409,12 @@ export function Popover({
                             // In dark mode: Blueprint's $pt-dark-popover-box-shadow adds an extra
                             // outset border: 0 0 0 1px hsl(215,3%,38%) = rgb(94,95,97).
                             // We replicate this with a compound dark shadow utility override.
-                            "shadow-card-3",
-                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%))
-                            // that Blueprint's $pt-dark-popover-box-shadow includes in addition
-                            // to $pt-dark-elevation-shadow-3.
-                            "dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]",
+                            "shadow-overlay-3",
+                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%) =
+                            // rgb(94,96,100)) that Blueprint's $pt-dark-popover-box-shadow includes
+                            // in addition to $pt-dark-elevation-shadow-3. Layer order matches
+                            // Blueprint: ring, inset-ring, drop1, inset-highlights, drop2.
+                            "dark:[box-shadow:rgb(94,96,100)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px,rgba(0,0,0,0.302)_0px_10px_30px_-5px]",
                             // Blueprint: z-index: $pt-z-index-overlay
                             "z-[20]",
                             // Open/close animation (globals.css). Full scale+fade for normal
@@ -317,12 +435,18 @@ export function Popover({
                                 : {}),
                             ...style,
                         }}
+                        onOpenAutoFocus={
+                            autoFocusContent ? undefined : (e) => e.preventDefault()
+                        }
                         onEscapeKeyDown={
                             canEscapeKeyClose ? undefined : (e) => e.preventDefault()
                         }
                         onPointerDownOutside={
                             canOutsideClickClose ? undefined : (e) => e.preventDefault()
                         }
+                        // Hover mode: keep open while the pointer is over the panel; close on leave.
+                        onPointerEnter={isHover ? clearCloseTimer : undefined}
+                        onPointerLeave={isHover ? hoverCloseSoon : undefined}
                     >
                         {/* Popover content inner div — Blueprint: .bp6-popover-content
                             background is here (not on the outer .bp6-popover which is transparent).
