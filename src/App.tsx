@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
@@ -154,6 +155,73 @@ function ButtonGallery() {
                 <Button fill intent="primary">
                     Fill button
                 </Button>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * ButtonGroup showcase. Specimens carry `data-compare` keys mirroring the Blueprint
+ * reference gallery: the harness diffs the container layout and each button's collapsed
+ * radius / margin (first · middle · last) so the attached-border treatment is verified.
+ */
+function ButtonGroupGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Solid (horizontal)">
+                <ButtonGroup data-compare="bg-solid-container">
+                    <Button data-compare="bg-solid-first">First</Button>
+                    <Button data-compare="bg-solid-mid">Middle</Button>
+                    <Button data-compare="bg-solid-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Outlined (horizontal)">
+                <ButtonGroup variant="outlined" data-compare="bg-outlined-container">
+                    <Button data-compare="bg-outlined-first">First</Button>
+                    <Button data-compare="bg-outlined-mid">Middle</Button>
+                    <Button data-compare="bg-outlined-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Minimal (horizontal)">
+                <ButtonGroup variant="minimal">
+                    <Button>First</Button>
+                    <Button>Middle</Button>
+                    <Button>Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Vertical (solid)">
+                <ButtonGroup vertical data-compare="bg-vert-container">
+                    <Button data-compare="bg-vert-first">First</Button>
+                    <Button data-compare="bg-vert-mid">Middle</Button>
+                    <Button data-compare="bg-vert-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Intents (per-button)">
+                <ButtonGroup>
+                    <Button intent="primary">Save</Button>
+                    <Button intent="success">Apply</Button>
+                    <Button intent="danger">Delete</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="With icons + size (group-level)">
+                <ButtonGroup size="large">
+                    <Button icon={<Icon icon="chevron-left" className="!text-current" />} aria-label="Previous" />
+                    <Button>Center</Button>
+                    <Button endIcon={<Icon icon="chevron-right" className="!text-current" />}>Next</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Fill">
+                <ButtonGroup fill data-compare="bg-fill-container">
+                    <Button>Left</Button>
+                    <Button>Center</Button>
+                    <Button>Right</Button>
+                </ButtonGroup>
             </Section>
         </div>
     );
@@ -4516,6 +4584,7 @@ function TimezoneSelectGallery() {
 /** Registry of component showcases. Add an entry per component as it's built. */
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },

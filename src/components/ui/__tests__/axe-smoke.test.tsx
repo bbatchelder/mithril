@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { axe } from "@/test/axe";
 import { Alert } from "../alert";
 import { Button } from "../button";
+import { ButtonGroup } from "../button-group";
 import { Callout } from "../callout";
 import { CardList } from "../card-list";
 import { Checkbox } from "../checkbox";
@@ -45,6 +46,17 @@ describe("axe smoke — inline components", () => {
 
     it("Button (icon-only needs an accessible name)", async () => {
         const { container } = render(<Button icon="cog" aria-label="Settings" />);
+        expect(await axe(container)).toHaveNoViolations();
+    });
+
+    it("ButtonGroup (labelled set of buttons)", async () => {
+        const { container } = render(
+            <ButtonGroup aria-label="Alignment">
+                <Button>Left</Button>
+                <Button>Center</Button>
+                <Button>Right</Button>
+            </ButtonGroup>,
+        );
         expect(await axe(container)).toHaveNoViolations();
     });
 

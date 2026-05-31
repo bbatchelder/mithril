@@ -1,4 +1,4 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
@@ -75,6 +75,72 @@ function ButtonGallery() {
 
             <Section title="Fill">
                 <Button fill={true} intent="primary" text="Fill button" />
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for ButtonGroup. `data-compare` keys MUST match analyst-ui's
+ * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
+ */
+function ButtonGroupGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Solid (horizontal)">
+                <ButtonGroup data-compare="bg-solid-container">
+                    <Button text="First" data-compare="bg-solid-first" />
+                    <Button text="Middle" data-compare="bg-solid-mid" />
+                    <Button text="Last" data-compare="bg-solid-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Outlined (horizontal)">
+                <ButtonGroup variant="outlined" data-compare="bg-outlined-container">
+                    <Button text="First" data-compare="bg-outlined-first" />
+                    <Button text="Middle" data-compare="bg-outlined-mid" />
+                    <Button text="Last" data-compare="bg-outlined-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Minimal (horizontal)">
+                <ButtonGroup variant="minimal">
+                    <Button text="First" />
+                    <Button text="Middle" />
+                    <Button text="Last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Vertical (solid)">
+                <ButtonGroup vertical={true} data-compare="bg-vert-container">
+                    <Button text="First" data-compare="bg-vert-first" />
+                    <Button text="Middle" data-compare="bg-vert-mid" />
+                    <Button text="Last" data-compare="bg-vert-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Intents (per-button)">
+                <ButtonGroup>
+                    <Button intent="primary" text="Save" />
+                    <Button intent="success" text="Apply" />
+                    <Button intent="danger" text="Delete" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="With icons + size (group-level)">
+                <ButtonGroup size="large">
+                    <Button icon="chevron-left" aria-label="Previous" />
+                    <Button text="Center" />
+                    <Button endIcon="chevron-right" text="Next" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Fill">
+                <ButtonGroup fill={true} data-compare="bg-fill-container">
+                    <Button text="Left" />
+                    <Button text="Center" />
+                    <Button text="Right" />
+                </ButtonGroup>
             </Section>
         </div>
     );
@@ -4958,6 +5024,7 @@ function TimezoneSelectGallery() {
 
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },

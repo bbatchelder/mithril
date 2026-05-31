@@ -1,6 +1,6 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef } from "react";
+import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
@@ -8,6 +8,19 @@ import { Spinner } from "./spinner";
 export type ButtonIntent = "none" | "primary" | "success" | "warning" | "danger";
 export type ButtonVariant = "solid" | "outlined" | "minimal";
 export type ButtonSize = "small" | "medium" | "large";
+
+/**
+ * Lets a `<ButtonGroup>` push shared `variant`/`size` defaults down to its child
+ * `<Button>`s without each call site repeating them. A button's own explicit
+ * `variant`/`size` prop always wins over the group's. Lives here (not in
+ * button-group.tsx) so Button stays self-contained — the dependency points
+ * ButtonGroup → Button, never the reverse.
+ */
+export interface ButtonGroupContextValue {
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+}
+export const ButtonGroupContext = createContext<ButtonGroupContextValue | null>(null);
 
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
 
@@ -108,7 +121,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     { className, variant, intent, size, fill, active, icon, endIcon, loading = false, disabled, asChild = false, children, ...props },
     ref,
 ) {
-    const classes = cn(buttonVariants({ variant, intent, size, fill }), className);
+    // A parent ButtonGroup supplies variant/size defaults; an explicit prop overrides.
+    const group = useContext(ButtonGroupContext);
+    const resolvedVariant = variant ?? group?.variant;
+    const resolvedSize = size ?? group?.size;
+
+    const classes = cn(buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill }), className);
 
     if (asChild) {
         return (
@@ -140,7 +158,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
                     className="absolute inset-0 inline-flex items-center justify-center [&_path:last-child]:!stroke-current"
                     aria-hidden="true"
                 >
-                    <Spinner size={size === "large" ? 20 : 16} />
+                    <Spinner size={resolvedSize === "large" ? 20 : 16} />
                 </span>
             )}
             {icon != null && <span className={cn("inline-flex", hidden)}>{icon}</span>}
