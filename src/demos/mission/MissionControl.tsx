@@ -7,9 +7,15 @@
  * Exercises the read-heavy/structural slice of the library that the SOC and Board
  * demos didn't: Tree, Section, Collapse, CardList, Skeleton, Breadcrumbs, PanelStack.
  */
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+    HotkeysContext,
+    HotkeysProvider,
+    useHotkeys,
+    type HotkeyConfig,
+} from "@/components/ui/hotkeys";
 import { Icon } from "@/components/ui/icon";
 import { InputGroup } from "@/components/ui/input-group";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
@@ -31,7 +37,7 @@ import { TelemetryPanel } from "./TelemetryPanel";
 import { type StreamSpeed, useStream } from "./stream/useStream";
 import { GROUND_STATION, STATUS_META, formatMissionClock } from "./data";
 
-export function MissionControl() {
+function MissionControlInner() {
     const dark = useDark();
     const toaster = useToaster();
     const stream = useStream();
@@ -69,6 +75,65 @@ export function MissionControl() {
         if (selectedId) setDetailOpen(true);
     };
 
+    // ── Keyboard shortcuts (useHotkeys) ──────────────────────────────────
+    // The hotkey callbacks need the *latest* live state (the drone roster changes
+    // every stream tick), so we read it through a ref and keep the registered combo
+    // list stable — otherwise we'd re-bind the document listener on every tick.
+    const searchRef = useRef<HTMLInputElement>(null);
+    const hotkeyState = useRef({ drones: stream.drones, selectedId, detailOpen });
+    hotkeyState.current = { drones: stream.drones, selectedId, detailOpen };
+
+    const cycleSelection = (dir: 1 | -1) => {
+        const { drones, selectedId: cur } = hotkeyState.current;
+        if (drones.length === 0) return;
+        const idx = drones.findIndex((d) => d.id === cur);
+        // From no selection, ArrowDown/j picks the first, ArrowUp/k the last.
+        const next = idx === -1 ? (dir === 1 ? 0 : drones.length - 1) : (idx + dir + drones.length) % drones.length;
+        setSelectedId(drones[next].id);
+    };
+
+    const hotkeyActions = useMemo(
+        () => ({
+            togglePlay: () => stream.toggle(),
+            setSpeed: (s: StreamSpeed) => stream.setSpeed(s),
+            toggleFollow: () => setAutoFollow((v) => !v),
+            focusSearch: () => searchRef.current?.focus(),
+            next: () => cycleSelection(1),
+            prev: () => cycleSelection(-1),
+            openDetail: () => {
+                if (hotkeyState.current.selectedId) setDetailOpen(true);
+            },
+            // Esc clears the selection only when the drawer is closed; when it's open
+            // we leave it to the Drawer's own Escape handling (no double-action).
+            dismiss: () => {
+                if (!hotkeyState.current.detailOpen) setSelectedId(null);
+            },
+        }),
+        // stream.toggle/setSpeed are stable across renders; cycleSelection reads via ref.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    );
+
+    const hotkeys = useMemo<HotkeyConfig[]>(
+        () => [
+            { combo: "p", label: "Play / pause stream", group: "Stream", global: true, onKeyDown: hotkeyActions.togglePlay },
+            { combo: "1", label: "Speed 1×", group: "Stream", global: true, onKeyDown: () => hotkeyActions.setSpeed(1) },
+            { combo: "2", label: "Speed 2×", group: "Stream", global: true, onKeyDown: () => hotkeyActions.setSpeed(2) },
+            { combo: "5", label: "Speed 5×", group: "Stream", global: true, onKeyDown: () => hotkeyActions.setSpeed(5) },
+            { combo: "f", label: "Toggle map follow", group: "View", global: true, onKeyDown: hotkeyActions.toggleFollow },
+            { combo: "/", label: "Focus search", group: "View", global: true, preventDefault: true, onKeyDown: hotkeyActions.focusSearch },
+            { combo: "j", label: "Select next drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.next },
+            { combo: "k", label: "Select previous drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.prev },
+            { combo: "o", label: "Open drone details", group: "Fleet", global: true, onKeyDown: hotkeyActions.openDetail },
+            { combo: "escape", label: "Clear selection", group: "Fleet", global: true, onKeyDown: hotkeyActions.dismiss },
+            // Display-only row: `?` is handled by the provider (opens this dialog) before
+            // any registered callback would run, so this entry is purely for the listing.
+            { combo: "?", label: "Show this dialog", group: "General", global: true },
+        ],
+        [hotkeyActions],
+    );
+    useHotkeys(hotkeys);
+
     return (
         <div className="flex h-screen flex-col bg-background text-foreground">
             {/* ── Navbar ──────────────────────────────────────────────────── */}
@@ -91,8 +156,9 @@ export function MissionControl() {
                     <NavbarDivider />
                     <div className="hidden md:block">
                         <InputGroup
+                            ref={searchRef}
                             leftIcon="search"
-                            placeholder="Search drones…"
+                            placeholder="Search drones…  ( / )"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             style={{ width: 220 }}
@@ -126,6 +192,8 @@ export function MissionControl() {
                         <Switch checked={autoFollow} onChange={(e) => setAutoFollow(e.target.checked)} />
                         Follow
                     </label>
+                    <NavbarDivider />
+                    <HotkeysHelpButton dark={dark} />
                     <NavbarDivider />
                     <Popover
                         side="bottom"
@@ -242,6 +310,37 @@ export function MissionControl() {
                 onClose={() => setDetailOpen(false)}
             />
         </div>
+    );
+}
+
+/**
+ * Navbar affordance that opens the generated hotkeys help dialog. Must render
+ * inside `HotkeysProvider` (it dispatches `OPEN_DIALOG` to the hotkeys context).
+ */
+function HotkeysHelpButton({ dark }: { dark: boolean }) {
+    const [, dispatch] = useContext(HotkeysContext);
+    return (
+        <Tooltip content="Keyboard shortcuts (?)" dark={dark}>
+            <Button
+                variant="minimal"
+                aria-label="Keyboard shortcuts"
+                icon={<Icon icon="key" className="!text-current" />}
+                onClick={() => dispatch({ type: "OPEN_DIALOG" })}
+            />
+        </Tooltip>
+    );
+}
+
+/**
+ * Skylark entry point. Wraps the console in `HotkeysProvider` so `useHotkeys`
+ * (inside `MissionControlInner`) can register shortcuts and `?` opens the help dialog.
+ */
+export function MissionControl() {
+    const dark = useDark();
+    return (
+        <HotkeysProvider dark={dark} dialogTitle="Skylark keyboard shortcuts">
+            <MissionControlInner />
+        </HotkeysProvider>
     );
 }
 

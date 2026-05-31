@@ -28,7 +28,12 @@ These two (P0) are the credibility blockers. Completeness (P1) and polish (P2/P3
 > Until these land, the honest recommendation for any accessibility-sensitive app is Blueprint. These
 > are the highest-leverage items by far.
 
-### P0.1 — Establish a behavioral test foundation
+> **✅ Status (2026-05-31): P0 is fully closed.** P0.1 (test foundation) and P0.2 (keyboard/ARIA gaps)
+> landed via PR #13 (handoffs 0066–0073); P0.3 (`useHotkeys` engine) landed in handoff 0074. The only
+> remaining accessibility-adjacent item is a live VoiceOver/NVDA pass (jsdom + axe can't validate lived
+> announcements). The next work is P1 completeness.
+
+### P0.1 — Establish a behavioral test foundation ✅ done (PR #13)
 
 - **Problem:** 0 tests vs Blueprint's 152. Verification is screenshot-only; keyboard/ARIA regressions
   are invisible. (CLAUDE.md currently states "No unit tests — verification is visual via the harness.")
@@ -43,7 +48,7 @@ These two (P0) are the credibility blockers. Completeness (P1) and polish (P2/P3
 - **Done when:** `pnpm test` exists and runs in CI; every component touched in P0.2/P1 ships with a
   contract test; axe smoke passes for all components.
 
-### P0.2 — Close the hand-rolled keyboard/ARIA gaps
+### P0.2 — Close the hand-rolled keyboard/ARIA gaps ✅ done (PR #13)
 
 Fix in roughly this order (highest user impact first). SegmentedControl already proves we can hand-roll
 this correctly — use it as the reference pattern.
@@ -56,9 +61,9 @@ this correctly — use it as the reference pattern.
 | **ContextMenu** (`context-menu.tsx`) | Wraps Radix but feeds it analyst `<Menu>`, so no arrow-nav/typeahead/submenu | Either (a) route items through `RadixContextMenu.Item`/`.Sub` so Radix's collection drives nav, or (b) reuse the now-keyboard-capable Menu from above. Add submenu support | Arrow keys + typeahead work in context menus; submenus open; test covers nav |
 | **NumericInput** (`numeric-input.tsx`) | No `role=spinbutton` / `aria-value*` on the input | Add `role="spinbutton"` (when numeric-only) + `aria-valuenow/min/max` on the input, mirroring Blueprint `numericInput.tsx:466-471` | SR announces a spinbutton with current/min/max; test asserts values update on step |
 | **Alert** (`alert.tsx`) | `role="dialog"` not `alertdialog` | Override the Radix Content role to `alertdialog` (or set `aria-roledescription`) for confirmation semantics | Alert exposes `role="alertdialog"`; test asserts it |
-| **Hotkeys** (`hotkeys.tsx`) | Display-only — no key-binding engine | See **P1.2** (this is also a completeness item) | — |
+| **Hotkeys** (`hotkeys.tsx`) | ✅ done (handoff 0074) — `useHotkeys` engine added; see **P0.3** | — | Combos fire; `?` opens the dialog; 16 behavior tests |
 
-### P0.3 — Add a `useHotkeys` engine
+### P0.3 — Add a `useHotkeys` engine ✅ done (handoff 0074)
 
 - **Problem:** `hotkeys.tsx` only renders `KeyCombo` + a dialog; there is no event binding. Blueprint's
   `useHotkeys` registers global + local `keydown`/`keyup`, parses combos (`getKeyCombo`/`comboMatches`),
@@ -68,6 +73,11 @@ this correctly — use it as the reference pattern.
   and wires `?` → open the existing `HotkeysDialog`. Keep `KeyCombo`/dialog as the presentation layer.
 - **Done when:** registering a hotkey actually fires; `?` opens the dialog from real bindings; tests
   cover combo matching + dispatch + the `?` shortcut.
+- **✅ Resolved (handoff 0074):** `useHotkeys(keys, options)` + `HotkeysProvider`/`HotkeysContext` +
+  `parseKeyCombo`/`getKeyCombo`/`comboMatches` ported into `hotkeys.tsx` (one self-contained file).
+  Global + local binding, input-target exclusion (`allowInInput`), `disabled`/`preventDefault`/
+  `stopPropagation`, and `?` → dialog all work. 16 behavior tests in `hotkeys.test.tsx`; dogfooded in
+  the Skylark demo (`src/demos/mission/MissionControl.tsx`). No new deps.
 
 > Listed under both P0 and P1 because it is *both* an a11y/behavior correctness item and a missing
 > capability.
@@ -92,9 +102,9 @@ this correctly — use it as the reference pattern.
 - **Note:** This is a multi-loop effort — scope it as its own phase. It is the single largest lever for
   "feature parity."
 
-### P1.2 — Hotkey engine
+### P1.2 — Hotkey engine ✅ done (handoff 0074)
 
-See **P0.3** (cross-listed).
+See **P0.3** (cross-listed) — resolved.
 
 ### P1.3 — Missing composite & infra components
 
@@ -239,8 +249,9 @@ currently wins. That is the hands-down state.
 
 ## Suggested sequencing
 
-1. **Phase A (P0):** test foundation → Tabs → Menu/MenuItem roleStructure → Select-family combobox ARIA
-   → ContextMenu → NumericInput/Alert → `useHotkeys`. *(Closes the accessibility recommendation gap.)*
+1. **Phase A (P0): ✅ complete.** test foundation → Tabs → Menu/MenuItem roleStructure → Select-family
+   combobox ARIA → ContextMenu → NumericInput/Alert → `useHotkeys`. *(Accessibility recommendation gap
+   closed; only a live VoiceOver/NVDA pass remains.)*
 2. **Phase B (P1):** MultistepDialog/ButtonGroup/AnchorButton + promoted infra → **then** the data grid
    as its own multi-loop phase. *(Closes the completeness gap.)*
 3. **Phase C (P2):** serve the registry + CI drift guard → icon tree-shaking → shared `Intent` + icon

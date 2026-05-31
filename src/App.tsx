@@ -45,7 +45,7 @@ import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title"
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
-import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
+import { KeyCombo, HotkeysDialog, HotkeysProvider, useHotkeys } from "@/components/ui/hotkeys";
 import { TagInput } from "@/components/ui/tag-input";
 import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
@@ -3363,6 +3363,66 @@ function SliderGallery() {
  * NOTE: These elements are portaled to document.body, so the harness finds them
  * via document.querySelectorAll("[data-compare]") which scans the full document.
  */
+/**
+ * Live demo of the `useHotkeys` engine. Registers a global counter shortcut and a
+ * local one (only active while the focused box has focus). With the surrounding
+ * `HotkeysProvider`, pressing `?` opens the generated help dialog listing all of them.
+ */
+function HotkeysLiveDemo() {
+    const [count, setCount] = useState(0);
+    const [reset, setReset] = useState(0);
+
+    useHotkeys([
+        {
+            combo: "mod+shift+u",
+            label: "Increment counter",
+            global: true,
+            group: "Demo",
+            preventDefault: true,
+            onKeyDown: () => setCount((c) => c + 1),
+        },
+        {
+            combo: "mod+shift+0",
+            label: "Reset counter",
+            global: true,
+            group: "Demo",
+            preventDefault: true,
+            onKeyDown: () => {
+                setCount(0);
+                setReset((r) => r + 1);
+            },
+        },
+        {
+            combo: "r",
+            label: "Local: refresh (focus the box first)",
+            group: "Demo",
+            onKeyDown: () => setReset((r) => r + 1),
+        },
+    ]);
+
+    return (
+        <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 text-body text-foreground">
+                <span>
+                    Counter: <strong>{count}</strong>
+                </span>
+                <span className="text-foreground-muted">resets: {reset}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-body-sm text-foreground-muted">
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="mod+shift+u" minimal /> increment
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="mod+shift+0" minimal /> reset
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="?" minimal /> open this dialog
+                </span>
+            </div>
+        </div>
+    );
+}
+
 function HotkeysGallery() {
     const dark = useContext(DarkContext);
 
@@ -3374,26 +3434,34 @@ function HotkeysGallery() {
     ] as const;
 
     return (
-        <div className="flex flex-col gap-4">
-            <p className="text-body text-foreground-muted">
-                The hotkeys dialog below is open by default for comparison harness screenshots.
-            </p>
-            {/* Standalone KeyCombo specimens (visible outside dialog) */}
-            <div className="flex flex-wrap items-center gap-4">
-                <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
-                <KeyCombo combo="mod+s" />
-                <KeyCombo combo="mod+shift+n" />
-                <KeyCombo combo="ctrl+z" />
+        <HotkeysProvider dark={dark} dialogTitle="Keyboard shortcuts">
+            <div className="flex flex-col gap-4">
+                <p className="text-body text-foreground-muted">
+                    The hotkeys dialog below is open by default for comparison harness screenshots.
+                </p>
+                {/* Standalone KeyCombo specimens (visible outside dialog) */}
+                <div className="flex flex-wrap items-center gap-4">
+                    <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
+                    <KeyCombo combo="mod+s" />
+                    <KeyCombo combo="mod+shift+n" />
+                    <KeyCombo combo="ctrl+z" />
+                </div>
+
+                {/* Live engine demo — exercises useHotkeys + HotkeysProvider. */}
+                <Section title="Live engine (useHotkeys)">
+                    <HotkeysLiveDemo />
+                </Section>
+
+                <HotkeysDialog
+                    open={true}
+                    onOpenChange={() => {}}
+                    dark={dark}
+                    title="Keyboard shortcuts"
+                    hotkeys={HOTKEYS}
+                    globalGroupName="Global"
+                />
             </div>
-            <HotkeysDialog
-                open={true}
-                onOpenChange={() => {}}
-                dark={dark}
-                title="Keyboard shortcuts"
-                hotkeys={HOTKEYS}
-                globalGroupName="Global"
-            />
-        </div>
+        </HotkeysProvider>
     );
 }
 

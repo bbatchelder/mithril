@@ -202,6 +202,7 @@
                 "@radix-ui/react-context-menu"
             ],
             "registryDependencies": [
+                "menu",
                 "utils",
                 "tokens"
             ]
@@ -499,6 +500,7 @@
             ],
             "registryDependencies": [
                 "dialog",
+                "icon",
                 "utils",
                 "tokens"
             ]
@@ -953,13 +955,16 @@
             "name": "tabs",
             "type": "registry:ui",
             "title": "Tabs",
-            "description": "Tabs — Blueprint-faithful, built on CVA.",
+            "description": "Tabs — Blueprint-faithful, built on CVA + Radix.",
             "files": [
                 {
                     "path": "src/components/ui/tabs.tsx",
                     "type": "registry:ui",
                     "target": "components/ui/tabs.tsx"
                 }
+            ],
+            "dependencies": [
+                "@radix-ui/react-tabs"
             ],
             "registryDependencies": [
                 "icon",
