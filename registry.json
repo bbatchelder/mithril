@@ -690,6 +690,25 @@
             ]
         },
         {
+            "name": "multistep-dialog",
+            "type": "registry:ui",
+            "title": "MultistepDialog",
+            "description": "MultistepDialog — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/multistep-dialog.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/multistep-dialog.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "button",
+                "dialog",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "navbar",
             "type": "registry:ui",
             "title": "Navbar",

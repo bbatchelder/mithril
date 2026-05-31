@@ -2059,27 +2059,33 @@ function MultistepDialogGallery() {
                     id="info"
                     title="Project info"
                     panel={
-                        <p className="text-body text-foreground m-0">
-                            Step 1 — name your project and pick a workspace.
-                        </p>
+                        <div className="p-5">
+                            <p className="text-body text-foreground m-0">
+                                Step 1 — name your project and pick a workspace.
+                            </p>
+                        </div>
                     }
                 />
                 <DialogStep
                     id="members"
                     title="Members"
                     panel={
-                        <p className="text-body text-foreground m-0">
-                            Step 2 — invite collaborators and assign roles.
-                        </p>
+                        <div className="p-5">
+                            <p className="text-body text-foreground m-0">
+                                Step 2 — invite collaborators and assign roles.
+                            </p>
+                        </div>
                     }
                 />
                 <DialogStep
                     id="review"
                     title="Review"
                     panel={
-                        <p className="text-body text-foreground m-0">
-                            Step 3 — review your settings, then create the project.
-                        </p>
+                        <div className="p-5">
+                            <p className="text-body text-foreground m-0">
+                                Step 3 — review your settings, then create the project.
+                            </p>
+                        </div>
                     }
                 />
             </MultistepDialog>

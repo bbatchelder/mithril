@@ -10,6 +10,7 @@ import { Callout } from "../callout";
 import { CardList } from "../card-list";
 import { Checkbox } from "../checkbox";
 import { Dialog } from "../dialog";
+import { MultistepDialog, DialogStep } from "../multistep-dialog";
 import { Drawer } from "../drawer";
 import { HTMLTable } from "../html-table";
 import { InputGroup } from "../input-group";
@@ -175,6 +176,16 @@ describe("axe smoke — open overlays", () => {
             <Dialog open title="Confirm" onOpenChange={() => {}}>
                 <p>Dialog body content.</p>
             </Dialog>,
+        );
+        expect(await axe(document.body)).toHaveNoViolations();
+    });
+
+    it("MultistepDialog (wizard with a step rail)", async () => {
+        render(
+            <MultistepDialog open title="Create project" onOpenChange={() => {}}>
+                <DialogStep id="one" title="First" panel={<p>First step panel.</p>} />
+                <DialogStep id="two" title="Second" panel={<p>Second step panel.</p>} />
+            </MultistepDialog>,
         );
         expect(await axe(document.body)).toHaveNoViolations();
     });

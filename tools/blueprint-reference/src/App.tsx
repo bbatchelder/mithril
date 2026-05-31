@@ -1,4 +1,4 @@
-import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, MultistepDialog, DialogStep, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
 import { useEffect, useRef, useState } from "react";
@@ -2075,6 +2075,99 @@ function DrawerGallery() {
                     </p>
                 </div>
             </Drawer>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for MultistepDialog. Renders ONE wizard open by default (step 2 of 3
+ * active, via initialStepIndex={1}) so the harness captures a viewed/active step plus the
+ * Back+Next footer simultaneously.
+ *
+ * Blueprint portals to document.body; we querySelector + setAttribute the inner elements after
+ * mount (same pattern as Dialog/Drawer references). Inherited Dialog keys (dialog-panel/-header/
+ * -footer/-close) pair with the analyst MultistepDialog's composed Dialog; multistep-* keys pair
+ * the panels/rail/active-step/circle/right-panel.
+ *
+ * Must match analyst-ui MultistepDialogGallery exactly.
+ *
+ * Dark mode: portalClassName={Classes.DARK} when ?theme=dark (same fix as Dialog/Drawer).
+ */
+function MultistepDialogGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+
+    useEffect(() => {
+        function tag() {
+            const dialog = document.querySelector(`.${Classes.DIALOG}`);
+            if (!dialog) return;
+            const set = (sel: string, key: string, root: Element = dialog) => {
+                const el = root.querySelector(sel);
+                if (el) el.setAttribute("data-compare", key);
+            };
+            dialog.setAttribute("data-compare", "dialog-panel");
+            set(`.${Classes.DIALOG_HEADER}`, "dialog-header");
+            set(`.${Classes.DIALOG_FOOTER}`, "dialog-footer");
+            set(`.${Classes.DIALOG_CLOSE_BUTTON}`, "dialog-close");
+            set(`.${Classes.MULTISTEP_DIALOG_PANELS}`, "multistep-panels");
+            set(`.${Classes.MULTISTEP_DIALOG_LEFT_PANEL}`, "multistep-rail");
+            set(`.${Classes.MULTISTEP_DIALOG_RIGHT_PANEL}`, "multistep-panel");
+            const active = dialog.querySelector(
+                `.${Classes.DIALOG_STEP_CONTAINER}.${Classes.ACTIVE}`,
+            );
+            if (active) {
+                active.setAttribute("data-compare", "multistep-step-active");
+                const icon = active.querySelector(`.${Classes.DIALOG_STEP_ICON}`);
+                if (icon) icon.setAttribute("data-compare", "multistep-circle-active");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The wizard below is open by default (on step 2) for comparison harness screenshots.
+            </p>
+            <MultistepDialog
+                isOpen={true}
+                title="Create project"
+                icon="projects"
+                isCloseButtonShown={true}
+                initialStepIndex={1}
+                finalButtonProps={{ text: "Create" }}
+                onClose={() => {}}
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <DialogStep
+                    id="info"
+                    title="Project info"
+                    panel={
+                        <div style={{ padding: 20 }}>
+                            <p style={{ margin: 0 }}>Step 1 — name your project and pick a workspace.</p>
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="members"
+                    title="Members"
+                    panel={
+                        <div style={{ padding: 20 }}>
+                            <p style={{ margin: 0 }}>Step 2 — invite collaborators and assign roles.</p>
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="review"
+                    title="Review"
+                    panel={
+                        <div style={{ padding: 20 }}>
+                            <p style={{ margin: 0 }}>Step 3 — review your settings, then create the project.</p>
+                        </div>
+                    }
+                />
+            </MultistepDialog>
         </div>
     );
 }
