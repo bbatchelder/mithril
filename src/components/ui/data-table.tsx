@@ -25,6 +25,7 @@ import { DataTableHeader } from "./data-table/header";
  *                              box-shadow: inset 0 -1px 0 <border>, inset -1px 0 0 <border>  (bottom+right)
  *   column header (.bp6-table-column-headers .bp6-table-header)
  *                              line-height:30px; min-height:30px; box-shadow: 0 1px 0 <border> (bottom)
+ *                              header text (.bp6-table-column-name-text) font-size:14px (NOT 12px)
  *   row header / gutter (.bp6-table-row-name)
  *                              font-size:12px; padding:0 4px; text-align:right; min-width:30px; line-height:20px
  *                              box-shadow: inset 0 -1px 0 <border>, 1px 0 0 <border> (bottom+right)

@@ -6,7 +6,9 @@ import { CornerCell } from "./gutter";
 
 /**
  * The sticky column-header row. Blueprint `.bp6-table-column-headers .bp6-table-header`:
- *   line-height 30px, min-height 30px, font 12px, bottom border (0 1px 0 <border>).
+ *   line-height 30px, min-height 30px, bottom border (0 1px 0 <border>).
+ *   Header **text** (`.bp6-table-column-name-text`) is the body default **14px** —
+ *   NOT the 12px of body cells — at line-height 30px (vertically filling the header).
  *   (dark theme additionally draws a 1px right inset divider between headers.)
  *
  * Header text is always left-aligned — Blueprint column headers do not follow a
@@ -39,7 +41,7 @@ export function DataTableHeader<TRow>({
                                 className={cn(
                                     "box-border flex shrink-0 items-center overflow-hidden px-2",
                                     "bg-background dark:bg-[#383e47]",
-                                    "whitespace-nowrap text-[12px] font-normal text-foreground",
+                                    "whitespace-nowrap text-[14px] font-normal text-foreground",
                                     "shadow-[0_1px_0_rgba(17,20,24,0.15)]",
                                     "dark:shadow-[0_1px_0_rgba(17,20,24,0.4),inset_-1px_0_0_rgba(17,20,24,0.4)]",
                                 )}
