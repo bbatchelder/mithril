@@ -4955,6 +4955,7 @@ function DataTableGallery() {
                         data={DATA_TABLE_ROWS}
                         columns={DATA_TABLE_COLUMNS}
                         enableColumnResizing
+                        enableColumnReordering
                     />
                 </div>
             </Section>

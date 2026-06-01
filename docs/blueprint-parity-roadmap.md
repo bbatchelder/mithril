@@ -104,8 +104,10 @@ this correctly — use it as the reference pattern.
 > - [x] **Loop 4** — column **resize** (handoff 0089): per-column right-edge `ew-resize` handle
 >   (TanStack `getResizeHandler`, `columnResizeMode:"onEnd"`), full-height blue resize guide + drag
 >   cursor overlay, `enableColumnResizing` prop. Cursor + text-select fidelity also landed here.
-> - [ ] **Loop 4b** — column **reorder** (split from Loop 4 — reorder handle, drag drop-indicator,
->   `columnOrder` state; materially more complex, kept as its own focused loop).
+> - [x] **Loop 4b** — column **reorder** (handoff 0090): per-header `DragHandleVertical` reorder
+>   handle (Blueprint `.bp6-table-reorder-handle-target`, 22px grab zone + 22px name indent),
+>   drag-to-reorder with a blue drop guide + grabbing cursor overlay, TanStack `columnOrder` state,
+>   `enableColumnReordering` + controllable `columnOrder`/`onColumnOrderChange`.
 > - [ ] **Loop 5** — editable cells
 > - [ ] **Loop 6** — keyboard navigation + clipboard copy
 > - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs

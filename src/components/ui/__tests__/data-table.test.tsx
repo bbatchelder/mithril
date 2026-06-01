@@ -310,6 +310,76 @@ describe("DataTable — column resize (Loop 4)", () => {
     });
 });
 
+describe("DataTable — column reorder (Loop 4b)", () => {
+    const headerNames = () =>
+        screen.getAllByRole("columnheader").map((h) => h.textContent?.trim());
+
+    it("renders a reorder handle per column only when reordering is enabled", () => {
+        const { container, rerender } = render(<DataTable<Person> data={ROWS} columns={COLUMNS} />);
+        expect(container.querySelectorAll("[data-reorder-handle]")).toHaveLength(0);
+        rerender(<DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnReordering />);
+        expect(container.querySelectorAll("[data-reorder-handle]")).toHaveLength(COLUMNS.length);
+    });
+
+    it("dragging a handle past the threshold reorders the columns on release", () => {
+        let order: string[] | undefined;
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={COLUMNS}
+                enableColumnReordering
+                numberedRows={false}
+                onColumnOrderChange={(o) => (order = o)}
+            />,
+        );
+        expect(headerNames()).toEqual(["Name", "Age", "Role"]);
+        // Grab the Name column's handle (col 0) and drag it past Role's centre.
+        const handle = container.querySelectorAll("[data-reorder-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 0 });
+        // No gutter; every column is the default 150px → Name [0,150) Age [150,300) Role
+        // [300,450). Drop past Role's centre (375) so Name lands last.
+        fireEvent.mouseMove(document, { clientX: 400 });
+        // Mid-drag: the blue drop guide + grabbing-cursor overlay are mounted.
+        expect(container.querySelector("[data-reorder-guide]")).not.toBeNull();
+        expect(container.querySelector(".fixed.cursor-grabbing")).not.toBeNull();
+        fireEvent.mouseUp(document);
+        expect(order).toEqual(["age", "role", "name"]);
+        expect(headerNames()).toEqual(["Age", "Role", "Name"]);
+        // Overlay + guide cleared; the moved column stays selected at its new index (2).
+        expect(container.querySelector(".fixed.cursor-grabbing")).toBeNull();
+        expect(screen.getAllByRole("columnheader")[2]).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("grabbing a handle does not select the column", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnReordering numberedRows={false} />,
+        );
+        const handle = container.querySelectorAll("[data-reorder-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 0 });
+        fireEvent.mouseUp(document); // released without moving
+        expect(screen.getAllByRole("columnheader")[0]).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("a grab without crossing the threshold leaves the order unchanged", () => {
+        let changed = false;
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={COLUMNS}
+                enableColumnReordering
+                numberedRows={false}
+                onColumnOrderChange={() => (changed = true)}
+            />,
+        );
+        const handle = container.querySelectorAll("[data-reorder-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 0 });
+        fireEvent.mouseMove(document, { clientX: 2 }); // < 5px threshold
+        fireEvent.mouseUp(document);
+        expect(changed).toBe(false);
+        expect(headerNames()).toEqual(["Name", "Age", "Role"]);
+    });
+});
+
 describe("DataTable — a11y", () => {
     it("has no axe violations", async () => {
         const { container } = renderTable();

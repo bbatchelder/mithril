@@ -2,6 +2,9 @@ import { flexRender, type Table } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";
 
+import { Icon } from "@/components/ui/icon";
+import { dragHandleVertical } from "@/components/ui/icons";
+
 import { CornerCell } from "./gutter";
 import { isColumnSelected, type SelectionRegion } from "./selection";
 
@@ -31,6 +34,14 @@ export interface DataTableHeaderProps<TRow> {
     onHeaderMouseEnter?: (col: number) => void;
     /** Corner click — selects the whole table. */
     onSelectAll?: () => void;
+    /**
+     * Show a drag-to-reorder handle on the left of every column header (Loop 4b). Blueprint's
+     * `.bp6-table-reorder-handle-target`: a 22px grab-cursor zone with a `DragHandleVertical`
+     * glyph, and the header text indented 22px to make room.
+     */
+    reorderable?: boolean;
+    /** Pointer-down on a reorder handle — `(col, clientX)`. Begins a reorder drag. */
+    onReorderStart?: (col: number, clientX: number) => void;
 }
 
 export function DataTableHeader<TRow>({
@@ -42,7 +53,10 @@ export function DataTableHeader<TRow>({
     onHeaderMouseDown,
     onHeaderMouseEnter,
     onSelectAll,
+    reorderable,
+    onReorderStart,
 }: DataTableHeaderProps<TRow>) {
+    const showHandle = reorderable && onReorderStart != null;
     return (
         <div role="rowgroup" className="sticky top-0 z-30 bg-background dark:bg-[#383e47]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -67,7 +81,11 @@ export function DataTableHeader<TRow>({
                                     onHeaderMouseEnter ? () => onHeaderMouseEnter(colIndex) : undefined
                                 }
                                 className={cn(
-                                    "relative box-border flex shrink-0 items-center overflow-hidden px-2",
+                                    "relative box-border flex shrink-0 items-center overflow-hidden",
+                                    // Text padding: 8px each side; with a reorder handle the name's
+                                    // left padding becomes 22px (Blueprint `.bp6-table-has-reorder-handle`
+                                    // overrides the base 8px), making room for the 22px handle zone.
+                                    showHandle ? "pl-[22px] pr-2" : "px-2",
                                     "bg-background dark:bg-[#383e47]",
                                     "whitespace-nowrap text-[14px] font-normal text-foreground",
                                     "shadow-[0_1px_0_rgba(17,20,24,0.15)]",
@@ -82,6 +100,27 @@ export function DataTableHeader<TRow>({
                                     height: headerHeight,
                                 }}
                             >
+                                {/* Reorder handle (Loop 4b) — Blueprint `.bp6-table-reorder-handle-target`:
+                                    a 22px grab zone with a DragHandleVertical glyph on the left edge.
+                                    `stopPropagation` keeps grabbing it from also selecting the column. */}
+                                {showHandle && (
+                                    <div
+                                        data-reorder-handle
+                                        aria-hidden
+                                        onMouseDown={(e) => {
+                                            e.stopPropagation();
+                                            onReorderStart!(colIndex, e.clientX);
+                                        }}
+                                        className={cn(
+                                            "absolute inset-y-0 left-0 z-20 flex w-[22px] items-center justify-center",
+                                            "cursor-grab active:cursor-grabbing",
+                                            "text-[rgba(95,107,124,0.6)] hover:text-[#1c2127] active:text-[#2d72d2]",
+                                            "dark:text-[rgba(171,179,191,0.6)] dark:hover:text-[#f6f7f9] dark:active:text-[#2d72d2]",
+                                        )}
+                                    >
+                                        <Icon icon={dragHandleVertical} size={16} className="!text-current" />
+                                    </div>
+                                )}
                                 {header.isPlaceholder
                                     ? null
                                     : flexRender(header.column.columnDef.header, header.getContext())}

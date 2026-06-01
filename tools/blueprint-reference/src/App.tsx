@@ -5266,7 +5266,12 @@ function DataTableGallery() {
         <div className="flex flex-col gap-6">
             <BpSection title="Basic grid (sticky header · numbered gutter · ruled cells)">
                 <div data-compare="data-table-basic" style={{ width: 460, height: 150 }}>
-                    <BpTable2 numRows={rows.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        enableColumnReordering
+                    >
                         <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
                         <BpColumn
                             name="Age"

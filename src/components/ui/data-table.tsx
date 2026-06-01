@@ -12,6 +12,7 @@ import { DataTableBody } from "./data-table/body";
 import { DataTableHeader } from "./data-table/header";
 import {
     cellsEqual,
+    columnsRegion,
     regionListsEqual,
     selectionReducer,
     type CellCoord,
@@ -132,6 +133,19 @@ export interface DataTableProps<TRow> {
      * @default false
      */
     enableColumnResizing?: boolean;
+    /**
+     * Allow reordering columns by dragging a header (Loop 4b). Matching Blueprint, a column
+     * only becomes draggable once it's the sole selected column — click its header to select
+     * it, then grab and drag. A blue guide marks the drop slot; the order commits on release.
+     * @default false
+     */
+    enableColumnReordering?: boolean;
+    /** Controlled column order (array of column `id`s). Pair with `onColumnOrderChange`. */
+    columnOrder?: string[];
+    /** Initial column order when uncontrolled. @default [] (natural `columns` order) */
+    defaultColumnOrder?: string[];
+    /** Called when the column order changes (drag-reorder). */
+    onColumnOrderChange?: (order: string[]) => void;
     selectionMode?: DataTableSelectionMode;
     /** Controlled selection regions. Pair with `onSelectionChange`. */
     selection?: SelectionRegion[];
@@ -194,6 +208,12 @@ function toColumnDef<TRow>(col: DataTableColumn<TRow>, defaultResizing: boolean)
 /** Stable empty regions default (avoids a fresh array identity each render). */
 const NO_REGIONS: SelectionRegion[] = [];
 
+/** Stable empty column-order default (natural order). */
+const EMPTY_ORDER: string[] = [];
+
+/** Threshold in px the pointer must travel before a header grab becomes a reorder drag. */
+const REORDER_DRAG_THRESHOLD = 5;
+
 /** Minimal controlled-or-uncontrolled state hook (no external dep). */
 function useControllableState<T>(
     controlled: T | undefined,
@@ -236,6 +256,10 @@ export function DataTable<TRow>({
     rowHeight = 20,
     height,
     enableColumnResizing = false,
+    enableColumnReordering = false,
+    columnOrder: columnOrderProp,
+    defaultColumnOrder,
+    onColumnOrderChange,
     selectionMode = "single",
     selection,
     defaultSelection,
@@ -250,6 +274,13 @@ export function DataTable<TRow>({
         [columns, enableColumnResizing],
     );
 
+    // Column order (Loop 4b) — a controllable list of column ids. Empty ⇒ natural order.
+    const [columnOrder, setColumnOrder] = useControllableState<string[]>(
+        columnOrderProp,
+        defaultColumnOrder ?? EMPTY_ORDER,
+        onColumnOrderChange,
+    );
+
     const table: Table<TRow> = useReactTable({
         data,
         columns: columnDefs,
@@ -257,6 +288,9 @@ export function DataTable<TRow>({
         getRowId,
         columnResizeMode: "onEnd",
         defaultColumn: { size: 150, minSize: 50 },
+        state: { columnOrder },
+        onColumnOrderChange: (updater) =>
+            setColumnOrder(typeof updater === "function" ? updater(columnOrder) : updater),
     });
 
     const gutterW = numberedRows ? gutterWidth(data.length) : 0;
@@ -382,6 +416,75 @@ export function DataTable<TRow>({
         if (!cellsEqual({ row: 0, col: 0 }, focusedCell)) setFocusedCell({ row: 0, col: 0 });
     }, [regions, focusedCell, setRegions, setFocusedCell]);
 
+    // ── Column reorder (Loop 4b) ──────────────────────────────────────────────
+    // The inner sizer — the positioned ancestor for both the resize and the reorder guide.
+    // We also read its left edge to convert a pointer clientX into content-space x.
+    const sizerRef = useRef<HTMLDivElement | null>(null);
+    // Active reorder drag, tracked in a ref so the document listeners read fresh values;
+    // `reorderGuideX` state drives the drop-guide + grabbing-cursor render.
+    const reorderRef = useRef<{ col: number; startX: number; moved: boolean; target: number } | null>(null);
+    const [reorderGuideX, setReorderGuideX] = useState<number | null>(null);
+
+    const handleReorderStart = useCallback(
+        (col: number, clientX: number) => {
+            reorderRef.current = { col, startX: clientX, moved: false, target: col };
+
+            // Map a pointer clientX to a drop slot (insertion index 0..colCount) and the x of
+            // that slot's left edge (content space), walking the visible columns left→right.
+            const computeTarget = (px: number) => {
+                const x = px - (sizerRef.current?.getBoundingClientRect().left ?? 0);
+                const cols = table.getVisibleLeafColumns();
+                let left = gutterW;
+                let target = cols.length;
+                let guideX = gutterW;
+                for (let i = 0; i < cols.length; i++) {
+                    const w = cols[i].getSize();
+                    if (x < left + w / 2) {
+                        target = i;
+                        guideX = left;
+                        return { target, guideX };
+                    }
+                    left += w;
+                }
+                return { target, guideX: left };
+            };
+
+            const onMove = (e: MouseEvent) => {
+                const drag = reorderRef.current;
+                if (!drag) return;
+                if (!drag.moved && Math.abs(e.clientX - drag.startX) < REORDER_DRAG_THRESHOLD) return;
+                drag.moved = true;
+                const { target, guideX } = computeTarget(e.clientX);
+                drag.target = target;
+                setReorderGuideX(Math.round(guideX));
+            };
+            const onUp = () => {
+                window.removeEventListener("mousemove", onMove);
+                window.removeEventListener("mouseup", onUp);
+                const drag = reorderRef.current;
+                reorderRef.current = null;
+                setReorderGuideX(null);
+                if (!drag || !drag.moved) return;
+                // Translate the slot index into an in-place array move; a slot to the right of
+                // the source collapses by one once the source is removed.
+                const order = table.getVisibleLeafColumns().map((c) => c.id);
+                const insertAt = drag.target > drag.col ? drag.target - 1 : drag.target;
+                if (insertAt === drag.col) return;
+                const next = order.slice();
+                const [movedId] = next.splice(drag.col, 1);
+                next.splice(insertAt, 0, movedId);
+                setColumnOrder(next);
+                // Keep the moved column selected at its new position (Blueprint follows it).
+                anchorRef.current = { row: 0, col: insertAt };
+                setRegions([columnsRegion(insertAt, insertAt)]);
+                setFocusedCell({ row: 0, col: insertAt });
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+        },
+        [table, gutterW, setColumnOrder, setRegions, setFocusedCell],
+    );
+
     return (
         <div
             ref={setScrollEl}
@@ -402,7 +505,7 @@ export function DataTable<TRow>({
         >
             {/* Inner sizer: forces the scroll width to the sum of column widths. `relative`
                 anchors the resize guide, which spans the full header+body height. */}
-            <div className="relative" style={{ width: totalWidth, minWidth: "100%" }}>
+            <div ref={sizerRef} className="relative" style={{ width: totalWidth, minWidth: "100%" }}>
                 <DataTableHeader
                     table={table}
                     numberedRows={numberedRows}
@@ -412,6 +515,8 @@ export function DataTable<TRow>({
                     onHeaderMouseDown={selectable ? handleHeaderMouseDown : undefined}
                     onHeaderMouseEnter={selectable ? handleHeaderMouseEnter : undefined}
                     onSelectAll={selectable ? handleSelectAll : undefined}
+                    reorderable={enableColumnReordering}
+                    onReorderStart={enableColumnReordering ? handleReorderStart : undefined}
                 />
                 <DataTableBody
                     table={table}
@@ -436,10 +541,22 @@ export function DataTable<TRow>({
                         style={{ left: resizeGuideX - 3 }}
                     />
                 )}
+                {/* Reorder drop guide (Loop 4b) — the same blue vertical guide, centered on the
+                    boundary of the slot the column will drop into. */}
+                {reorderGuideX != null && (
+                    <div
+                        data-reorder-guide
+                        aria-hidden
+                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-[#2d72d2]"
+                        style={{ left: reorderGuideX - 1 }}
+                    />
+                )}
             </div>
             {/* While dragging, a fixed overlay keeps the ew-resize cursor everywhere (the drag
                 runs on document listeners, so blocking pointer events here is harmless). */}
             {sizingInfo.isResizingColumn && <div className="fixed inset-0 z-[60] cursor-ew-resize" />}
+            {/* While reordering, the same overlay pattern keeps a grabbing cursor everywhere. */}
+            {reorderGuideX != null && <div className="fixed inset-0 z-[60] cursor-grabbing" />}
         </div>
     );
 }

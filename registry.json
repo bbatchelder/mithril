@@ -363,6 +363,7 @@
                 "@tanstack/react-virtual"
             ],
             "registryDependencies": [
+                "icon",
                 "utils",
                 "tokens"
             ]
