@@ -1,6 +1,7 @@
 import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, MultistepDialog, DialogStep, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
+import { Cell as BpCell, Column as BpColumn, Table2 as BpTable2 } from "@blueprintjs/table";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -5236,6 +5237,40 @@ function TimezoneSelectGallery() {
     );
 }
 
+/**
+ * Blueprint reference for DataTable (`<Table2>`). `data-compare` keys MUST match
+ * analyst-ui's gallery so the harness can crop + diff the grids side-by-side.
+ */
+const DATA_TABLE_ROWS = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+
+function DataTableGallery() {
+    const rows = DATA_TABLE_ROWS;
+    return (
+        <div className="flex flex-col gap-6">
+            <BpSection title="Basic grid (sticky header · numbered gutter · ruled cells)">
+                <div data-compare="data-table-basic" style={{ width: 460, height: 150 }}>
+                    <BpTable2 numRows={rows.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
@@ -5279,6 +5314,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "data-table", title: "DataTable", render: () => <DataTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
@@ -5316,6 +5352,7 @@ const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
     { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
     { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+    { label: "Data", ids: ["data-table"] },
 ];
 
 type ComponentEntry = (typeof COMPONENTS)[number];

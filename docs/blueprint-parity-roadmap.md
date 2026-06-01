@@ -89,7 +89,19 @@ this correctly — use it as the reference pattern.
 > These are the components/capabilities Blueprint has and analyst lacks. Without them, Blueprint stays
 > the answer for any app that needs them.
 
-### P1.1 — Data grid (the big one)
+### P1.1 — Data grid (the big one) 🚧 in progress (7-loop phase)
+
+> Composing **TanStack Table v8 + TanStack Virtual v3** under analyst's API + tokens. Modern `columns`
+> array + `data` API (not Blueprint's `<Column>` children). Loop plan:
+> `~/.claude/plans/snuggly-wibbling-clover.md`.
+> - [x] **Loop 1** — engine wiring + static grid skeleton (handoff 0083): sticky header, numbered gutter,
+>   ruled cells, Blueprint `Table2` token fidelity (crop SSIM 0.957 light / 0.936 dark).
+> - [ ] **Loop 2** — row virtualization + sticky header + scroll sync
+> - [ ] **Loop 3** — selection (row + cell + focused cell)
+> - [ ] **Loop 4** — column resize + reorder
+> - [ ] **Loop 5** — editable cells
+> - [ ] **Loop 6** — keyboard navigation + clipboard copy
+> - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs
 
 - **Problem:** No equivalent to Blueprint's **Table2** (~13k LOC: virtualized rows/cols, selection,
   resize, reorder, editable cells, clipboard). `html-table` is CSS-only.

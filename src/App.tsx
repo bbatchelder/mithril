@@ -43,6 +43,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
 import { HTMLTable } from "@/components/ui/html-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
 import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
@@ -4903,6 +4904,60 @@ function PortalGallery() {
     );
 }
 
+/**
+ * DataTable showcase — the virtualized, Blueprint-Table2-faithful grid.
+ *
+ * Compare keys (must match the Blueprint reference gallery):
+ *   data-table-basic  — the whole grid (header + numbered gutter + ruled cells), cropped
+ *                        and pixel-diffed against Blueprint's <Table2>.
+ */
+interface DataTablePerson {
+    name: string;
+    age: number;
+    role: string;
+    location: string;
+}
+
+const DATA_TABLE_ROWS: DataTablePerson[] = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+
+const DATA_TABLE_COLUMNS: DataTableColumn<DataTablePerson>[] = [
+    { id: "name", header: "Name", accessor: "name", width: 160 },
+    { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+    { id: "role", header: "Role", accessor: "role", width: 120 },
+    { id: "location", header: "Location", accessor: "location", width: 120 },
+];
+
+function DataTableGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Basic grid (sticky header · numbered gutter · ruled cells)">
+                <div data-compare="data-table-basic" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                    />
+                </div>
+            </Section>
+            <Section title="No gutter">
+                <div style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        numberedRows={false}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
@@ -4946,6 +5001,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "data-table", title: "DataTable", render: () => <DataTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
@@ -5011,6 +5067,7 @@ const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
     { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
     { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+    { label: "Data", ids: ["data-table"] },
     { label: "Infrastructure", ids: ["resize-sensor", "overflow-list", "portal"] },
 ];
 

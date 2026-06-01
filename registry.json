@@ -327,6 +327,41 @@
             ]
         },
         {
+            "name": "data-table",
+            "type": "registry:ui",
+            "title": "DataTable",
+            "description": "DataTable — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/data-table.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/body.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/body.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/gutter.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/gutter.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/header.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/header.tsx"
+                }
+            ],
+            "dependencies": [
+                "@tanstack/react-table"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "date-input",
             "type": "registry:ui",
             "title": "DateInput",

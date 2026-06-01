@@ -12,7 +12,7 @@
 //
 // It is intentionally dependency-free (Node built-ins only).
 
-import { readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, basename } from "node:path";
 
@@ -22,10 +22,11 @@ const UI_DIR = join(ROOT, "src/components/ui");
 // npm packages a component may import. react/react-dom are peer deps (assumed,
 // never listed); clsx + tailwind-merge belong to the `utils` lib item, not to
 // individual components.
-const NPM_PREFIXES = ["@radix-ui/", "react-day-picker", "class-variance-authority"];
+const NPM_PREFIXES = ["@radix-ui/", "@tanstack/", "react-day-picker", "class-variance-authority"];
 
 /** Pretty titles for the registry item `title` field. Falls back to PascalCase. */
 const TITLES = {
+    "data-table": "DataTable",
     "input-group": "InputGroup",
     "text-area": "TextArea",
     "form-group": "FormGroup",
@@ -69,6 +70,26 @@ function importsOf(src) {
 
 const files = readdirSync(UI_DIR).filter((f) => f.endsWith(".tsx")).sort();
 
+/**
+ * Subfiles of a multi-file component that ships a sibling directory of internals
+ * (e.g. `data-table/header.tsx`). Returns the `.ts`/`.tsx` entries of `<id>/`,
+ * sorted, or `[]` if no such directory exists. (`icon` predates this convention and
+ * keeps its bespoke `icons/` handling below.)
+ */
+function subfilesOf(id) {
+    const dir = join(UI_DIR, id);
+    let isDir = false;
+    try {
+        isDir = statSync(dir).isDirectory();
+    } catch {
+        return [];
+    }
+    if (!isDir) return [];
+    return readdirSync(dir)
+        .filter((f) => f.endsWith(".ts") || f.endsWith(".tsx"))
+        .sort();
+}
+
 const items = [
     {
         name: "tokens",
@@ -100,7 +121,18 @@ const items = [
 for (const file of files) {
     const id = basename(file, ".tsx");
     const src = readFileSync(join(UI_DIR, file), "utf8");
-    const specifiers = importsOf(src);
+    // Multi-file components ship a sibling directory of internals (e.g. `data-table/`).
+    // Every subfile ships with the item, and the subfiles' *external* imports (npm,
+    // @/lib, @/components/ui) count toward this item's deps. Relative sibling imports
+    // (`./header`) and the back-reference to the entry (`../data-table`) are NOT deps,
+    // so subfile specifiers starting with "." are ignored.
+    const subEntries = id === "icon" ? [] : subfilesOf(id);
+    const specifiers = [
+        ...importsOf(src),
+        ...subEntries.flatMap((sub) =>
+            importsOf(readFileSync(join(UI_DIR, id, sub), "utf8")).filter((s) => !s.startsWith(".")),
+        ),
+    ];
 
     const npm = new Set();
     const registryDeps = new Set();
@@ -133,8 +165,9 @@ for (const file of files) {
         }
         const npmPkg = NPM_PREFIXES.find((p) => spec === p || spec.startsWith(p));
         if (npmPkg) {
-            // @radix-ui/react-dialog → keep full package; others are the prefix itself
-            npm.add(spec.startsWith("@radix-ui/") ? spec : npmPkg);
+            // Scoped engines (@radix-ui/*, @tanstack/*) → keep the full package name;
+            // bare prefixes (react-day-picker, cva) are the prefix itself.
+            npm.add(spec.startsWith("@radix-ui/") || spec.startsWith("@tanstack/") ? spec : npmPkg);
         }
     }
 
@@ -157,6 +190,14 @@ for (const file of files) {
                 target: `components/ui/icons/${f}`,
             });
         }
+    }
+    // Other multi-file components ship their `<id>/` directory of internals.
+    for (const sub of subEntries) {
+        itemFiles.push({
+            path: `src/components/ui/${id}/${sub}`,
+            type: "registry:ui",
+            target: `components/ui/${id}/${sub}`,
+        });
     }
 
     const item = {
