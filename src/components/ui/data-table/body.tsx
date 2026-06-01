@@ -154,6 +154,9 @@ export function DataTableBody<TRow>({
                                         "text-[12px] text-foreground",
                                         "shadow-[inset_0_-1px_0_rgba(17,20,24,0.15),inset_-1px_0_0_rgba(17,20,24,0.15)]",
                                         "dark:shadow-[inset_0_-1px_0_rgba(17,20,24,0.4),inset_-1px_0_0_rgba(17,20,24,0.4)]",
+                                        // Blueprint `.bp6-table-selection-enabled .bp6-table-cell` → the
+                                        // `cell` ("+") crosshair cursor when the grid is selectable.
+                                        onCellMouseDown && "cursor-cell",
                                         alignClass(align),
                                     )}
                                     style={{

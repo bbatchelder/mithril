@@ -362,7 +362,9 @@ export function DataTable<TRow>({
                 // Scroll container + outer frame. Blueprint's `.bp6-table-container` draws
                 // its 1px frame with `box-shadow: 0 0 0 1px` (no layout impact) over a
                 // light-gray-5 surface (== analyst `--background`); dark uses #383e47.
-                "relative overflow-auto bg-background text-foreground dark:bg-[#383e47]",
+                // `select-none`: Blueprint's `.bp6-table-quadrant-scroll-container` disables
+                // text selection so a click-drag selects cells, not text (always on).
+                "relative select-none overflow-auto bg-background text-foreground dark:bg-[#383e47]",
                 "shadow-[0_0_0_1px_rgba(17,20,24,0.15)] dark:shadow-[0_0_0_1px_rgba(17,20,24,0.4)]",
                 className,
             )}
