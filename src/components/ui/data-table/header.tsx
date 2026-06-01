@@ -67,7 +67,7 @@ export function DataTableHeader<TRow>({
                                     onHeaderMouseEnter ? () => onHeaderMouseEnter(colIndex) : undefined
                                 }
                                 className={cn(
-                                    "box-border flex shrink-0 items-center overflow-hidden px-2",
+                                    "relative box-border flex shrink-0 items-center overflow-hidden px-2",
                                     "bg-background dark:bg-[#383e47]",
                                     "whitespace-nowrap text-[14px] font-normal text-foreground",
                                     "shadow-[0_1px_0_rgba(17,20,24,0.15)]",
@@ -85,6 +85,31 @@ export function DataTableHeader<TRow>({
                                 {header.isPlaceholder
                                     ? null
                                     : flexRender(header.column.columnDef.header, header.getContext())}
+                                {/* Resize handle (Loop 4) — Blueprint `.bp6-table-resize-handle`:
+                                    a 4px ew-resize hit-target on the right edge, hidden until
+                                    hover/drag, with a 3px #2d72d2 line. `stopPropagation` keeps a
+                                    handle grab from also triggering column selection. */}
+                                {header.column.getCanResize() && (
+                                    <div
+                                        data-resize-handle
+                                        aria-hidden
+                                        onMouseDown={(e) => {
+                                            e.stopPropagation();
+                                            header.getResizeHandler()(e);
+                                        }}
+                                        onTouchStart={(e) => {
+                                            e.stopPropagation();
+                                            header.getResizeHandler()(e);
+                                        }}
+                                        className={cn(
+                                            "absolute right-0 top-0 z-20 h-full w-[4px] cursor-ew-resize touch-none",
+                                            "opacity-0 hover:opacity-100",
+                                            header.column.getIsResizing() && "opacity-100",
+                                        )}
+                                    >
+                                        <div className="absolute left-[1px] top-0 h-full w-[3px] bg-[#2d72d2]" />
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

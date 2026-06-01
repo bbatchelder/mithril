@@ -4954,6 +4954,7 @@ function DataTableGallery() {
                     <DataTable<DataTablePerson>
                         data={DATA_TABLE_ROWS}
                         columns={DATA_TABLE_COLUMNS}
+                        enableColumnResizing
                     />
                 </div>
             </Section>
@@ -4963,6 +4964,7 @@ function DataTableGallery() {
                         data={DATA_TABLE_MANY}
                         columns={DATA_TABLE_COLUMNS}
                         height={300}
+                        enableColumnResizing
                     />
                 </div>
             </Section>

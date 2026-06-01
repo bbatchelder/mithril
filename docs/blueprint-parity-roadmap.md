@@ -101,7 +101,11 @@ this correctly — use it as the reference pattern.
 > - [x] **Loop 3** — selection (row + cell + focused cell) (handoff 0088): own region reducer
 >   (`selection.ts`), translucent-blue region overlays + 2px focused outline, click/shift-click/drag
 >   handlers, header/gutter band selection + selected tint, controlled+uncontrolled `selection`/`focusedCell`.
-> - [ ] **Loop 4** — column resize + reorder
+> - [x] **Loop 4** — column **resize** (handoff 0089): per-column right-edge `ew-resize` handle
+>   (TanStack `getResizeHandler`, `columnResizeMode:"onEnd"`), full-height blue resize guide + drag
+>   cursor overlay, `enableColumnResizing` prop. Cursor + text-select fidelity also landed here.
+> - [ ] **Loop 4b** — column **reorder** (split from Loop 4 — reorder handle, drag drop-indicator,
+>   `columnOrder` state; materially more complex, kept as its own focused loop).
 > - [ ] **Loop 5** — editable cells
 > - [ ] **Loop 6** — keyboard navigation + clipboard copy
 > - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs

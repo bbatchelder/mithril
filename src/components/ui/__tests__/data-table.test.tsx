@@ -236,6 +236,59 @@ describe("DataTable — selection (Loop 3)", () => {
     });
 });
 
+describe("DataTable — column resize (Loop 4)", () => {
+    it("renders a resize handle per column only when resizing is enabled", () => {
+        const { container, rerender } = render(<DataTable<Person> data={ROWS} columns={COLUMNS} />);
+        expect(container.querySelectorAll("[data-resize-handle]")).toHaveLength(0);
+        rerender(<DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnResizing />);
+        expect(container.querySelectorAll("[data-resize-handle]")).toHaveLength(COLUMNS.length);
+    });
+
+    it("dragging a handle widens the column and commits on mouse up", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnResizing />,
+        );
+        const widthOf = () => parseInt(getComputedStyle(screen.getAllByRole("columnheader")[0]).width, 10);
+        expect(widthOf()).toBe(150); // default column size
+        const handle = container.querySelectorAll("[data-resize-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 150 });
+        fireEvent.mouseMove(document, { clientX: 220 });
+        // Mid-drag: the full-height blue guide line is shown at the projected edge, and the
+        // ew-resize cursor overlay is mounted; the real column widths stay frozen (onEnd).
+        const guide = container.querySelector(".inset-y-0.bg-\\[\\#2d72d2\\]");
+        expect(guide).not.toBeNull();
+        expect(guide).toHaveStyle({ left: "247px" }); // gutter 30 + new width 220 − 3px guide
+        expect(container.querySelector(".fixed.cursor-ew-resize")).not.toBeNull();
+        expect(widthOf()).toBe(150); // not yet committed
+        // `columnResizeMode:"onEnd"` commits from the mouse-*up* position (+70px here).
+        fireEvent.mouseUp(document, { clientX: 220 });
+        expect(widthOf()).toBe(220);
+        expect(container.querySelector(".fixed.cursor-ew-resize")).toBeNull(); // overlay gone
+    });
+
+    it("does not render handles when a column opts out via enableResizing:false", () => {
+        const mixed: DataTableColumn<Person>[] = [
+            { ...COLUMNS[0], enableResizing: false },
+            COLUMNS[1],
+            COLUMNS[2],
+        ];
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={mixed} enableColumnResizing />,
+        );
+        expect(container.querySelectorAll("[data-resize-handle]")).toHaveLength(2);
+    });
+
+    it("grabbing a resize handle does not also select the column", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnResizing />,
+        );
+        const handle = container.querySelectorAll("[data-resize-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 150 });
+        fireEvent.mouseUp(document);
+        expect(screen.getAllByRole("columnheader")[0]).toHaveAttribute("aria-selected", "false");
+    });
+});
+
 describe("DataTable — a11y", () => {
     it("has no axe violations", async () => {
         const { container } = renderTable();

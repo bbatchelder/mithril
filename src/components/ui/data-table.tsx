@@ -126,6 +126,12 @@ export interface DataTableProps<TRow> {
      * `"none"` disables selection. `"multi"` is deferred (Loop 7).
      * @default "single"
      */
+    /**
+     * Make every column resizable by dragging its right-edge handle (Loop 4). Per-column
+     * `enableResizing` overrides this. Sizes commit on drag end (no mid-drag re-layout).
+     * @default false
+     */
+    enableColumnResizing?: boolean;
     selectionMode?: DataTableSelectionMode;
     /** Controlled selection regions. Pair with `onSelectionChange`. */
     selection?: SelectionRegion[];
@@ -154,7 +160,7 @@ function gutterWidth(rowCount: number): number {
 }
 
 /** Map an analyst `DataTableColumn` to a TanStack `ColumnDef`. */
-function toColumnDef<TRow>(col: DataTableColumn<TRow>): ColumnDef<TRow> {
+function toColumnDef<TRow>(col: DataTableColumn<TRow>, defaultResizing: boolean): ColumnDef<TRow> {
     const accessorFn =
         typeof col.accessor === "function"
             ? col.accessor
@@ -179,7 +185,7 @@ function toColumnDef<TRow>(col: DataTableColumn<TRow>): ColumnDef<TRow> {
         size: col.width ?? 150,
         minSize: col.minWidth ?? 50,
         maxSize: col.maxWidth ?? Number.MAX_SAFE_INTEGER,
-        enableResizing: col.enableResizing ?? false,
+        enableResizing: col.enableResizing ?? defaultResizing,
         enableSorting: col.enableSorting ?? false,
         meta,
     };
@@ -229,6 +235,7 @@ export function DataTable<TRow>({
     numberedRows = true,
     rowHeight = 20,
     height,
+    enableColumnResizing = false,
     selectionMode = "single",
     selection,
     defaultSelection,
@@ -238,7 +245,10 @@ export function DataTable<TRow>({
     onFocusedCellChange,
     className,
 }: DataTableProps<TRow>) {
-    const columnDefs = useMemo(() => columns.map(toColumnDef), [columns]);
+    const columnDefs = useMemo(
+        () => columns.map((c) => toColumnDef(c, enableColumnResizing)),
+        [columns, enableColumnResizing],
+    );
 
     const table: Table<TRow> = useReactTable({
         data,
@@ -251,6 +261,26 @@ export function DataTable<TRow>({
 
     const gutterW = numberedRows ? gutterWidth(data.length) : 0;
     const totalWidth = table.getTotalSize() + gutterW;
+
+    // Resize guide (Loop 4): while a column is being dragged (`columnResizeMode:"onEnd"` keeps
+    // the real widths frozen until release), draw a full-height blue line at the *projected*
+    // right edge = the column's left x + its clamped new width. `columnSizingInfo.deltaOffset`
+    // updates on each mousemove, so the line follows the cursor without re-laying-out the rows.
+    const sizingInfo = table.getState().columnSizingInfo;
+    let resizeGuideX: number | null = null;
+    if (sizingInfo.isResizingColumn) {
+        let x = gutterW;
+        for (const col of table.getVisibleLeafColumns()) {
+            if (col.id === sizingInfo.isResizingColumn) {
+                const minW = col.columnDef.minSize ?? 50;
+                const maxW = col.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER;
+                const newW = Math.min(maxW, Math.max(minW, col.getSize() + (sizingInfo.deltaOffset ?? 0)));
+                resizeGuideX = x + newW;
+                break;
+            }
+            x += col.getSize();
+        }
+    }
 
     // The scroll container is the virtualization viewport (Loop 2): the row virtualizer
     // reads its scroll position. A fixed `height` bounds it so only visible rows render.
@@ -370,8 +400,9 @@ export function DataTable<TRow>({
             )}
             style={height != null ? { height } : undefined}
         >
-            {/* Inner sizer: forces the scroll width to the sum of column widths. */}
-            <div style={{ width: totalWidth, minWidth: "100%" }}>
+            {/* Inner sizer: forces the scroll width to the sum of column widths. `relative`
+                anchors the resize guide, which spans the full header+body height. */}
+            <div className="relative" style={{ width: totalWidth, minWidth: "100%" }}>
                 <DataTableHeader
                     table={table}
                     numberedRows={numberedRows}
@@ -396,7 +427,19 @@ export function DataTable<TRow>({
                     onGutterMouseDown={selectable ? handleGutterMouseDown : undefined}
                     onGutterMouseEnter={selectable ? handleGutterMouseEnter : undefined}
                 />
+                {/* Resize guide — a 3px blue line at the projected edge (Blueprint
+                    `.bp6-table-vertical-guide`, width 3px, margin-left -3px → right edge at x). */}
+                {resizeGuideX != null && (
+                    <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-[#2d72d2]"
+                        style={{ left: resizeGuideX - 3 }}
+                    />
+                )}
             </div>
+            {/* While dragging, a fixed overlay keeps the ew-resize cursor everywhere (the drag
+                runs on document listeners, so blocking pointer events here is harmless). */}
+            {sizingInfo.isResizingColumn && <div className="fixed inset-0 z-[60] cursor-ew-resize" />}
         </div>
     );
 }
