@@ -77,8 +77,9 @@ light-mode semantic tokens (declared on `:root`) re-resolve against your seeds:
 intents** to a brand palette — vivid violet primary (`rgb(91, 8, 178)`), mint
 success (`rgb(63, 197, 137)`), amber warning (`rgb(239, 181, 47)`), and a matched
 red danger (`rgb(226, 52, 57)`) — with each intent's hover/active/disabled tiers
-derived from its own color family's Blueprint OKLCH steps. The neutral ramp gets a
-subtle olive hue-shift (the brand "none" tone, `rgb(59, 70, 7)`). The gallery
+derived from its own color family's Blueprint OKLCH steps. The neutral ramp is left
+at the default grays, so backgrounds/surfaces are identical to the default theme
+(datex re-tints intents only). The gallery
 toggles it (the tint button in the sidebar) or via `?palette=datex` (add
 `&theme=dark` for the dark variant). It's the proof that seed overrides re-tint all
 four light/dark quadrants. (Note: the mint success is light enough that its solid

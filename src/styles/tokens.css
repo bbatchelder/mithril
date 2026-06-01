@@ -560,8 +560,8 @@
  *
  * All four intents are re-seeded (vivid violet primary + brand status colors);
  * hover/active/disabled tiers mirror each color family's own Blueprint OKLCH
- * steps. The neutral ramp gets a subtle olive hue-shift (the brand "none" tone)
- * so surfaces/borders/default controls pick up the cast too.
+ * steps. The neutral ramp is intentionally LEFT at the default grays so the
+ * background/surfaces match the default theme — datex re-tints intents only.
  *
  * NOTE: full runtime theming (a ThemeProvider/API + gallery switcher, option #3
  * from the P2.5 discussion) is planned future work; this is the static proof.
@@ -592,19 +592,6 @@
     --color-danger-hover: #c01d25;
     --color-danger-active: #a21920;
     --color-danger-disabled: #fd6265;
-}
-
-@supports (color: oklch(from white l c h)) {
-    /* Subtle olive-tinted neutrals — hue-shifted to the brand "none" tone
-     * (rgb(59,70,7), hue ≈ 120). Gated because it derives from the default ramp;
-     * non-supporting engines keep the neutral grays. */
-    [data-theme="datex"] {
-        --color-light-gray-4: oklch(from #edeff2 l calc(c + 0.006) 120);
-        --color-light-gray-5: oklch(from #f6f7f9 l calc(c + 0.005) 120);
-        --color-dark-gray-1: oklch(from #1c2127 l calc(c + 0.008) 120);
-        --color-dark-gray-2: oklch(from #252a31 l calc(c + 0.008) 120);
-        --color-dark-gray-3: oklch(from #2f343c l calc(c + 0.008) 120);
-    }
 }
 
 /* =============================================================================
