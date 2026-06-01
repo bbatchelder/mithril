@@ -137,7 +137,14 @@ export function DataTableBody<TRow>({
                         className="absolute left-0 flex w-full"
                         style={{
                             height: rowHeight,
-                            transform: `translateY(${Math.round(virtualRow.start)}px)`,
+                            // Position via `top`, NOT `transform: translateY`. A transform creates a
+                            // stacking context, which would trap the sticky gutter cell's `z-20`
+                            // INSIDE this row — letting the selection overlays (later siblings, z-10
+                            // over the rows' z-auto) paint over the gutter once it slides across this
+                            // content on horizontal scroll. With `top`, the gutter's z-20 correctly
+                            // out-stacks the overlays' z-10. Offsets stay integer-rounded to avoid
+                            // border-seam flicker (handoff 0084).
+                            top: Math.round(virtualRow.start),
                         }}
                     >
                         {numberedRows && (
