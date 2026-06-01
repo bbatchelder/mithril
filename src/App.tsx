@@ -5156,8 +5156,8 @@ const params = new URLSearchParams(window.location.search);
 const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
-/** `?palette=purple` selects the example alternate theme (P2.5 themeability proof). */
-const INITIAL_PURPLE = params.get("palette") === "purple";
+/** `?palette=datex` selects the example alternate theme (P2.5 themeability proof). */
+const INITIAL_DATEX = params.get("palette") === "datex";
 
 /**
  * Components whose specimens render a portaled/floating overlay OPEN by default (for the
@@ -5231,16 +5231,16 @@ function Sidebar({
     onToggleDark,
     view,
     onViewChange,
-    purple,
-    onTogglePurple,
+    datex,
+    onToggleDatex,
 }: {
     selectedId: string;
     dark: boolean;
     onToggleDark: () => void;
     view: "showcase" | "demos";
     onViewChange: (v: "showcase" | "demos") => void;
-    purple: boolean;
-    onTogglePurple: () => void;
+    datex: boolean;
+    onToggleDatex: () => void;
 }) {
     return (
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
@@ -5250,11 +5250,11 @@ function Sidebar({
                     <Button
                         size="small"
                         variant="minimal"
-                        intent={purple ? "primary" : "none"}
-                        aria-label={purple ? "Switch to default theme" : "Switch to purple theme"}
-                        aria-pressed={purple}
+                        intent={datex ? "primary" : "none"}
+                        aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
+                        aria-pressed={datex}
                         icon={<Icon icon="tint" className="!text-current" />}
-                        onClick={onTogglePurple}
+                        onClick={onToggleDatex}
                     />
                     <Button
                         size="small"
@@ -5371,7 +5371,7 @@ type AppView = "showcase" | "demos";
 
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
-    const [purple, setPurple] = useState(INITIAL_PURPLE);
+    const [datex, setDatex] = useState(INITIAL_DATEX);
 
     // The theme (seed set) must be applied at the document root: light-mode semantic
     // tokens are declared on `:root`, so their `var(--seed)` substitution resolves
@@ -5380,9 +5380,9 @@ export default function App() {
     // also lets portaled content (rendered at <body>) inherit the theme automatically.
     useEffect(() => {
         const el = document.documentElement;
-        if (purple) el.setAttribute("data-theme", "purple");
+        if (datex) el.setAttribute("data-theme", "datex");
         else el.removeAttribute("data-theme");
-    }, [purple]);
+    }, [datex]);
     const [view, setView] = useState<AppView>(() =>
         decodeURIComponent(window.location.hash.replace(/^#/, "")).startsWith("demo-") ? "demos" : "showcase",
     );
@@ -5425,8 +5425,8 @@ export default function App() {
                         onToggleDark={() => setDark((d) => !d)}
                         view={view}
                         onViewChange={setView}
-                        purple={purple}
-                        onTogglePurple={() => setPurple((p) => !p)}
+                        datex={datex}
+                        onToggleDatex={() => setDatex((p) => !p)}
                     />
                     {view === "showcase" ? (
                         <main className="flex-1 overflow-x-hidden px-10 py-8">

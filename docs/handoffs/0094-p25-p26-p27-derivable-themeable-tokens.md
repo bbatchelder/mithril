@@ -11,17 +11,17 @@ Converted `src/styles/tokens.css` from hand-baked sRGB literals to **runtime rel
 derivations** from a small seed set, so changing a seed re-tints the whole theme — in both light
 and dark. Added a static-literal fallback + `@supports` guard for every derived value (P2.6), set
 `color-scheme` and made dark respond to `.dark` **or** `[data-mode="dark"]` (P2.7). Shipped one
-example theme `[data-theme="purple"]` wired into the gallery, and wrote `docs/theming.md`.
+example theme `[data-theme="datex"]` wired into the gallery, and wrote `docs/theming.md`.
 
 ## Current state
 
 - **Verified (compare.sh, both themes, all `N match · 0 differ`):** button, tag, card, callout,
   input-group, numeric-input, checkbox, html-select — the default theme is pixel-identical to before
   the refactor (derivations reproduce the prior literals byte-for-byte).
-- **Verified (in-browser probes via agent-browser):** `[data-theme="purple"]` re-tints link, ring,
+- **Verified (in-browser probes via agent-browser):** `[data-theme="datex"]` re-tints link, ring,
   intent text, tag-minimal text, selection, and neutral surfaces in **both** light and dark;
   `[data-mode="dark"]` activates both the dark semantic tokens and the `dark:` utility variant.
-- **Verified visually:** `docs/assets/p25-purple-{light,dark}.png` (gallery in the purple theme).
+- **Verified visually:** `docs/assets/p25-datex-{light,dark}.png` (gallery in the datex theme).
 - **Build/typecheck:** `pnpm build` green.
 - **Math verification:** an OKLCH↔sRGB resolver (ad-hoc `/tmp/oklch.py`) confirmed every offset
   reproduces the old literal; not committed (throwaway), but the offsets are documented inline.
@@ -41,9 +41,10 @@ example theme `[data-theme="purple"]` wired into the gallery, and wrote `docs/th
 - **Two neutral/near-black shadows kept non-derived:** the dark `--button-shadow` drop is achromatic
   (`oklch(0.189828 0.00940823 none / 0.2)`) — restored verbatim under `@supports` because seed-deriving
   it from `dark-gray-1` shifted hue and broke the button-dark style match (it's neutral, no re-tint value).
-- **Purple theme leaves success/warning/danger semantic** (only primary + neutrals re-tinted) — re-tinting
-  danger away from red is bad UX. The mechanism supports overriding all four; the example just shows the
-  common case (commented hooks in `tokens.css`).
+- **Datex theme re-seeds all four intents** (violet primary, mint success, amber warning, matched red
+  danger) + an olive neutral tint (the brand "none" tone). Each intent's hover/active/disabled tiers mirror
+  its own color family's Blueprint OKLCH steps. The mint success solid fill uses dark foreground text
+  (`--color-success-foreground: #111418`) because white-on-mint fails AA.
 
 ## Gotchas / things to know
 
@@ -75,10 +76,10 @@ pnpm dev                                  # :5173 (analyst), tap-managed
 cd tools/blueprint-reference && pnpm dev  # :5174 (reference)
 # default-theme fidelity (must stay clean):
 tools/compare.sh button both > /tmp/c.log 2>&1; grep -E 'match · [0-9]+ differ' /tmp/c.log
-# see the purple theme:  http://localhost:5173/?palette=purple  (+ &theme=dark)
+# see the datex theme:  http://localhost:5173/?palette=datex  (+ &theme=dark)
 ```
 
 - Relevant files: `src/styles/tokens.css` (seeds, `:root`/`.dark` fallbacks, `@supports` derivations,
-  `[data-theme="purple"]`), `src/App.tsx` (theme `useEffect` + sidebar tint toggle), `docs/theming.md`,
+  `[data-theme="datex"]`), `src/App.tsx` (theme `useEffect` + sidebar tint toggle), `docs/theming.md`,
   `docs/blueprint-parity-roadmap.md` (P2.5/2.6/2.7 ticked).
 - Open questions for the user: whether to pursue the full `ThemeProvider` runtime-theming system (#3) next.

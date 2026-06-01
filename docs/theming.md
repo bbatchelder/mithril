@@ -71,16 +71,19 @@ light-mode semantic tokens (declared on `:root`) re-resolve against your seeds:
 > the `.dark` block redeclares the semantic tokens there.) For app-wide theming,
 > always use `<html>`.
 
-### Example: the bundled "purple" theme
+### Example: the bundled "datex" theme
 
-`tokens.css` ships one example, `[data-theme="purple"]`, which re-seeds the
-primary intent to a vivid violet (`rgb(91, 8, 178)`, with hover/active/disabled
-tiers derived from Blueprint's blue-ramp OKLCH steps) and gives the neutral ramp
-a subtle violet hue-shift. The gallery toggles it (the tint button in the sidebar) or via
-`?palette=purple` (add `&theme=dark` for the dark variant). It's the proof that a
-single seed override re-tints all four light/dark quadrants. Status intents are
-left semantic by choice — uncomment the `--color-success/-warning/-danger` lines
-to re-tint those too.
+`tokens.css` ships one example, `[data-theme="datex"]`, which re-seeds **all four
+intents** to a brand palette — vivid violet primary (`rgb(91, 8, 178)`), mint
+success (`rgb(63, 197, 137)`), amber warning (`rgb(239, 181, 47)`), and a matched
+red danger (`rgb(226, 52, 57)`) — with each intent's hover/active/disabled tiers
+derived from its own color family's Blueprint OKLCH steps. The neutral ramp gets a
+subtle olive hue-shift (the brand "none" tone, `rgb(59, 70, 7)`). The gallery
+toggles it (the tint button in the sidebar) or via `?palette=datex` (add
+`&theme=dark` for the dark variant). It's the proof that seed overrides re-tint all
+four light/dark quadrants. (Note: the mint success is light enough that its solid
+fill switches to dark foreground text for AA contrast — set via
+`--color-success-foreground`.)
 
 ## How derivation works (P2.5)
 

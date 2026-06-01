@@ -525,39 +525,58 @@
 }
 
 /* =============================================================================
- * Example alternate theme — "purple" (P2.5 themeability proof)
+ * Example alternate theme — "datex" (P2.5 themeability proof)
  * -----------------------------------------------------------------------------
  * A theme overrides ONLY seeds. Because every semantic token above derives from
  * a seed, this single block re-tints BOTH the light and dark variants. Apply via
- * `[data-theme="purple"]` (combine with `.dark`/`[data-mode]` for dark).
+ * `[data-theme="datex"]` (combine with `.dark`/`[data-mode]` for dark).
  *
- * The primary intent is re-seeded to Blueprint's indigo ramp; the neutral ramp
- * gets a subtle indigo hue-shift so surfaces/borders pick up the tint too.
- * Status intents (success/warning/danger) are left semantic by choice — but they
- * are equally seed-overridable (uncomment to re-tint them).
+ * All four intents are re-seeded (vivid violet primary + brand status colors);
+ * hover/active/disabled tiers mirror each color family's own Blueprint OKLCH
+ * steps. The neutral ramp gets a subtle olive hue-shift (the brand "none" tone)
+ * so surfaces/borders/default controls pick up the cast too.
  *
  * NOTE: full runtime theming (a ThemeProvider/API + gallery switcher, option #3
  * from the P2.5 discussion) is planned future work; this is the static proof.
  * ========================================================================== */
-[data-theme="purple"] {
-    /* Vivid violet accent — rest = rgb(91,8,178); hover/active/disabled mirror
-     * Blueprint's blue-ramp OKLCH steps applied to that base (faithful stepping). */
-    --color-primary: #5b08b2; /* rgb(91, 8, 178) */
-    --color-primary-hover: #470092; /* rest l-0.074 c-0.017 */
-    --color-primary-active: #340073; /* rest l-0.143 c-0.036 */
-    --color-primary-disabled: #7339d1; /* rest l+0.095 c-0.004 */
-    /* --color-success / --color-warning / --color-danger: override here to re-tint all four. */
+[data-theme="datex"] {
+    /* Primary — vivid violet, rest = rgb(91,8,178). */
+    --color-primary: #5b08b2;
+    --color-primary-hover: #470092;
+    --color-primary-active: #340073;
+    --color-primary-disabled: #7339d1;
+
+    /* Success — brand mint, rest = rgb(63,197,137). Bright enough that solid fills
+     * need dark text for contrast (white-on-mint fails AA). */
+    --color-success: #3fc589;
+    --color-success-hover: #39ac78;
+    --color-success-active: #339669;
+    --color-success-disabled: #4de6a2;
+    --color-success-foreground: #111418;
+
+    /* Warning — brand amber, rest = rgb(239,181,47). Keeps the default dark text. */
+    --color-warning: #efb52f;
+    --color-warning-hover: #bc8f2b;
+    --color-warning-active: #a07b29;
+    --color-warning-disabled: #ffdc57;
+
+    /* Danger — brand red, rest = rgb(226,52,57) (designed to match the palette). */
+    --color-danger: #e23439;
+    --color-danger-hover: #c01d25;
+    --color-danger-active: #a21920;
+    --color-danger-disabled: #fd6265;
 }
 
 @supports (color: oklch(from white l c h)) {
-    /* Subtle violet-tinted neutrals (hue-shifted to the accent's hue ≈ 295). Gated
-     * because it derives from the default ramp; non-supporting engines keep grays. */
-    [data-theme="purple"] {
-        --color-light-gray-4: oklch(from #edeff2 l calc(c + 0.006) 295);
-        --color-light-gray-5: oklch(from #f6f7f9 l calc(c + 0.005) 295);
-        --color-dark-gray-1: oklch(from #1c2127 l calc(c + 0.008) 295);
-        --color-dark-gray-2: oklch(from #252a31 l calc(c + 0.008) 295);
-        --color-dark-gray-3: oklch(from #2f343c l calc(c + 0.008) 295);
+    /* Subtle olive-tinted neutrals — hue-shifted to the brand "none" tone
+     * (rgb(59,70,7), hue ≈ 120). Gated because it derives from the default ramp;
+     * non-supporting engines keep the neutral grays. */
+    [data-theme="datex"] {
+        --color-light-gray-4: oklch(from #edeff2 l calc(c + 0.006) 120);
+        --color-light-gray-5: oklch(from #f6f7f9 l calc(c + 0.005) 120);
+        --color-dark-gray-1: oklch(from #1c2127 l calc(c + 0.008) 120);
+        --color-dark-gray-2: oklch(from #252a31 l calc(c + 0.008) 120);
+        --color-dark-gray-3: oklch(from #2f343c l calc(c + 0.008) 120);
     }
 }
 
