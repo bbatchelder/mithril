@@ -6,7 +6,8 @@
         {
             "name": "tokens",
             "type": "registry:style",
-            "description": "Blueprint-faithful design tokens (palette, intents, surfaces, elevation, type, motion) as Tailwind v4 @theme + light/dark CSS variables.",
+            "title": "Design tokens",
+            "description": "Blueprint-faithful design tokens (palette, intents, surfaces, elevation, type, motion) as Tailwind v4 @theme + light/dark CSS variables. The foundation every component builds on.",
             "files": [
                 {
                     "path": "src/styles/tokens.css",
@@ -16,17 +17,1342 @@
             ]
         },
         {
+            "name": "utils",
+            "type": "registry:lib",
+            "title": "cn() utility",
+            "description": "The `cn` class-merging helper (clsx + tailwind-merge), taught analyst-ui's custom font-size scale so size and color utilities don't collide.",
+            "dependencies": [
+                "clsx",
+                "tailwind-merge"
+            ],
+            "files": [
+                {
+                    "path": "src/lib/utils.ts",
+                    "type": "registry:lib",
+                    "target": "lib/utils.ts"
+                }
+            ]
+        },
+        {
+            "name": "types",
+            "type": "registry:lib",
+            "title": "Shared types",
+            "description": "Cross-component TypeScript types (the `Intent` vocabulary) defined once so every control shares one source of truth. Dependency-free.",
+            "files": [
+                {
+                    "path": "src/lib/types.ts",
+                    "type": "registry:lib",
+                    "target": "lib/types.ts"
+                }
+            ]
+        },
+        {
+            "name": "alert",
+            "type": "registry:ui",
+            "title": "Alert",
+            "description": "Alert — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/alert.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/alert.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-dialog"
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "anchor-button",
+            "type": "registry:ui",
+            "title": "AnchorButton",
+            "description": "AnchorButton — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/anchor-button.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/anchor-button.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "spinner",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "breadcrumbs",
+            "type": "registry:ui",
+            "title": "Breadcrumbs",
+            "description": "Breadcrumbs — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/breadcrumbs.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/breadcrumbs.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "button-group",
+            "type": "registry:ui",
+            "title": "ButtonGroup",
+            "description": "ButtonGroup — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/button-group.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/button-group.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "button",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "button",
             "type": "registry:ui",
-            "description": "Button — solid/outlined/minimal variants, five intents, three sizes, loading/active/fill states, start/end icons. Blueprint-faithful, built on CVA + Radix Slot.",
-            "dependencies": ["@radix-ui/react-slot", "class-variance-authority", "lucide-react"],
-            "registryDependencies": ["https://registry/tokens"],
+            "title": "Button",
+            "description": "Button — Blueprint-faithful, built on CVA + Radix.",
             "files": [
                 {
                     "path": "src/components/ui/button.tsx",
                     "type": "registry:ui",
                     "target": "components/ui/button.tsx"
                 }
+            ],
+            "dependencies": [
+                "@radix-ui/react-slot",
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "icon",
+                "spinner",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "callout",
+            "type": "registry:ui",
+            "title": "Callout",
+            "description": "Callout — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/callout.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/callout.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "card-list",
+            "type": "registry:ui",
+            "title": "CardList",
+            "description": "CardList — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/card-list.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/card-list.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "card",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "card",
+            "type": "registry:ui",
+            "title": "Card",
+            "description": "Card — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/card.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/card.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "checkbox",
+            "type": "registry:ui",
+            "title": "Checkbox",
+            "description": "Checkbox — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/checkbox.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/checkbox.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "collapse",
+            "type": "registry:ui",
+            "title": "Collapse",
+            "description": "Collapse — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/collapse.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/collapse.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "context-menu",
+            "type": "registry:ui",
+            "title": "ContextMenu",
+            "description": "ContextMenu — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/context-menu.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/context-menu.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-context-menu"
+            ],
+            "registryDependencies": [
+                "menu",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "control-base",
+            "type": "registry:ui",
+            "title": "ControlBase",
+            "description": "ControlBase — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/control-base.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/control-base.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "control-card",
+            "type": "registry:ui",
+            "title": "ControlCard",
+            "description": "ControlCard — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/control-card.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/control-card.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "card",
+                "checkbox",
+                "radio",
+                "switch",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "control-group",
+            "type": "registry:ui",
+            "title": "ControlGroup",
+            "description": "ControlGroup — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/control-group.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/control-group.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "data-table",
+            "type": "registry:ui",
+            "title": "DataTable",
+            "description": "DataTable — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/data-table.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/body.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/body.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/editable-cell.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/editable-cell.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/gutter.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/gutter.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/header.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/header.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/selection.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/selection.ts"
+                }
+            ],
+            "dependencies": [
+                "@tanstack/react-table",
+                "@tanstack/react-virtual"
+            ],
+            "registryDependencies": [
+                "icon",
+                "skeleton",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "date-input",
+            "type": "registry:ui",
+            "title": "DateInput",
+            "description": "DateInput — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/date-input.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/date-input.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "date-picker",
+                "icon",
+                "input-group",
+                "popover",
+                "time-picker",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "date-picker",
+            "type": "registry:ui",
+            "title": "DatePicker",
+            "description": "DatePicker — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/date-picker.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/date-picker.tsx"
+                }
+            ],
+            "dependencies": [
+                "react-day-picker"
+            ],
+            "registryDependencies": [
+                "html-select",
+                "icon",
+                "time-picker",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "date-range-input",
+            "type": "registry:ui",
+            "title": "DateRangeInput",
+            "description": "DateRangeInput — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/date-range-input.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/date-range-input.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "date-range-picker",
+                "input-group",
+                "popover",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "date-range-picker",
+            "type": "registry:ui",
+            "title": "DateRangePicker",
+            "description": "DateRangePicker — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/date-range-picker.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/date-range-picker.tsx"
+                }
+            ],
+            "dependencies": [
+                "react-day-picker"
+            ],
+            "registryDependencies": [
+                "html-select",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "dialog",
+            "type": "registry:ui",
+            "title": "Dialog",
+            "description": "Dialog — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/dialog.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/dialog.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-dialog"
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "divider",
+            "type": "registry:ui",
+            "title": "Divider",
+            "description": "Divider — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/divider.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/divider.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "drawer",
+            "type": "registry:ui",
+            "title": "Drawer",
+            "description": "Drawer — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/drawer.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/drawer.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-dialog"
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "editable-text",
+            "type": "registry:ui",
+            "title": "EditableText",
+            "description": "EditableText — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/editable-text.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/editable-text.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "entity-title",
+            "type": "registry:ui",
+            "title": "EntityTitle",
+            "description": "EntityTitle — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/entity-title.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/entity-title.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "skeleton",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "file-input",
+            "type": "registry:ui",
+            "title": "FileInput",
+            "description": "FileInput — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/file-input.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/file-input.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "form-group",
+            "type": "registry:ui",
+            "title": "FormGroup",
+            "description": "FormGroup — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/form-group.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/form-group.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "hotkeys",
+            "type": "registry:ui",
+            "title": "Hotkeys",
+            "description": "Hotkeys — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/hotkeys.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/hotkeys.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "dialog",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "html-select",
+            "type": "registry:ui",
+            "title": "HTMLSelect",
+            "description": "HTMLSelect — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/html-select.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/html-select.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "html-table",
+            "type": "registry:ui",
+            "title": "HTMLTable",
+            "description": "HTMLTable — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/html-table.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/html-table.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "icon",
+            "type": "registry:ui",
+            "title": "Icon",
+            "description": "Icon — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/icon.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/icon.tsx"
+                },
+                {
+                    "path": "src/components/ui/icons/index.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/icons/index.ts"
+                },
+                {
+                    "path": "src/components/ui/icons/all.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/icons/all.ts"
+                },
+                {
+                    "path": "src/components/ui/icons/registry.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/icons/registry.ts"
+                }
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "input-group",
+            "type": "registry:ui",
+            "title": "InputGroup",
+            "description": "InputGroup — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/input-group.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/input-group.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "link",
+            "type": "registry:ui",
+            "title": "Link",
+            "description": "Link — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/link.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/link.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "menu",
+            "type": "registry:ui",
+            "title": "Menu",
+            "description": "Menu — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/menu.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/menu.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "multi-select",
+            "type": "registry:ui",
+            "title": "MultiSelect",
+            "description": "MultiSelect — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/multi-select.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/multi-select.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "menu",
+                "popover",
+                "select",
+                "tag",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "multistep-dialog",
+            "type": "registry:ui",
+            "title": "MultistepDialog",
+            "description": "MultistepDialog — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/multistep-dialog.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/multistep-dialog.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "button",
+                "dialog",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "navbar",
+            "type": "registry:ui",
+            "title": "Navbar",
+            "description": "Navbar — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/navbar.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/navbar.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "non-ideal-state",
+            "type": "registry:ui",
+            "title": "NonIdealState",
+            "description": "NonIdealState — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/non-ideal-state.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/non-ideal-state.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "numeric-input",
+            "type": "registry:ui",
+            "title": "NumericInput",
+            "description": "NumericInput — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/numeric-input.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/numeric-input.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "input-group",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "omnibar",
+            "type": "registry:ui",
+            "title": "Omnibar",
+            "description": "Omnibar — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/omnibar.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/omnibar.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "input-group",
+                "menu",
+                "select",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "overflow-list",
+            "type": "registry:ui",
+            "title": "OverflowList",
+            "description": "OverflowList — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/overflow-list.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/overflow-list.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "resize-sensor",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "panel-stack",
+            "type": "registry:ui",
+            "title": "PanelStack",
+            "description": "PanelStack — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/panel-stack.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/panel-stack.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "popover",
+            "type": "registry:ui",
+            "title": "Popover",
+            "description": "Popover — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/popover.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/popover.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-popover"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "portal",
+            "type": "registry:ui",
+            "title": "Portal",
+            "description": "Portal — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/portal.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/portal.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "progress-bar",
+            "type": "registry:ui",
+            "title": "ProgressBar",
+            "description": "ProgressBar — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/progress-bar.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/progress-bar.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "radio",
+            "type": "registry:ui",
+            "title": "Radio",
+            "description": "Radio — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/radio.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/radio.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "resize-sensor",
+            "type": "registry:ui",
+            "title": "ResizeSensor",
+            "description": "ResizeSensor — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/resize-sensor.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/resize-sensor.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "tokens"
+            ]
+        },
+        {
+            "name": "section",
+            "type": "registry:ui",
+            "title": "Section",
+            "description": "Section — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/section.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/section.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "card",
+                "collapse",
+                "icon",
+                "text",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "segmented-control",
+            "type": "registry:ui",
+            "title": "SegmentedControl",
+            "description": "SegmentedControl — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/segmented-control.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/segmented-control.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "select",
+            "type": "registry:ui",
+            "title": "Select",
+            "description": "Select — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/select.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/select.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "input-group",
+                "menu",
+                "popover",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "skeleton",
+            "type": "registry:ui",
+            "title": "Skeleton",
+            "description": "Skeleton — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/skeleton.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/skeleton.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "skeleton",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "slider",
+            "type": "registry:ui",
+            "title": "Slider",
+            "description": "Slider — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/slider.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/slider.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-slider"
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "spinner",
+            "type": "registry:ui",
+            "title": "Spinner",
+            "description": "Spinner — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/spinner.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/spinner.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "suggest",
+            "type": "registry:ui",
+            "title": "Suggest",
+            "description": "Suggest — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/suggest.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/suggest.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "input-group",
+                "menu",
+                "popover",
+                "select",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "switch",
+            "type": "registry:ui",
+            "title": "Switch",
+            "description": "Switch — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/switch.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/switch.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "tabs",
+            "type": "registry:ui",
+            "title": "Tabs",
+            "description": "Tabs — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/tabs.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/tabs.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-tabs"
+            ],
+            "registryDependencies": [
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "tag-input",
+            "type": "registry:ui",
+            "title": "TagInput",
+            "description": "TagInput — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/tag-input.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/tag-input.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "tag",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "tag",
+            "type": "registry:ui",
+            "title": "Tag",
+            "description": "Tag — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/tag.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/tag.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "text-area",
+            "type": "registry:ui",
+            "title": "TextArea",
+            "description": "TextArea — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/text-area.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/text-area.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "text",
+            "type": "registry:ui",
+            "title": "Text",
+            "description": "Text — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/text.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/text.tsx"
+                }
+            ],
+            "dependencies": [
+                "class-variance-authority"
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "time-picker",
+            "type": "registry:ui",
+            "title": "TimePicker",
+            "description": "TimePicker — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/time-picker.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/time-picker.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "html-select",
+                "icon",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "timezone-select",
+            "type": "registry:ui",
+            "title": "TimezoneSelect",
+            "description": "TimezoneSelect — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/timezone-select.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/timezone-select.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "button",
+                "icon",
+                "menu",
+                "select",
+                "tokens"
+            ]
+        },
+        {
+            "name": "toast",
+            "type": "registry:ui",
+            "title": "Toast",
+            "description": "Toast — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/toast.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/toast.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-toast"
+            ],
+            "registryDependencies": [
+                "icon",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "tooltip",
+            "type": "registry:ui",
+            "title": "Tooltip",
+            "description": "Tooltip — Blueprint-faithful, built on CVA + Radix.",
+            "files": [
+                {
+                    "path": "src/components/ui/tooltip.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/tooltip.tsx"
+                }
+            ],
+            "dependencies": [
+                "@radix-ui/react-tooltip"
+            ],
+            "registryDependencies": [
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "tree",
+            "type": "registry:ui",
+            "title": "Tree",
+            "description": "Tree — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/tree.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/tree.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "collapse",
+                "icon",
+                "utils",
+                "tokens"
             ]
         }
     ]

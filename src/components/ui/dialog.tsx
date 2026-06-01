@@ -74,7 +74,8 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
-import { Icon } from "./icon";
+import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
 export interface DialogProps {
     /** Controlled open state. */
@@ -85,8 +86,8 @@ export interface DialogProps {
     onOpenChange?: (open: boolean) => void;
     /** Dialog title — when provided, renders the dialog header. */
     title?: React.ReactNode;
-    /** Icon rendered in the header before the title (use `<Icon icon="..." />`). */
-    icon?: React.ReactNode;
+    /** Icon rendered in the header before the title. An icon-name string (e.g. `"cog"`) or a custom element. */
+    icon?: IconProp;
     /** Show the close button in the header. @default true */
     closeButton?: boolean;
     /**
@@ -175,7 +176,9 @@ export function Dialog({
                                 // elevation-3): Card already tuned it to Blueprint's exact shadow
                                 // base color (#111418, not pure black) AND the dark-mode white inset
                                 // edge-highlights the dialog panel needs. Verified 7/7 both themes.
-                                "shadow-card-3",
+                                // overlay-3: rgba(20,20,20) hairline ring (light) + reordered
+                                // dark drop/highlight layers to match Blueprint exactly.
+                                "shadow-overlay-3",
                                 // Blueprint: width = $pt-spacing * 125 = 500px
                                 "w-[500px]",
                                 // Blueprint: margin = ($pt-spacing * 8) 0 = 32px top/bottom
@@ -214,9 +217,9 @@ export function Dialog({
                                     )}
                                 >
                                     {/* Icon — Blueprint: flex: 0 0 auto; margin-left: -$pt-spacing = -4px; margin-right: $dialog-padding*0.5 = 8px */}
-                                    {icon != null && (
+                                    {resolveIcon(icon) && (
                                         <span className="flex-[0_0_auto] -ml-1 mr-2 text-foreground-muted">
-                                            {icon}
+                                            {resolveIcon(icon)}
                                         </span>
                                     )}
                                     {/* Title — Blueprint: flex: 1 1 auto; font-size: 14px; ellipsis
@@ -234,7 +237,7 @@ export function Dialog({
                                                 size="medium"
                                                 className="shrink-0"
                                                 aria-label="Close"
-                                                icon={<Icon icon="small-cross" />}
+                                                icon={<Icon icon={smallCross} />}
                                             />
                                         </RadixDialog.Close>
                                     )}

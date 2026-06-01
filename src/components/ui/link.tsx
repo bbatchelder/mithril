@@ -61,28 +61,20 @@ const linkVariants = cva(
              * Link color — intent-based or inherited.
              * @default "primary"
              *
-             * Colors use exact Blueprint palette values:
-             *   light: $pt-intent-text-colors (blue2/green2/orange2/red2)
-             *   dark: $pt-dark-intent-text-colors (blue5/green5/orange5/red5)
-             *
-             * Note: We cannot use the --intent-*-text semantic tokens here because
-             * in dark mode those use color-mix() formulas (for Tag/Button contexts)
-             * that produce slightly different values than the raw palette colors that
-             * Blueprint's Link uses ($pt-dark-intent-text-colors = blue5/green5/…).
-             * Using literal palette classes ensures exact fidelity in both themes.
+             * Colors use the canonical intent-text token (--intent-*-text =
+             * Blueprint $pt-intent-text-colors: tier-2 light / tier-5 dark), so links
+             * re-tint with the theme. (The color-mix variant is --intent-*-minimal-text,
+             * used by buttons.)
              */
             color: {
-                /**
-                 * Intent primary: blue-2 (#215db0) in light, blue-5 (#8abbff) in dark.
-                 * Tailwind v4: `text-blue-2` and `dark:text-blue-5`.
-                 */
-                primary: "text-blue-2 dark:text-blue-5",
-                /** Intent success: green-2 (#1c6e42) light / green-5 (#72ca9b) dark. */
-                success: "text-green-2 dark:text-green-5",
-                /** Intent warning: orange-2 (#935610) light / orange-5 (#fbb360) dark. */
-                warning: "text-orange-2 dark:text-orange-5",
-                /** Intent danger: red-2 (#ac2f33) light / red-5 (#fa999c) dark. */
-                danger: "text-red-2 dark:text-red-5",
+                /** Intent primary: tier-2 (#215db0) light / tier-5 (#8abbff) dark. */
+                primary: "text-intent-primary-text",
+                /** Intent success: tier-2 (#1c6e42) light / tier-5 (#72ca9b) dark. */
+                success: "text-intent-success-text",
+                /** Intent warning: tier-2 (#935610) light / tier-5 (#fbb360) dark. */
+                warning: "text-intent-warning-text",
+                /** Intent danger: tier-2 (#ac2f33) light / tier-5 (#fa999c) dark. */
+                danger: "text-intent-danger-text",
                 /** Inherits color from surrounding text. */
                 inherit: "text-inherit",
             },

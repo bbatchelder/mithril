@@ -51,10 +51,11 @@ import * as RadixDialog from "@radix-ui/react-dialog";
 import { useCallback } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Button, type ButtonIntent } from "./button";
-import { Icon, type IconIntent } from "./icon";
+import { Icon, isIconGlyph, type IconIntent, type IconProp } from "./icon";
 
-export type AlertIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type AlertIntent = Intent;
 
 export interface AlertProps {
     /** Controlled open state. */
@@ -63,8 +64,8 @@ export interface AlertProps {
     defaultOpen?: boolean;
     /** Called when the open state changes (including dismiss). */
     onOpenChange?: (open: boolean) => void;
-    /** Large icon displayed on the left of the body (Blueprint: 40px, intent-colored). */
-    icon?: string | React.ReactNode;
+    /** Large icon displayed on the left of the body (Blueprint: 40px, intent-colored). An icon-name string or a custom element. */
+    icon?: IconProp;
     /** Intent applied to the confirm button and icon color. */
     intent?: AlertIntent;
     /**
@@ -173,8 +174,9 @@ export function Alert({
         [handleConfirm, onOpenChange],
     );
 
-    // Whether an icon will be rendered (used to decide whether to render the icon slot)
-    const hasIcon = icon != null;
+    // Whether an icon will be rendered (used to decide whether to render the icon slot).
+    // IconProp allows `false`/`null` to mean "no icon", so exclude both.
+    const hasIcon = icon != null && icon !== false;
 
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -189,6 +191,9 @@ export function Alert({
                     <div className="fixed inset-0 flex items-center justify-center z-overlay pointer-events-none">
                         <RadixDialog.Content
                             data-compare="alert-panel"
+                            // Blueprint Alert is an alertdialog (a modal that interrupts to
+                            // confirm/warn), not a plain dialog. Override Radix's role="dialog".
+                            role="alertdialog"
                             className={cn(
                                 // Layout
                                 "flex flex-col",
@@ -203,7 +208,7 @@ export function Alert({
                                 // Blueprint: box-shadow = card-3 (Dialog verified this is correct;
                                 // shadow-elevation-N uses pure-black base, shadow-card-N uses
                                 // $black=#111418 base + dark-mode white inset edge-highlights)
-                                "shadow-card-3",
+                                "shadow-overlay-3",
                                 // Blueprint: max-width = $pt-spacing * 100 = 400px (Alert is narrower than Dialog's 500px)
                                 "w-full max-w-[400px]",
                                 // Blueprint: padding = $pt-spacing * 5 = 20px (all sides)
@@ -245,10 +250,10 @@ export function Alert({
                                     itself so the measured node has the correct computed fontSize AND
                                     color (intent-colored text on the same span). */}
                                 {hasIcon && (
-                                    typeof icon === "string" ? (
+                                    typeof icon === "string" || isIconGlyph(icon) ? (
                                         <Icon
                                             data-compare="alert-icon"
-                                            icon={icon as Parameters<typeof Icon>[0]["icon"]}
+                                            icon={icon}
                                             size={40}
                                             intent={intent as IconIntent}
                                             className="flex-[0_0_auto] mr-5 mt-0 text-[40px]"

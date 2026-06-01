@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
-import type { IconName } from "./icons";
+import { chevronRight, type IconName } from "./icons";
 
 /**
  * Breadcrumbs component — pixel-faithful reimplementation of Blueprint's Breadcrumbs.
@@ -269,7 +269,7 @@ export const Breadcrumbs = forwardRef<HTMLUListElement, BreadcrumbsProps>(functi
                             Hidden on last item (::last-of-type::after { display: none }). */}
                         {!isLast && (
                             <Icon
-                                icon="chevron-right"
+                                icon={chevronRight}
                                 // Inherits text-foreground-muted color via className override
                                 className="text-foreground-muted mx-1 shrink-0"
                                 aria-hidden

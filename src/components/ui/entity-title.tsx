@@ -2,6 +2,7 @@ import { createElement, forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon, type IconName } from "./icon";
+import { document as documentIcon } from "./icons";
 import { skeletonClass } from "./skeleton";
 
 /**
@@ -251,7 +252,7 @@ export const EntityTitle = forwardRef<HTMLDivElement, EntityTitleProps>(function
             // which has similar dimensions and is in our icon set.
             iconNode = (
                 <Icon
-                    icon="document"
+                    icon={documentIcon}
                     size={iconSize}
                     className={cn("text-foreground-muted", skeletonClass)}
                     aria-hidden

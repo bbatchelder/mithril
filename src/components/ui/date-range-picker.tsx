@@ -39,7 +39,14 @@ import type { DateRange, MonthCaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronLeft, chevronRight } from "./icons";
 import { HTMLSelect } from "./html-select";
+
+// Caption HTMLSelect styling — see DatePicker's CAPTION_SELECT_CLS for the rationale.
+// caret right 2px ([&>span]:right-0.5) so the displayed value clears the double-caret;
+// year select pins min-width 60px since all year options are the same 4-digit width.
+const CAPTION_SELECT_CLS = "[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4 [&>span]:right-0.5";
+const CAPTION_YEAR_SELECT_CLS = `${CAPTION_SELECT_CLS} min-w-[60px]`;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -120,7 +127,7 @@ function NavButton({
             aria-label={direction === "prev" ? "Previous month" : "Next month"}
             className={cn(
                 "inline-flex items-center justify-center",
-                "h-[30px] min-w-[30px] px-2 py-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-bp",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -130,7 +137,7 @@ function NavButton({
             )}
         >
             <Icon
-                icon={direction === "prev" ? "chevron-left" : "chevron-right"}
+                icon={direction === "prev" ? chevronLeft : chevronRight}
                 size={16}
                 aria-hidden
             />
@@ -194,10 +201,14 @@ function DateRangePickerCaption({
                 "flex flex-row items-center",
                 "border-b border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
                 "pb-1",
-                // Blueprint: for contiguous mode, left caption is row-reverse (prev on left, dropdowns right)
-                // right caption is row (dropdowns left, next on right)
-                // For single month: standard [dropdowns] [prev] [next]
-                isSingleMonth ? "justify-between" : isLeft ? "flex-row-reverse justify-between" : "flex-row justify-between",
+                // Blueprint contiguous layout is symmetric — the nav button hugs the OUTER
+                // edge of each calendar, dropdowns inset on the inner edge:
+                //   left caption:  [prev][month][year] packed left  → justify-start
+                //   right caption: [month][year][next] packed right → justify-end
+                // (DOM order already puts prev first in the left branch and next last in the
+                // right branch, so plain flex-row + start/end matches; no row-reverse.)
+                // Single month: [dropdowns] … [prev][next] → justify-between.
+                isSingleMonth ? "justify-between" : isLeft ? "justify-start" : "justify-end",
                 classNames.month_caption,
             )}
         >
@@ -207,6 +218,7 @@ function DateRangePickerCaption({
                 <>
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -214,13 +226,14 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -228,7 +241,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -263,6 +276,7 @@ function DateRangePickerCaption({
                     {/* Dropdowns — appear on the RIGHT in row-reverse */}
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -270,13 +284,14 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -284,7 +299,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -297,6 +312,7 @@ function DateRangePickerCaption({
                 <>
                     <div className="flex flex-row items-center gap-1">
                         <HTMLSelect
+                            minimal
                             value={currentMonth}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -304,13 +320,14 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelMonthDropdown()}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_SELECT_CLS}
                         >
                             {monthOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                         </HTMLSelect>
                         <HTMLSelect
+                            minimal
                             value={currentYear}
                             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                                 const newMonth = new Date(calendarMonth.date);
@@ -318,7 +335,7 @@ function DateRangePickerCaption({
                                 goToMonth(newMonth);
                             }}
                             aria-label={labelYearDropdown({})}
-                            className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                            className={CAPTION_YEAR_SELECT_CLS}
                         >
                             {yearOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -466,12 +483,13 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                         months: "flex flex-row gap-4",
                         month: "flex flex-col mx-1",
                         month_caption: "",
-                        // NO w-full on month_grid — keeps table content-sized (compact fix)
-                        month_grid: "border-collapse",
+                        // Pin each grid to Blueprint's fixed 210px (7 × 30px) so the table
+                        // doesn't stretch to the caption width and spread the columns.
+                        month_grid: "border-collapse w-[210px] table-fixed",
                         weekdays: "",
                         weekday: cn(
                             "text-center text-body font-semibold text-foreground",
-                            "w-[30px] h-[30px] pt-1 p-0",
+                            "w-[30px] h-[30px] px-0 pb-0 pt-1",
                         ),
                         weeks: "",
                         week: "",
@@ -548,23 +566,23 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                         "px-2 py-0 m-0",
                                         "transition-colors duration-100",
 
-                                        // Endpoints (range_start / range_end) — filled blue like selected day
-                                        isEndpoint && "bg-blue-3 text-white cursor-pointer",
-                                        isEndpoint && "hover:bg-blue-2",
-                                        isEndpoint && "active:bg-blue-1",
+                                        // Endpoints (range_start / range_end) — filled with the primary seed like selected day
+                                        isEndpoint && "bg-primary text-white cursor-pointer",
+                                        isEndpoint && "hover:bg-primary-hover",
+                                        isEndpoint && "active:bg-primary-active",
                                         // Start: square right edge (continues into range band)
                                         isRangeStart && !isRangeEnd && "[border-top-right-radius:0px] [border-bottom-right-radius:0px]",
                                         // End: square left edge (continues from range band)
                                         isRangeEnd && !isRangeStart && "[border-top-left-radius:0px] [border-bottom-left-radius:0px]",
 
-                                        // Range middle — light blue background band, no border-radius
-                                        // Light: rgba($blue3, 0.1), color=$blue2
-                                        // Dark: rgba($blue3, 0.2), color=$light-gray5 (foreground)
-                                        isRangeMiddle && "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-                                        isRangeMiddle && "text-blue-2 dark:text-foreground",
+                                        // Range middle — primary-tinted background band, no border-radius
+                                        // Light: primary @ 0.1, text = intent primary text (tier-2)
+                                        // Dark: primary @ 0.2, text = foreground
+                                        isRangeMiddle && "bg-primary/10 dark:bg-primary/20",
+                                        isRangeMiddle && "text-intent-primary-text dark:text-foreground",
                                         isRangeMiddle && "[border-radius:0px]",
                                         isRangeMiddle && "cursor-pointer",
-                                        isRangeMiddle && "hover:bg-[rgba(45,114,210,0.2)] dark:hover:bg-[rgba(45,114,210,0.4)]",
+                                        isRangeMiddle && "hover:bg-primary/20 dark:hover:bg-primary/40",
 
                                         // Outside month: hidden (Blueprint hides these in range mode)
                                         isOutside && "invisible",
@@ -594,7 +612,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                 {...wdRest}
                                 className={cn(
                                     "text-center text-body font-semibold text-foreground",
-                                    "w-[30px] h-[30px] pt-1 p-0",
+                                    "w-[30px] h-[30px] px-0 pb-0 pt-1",
                                 )}
                             >
                                 {children}

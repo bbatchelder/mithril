@@ -44,8 +44,9 @@
 
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
-export type FormGroupIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type FormGroupIntent = Intent;
 
 // ─── Label ──────────────────────────────────────────────────────────────────
 
@@ -202,21 +203,20 @@ export const FormGroup = forwardRef<HTMLDivElement, FormGroupProps>(function For
     // Dark:   primary=blue5, success=green5, warning=orange5, danger=red5
     //         ($pt-dark-intent-text-colors from _mixins.scss)
     //
-    // IMPORTANT: Use palette tier utilities (text-blue-2 dark:text-blue-5) NOT the
-    // --intent-*-text tokens. The tokens use color-mix() in dark mode which resolves
-    // to slightly different values than Blueprint's raw $red5/$blue5 etc.
-    // This matches the decision made for Callout (see handoff 0011).
+    // Canonical intent text token (--intent-*-text = Blueprint $pt-intent-text-colors:
+    // tier-2 light / tier-5 dark), so the helper text re-tints with the theme. (This is
+    // the SAME token Callout/Icon use; the color-mix variant moved to --intent-*-minimal-text.)
     const intentHelperClass =
         intent === "none"
             ? // No intent: muted (gray-1 light / gray-4 dark)
               "text-foreground-muted"
             : intent === "primary"
-              ? "text-blue-2 dark:text-blue-5"
+              ? "text-intent-primary-text"
               : intent === "success"
-                ? "text-green-2 dark:text-green-5"
+                ? "text-intent-success-text"
                 : intent === "warning"
-                  ? "text-orange-2 dark:text-orange-5"
-                  : "text-red-2 dark:text-red-5";
+                  ? "text-intent-warning-text"
+                  : "text-intent-danger-text";
 
     return (
         <div

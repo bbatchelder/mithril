@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronDown, chevronUp } from "./icons";
 import { InputGroup, type InputGroupIntent, type InputGroupSize } from "./input-group";
 
 /**
@@ -91,10 +92,13 @@ export interface NumericInputProps
 // ── Intent color maps for solid stepper buttons ──────────────────────────────
 // Mirrors Button component's SOLID map for none+intents (literal utility strings).
 const STEPPER_COLORS: Record<NumericInputIntent, string> = {
-    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-dark-gray-3 dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-foreground",
+    // Dark rest bg is Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740,
+    // a hair lighter than the flat dark-gray-3 (#2f343c) used for *panels*. See handoff 0063.
+    // Dark stepper text/chevrons are white (#fff) to match Blueprint, not #f6f7f9 (Delta #1, handoff 0064).
+    none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-white",
     primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground",
     success: "bg-success hover:bg-success-hover active:bg-success-active text-success-foreground",
-    warning: "bg-orange-5 hover:bg-orange-4 active:bg-orange-3 text-warning-foreground",
+    warning: "bg-warning-solid-bg hover:bg-warning-disabled active:bg-warning text-warning-foreground",
     danger: "bg-danger hover:bg-danger-hover active:bg-danger-active text-danger-foreground",
 };
 
@@ -245,22 +249,30 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
 
     // ── Stepper button common classes ───────────────────────────────────────
     // shadow-button = Blueprint's solid button shadow (matches .bp6-button)
-    // Blueprint's numeric-input buttons: flex:1 1 11px, min-h-0, p-0, w-24px
-    // min-width in Blueprint is the standard $pt-button-height = 30px (from global .bp6-button)
-    // We match with min-w-[30px] so that computed minWidth=30px equals Blueprint.
+    // Blueprint sets `width: 24px` on the .bp6-numeric-input stepper button, but
+    // the global `.bp6-button { min-width: 30px }` rule still applies because
+    // they're different properties — final rendered width = max(min,width) = 30px.
+    // Match that with min-w-[30px] so the stepper sits at 30px like Blueprint.
     const stepperButtonBase = cn(
         // Layout — flex split: each button takes half the input height
         "flex-1 flex items-center justify-center",
         "basis-[11px] min-h-0 p-0",
         stepperWidth,
         "min-w-[30px]",
-        // Colors from intent map
+        // Colors from intent map (resting/hover/active). Disabled overrides below.
         stepperColors,
         // Shadow: Blueprint's solid button shadow
         "shadow-button",
         // Misc
         "outline-none cursor-pointer select-none transition-colors duration-100 ease-bp",
-        "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
+        // Disabled — match the input's disabled treatment regardless of intent
+        // (Blueprint resets intent colors on disabled steppers to the neutral disabled tone).
+        "disabled:cursor-not-allowed disabled:shadow-none",
+        "disabled:bg-[rgba(211,216,222,0.5)] dark:disabled:bg-[rgba(64,72,84,0.5)]",
+        "disabled:hover:bg-[rgba(211,216,222,0.5)] dark:disabled:hover:bg-[rgba(64,72,84,0.5)]",
+        "disabled:text-foreground-disabled",
+        // SVG sizing — Icon's own wrapper span carries text-foreground; pass `!text-current`
+        // on each Icon below so it inherits the button's intent-foreground (white on colored bg).
         "[&_svg]:size-[12px] [&_svg]:shrink-0",
     );
 
@@ -276,7 +288,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(1, e);
             }}
         >
-            <Icon icon="chevron-up" size={12} aria-hidden />
+            <Icon icon={chevronUp} size={12} className="!text-current" aria-hidden />
         </button>
     );
 
@@ -292,16 +304,23 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(-1, e);
             }}
         >
-            <Icon icon="chevron-down" size={12} aria-hidden />
+            <Icon icon={chevronDown} size={12} className="!text-current" aria-hidden />
         </button>
     );
 
     // ── Stepper column ──────────────────────────────────────────────────────
     // Vertical flex column, self-stretch so it matches the input height.
     // NO overflow-hidden — buttons carry their own corner radii.
+    // Blueprint's ControlGroup adds `margin-right: $pt-spacing * 0.5 = 2px` between
+    // non-last children; the stepper inherits that gap from the input. Mirror it
+    // with an ml-/mr- on the stepper depending on which side it sits.
     const stepper = (
         <div
-            className="flex flex-col self-stretch"
+            className={cn(
+                "flex flex-col self-stretch",
+                buttonPosition === "right" && "ml-[2px]",
+                buttonPosition === "left" && "mr-[2px]",
+            )}
             aria-hidden
         >
             {incrementBtn}
@@ -311,6 +330,12 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
 
     // ── Outer wrapper (horizontal flex row, items-stretch) ──────────────────
     // items-stretch makes children match the tallest child (the input's height).
+    //
+    // Width semantics match Blueprint: `style` (and its `width`) is forwarded to the
+    // inner <input>, NOT the wrapper. Blueprint's NumericInput spreads htmlInputProps
+    // (incl. style) onto its InputGroup, so a `width` sizes the field and the ~30px
+    // stepper sits *outside* it (total ≈ width + 2px gap + 30). When `fill`, the
+    // control instead stretches to 100% and the input flexes to fill the row.
     return (
         <div
             className={cn(
@@ -318,12 +343,13 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 fill ? "w-full" : "inline-flex",
                 className,
             )}
-            style={style}
+            style={fill ? style : undefined}
         >
             {buttonPosition === "left" && stepper}
 
-            {/* Flex-1 wrapper so the InputGroup (with fill) takes the remaining row space */}
-            <div className={cn("min-w-0", buttonPosition !== "none" ? "flex-1" : "")}>
+            {/* When `fill`, flex-1 lets the InputGroup take the remaining row space.
+                Otherwise the field is content/width-sized and the wrapper shrinks to it. */}
+            <div className={cn("min-w-0", fill && buttonPosition !== "none" ? "flex-1" : "")}>
                 <InputGroup
                     ref={(el) => {
                         // Forward ref to both our internal ref and the caller's forwarded ref
@@ -335,10 +361,17 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                     inputMode="decimal"
                     size={resolvedSize}
                     intent={intent}
-                    fill
+                    fill={fill}
+                    style={fill ? undefined : style}
                     disabled={disabled}
                     leftIcon={leftIcon}
                     value={displayValue}
+                    // WAI-ARIA spinbutton: expose the current value and bounds to AT.
+                    role="spinbutton"
+                    aria-valuenow={Number.isNaN(parseFloat(displayValue)) ? undefined : parseFloat(displayValue)}
+                    aria-valuemin={min}
+                    aria-valuemax={max}
+                    aria-valuetext={displayValue === "" ? undefined : displayValue}
                     onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     onKeyPress={handleKeyPress}

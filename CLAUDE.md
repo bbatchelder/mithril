@@ -18,19 +18,25 @@ A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's desi
 
 - `src/styles/tokens.css` — the design foundation (palette, intents, surfaces, elevation, type, motion).
   Ported 1:1 from Blueprint's DTCG tokens. This is the source of visual fidelity.
-- `src/components/ui/` — the owned components (built with CVA + Radix). No third-party icon dep:
-  `src/components/ui/icons/index.ts` is the **full Blueprint icon set (706 glyphs), generated** by
-  `tools/gen-icons.mjs` (re-run to refresh). Trade-off, by decision: it's one static map keyed by the
-  `IconName` union, so importing `Icon` bundles all glyphs (no tree-shaking) — owners trim unused entries.
-  Keep `ICON_GLYPHS` typed as `Record<IconName, IconGlyph>` (an explicit union, **never** `as const`) or
-  indexing it hits TS2590. See `docs/handoffs/0059`.
+- `src/components/ui/` — the owned components (built with CVA + Radix). No third-party icon dep: the
+  **full Blueprint icon set (706 glyphs) is generated** by `tools/gen-icons.mjs` (re-run to refresh) into
+  `src/components/ui/icons/` — `index.ts` holds **one `export const <camelName>: IconGlyph` per glyph**, so
+  a bundler ships only the glyphs you import (`import { add } from ".../icons"; <Icon icon={add} />` →
+  tree-shakes). The dynamic string form (`<Icon icon="add" />`) resolves through a **registry**
+  (`registry.ts`): call `registerIcons(ICON_GLYPHS)` from `icons/all.ts` for all glyphs, or a selective
+  subset. Components import their own structural glyphs as objects (so they render standalone, no
+  registration). `ICON_GLYPHS` lives in `all.ts` (never reachable from `icon.tsx`) and stays typed
+  `Record<IconName, IconGlyph>` (an explicit union, **never** `as const`) or it hits TS2590. Names that
+  camelCase to JS reserved words (`delete`→`deleteIcon`, also export/function/import/package/switch) get an
+  `Icon` suffix. See `docs/handoffs/0081` (and `0059` for the original single-map design).
 - `src/App.tsx` — preview/showcase app (`pnpm dev` → :5173).
 - `tools/blueprint-reference/` — isolated `@blueprintjs/core@6.15` gallery for side-by-side comparison
   (`cd tools/blueprint-reference && pnpm dev` → :5174). React 18 there to satisfy Blueprint's peer dep.
 - `tools/compare.sh` + `tools/comparison/` — the comparison harness (see its README). Drives `agent-browser`
   to screenshot **and** computed-style-diff a component against Blueprint in one command.
-- Blueprint source clone (the design spec): `/Users/bbatchelder/Code/blueprint` (v6.15, Apache-2.0).
-  Authoritative tokens: `packages/core/src/design-tokens/tokens/`.
+- Blueprint source clone (the design spec) — clone `palantir/blueprint` (v6.15, Apache-2.0) locally and
+  set its path via the `BLUEPRINT_SRC` env var (defaults to `../blueprint`).
+  Authoritative tokens live at `packages/core/src/design-tokens/tokens/`.
 - `docs/handoffs/` — session handoff docs; newest bootstraps the next session.
 
 ## The development loop (autonomous)

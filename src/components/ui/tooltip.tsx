@@ -71,10 +71,11 @@ import * as RadixTooltip from "@radix-ui/react-tooltip";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 export type TooltipSide = "top" | "right" | "bottom" | "left";
 export type TooltipAlign = "start" | "center" | "end";
-export type TooltipIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TooltipIntent = Intent;
 
 export interface TooltipProps {
     /**
@@ -314,8 +315,8 @@ export function Tooltip({
                                 // Blueprint light: $pt-tooltip-box-shadow = $pt-elevation-shadow-3 → shadow-card-3
                                 // Blueprint dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba($black, 0.4), 0 8px 24px rgba($black, 0.4)
                                 // Note: dark tooltip uses a SIMPLER shadow (2 layers, no inset border) unlike dark popover.
-                                // We use shadow-card-3 for light (matches elevation-3 exactly) and override dark separately.
-                                "shadow-card-3",
+                                // We use shadow-overlay-3 for light (rgba(20,20,20) hairline ring) and override dark separately.
+                                "shadow-overlay-3",
                                 // Dark tooltip shadow override: Blueprint's $pt-dark-tooltip-box-shadow =
                                 // 0 2px 4px rgba(#111418, 0.4), 0 8px 24px rgba(#111418, 0.4)
                                 // This is lighter/simpler than dark popover shadow (no outset border ring, no inset).
@@ -376,32 +377,31 @@ export function Tooltip({
                                 correctly to fit in the smaller tooltip arrow. */}
                             {arrow && (
                                 <RadixTooltip.Arrow asChild data-compare={dataCompare ? "tooltip-arrow" : undefined}>
+                                    {/* See Popover for the full rationale. The arrow box is sized to the
+                                        wedge's protrusion (not 30×30) so Radix reserves the right gap and
+                                        the arrow attaches to the bubble instead of floating in the gap.
+                                        The SVG points DOWN by default (inner <g> rotate); Radix's wrapper
+                                        rotates it per side. Tooltip arrow is smaller than popover's:
+                                        ARROW_SIZE=22 wide, height scaled proportionally (22 × 11/30 ≈ 8). */}
                                     <svg
                                         width={ARROW_SIZE}
-                                        height={ARROW_SIZE}
-                                        viewBox="0 0 30 30"
+                                        height={8}
+                                        viewBox="0 19 30 11"
                                         style={{ overflow: "visible" }}
-                                        className={cn(
-                                            // Rotate based on which side the Content is placed on.
-                                            // Blueprint's SVG paths are right-pointing by default (rotate 0).
-                                            // [data-side] is set on the Content element by Radix.
-                                            "[[data-side=bottom]_&]:rotate-90",
-                                            "[[data-side=top]_&]:-rotate-90",
-                                            "[[data-side=left]_&]:rotate-180",
-                                            // data-side=right → 0 rotation (native orientation)
-                                        )}
                                     >
-                                        {/* Shadow path — black at $pt-border-shadow-opacity = 0.1 */}
-                                        <path
-                                            d={SVG_SHADOW_PATH}
-                                            fill="black"
-                                            fillOpacity={0.1}
-                                        />
-                                        {/* Fill path — matches bubble background color per theme/intent */}
-                                        <path
-                                            d={SVG_ARROW_PATH}
-                                            className={arrowFillClass}
-                                        />
+                                        <g transform="rotate(-90 15 15)">
+                                            {/* Shadow path — black at $pt-border-shadow-opacity = 0.1 */}
+                                            <path
+                                                d={SVG_SHADOW_PATH}
+                                                fill="black"
+                                                fillOpacity={0.1}
+                                            />
+                                            {/* Fill path — matches bubble background color per theme/intent */}
+                                            <path
+                                                d={SVG_ARROW_PATH}
+                                                className={arrowFillClass}
+                                            />
+                                        </g>
                                     </svg>
                                 </RadixTooltip.Arrow>
                             )}

@@ -2,8 +2,17 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { caretDown, doubleCaretVertical, type IconGlyph } from "./icons";
 
 export type HTMLSelectIconName = "double-caret-vertical" | "caret-down";
+
+// The two glyphs this control can show, imported as objects so they tree-shake
+// (and render with no `registerIcons` call). The public `iconName` prop stays a
+// readable string union; this maps it to the glyph.
+const ICON_BY_NAME: Record<HTMLSelectIconName, IconGlyph> = {
+    "double-caret-vertical": doubleCaretVertical,
+    "caret-down": caretDown,
+};
 
 export interface OptionProps {
     /** Option label (defaults to value if omitted). */
@@ -122,8 +131,9 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                     // Default: right = input-padding-horizontal * 3 = 24px
                     // Large:   right = input-padding-horizontal * 3.5 = 28px
                     large ? "pl-2 pr-7" : "pl-2 pr-6",
-                    // Text color: foreground (dark-gray-1 light / light-gray-5 dark)
-                    "text-foreground",
+                    // Text color: foreground in light; white in dark to match Blueprint's
+                    // dark control text (not #f6f7f9). Delta #1 — see handoff 0064.
+                    "text-foreground dark:text-white",
                     // Font size: large uses body-lg (16px), default uses body (14px)
                     large ? "text-body-lg" : "text-body",
                     // Background + shadow: mirrors solid/none Button
@@ -143,8 +153,10 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                               "bg-light-gray-5 shadow-button",
                               "hover:bg-light-gray-4",
                               "active:bg-light-gray-2",
-                              // Dark solid / none: dark-gray-3 bg + dark button shadow
-                              "dark:bg-dark-gray-3 dark:shadow-button",
+                              // Dark solid / none: Blueprint's oklch-derived default-control
+                              // surface rgb(48,55,64) = #303740 (not the flat dark-gray-3 panel
+                              // value) + dark button shadow. See handoff 0063.
+                              "dark:bg-[#303740] dark:shadow-button",
                               "dark:hover:bg-dark-gray-2",
                               "dark:active:bg-dark-gray-1",
                           ],
@@ -182,7 +194,7 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
              * Icon color = $pt-icon-color (dark-gray-1 light / gray-4 dark).
              */}
             <Icon
-                icon={iconName}
+                icon={ICON_BY_NAME[iconName]}
                 size={16}
                 className={cn(
                     "pointer-events-none absolute",

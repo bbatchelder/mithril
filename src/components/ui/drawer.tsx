@@ -66,7 +66,8 @@ import * as RadixDialog from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
-import { Icon } from "./icon";
+import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
 /** Common drawer sizes. */
 export const DrawerSize = {
@@ -97,8 +98,8 @@ export interface DrawerProps {
     size?: number | string;
     /** Drawer title — when provided, renders the drawer header. */
     title?: React.ReactNode;
-    /** Icon rendered in the header before the title (use `<Icon icon="..." />`). */
-    icon?: React.ReactNode;
+    /** Icon rendered in the header before the title. An icon-name string (e.g. `"cog"`) or a custom element. */
+    icon?: IconProp;
     /** Show the close button in the header. @default true */
     closeButton?: boolean;
     /**
@@ -206,8 +207,9 @@ export function Drawer({
                             // so dark mode resolves to the correct dark --foreground.
                             "text-foreground",
                             // Blueprint drawer uses elevation-4 in LIGHT but elevation-3 in DARK
-                            // (Blueprint quirk). card-N tokens have the correct base + dark insets.
-                            "shadow-card-4 dark:shadow-card-3",
+                            // (Blueprint quirk). overlay-N tokens carry the rgba(20,20,20) light
+                            // hairline ring + Blueprint's dark drop/highlight layer order.
+                            "shadow-overlay-4 dark:shadow-overlay-3",
                             // Blueprint: no padding, no margin, no border-radius
                             "p-0 m-0",
                             // Blueprint: &:focus { outline: 0 }
@@ -234,14 +236,14 @@ export function Drawer({
                                     "p-[5px] pl-5",
                                     // Blueprint header has NO border-radius (drawer has no rounded corners)
                                     // Light: box-shadow: 0 1px 0 rgba(17,20,24,0.15) = $pt-divider-black
-                                    // Dark:  box-shadow: 0 1px 0 rgba(0,0,0,0.4) = $pt-dark-divider-black
-                                    "shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[0_1px_0_rgba(0,0,0,0.4)]",
+                                    // Dark:  box-shadow: 0 1px 0 rgba(17,20,25,0.4) = $pt-dark-divider-black
+                                    "shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[0_1px_0_rgba(17,20,25,0.4)]",
                                 )}
                             >
                                 {/* Icon — Blueprint: color $pt-icon-color (muted); margin-right: $drawer-padding*0.5 = 10px */}
-                                {icon != null && (
+                                {resolveIcon(icon) && (
                                     <span className="flex-[0_0_auto] mr-[10px] text-foreground-muted">
-                                        {icon}
+                                        {resolveIcon(icon)}
                                     </span>
                                 )}
                                 {/* Title — Blueprint: H4 (heading); flex: 1 1 auto; line-height inherited; margin: 0
@@ -262,7 +264,7 @@ export function Drawer({
                                             size="medium"
                                             className="shrink-0"
                                             aria-label="Close"
-                                            icon={<Icon icon="small-cross" />}
+                                            icon={<Icon icon={smallCross} />}
                                         />
                                     </RadixDialog.Close>
                                 )}
@@ -334,8 +336,8 @@ export function DrawerFooter({ className, children, ...props }: DrawerFooterProp
                 // Blueprint: padding = 10px 20px
                 "py-[10px] px-5",
                 // Blueprint: inset 0 1px 0 $pt-divider-black = rgba(17,20,24,0.15)
-                // Dark: inset 0 1px 0 $pt-dark-divider-black = rgba(0,0,0,0.4)
-                "shadow-[inset_0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_1px_0_rgba(0,0,0,0.4)]",
+                // Dark: inset 0 1px 0 $pt-dark-divider-black = rgba(17,20,25,0.4)
+                "shadow-[inset_0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_1px_0_rgba(17,20,25,0.4)]",
                 className,
             )}
             {...props}

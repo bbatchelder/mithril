@@ -30,6 +30,43 @@
     }
 }
 
+/* Popover open/close transition — matches Blueprint's two-part appear animation:
+ *   scale-transition: transform scale(0.3) → scale(1), 300ms (3 × 100ms), bounce easing
+ *   fade-transition:  opacity 0 → 1, 100ms, standard easing
+ * (Blueprint _popover.scss `@include scale-transition` + the transition container's
+ *  `@include fade-transition`.) Minimal popovers drop the scale and keep only the fade.
+ *
+ * transform-origin is Radix's computed anchor point (the arrow position), so the panel
+ * scales out from the trigger — the same effect Blueprint gets from Popper's origin.
+ * Safe to animate `transform` on Content: Radix applies positioning translate to the
+ * wrapper ([data-radix-popper-content-wrapper]), not to Content itself. */
+@keyframes bp-popover-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bp-popover-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes bp-popover-scale-in  { from { transform: scale(0.3); } to { transform: scale(1); } }
+@keyframes bp-popover-scale-out { from { transform: scale(1); } to { transform: scale(0.3); } }
+
+.bp-popover-animated {
+    transform-origin: var(--radix-popover-content-transform-origin);
+}
+.bp-popover-animated[data-state="open"] {
+    animation:
+        bp-popover-fade-in var(--duration-bp) var(--ease-bp),
+        bp-popover-scale-in calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+}
+.bp-popover-animated[data-state="closed"] {
+    animation:
+        bp-popover-fade-out var(--duration-bp) var(--ease-bp),
+        bp-popover-scale-out calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+}
+/* Minimal popovers (menus, selects): fade only, no scale — matches Blueprint's
+ * `.bp6-popover-minimal-animation` which sets scale(1) scale(1) over a single 100ms. */
+.bp-popover-animated-minimal[data-state="open"] {
+    animation: bp-popover-fade-in var(--duration-bp) var(--ease-bp);
+}
+.bp-popover-animated-minimal[data-state="closed"] {
+    animation: bp-popover-fade-out var(--duration-bp) var(--ease-bp);
+}
+
 @layer base {
     * {
         border-color: var(--border);
@@ -54,5 +91,26 @@
 
     ::selection {
         background-color: var(--selection);
+    }
+}
+
+/* Respect prefers-reduced-motion (WCAG 2.3.3). Neutralize decorative motion —
+ * Popover scale/fade, Skeleton glow, ProgressBar stripes, and every CSS transition.
+ * Animations are applied via Tailwind `[animation:…]` utilities, so a blanket reset
+ * is the maintainable hook. The Spinner is an essential loading-status indicator
+ * (not interaction-triggered), so it's explicitly allowed to keep rotating. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .bp-spinner-animation {
+        animation-duration: 500ms !important;
+        animation-iteration-count: infinite !important;
     }
 }

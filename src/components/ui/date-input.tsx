@@ -15,7 +15,7 @@
  * Key metrics:
  *   - The input is a standard InputGroup (30px medium height)
  *   - Popover placement: bottom-start (Blueprint DateInput default)
- *   - Popover is minimal (no extra content padding; DatePicker has its own padding)
+ *   - Popover shows the arrow pointing at the input; no inner padding (DatePicker has its own)
  *   - The right element is an optional calendar icon button (or consumer-provided)
  *   - Default format: M/d/yyyy (date-fns style, but we use Intl for zero dependency)
  *     e.g. "1/15/2026" for Jan 15, 2026
@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { DatePicker } from "./date-picker";
 import type { TimePrecision } from "./time-picker";
 import { Icon } from "./icon";
+import { calendar } from "./icons";
 import { InputGroup } from "./input-group";
 import { Popover } from "./popover";
 
@@ -399,7 +400,7 @@ export function DateInput({
                 "transition-colors duration-100",
             )}
         >
-            <Icon icon="calendar" size={16} aria-hidden />
+            <Icon icon={calendar} size={16} aria-hidden />
         </button>
     );
 
@@ -430,8 +431,8 @@ export function DateInput({
                 side={popoverProps.side ?? "bottom"}
                 align={popoverProps.align ?? "start"}
                 sideOffset={popoverProps.sideOffset ?? 4}
-                arrow={false}
-                minimal={true}
+                arrow={true}
+                minimal={false}
                 hasContentPadding={false}
                 dark={dark}
                 disabled={disabled}

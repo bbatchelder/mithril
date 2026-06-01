@@ -1,6 +1,7 @@
 import { createElement, forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 /**
  * Spinner component — pixel-faithful reimplementation of Blueprint's `bp6-spinner`.
@@ -57,7 +58,7 @@ export const SpinnerSize = {
     LARGE: 100,
 } as const;
 
-export type SpinnerIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type SpinnerIntent = Intent;
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLElement> {
     /**
@@ -172,18 +173,19 @@ export const Spinner = forwardRef<HTMLElement, SpinnerProps>(function Spinner(
     // a11y: aria-valuenow only when determinate.
     const ariaValueNow = isDeterminate ? value * 100 : undefined;
 
-    // Head stroke classes — intent overrides the default gray.
-    // All classes are literal strings (no runtime var() refs) to satisfy Tailwind v4
-    // tree-shaking rules. Arbitrary-value classes are always emitted.
+    // Head stroke classes — intent overrides the default gray. Arbitrary-value
+    // classes referencing the intent *rest* seed var (Blueprint $pt-intent-colors)
+    // so they re-tint with the theme. Arbitrary-value classes are always emitted,
+    // and the seed vars are kept alive by other utilities (bg-primary, etc.).
     const headStrokeClass =
         intent === "primary"
-            ? "stroke-[#2d72d2]"
+            ? "stroke-[var(--color-primary)]"
             : intent === "success"
-              ? "stroke-[#238551]"
+              ? "stroke-[var(--color-success)]"
               : intent === "warning"
-                ? "stroke-[#c87619]"
+                ? "stroke-[var(--color-warning)]"
                 : intent === "danger"
-                  ? "stroke-[#cd4246]"
+                  ? "stroke-[var(--color-danger)]"
                   : // "none" — default: gray1@80% light, gray3 dark
                     "stroke-[rgba(95,107,124,0.8)] dark:stroke-[#8f99a8]";
 
@@ -208,11 +210,14 @@ export const Spinner = forwardRef<HTMLElement, SpinnerProps>(function Spinner(
             {
                 // Animation wrapper — isolated from the outer display layout.
                 // Blueprint rotates this inner element; SVG itself stays a static block.
+                // `bp-spinner-animation` is a stable hook so the reduced-motion reset in
+                // globals.css can keep the spinner rotating — it's an essential loading
+                // status indicator, exempt from WCAG 2.3.3 (interaction animation).
                 className: isDeterminate
                     ? // Determinate: no spin.
-                      "[animation:none]"
+                      "bp-spinner-animation [animation:none]"
                     : // Indeterminate: rotate 360° over 500ms (5 × $pt-transition-duration=100ms).
-                      "[animation:bp-spinner-spin_500ms_linear_infinite]",
+                      "bp-spinner-animation [animation:bp-spinner-spin_500ms_linear_infinite]",
             },
             <svg
                 width={sizePx}

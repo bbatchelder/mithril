@@ -11,10 +11,25 @@
 # tools/comparison/screenshots/:
 #   <component>.<theme>.analyst.png     full-page screenshot (analyst-ui  :5173)
 #   <component>.<theme>.blueprint.png   full-page screenshot (Blueprint   :5174)
+#   <component>.<theme>.diff.png        full-page pixel-diff image (auto-aligned)
+#   <component>.<theme>.<key>.spec.png  per-specimen diff crop (only for flagged keys)
 #   <component>.<theme>.{analyst,blueprint}.styles.json
-# then prints a computed-style diff for every paired [data-compare] specimen.
+#   <component>.<theme>.{analyst,blueprint}.rects.json
+# then prints, per theme:
+#   1. a computed-style diff for every paired [data-compare] specimen,
+#   2. a PER-SPECIMEN visual diff — each [data-compare]/[data-vcompare] element cropped
+#      by its own rect and compared (the reliable gate; see diff-specimens.mjs), and
+#   3. a full-page visual diff — SSIM over the auto-aligned screenshots, a holistic
+#      catch-all (a guide, not a gate; see diff-pixels.mjs).
 #
 # Dev servers are auto-started if not already reachable (and left running).
+#
+# NOTE: do NOT pipe this script to `tail`/`head` — if it has to auto-start a dev
+# server, the spawned vite/esbuild can inherit the pipe's write end and the pipe
+# never closes (the script looks hung). Redirect to a file instead and grep it:
+#   tools/compare.sh <id> both > /tmp/cmp-<id>.log 2>&1 ; grep -E 'SSIM|match ·' /tmp/cmp-<id>.log
+# (When the servers are already up — e.g. managed by `tap` — nothing is spawned
+# and piping is safe, but the file-redirect habit is the reliable default.)
 
 set -euo pipefail
 
@@ -48,7 +63,10 @@ ensure_server() {
         return
     fi
     echo "… starting $name dev server on :$port"
-    (cd "$dir" && nohup pnpm dev >"/tmp/analyst-compare-$name.log" 2>&1 &)
+    # Detach stdin from /dev/null too (not just stdout/stderr → file): otherwise the
+    # spawned vite/esbuild can keep this script's stdout pipe open and a `| tail`
+    # caller deadlocks (see header note). Full redirection makes piping safe.
+    (cd "$dir" && nohup pnpm dev >"/tmp/analyst-compare-$name.log" 2>&1 </dev/null &)
     for _ in $(seq 1 60); do
         if curl -sf -o /dev/null --max-time 1 "http://localhost:$port"; then
             echo "✓ $name up on :$port"
@@ -65,6 +83,8 @@ ensure_server "$BP_PORT" blueprint "$ROOT/tools/blueprint-reference"
 
 # Computed-style capture expression (color-normalized; see capture-styles.js).
 STYLE_EVAL="$(cat "$ROOT/tools/comparison/capture-styles.js")"
+# Bounding-rect capture expression (per-specimen crops; see capture-rects.js).
+RECT_EVAL="$(cat "$ROOT/tools/comparison/capture-rects.js")"
 
 capture() {
     local side="$1" port="$2" theme="$3" session="$4"
@@ -83,6 +103,7 @@ capture() {
     fi
     agent-browser --session "$session" screenshot --full "$stem.png" >/dev/null
     agent-browser --session "$session" eval "$STYLE_EVAL" --json >"$stem.styles.json"
+    agent-browser --session "$session" eval "$RECT_EVAL" --json >"$stem.rects.json"
 }
 
 for theme in "${THEMES[@]}"; do
@@ -94,6 +115,20 @@ for theme in "${THEMES[@]}"; do
     node "$ROOT/tools/comparison/diff-styles.mjs" \
         "$OUT/$COMPONENT.$theme.analyst.styles.json" \
         "$OUT/$COMPONENT.$theme.blueprint.styles.json" \
+        "$COMPONENT · $theme"
+    echo
+    node "$ROOT/tools/comparison/diff-specimens.mjs" \
+        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.blueprint.png" \
+        "$OUT/$COMPONENT.$theme.analyst.rects.json" \
+        "$OUT/$COMPONENT.$theme.blueprint.rects.json" \
+        "$OUT/$COMPONENT.$theme" \
+        "$COMPONENT · $theme"
+    echo
+    node "$ROOT/tools/comparison/diff-pixels.mjs" \
+        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.blueprint.png" \
+        "$OUT/$COMPONENT.$theme.diff.png" \
         "$COMPONENT · $theme"
 done
 

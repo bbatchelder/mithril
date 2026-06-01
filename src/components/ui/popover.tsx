@@ -83,9 +83,21 @@
  */
 
 import * as RadixPopover from "@radix-ui/react-popover";
-import type { ReactNode } from "react";
+import { cloneElement, isValidElement, useCallback, useRef, useState } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+
+/** Compose two optional event handlers into one. */
+function composeHandlers<E>(
+    theirs: ((e: E) => void) | undefined,
+    ours: (e: E) => void,
+): (e: E) => void {
+    return (e: E) => {
+        theirs?.(e);
+        ours(e);
+    };
+}
 
 export type PopoverSide = "top" | "right" | "bottom" | "left";
 export type PopoverAlign = "start" | "center" | "end";
@@ -181,10 +193,65 @@ export interface PopoverProps {
     /** Prevent the popover from opening when true. @default false */
     disabled?: boolean;
 
+    /**
+     * Render `children` as a positioning *anchor* (`Popover.Anchor`) instead of a
+     * *trigger* (`Popover.Trigger`). An anchor only provides the positioning
+     * reference — it does NOT toggle the popover on click.
+     *
+     * Use this when the consumer drives `open` itself (focus / blur / selection)
+     * and Radix's click-to-toggle would fight that. The canonical case is
+     * DateRangeInput: focusing an input opens the popover, but the trailing click
+     * bubbles to the wrapping trigger and Radix toggles it straight back closed —
+     * so the popover only stayed open while the mouse button was held down. With
+     * an anchor there is no toggle, so the focus-driven open survives the click.
+     *
+     * Open/close still works: outside-click (`onPointerDownOutside`) and Escape
+     * (`onEscapeKeyDown`) are handled by Content, independent of the trigger.
+     * @default false
+     */
+    anchorOnly?: boolean;
+
+    /**
+     * Whether the popover content grabs focus when it opens (Radix's default
+     * `onOpenAutoFocus`). Set `false` to keep DOM focus on whatever opened the popover.
+     *
+     * This is the WAI-ARIA combobox contract: the `role="combobox"` input must retain
+     * focus while its `role="listbox"` panel is open, with the active option conveyed via
+     * `aria-activedescendant` (not by moving focus into the list). Suggest/MultiSelect anchor
+     * the popover to the input's wrapper and drive open/close themselves, so letting the
+     * content steal focus on open would break type-to-filter. Preventing the open-autofocus
+     * (Radix `onOpenAutoFocus` → `preventDefault`) keeps focus on the input deterministically,
+     * independent of whether the panel has any tabbable children.
+     * @default true
+     */
+    autoFocusContent?: boolean;
+
+    /**
+     * How the popover opens:
+     * - `"click"` (default): Radix's click-to-toggle on the trigger.
+     * - `"hover"`: opens on pointer enter of the trigger, closes on leave (with a short
+     *   grace delay so the pointer can travel to the content). Renders `children` as an
+     *   anchor so click does not also toggle. Escape still closes.
+     * @default "click"
+     */
+    interactionKind?: "click" | "hover";
+
+    /** Grace period (ms) before a hover popover closes after the pointer leaves. @default 100 */
+    hoverCloseDelay?: number;
+
     /** Additional class on the popover panel element. */
     className?: string;
     /** Inline styles on the popover panel element. */
     style?: React.CSSProperties;
+
+    /**
+     * Accessible name for the popover panel. Radix gives the Content `role="dialog"`
+     * when it holds focusable content, and a dialog needs a name (axe aria-dialog-name /
+     * WCAG 4.1.2). Provide this (or `ariaLabelledby`) for interactive popovers.
+     */
+    ariaLabel?: string;
+    /** Id of an element that labels the popover panel (alternative to `ariaLabel`). */
+    ariaLabelledby?: string;
 
     /** The trigger element. Use a Button or any interactive element. */
     children: ReactNode;
@@ -223,8 +290,14 @@ export function Popover({
     matchTargetWidth = false,
     dark = false,
     disabled = false,
+    anchorOnly = false,
+    autoFocusContent = true,
+    interactionKind = "click",
+    hoverCloseDelay = 100,
     className,
     style,
+    ariaLabel,
+    ariaLabelledby,
     children,
 }: PopoverProps) {
     // In minimal mode: no arrow.
@@ -234,14 +307,81 @@ export function Popover({
     // Radix sideOffset still provides a small gap so the panel doesn't overlap the trigger.
     const resolvedSideOffset = minimal ? 0 : sideOffset;
 
+    // ── Hover interaction mode ────────────────────────────────────────────────
+    // Radix Popover is click-only, so we drive open state from pointer enter/leave.
+    // Uncontrolled hover popovers track their own state; controlled ones defer to `open`.
+    const isHover = interactionKind === "hover";
+    const isControlled = open !== undefined;
+    const [hoverOpen, setHoverOpen] = useState(defaultOpen ?? false);
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearCloseTimer = useCallback(() => {
+        if (closeTimer.current) {
+            clearTimeout(closeTimer.current);
+            closeTimer.current = null;
+        }
+    }, []);
+
+    const hoverOpenNow = useCallback(() => {
+        if (disabled) return;
+        clearCloseTimer();
+        if (!isControlled) setHoverOpen(true);
+        onOpenChange?.(true);
+    }, [disabled, isControlled, onOpenChange, clearCloseTimer]);
+
+    const hoverCloseSoon = useCallback(() => {
+        clearCloseTimer();
+        closeTimer.current = setTimeout(() => {
+            if (!isControlled) setHoverOpen(false);
+            onOpenChange?.(false);
+        }, hoverCloseDelay);
+    }, [hoverCloseDelay, isControlled, onOpenChange, clearCloseTimer]);
+
+    // Radix-initiated changes (Escape) keep our hover state in sync.
+    const handleRootOpenChange = useCallback(
+        (next: boolean) => {
+            if (isHover && !isControlled) setHoverOpen(next);
+            onOpenChange?.(next);
+        },
+        [isHover, isControlled, onOpenChange],
+    );
+
+    // Resolve the open prop passed to Radix.
+    const rootOpen = disabled ? false : isHover && !isControlled ? hoverOpen : open;
+    // Hover mode uses an anchor (no click-toggle); otherwise honor anchorOnly.
+    const useAnchor = anchorOnly || isHover;
+
+    // In hover mode, attach pointer handlers to the trigger element (merged with any
+    // the consumer already set), so click is never the open mechanism.
+    const triggerChild =
+        isHover && isValidElement(children)
+            ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+                  onPointerEnter: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerEnter as ((e: unknown) => void) | undefined,
+                      hoverOpenNow,
+                  ),
+                  onPointerLeave: composeHandlers(
+                      (children as ReactElement<Record<string, unknown>>).props
+                          .onPointerLeave as ((e: unknown) => void) | undefined,
+                      hoverCloseSoon,
+                  ),
+              })
+            : children;
+
     return (
         <RadixPopover.Root
-            open={disabled ? false : open}
+            open={isHover ? rootOpen : disabled ? false : open}
             defaultOpen={disabled ? false : defaultOpen}
-            onOpenChange={disabled ? undefined : onOpenChange}
+            onOpenChange={disabled ? undefined : isHover ? handleRootOpenChange : onOpenChange}
         >
-            {/* Trigger — asChild forwards Radix's accessibility props onto the child element */}
-            <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
+            {/* Trigger vs Anchor — both forward via asChild. Anchor positions only
+                (no click-to-toggle); used for `anchorOnly` and for hover mode. */}
+            {useAnchor ? (
+                <RadixPopover.Anchor asChild>{triggerChild}</RadixPopover.Anchor>
+            ) : (
+                <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
+            )}
 
             <RadixPopover.Portal>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
@@ -251,6 +391,8 @@ export function Popover({
                 <div className={dark ? "dark" : ""} style={{ pointerEvents: "none" }}>
                     <RadixPopover.Content
                         data-compare="popover-content"
+                        aria-label={ariaLabel}
+                        aria-labelledby={ariaLabelledby}
                         side={side}
                         align={align}
                         sideOffset={resolvedSideOffset}
@@ -267,13 +409,18 @@ export function Popover({
                             // In dark mode: Blueprint's $pt-dark-popover-box-shadow adds an extra
                             // outset border: 0 0 0 1px hsl(215,3%,38%) = rgb(94,95,97).
                             // We replicate this with a compound dark shadow utility override.
-                            "shadow-card-3",
-                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%))
-                            // that Blueprint's $pt-dark-popover-box-shadow includes in addition
-                            // to $pt-dark-elevation-shadow-3.
-                            "dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]",
+                            "shadow-overlay-3",
+                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%) =
+                            // rgb(94,96,100)) that Blueprint's $pt-dark-popover-box-shadow includes
+                            // in addition to $pt-dark-elevation-shadow-3. Layer order matches
+                            // Blueprint: ring, inset-ring, drop1, inset-highlights, drop2.
+                            "dark:[box-shadow:rgb(94,96,100)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px,rgba(0,0,0,0.302)_0px_10px_30px_-5px]",
                             // Blueprint: z-index: $pt-z-index-overlay
                             "z-[20]",
+                            // Open/close animation (globals.css). Full scale+fade for normal
+                            // popovers (with arrow); fade-only for minimal ones — matches
+                            // Blueprint's scale-transition vs minimal-animation split.
+                            showArrow ? "bp-popover-animated" : "bp-popover-animated-minimal",
                             // Suppress Radix focus outline
                             "outline-none",
                             // Set text color: portaled content needs explicit color.
@@ -288,12 +435,18 @@ export function Popover({
                                 : {}),
                             ...style,
                         }}
+                        onOpenAutoFocus={
+                            autoFocusContent ? undefined : (e) => e.preventDefault()
+                        }
                         onEscapeKeyDown={
                             canEscapeKeyClose ? undefined : (e) => e.preventDefault()
                         }
                         onPointerDownOutside={
                             canOutsideClickClose ? undefined : (e) => e.preventDefault()
                         }
+                        // Hover mode: keep open while the pointer is over the panel; close on leave.
+                        onPointerEnter={isHover ? clearCloseTimer : undefined}
+                        onPointerLeave={isHover ? hoverCloseSoon : undefined}
                     >
                         {/* Popover content inner div — Blueprint: .bp6-popover-content
                             background is here (not on the outer .bp6-popover which is transparent).
@@ -342,35 +495,49 @@ export function Popover({
                                 asChild
                                 data-compare="popover-arrow"
                             >
+                                {/* Arrow element box is 30×11 (cross-axis × protrusion), NOT 30×30.
+                                    Why: Radix reserves the gap between trigger and panel equal to the
+                                    arrow element's box extent on the side-axis (its height for
+                                    top/bottom). A 30×30 box reserved 30px but the rotated wedge is only
+                                    ~11px tall, leaving ~19px of empty gap (the old "detached arrow" bug).
+                                    Sizing the box to the wedge → gap = sideOffset(4) + 11 ≈ 15px,
+                                    matching Blueprint.
+
+                                    Orientation: the SVG points DOWN by default (via the inner <g>
+                                    rotate), which is what Radix's arrow wrapper expects — Radix then
+                                    rotates the wrapper per side (0° top, 180° bottom, ±90° left/right)
+                                    to point it at the trigger. We do NOT add our own per-side rotation.
+
+                                    The viewBox crops to the wedge: Blueprint's paths are a west-pointing
+                                    sliver (x∈[1,11], y∈[0,30]); rotate(-90 15 15) maps it to a
+                                    down-pointing wedge occupying x∈[0,30], y∈[19,29], so we view
+                                    "0 19 30 11".
+
+                                    Note (documented tradeoff): a fixed 30×11 box is tuned for the
+                                    top/bottom placements (all the galleries use, and the dominant case).
+                                    Left/right placement reserves the 30px width instead, so its gap is
+                                    larger — acceptable since side placement is rare and untested here. */}
                                 <svg
                                     width={30}
-                                    height={30}
-                                    viewBox="0 0 30 30"
+                                    height={11}
+                                    viewBox="0 19 30 11"
                                     style={{ overflow: "visible" }}
-                                    className={cn(
-                                        // Rotate based on which side the Content is placed on.
-                                        // Blueprint's SVG paths are right-pointing by default (rotate 0).
-                                        // [data-side] is set on the Content element by Radix.
-                                        // These selectors walk up to the nearest [data-side] ancestor.
-                                        "[[data-side=bottom]_&]:rotate-90",
-                                        "[[data-side=top]_&]:-rotate-90",
-                                        "[[data-side=left]_&]:rotate-180",
-                                        // data-side=right → 0 rotation (native orientation)
-                                    )}
                                 >
-                                    {/* Shadow path — matches Blueprint .bp6-popover-arrow-border
-                                        fill: $black, fill-opacity: $pt-border-shadow-opacity = 0.1 */}
-                                    <path
-                                        d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
-                                        fill="black"
-                                        fillOpacity={0.1}
-                                    />
-                                    {/* Fill path — matches Blueprint .bp6-popover-arrow-fill
-                                        fill: panel background color */}
-                                    <path
-                                        d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
-                                        className="fill-white dark:fill-dark-gray-3"
-                                    />
+                                    <g transform="rotate(-90 15 15)">
+                                        {/* Shadow path — Blueprint .bp6-popover-arrow-border
+                                            fill: $black, fill-opacity: $pt-border-shadow-opacity = 0.1 */}
+                                        <path
+                                            d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
+                                            fill="black"
+                                            fillOpacity={0.1}
+                                        />
+                                        {/* Fill path — Blueprint .bp6-popover-arrow-fill
+                                            fill: panel background color */}
+                                        <path
+                                            d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
+                                            className="fill-white dark:fill-dark-gray-3"
+                                        />
+                                    </g>
                                 </svg>
                             </RadixPopover.Arrow>
                         )}

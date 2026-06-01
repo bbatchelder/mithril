@@ -40,6 +40,7 @@ import type { Modifiers, MonthCaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronLeft, chevronRight } from "./icons";
 import { HTMLSelect } from "./html-select";
 import { TimePicker, type TimePrecision } from "./time-picker";
 
@@ -94,6 +95,19 @@ export interface DatePickerProps {
 const DEFAULT_MIN_DATE = new Date(1900, 0, 1);
 const DEFAULT_MAX_DATE = new Date(2100, 11, 31);
 
+// Caption HTMLSelect styling (Blueprint _date-picker-caption.scss):
+//   select: font-weight 600; padding-left $datepicker-padding (4px);
+//           padding-right $pt-icon-size-standard (16px)
+//   caret:  right $pt-spacing * 0.5 (2px) — narrower than the standalone select's 8px,
+//           so the displayed value doesn't collide with the double-caret. `[&>span]`
+//           targets the absolutely-positioned Icon span inside HTMLSelect's wrapper.
+const CAPTION_SELECT_CLS = "[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4 [&>span]:right-0.5";
+// Year select additionally pins min-width $pt-spacing * 15 (60px). Unlike the month
+// select (whose widest option, "September", is wider than the shown value and so
+// leaves slack before the caret), every year option is 4 digits, so without a
+// min-width the value butts right against the caret. (.bp6-datepicker-year-select)
+const CAPTION_YEAR_SELECT_CLS = `${CAPTION_SELECT_CLS} min-w-[60px]`;
+
 // ---------------------------------------------------------------------------
 // NavButton sub-component
 // ---------------------------------------------------------------------------
@@ -116,12 +130,11 @@ function NavButton({
             data-compare={dc}
             aria-label={direction === "prev" ? "Previous month" : "Next month"}
             className={cn(
-                // Blueprint: .bp6-button.bp6-minimal
-                // min-height=30px ($pt-button-height=7.5*4), min-width=30px
-                // padding: 5px 10px → but Blueprint minimal icon-only buttons show 8px px
-                // From computed diff: paddingLeft=8px, paddingRight=8px, minWidth=30px
+                // Blueprint: .bp6-button.bp6-minimal — an icon-only 30×30 nav button.
+                // Measured Blueprint nav button = 30×30, so pin width to 30px (px-2 + the 16px
+                // chevron summed to 32px, 2px too wide). The icon centers via justify-center.
                 "inline-flex items-center justify-center",
-                "h-[30px] min-w-[30px] px-2 py-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-bp",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -131,7 +144,7 @@ function NavButton({
             )}
         >
             <Icon
-                icon={direction === "prev" ? "chevron-left" : "chevron-right"}
+                icon={direction === "prev" ? chevronLeft : chevronRight}
                 size={16}
                 aria-hidden
             />
@@ -194,10 +207,16 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                 classNames.month_caption,
             )}
         >
-            {/* Dropdowns group: [Month ▼] [Year ▼] — Blueprint puts these on the LEFT */}
-            <div className="flex flex-row items-center gap-1">
-                {/* Month select */}
+            {/* Dropdowns group: [Month ▼] [Year ▼] — Blueprint puts these on the LEFT.
+                No inter-select gap: the minimal selects already carry their own caret padding,
+                and Blueprint's caption packs them tight (keeping the caption ≈ the 210px grid
+                width so the nav buttons sit at the grid's right edge). */}
+            <div className="flex flex-row items-center">
+                {/* Month select — Blueprint uses the MINIMAL HTMLSelect in the caption
+                    (transparent bg, no border/shadow ring, just text + double-caret),
+                    NOT the default bordered select. */}
                 <HTMLSelect
+                    minimal
                     value={currentMonth}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const newMonth = new Date(calendarMonth.date);
@@ -205,7 +224,7 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                         goToMonth(newMonth);
                     }}
                     aria-label={labelMonthDropdown()}
-                    className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                    className={CAPTION_SELECT_CLS}
                 >
                     {monthOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -214,8 +233,9 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                     ))}
                 </HTMLSelect>
 
-                {/* Year select */}
+                {/* Year select — minimal, same as the month select above. */}
                 <HTMLSelect
+                    minimal
                     value={currentYear}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const newMonth = new Date(calendarMonth.date);
@@ -223,7 +243,7 @@ function DatePickerCaption({ calendarMonth, displayIndex }: MonthCaptionProps) {
                         goToMonth(newMonth);
                     }}
                     aria-label={labelYearDropdown({})}
-                    className="[&_select]:font-semibold [&_select]:pl-1 [&_select]:pr-4"
+                    className={CAPTION_YEAR_SELECT_CLS}
                 >
                     {yearOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
@@ -404,17 +424,18 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         months: "flex flex-col",
                         month: "flex flex-col mx-1",
                         month_caption: "",
-                        // Blueprint: table is NOT w-full — it is content-sized (inline-block rdp).
-                        // Setting w-auto prevents the table from stretching to its container,
-                        // which was causing spread-out columns. Blueprint's min-width = 210px
-                        // (7 columns × 30px) is achieved naturally by the 30px day cells.
-                        month_grid: "border-collapse",
+                        // Blueprint's grid is a fixed 210px (7 × 30px), and it does NOT stretch
+                        // to the caption width. Our table is a flex child, so without an explicit
+                        // width it stretches to the caption (~220px), spreading the columns to
+                        // ~31.4px. `w-[210px] table-fixed` pins it to Blueprint's 210px → exact
+                        // 30px columns, matching the weekday/day cell metrics.
+                        month_grid: "border-collapse w-[210px] table-fixed",
                         weekdays: "",
                         weekday: cn(
                             // Blueprint .rdp-head_cell: font-weight:600, padding-top:4px
                             // color inherits parent (normal text, NOT muted)
                             "text-center text-body font-semibold text-foreground",
-                            "w-[30px] h-[30px] pt-1 p-0",
+                            "w-[30px] h-[30px] px-0 pb-0 pt-1",
                         ),
                         weeks: "",
                         week: "",
@@ -500,10 +521,10 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                                         isToday && highlightCurrentDay && "border border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
                                         // Blueprint: today font-weight is overridden back to 400 (not bold)
                                         isToday && "font-normal",
-                                        // Selected: Blueprint $blue3, white text, rounded-4px
-                                        isSelected && "bg-blue-3 text-white cursor-pointer",
-                                        isSelected && "hover:bg-blue-2",
-                                        isSelected && "active:bg-blue-1",
+                                        // Selected: primary intent seed (rest/hover/active), white text, rounded-4px
+                                        isSelected && "bg-primary text-white cursor-pointer",
+                                        isSelected && "hover:bg-primary-hover",
+                                        isSelected && "active:bg-primary-active",
                                         // Disabled
                                         isDisabled && "cursor-not-allowed text-foreground-disabled bg-transparent hover:bg-transparent",
                                     )}
@@ -522,7 +543,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                                     //   text-decoration: none, text-transform: none
                                     //   color: inherits parent = $pt-text-color (NOT muted)
                                     "text-center text-body font-semibold text-foreground",
-                                    "w-[30px] h-[30px] pt-1 p-0",
+                                    "w-[30px] h-[30px] px-0 pb-0 pt-1",
                                 )}
                             >
                                 {children}

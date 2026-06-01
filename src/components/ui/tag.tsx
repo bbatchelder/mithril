@@ -1,9 +1,11 @@
 import { forwardRef, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
-import { Icon } from "./icon";
+import type { Intent } from "@/lib/types";
+import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
-export type TagIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TagIntent = Intent;
 export type TagSize = "medium" | "large";
 
 // ── Solid intent colors ─────────────────────────────────────────────────────
@@ -31,11 +33,12 @@ const TAG_SOLID: Record<TagIntent, string> = {
     ].join(" "),
     // Warning solid: Blueprint lifts orange-3 by oklch l+0.19 for bg (≈ orange-5 but warmer)
     // and lightens warning-foreground (#111418) by oklch l+0.05 for text (≈ dark-gray).
-    // Tokens carry exact computed values; hover/active use static palette tiers.
+    // Tokens carry exact computed values; hover/active use the warning seed tiers
+    // (orange-4 = warning-disabled, orange-3 = warning rest) so they re-tint.
     warning: [
         "bg-tag-solid-warning-bg text-tag-solid-warning-text",
-        "data-[interactive=true]:hover:bg-orange-4 data-[interactive=true]:active:bg-orange-3",
-        "data-[active=true]:bg-orange-3",
+        "data-[interactive=true]:hover:bg-warning-disabled data-[interactive=true]:active:bg-warning",
+        "data-[active=true]:bg-warning",
     ].join(" "),
     danger: [
         "bg-danger text-danger-foreground",
@@ -60,34 +63,36 @@ const TAG_MINIMAL: Record<TagIntent, string> = {
         "data-[interactive=true]:hover:bg-interactive-active data-[interactive=true]:active:bg-interactive-active",
         "data-[active=true]:bg-interactive-active",
     ].join(" "),
+    // Backgrounds use the intent *rest* seed at alpha (default tier-3 = blue-3 etc.),
+    // so they re-tint with the theme; text uses the --tag-minimal-* tokens.
     primary: [
-        // light: blue-3 at 10% + blue-2 text; dark: blue-3 at 20% + custom light blue text
-        "bg-blue-3/10 text-tag-minimal-primary-text",
-        "dark:bg-blue-3/20",
-        "data-[interactive=true]:hover:bg-blue-3/20 data-[interactive=true]:active:bg-blue-3/30",
-        "dark:data-[interactive=true]:hover:bg-blue-3/30 dark:data-[interactive=true]:active:bg-blue-3/35",
-        "data-[active=true]:bg-blue-3/30 dark:data-[active=true]:bg-blue-3/35",
+        // light: rest at 10% + tier-2 text; dark: rest at 20% + custom light text
+        "bg-primary/10 text-tag-minimal-primary-text",
+        "dark:bg-primary/20",
+        "data-[interactive=true]:hover:bg-primary/20 data-[interactive=true]:active:bg-primary/30",
+        "dark:data-[interactive=true]:hover:bg-primary/30 dark:data-[interactive=true]:active:bg-primary/35",
+        "data-[active=true]:bg-primary/30 dark:data-[active=true]:bg-primary/35",
     ].join(" "),
     success: [
-        "bg-green-3/10 text-tag-minimal-success-text",
-        "dark:bg-green-3/20",
-        "data-[interactive=true]:hover:bg-green-3/20 data-[interactive=true]:active:bg-green-3/30",
-        "dark:data-[interactive=true]:hover:bg-green-3/30 dark:data-[interactive=true]:active:bg-green-3/35",
-        "data-[active=true]:bg-green-3/30 dark:data-[active=true]:bg-green-3/35",
+        "bg-success/10 text-tag-minimal-success-text",
+        "dark:bg-success/20",
+        "data-[interactive=true]:hover:bg-success/20 data-[interactive=true]:active:bg-success/30",
+        "dark:data-[interactive=true]:hover:bg-success/30 dark:data-[interactive=true]:active:bg-success/35",
+        "data-[active=true]:bg-success/30 dark:data-[active=true]:bg-success/35",
     ].join(" "),
     warning: [
-        "bg-orange-3/10 text-tag-minimal-warning-text",
-        "dark:bg-orange-3/20",
-        "data-[interactive=true]:hover:bg-orange-3/20 data-[interactive=true]:active:bg-orange-3/30",
-        "dark:data-[interactive=true]:hover:bg-orange-3/30 dark:data-[interactive=true]:active:bg-orange-3/35",
-        "data-[active=true]:bg-orange-3/30 dark:data-[active=true]:bg-orange-3/35",
+        "bg-warning/10 text-tag-minimal-warning-text",
+        "dark:bg-warning/20",
+        "data-[interactive=true]:hover:bg-warning/20 data-[interactive=true]:active:bg-warning/30",
+        "dark:data-[interactive=true]:hover:bg-warning/30 dark:data-[interactive=true]:active:bg-warning/35",
+        "data-[active=true]:bg-warning/30 dark:data-[active=true]:bg-warning/35",
     ].join(" "),
     danger: [
-        "bg-red-3/10 text-tag-minimal-danger-text",
-        "dark:bg-red-3/20",
-        "data-[interactive=true]:hover:bg-red-3/20 data-[interactive=true]:active:bg-red-3/30",
-        "dark:data-[interactive=true]:hover:bg-red-3/30 dark:data-[interactive=true]:active:bg-red-3/35",
-        "data-[active=true]:bg-red-3/30 dark:data-[active=true]:bg-red-3/35",
+        "bg-danger/10 text-tag-minimal-danger-text",
+        "dark:bg-danger/20",
+        "data-[interactive=true]:hover:bg-danger/20 data-[interactive=true]:active:bg-danger/30",
+        "dark:data-[interactive=true]:hover:bg-danger/30 dark:data-[interactive=true]:active:bg-danger/35",
+        "data-[active=true]:bg-danger/30 dark:data-[active=true]:bg-danger/35",
     ].join(" "),
 };
 
@@ -140,14 +145,17 @@ export interface TagProps extends React.HTMLAttributes<HTMLSpanElement> {
     active?: boolean;
 
     /**
-     * Icon rendered before the text content.
+     * Icon rendered before the text content. An icon-name string (e.g. `"tick"`) or a custom
+     * element. A bare name renders at 16px in the tag's text color (Blueprint's default); pass a
+     * custom `<Icon size={…} />` element for a different size.
      */
-    icon?: React.ReactNode;
+    icon?: IconProp;
 
     /**
-     * Icon rendered after the text content (before the remove button).
+     * Icon rendered after the text content (before the remove button). An icon-name string or a
+     * custom element. See {@link icon} for sizing/color behavior.
      */
-    endIcon?: React.ReactNode;
+    endIcon?: IconProp;
 
     /**
      * When provided, renders a remove (×) button. The callback receives the
@@ -238,10 +246,10 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
             )}
             {...props}
         >
-            {/* Left icon */}
-            {icon != null && (
+            {/* Left icon — string names render as a 16px <Icon> inheriting the tag's text color. */}
+            {resolveIcon(icon, { className: "!text-current" }) && (
                 <span className="inline-flex shrink-0 items-center">
-                    {icon}
+                    {resolveIcon(icon, { className: "!text-current" })}
                 </span>
             )}
 
@@ -253,9 +261,9 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
             )}
 
             {/* Right/end icon */}
-            {endIcon != null && (
+            {resolveIcon(endIcon, { className: "!text-current" }) && (
                 <span className="inline-flex shrink-0 items-center">
-                    {endIcon}
+                    {resolveIcon(endIcon, { className: "!text-current" })}
                 </span>
             )}
 
@@ -273,12 +281,14 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
                         "opacity-70 hover:opacity-100 active:opacity-100",
                         // Negative right margin to stay within the tag padding zone.
                         size === "medium" ? "-mr-1 -my-0.5" : "-mr-2 -my-1.5",
-                        // Padding on the remove button itself (click-area enlarger).
-                        size === "medium" ? "pl-0 pr-1.5 py-0.5" : "pl-0 pr-2 py-1.5",
+                        // Padding on the remove button — matches Blueprint's .bp6-tag-remove:
+                        //   `padding: 2px; padding-left: 0;`
+                        // Earlier we used pr-1.5 (6px) which inflated chip width by ~6px.
+                        size === "medium" ? "pl-0 pr-0.5 py-0.5" : "pl-0 pr-1 py-1.5",
                     )}
                 >
                     <Icon
-                        icon="small-cross"
+                        icon={smallCross}
                         size={size === "large" ? 20 : 16}
                         className="text-current"
                     />

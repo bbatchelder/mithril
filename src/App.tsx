@@ -1,9 +1,13 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { AnchorButton } from "@/components/ui/anchor-button";
 import { Card, type CardElevation } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
+import { MultistepDialog, DialogStep } from "@/components/ui/multistep-dialog";
 import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { Popover } from "@/components/ui/popover";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -27,7 +31,7 @@ import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinne
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
 import { Text } from "@/components/ui/text";
-import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Toast, ToastProvider, Toaster } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
@@ -39,12 +43,13 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
 import { PanelStack, type PanelActions, type PanelInfo } from "@/components/ui/panel-stack";
 import { HTMLTable } from "@/components/ui/html-table";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EditableText, type EditableTextIntent } from "@/components/ui/editable-text";
 import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
 import { NonIdealState, NonIdealStateIconSize } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
-import { KeyCombo, HotkeysDialog } from "@/components/ui/hotkeys";
+import { KeyCombo, HotkeysDialog, HotkeysProvider, useHotkeys } from "@/components/ui/hotkeys";
 import { TagInput } from "@/components/ui/tag-input";
 import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
@@ -56,9 +61,19 @@ import { DateInput } from "@/components/ui/date-input";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
+import { DEMOS } from "@/demos/registry";
+import { ResizeSensor } from "@/components/ui/resize-sensor";
+import { OverflowList } from "@/components/ui/overflow-list";
+import { Portal } from "@/components/ui/portal";
 
-/** Context carrying the app-level dark state for components that portal content (Dialog, etc.). */
-const DarkContext = createContext(false);
+import { DarkContext } from "@/lib/dark-context";
+import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
+
+// The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
+// string form that resolves through the registry. Register the full glyph set once
+// here so every name renders. (Consumers tree-shake instead by importing glyph
+// objects — `import { cog } from ".../icons"` — or registering a selective subset.)
+registerIcons(ICON_GLYPHS);
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
@@ -132,18 +147,18 @@ function ButtonGallery() {
             </Section>
 
             <Section title="With icons">
+                {/* P2.4: icon/endIcon accept a bare icon-name string (no <Icon> import needed) — the
+                    same ergonomic API as Blueprint. A string is rendered as <Icon> with !text-current
+                    so the glyph inherits the button's text color. Custom elements still work. */}
                 <Row label="">
-                    <Button icon={<Icon icon="plus" className="!text-current" />} aria-label="Add" />
-                    <Button icon={<Icon icon="plus" className="!text-current" />} intent="primary">
+                    <Button icon="add" aria-label="Add" data-compare="btn-icon-only" />
+                    <Button icon="add" intent="primary">
                         Start icon
                     </Button>
-                    <Button endIcon={<Icon icon="share" className="!text-current" />} intent="primary">
+                    <Button endIcon="share" intent="primary">
                         End icon
                     </Button>
-                    <Button
-                        icon={<Icon icon="cog" className="!text-current" />}
-                        endIcon={<Icon icon="chevron-down" className="!text-current" />}
-                    >
+                    <Button icon="cog" endIcon="caret-down">
                         Both
                     </Button>
                 </Row>
@@ -153,6 +168,135 @@ function ButtonGallery() {
                 <Button fill intent="primary">
                     Fill button
                 </Button>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * ButtonGroup showcase. Specimens carry `data-compare` keys mirroring the Blueprint
+ * reference gallery: the harness diffs the container layout and each button's collapsed
+ * radius / margin (first · middle · last) so the attached-border treatment is verified.
+ */
+function ButtonGroupGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Solid (horizontal)">
+                <ButtonGroup data-compare="bg-solid-container">
+                    <Button data-compare="bg-solid-first">First</Button>
+                    <Button data-compare="bg-solid-mid">Middle</Button>
+                    <Button data-compare="bg-solid-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Outlined (horizontal)">
+                <ButtonGroup variant="outlined" data-compare="bg-outlined-container">
+                    <Button data-compare="bg-outlined-first">First</Button>
+                    <Button data-compare="bg-outlined-mid">Middle</Button>
+                    <Button data-compare="bg-outlined-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Minimal (horizontal)">
+                <ButtonGroup variant="minimal">
+                    <Button>First</Button>
+                    <Button>Middle</Button>
+                    <Button>Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Vertical (solid)">
+                <ButtonGroup vertical data-compare="bg-vert-container">
+                    <Button data-compare="bg-vert-first">First</Button>
+                    <Button data-compare="bg-vert-mid">Middle</Button>
+                    <Button data-compare="bg-vert-last">Last</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Intents (per-button)">
+                <ButtonGroup>
+                    <Button intent="primary">Save</Button>
+                    <Button intent="success">Apply</Button>
+                    <Button intent="danger">Delete</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="With icons + size (group-level)">
+                <ButtonGroup size="large">
+                    <Button icon={<Icon icon="chevron-left" className="!text-current" />} aria-label="Previous" />
+                    <Button>Center</Button>
+                    <Button endIcon={<Icon icon="chevron-right" className="!text-current" />}>Next</Button>
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Fill">
+                <ButtonGroup fill data-compare="bg-fill-container">
+                    <Button>Left</Button>
+                    <Button>Center</Button>
+                    <Button>Right</Button>
+                </ButtonGroup>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * AnchorButton showcase — an `<a>` styled exactly like `Button` (reuses `buttonVariants`)
+ * with correct anchor + disabled semantics. `data-compare` keys mirror the Blueprint
+ * reference gallery (tools/blueprint-reference/src/App.tsx) one-for-one.
+ */
+function AnchorButtonGallery() {
+    return (
+        <div className="flex flex-col gap-8">
+            <Section title="Variant × Intent">
+                {VARIANTS.map((variant) => (
+                    <Row key={variant} label={variant}>
+                        {INTENTS.map((intent) => (
+                            <AnchorButton
+                                key={intent}
+                                href="#"
+                                variant={variant}
+                                intent={intent}
+                                data-compare={`anchorbtn-${variant}-${intent}`}
+                            >
+                                {intent}
+                            </AnchorButton>
+                        ))}
+                    </Row>
+                ))}
+            </Section>
+
+            <Section title="States (solid / primary)">
+                <Row label="">
+                    <AnchorButton href="#" intent="primary" data-compare="anchorbtn-solid">
+                        Default
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" disabled data-compare="anchorbtn-disabled">
+                        Disabled
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" loading>
+                        Loading
+                    </AnchorButton>
+                    <AnchorButton href="#" intent="primary" active>
+                        Active
+                    </AnchorButton>
+                </Row>
+            </Section>
+
+            <Section title="With icons">
+                <Row label="">
+                    <AnchorButton
+                        href="#"
+                        icon={<Icon icon="plus" className="!text-current" />}
+                        intent="primary"
+                        data-compare="anchorbtn-icon"
+                    >
+                        Start icon
+                    </AnchorButton>
+                    <AnchorButton href="#" endIcon={<Icon icon="share" className="!text-current" />} intent="primary">
+                        End icon
+                    </AnchorButton>
+                </Row>
             </Section>
         </div>
     );
@@ -450,6 +594,7 @@ function ProgressBarGallery() {
                     {/* value=0.5 — track + meter keyed */}
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.5}
                             data-compare="pb-track-50"
                             meterProps={{ "data-compare": "pb-meter-50" }}
@@ -457,12 +602,14 @@ function ProgressBarGallery() {
                     </div>
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.25}
                             meterProps={{ "data-compare": "pb-meter-25" }}
                         />
                     </div>
                     <div style={containerStyle}>
                         <ProgressBar
+                            aria-label="Download progress"
                             value={0.75}
                             meterProps={{ "data-compare": "pb-meter-75" }}
                         />
@@ -475,6 +622,7 @@ function ProgressBarGallery() {
                     {PB_INTENTS.map((intent) => (
                         <div key={intent} style={containerStyle}>
                             <ProgressBar
+                                aria-label={`${intent} progress`}
                                 value={0.6}
                                 intent={intent}
                                 meterProps={{ "data-compare": `pb-meter-${intent}` }}
@@ -486,18 +634,18 @@ function ProgressBarGallery() {
 
             <Section title="No stripes / no animation (visual only)">
                 <div className="flex flex-col gap-3" style={containerStyle}>
-                    <ProgressBar value={0.4} stripes={false} />
-                    <ProgressBar value={0.4} animate={false} />
-                    <ProgressBar value={0.4} stripes={false} animate={false} />
+                    <ProgressBar aria-label="No stripes" value={0.4} stripes={false} />
+                    <ProgressBar aria-label="No animation" value={0.4} animate={false} />
+                    <ProgressBar aria-label="No stripes or animation" value={0.4} stripes={false} animate={false} />
                 </div>
             </Section>
 
             <Section title="Indeterminate (visual only — not diff'd)">
                 <div style={containerStyle}>
-                    <ProgressBar />
+                    <ProgressBar aria-label="Loading" />
                 </div>
                 <div style={containerStyle}>
-                    <ProgressBar intent="primary" />
+                    <ProgressBar aria-label="Loading" intent="primary" />
                 </div>
             </Section>
         </div>
@@ -634,6 +782,11 @@ function TagGallery() {
                     </Tag>
                     <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">
                         End icon
+                    </Tag>
+                    {/* P2.4: a bare icon-name string renders at Blueprint's default 16px, inheriting
+                        the tag's text color. (The size={12} specimens above pass a custom element.) */}
+                    <Tag icon="tick" data-compare="tag-icon-string">
+                        String name
                     </Tag>
                 </div>
             </Section>
@@ -895,6 +1048,20 @@ function CheckboxGallery() {
                         defaultChecked
                         indicatorProps={{ "data-compare": "cb-checked-disabled" } as React.HTMLAttributes<HTMLSpanElement>}
                     />
+                </div>
+            </Section>
+
+            {/* Whole-control specimens: the data-compare is on an inline-block wrapper so the
+                per-specimen crop covers the box AND its label — this is what catches layout-flow
+                bugs (e.g. a label wrapping below the indicator) that an indicator-only tag misses. */}
+            <Section title="Whole control (box + label)">
+                <div className="flex flex-col items-start gap-3">
+                    <span data-vcompare="cb-control-unchecked" className="inline-block">
+                        <Checkbox label="Unchecked" />
+                    </span>
+                    <span data-vcompare="cb-control-checked" className="inline-block">
+                        <Checkbox label="Checked" defaultChecked />
+                    </span>
                 </div>
             </Section>
 
@@ -1332,6 +1499,7 @@ function HTMLSelectGallery() {
         <div className="flex flex-col gap-6">
             <Section title="Default">
                 <HTMLSelect
+                    aria-label="Default select"
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-default")}
                 />
@@ -1339,6 +1507,7 @@ function HTMLSelectGallery() {
 
             <Section title="Large">
                 <HTMLSelect
+                    aria-label="Large select"
                     large
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-large")}
@@ -1347,6 +1516,7 @@ function HTMLSelectGallery() {
 
             <Section title="Minimal">
                 <HTMLSelect
+                    aria-label="Minimal select"
                     minimal
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-minimal")}
@@ -1355,6 +1525,7 @@ function HTMLSelectGallery() {
 
             <Section title="Disabled">
                 <HTMLSelect
+                    aria-label="Disabled select"
                     disabled
                     options={HS_OPTIONS}
                     ref={(el) => el?.setAttribute("data-compare", "hs-disabled")}
@@ -1364,6 +1535,7 @@ function HTMLSelectGallery() {
             <Section title="Fill">
                 <div style={{ width: 280 }}>
                     <HTMLSelect
+                        aria-label="Fill select"
                         fill
                         options={HS_OPTIONS}
                         ref={(el) => el?.setAttribute("data-compare", "hs-fill")}
@@ -1489,6 +1661,7 @@ function NumericInputGallery() {
                 <div ref={defaultRef}>
                     <div ref={stepBtnRef} className="inline-block">
                         <NumericInput
+                            aria-label="Default number"
                             value={val}
                             onValueChange={(_, s) => setVal(s)}
                             min={0}
@@ -1502,6 +1675,7 @@ function NumericInputGallery() {
 
             <Section title="Large">
                 <NumericInput
+                    aria-label="Large number"
                     defaultValue={5}
                     size="large"
                     min={0}
@@ -1513,6 +1687,7 @@ function NumericInputGallery() {
 
             <Section title="Disabled">
                 <NumericInput
+                    aria-label="Disabled number"
                     defaultValue={5}
                     disabled
                     style={{ width: 120 }}
@@ -1525,6 +1700,7 @@ function NumericInputGallery() {
                     {NI_INTENTS.map((intent) => (
                         <NumericInput
                             key={intent}
+                            aria-label={`${intent} number`}
                             defaultValue={5}
                             intent={intent}
                             style={{ width: 120 }}
@@ -1536,6 +1712,7 @@ function NumericInputGallery() {
 
             <Section title="Buttons left">
                 <NumericInput
+                    aria-label="Buttons-left number"
                     defaultValue={5}
                     buttonPosition="left"
                     style={{ width: 120 }}
@@ -1545,6 +1722,7 @@ function NumericInputGallery() {
 
             <Section title="Buttons none">
                 <NumericInput
+                    aria-label="Buttons-none number"
                     defaultValue={5}
                     buttonPosition="none"
                     style={{ width: 120 }}
@@ -1554,6 +1732,7 @@ function NumericInputGallery() {
             <Section title="Fill">
                 <div style={{ width: 300 }}>
                     <NumericInput
+                        aria-label="Fill number"
                         defaultValue={5}
                         fill
                         ref={(el) => el?.setAttribute("data-compare", "ni-fill")}
@@ -1563,6 +1742,7 @@ function NumericInputGallery() {
 
             <Section title="Left icon">
                 <NumericInput
+                    aria-label="Left-icon number"
                     defaultValue={5}
                     leftIcon="search"
                     style={{ width: 140 }}
@@ -1866,6 +2046,132 @@ function DialogGallery() {
 }
 
 /**
+ * MultistepDialog showcase. Renders ONE wizard OPEN by default (step 2 of 3 active, so the
+ * harness captures a viewed/active step and the Back+Next footer simultaneously) so the
+ * harness can screenshot and computed-style-diff the portaled rail, active step, panel, footer.
+ *
+ * Portal + dark-mode: the wizard composes Dialog and receives `dark` from DarkContext.
+ *
+ * data-compare keys: multistep-panels, multistep-rail, multistep-step-active,
+ * multistep-circle-active, multistep-panel, multistep-footer. These match the Blueprint
+ * reference gallery keys exactly.
+ */
+function MultistepDialogGallery() {
+    const dark = useContext(DarkContext);
+    const [role, setRole] = useState("editor");
+    return (
+        <div className="flex flex-col gap-4">
+            <p className="text-body text-foreground-muted">
+                The wizard below is open by default (on step 2) for comparison harness screenshots.
+            </p>
+            <MultistepDialog
+                defaultOpen={true}
+                title="Create project"
+                icon={<Icon icon="projects" />}
+                initialStepIndex={1}
+                dark={dark}
+                finalButtonProps={{ children: "Create", onClick: () => {} }}
+            >
+                <DialogStep
+                    id="info"
+                    title="Project info"
+                    panel={
+                        <div className="flex flex-col gap-4 p-5">
+                            <FormGroup
+                                label="Project name"
+                                labelInfo="(required)"
+                                labelFor="ms-project-name"
+                                helperText="Shown in the workspace sidebar and in URLs."
+                            >
+                                <InputGroup
+                                    id="ms-project-name"
+                                    leftIcon="projects"
+                                    defaultValue="Apollo Initiative"
+                                    fill
+                                />
+                            </FormGroup>
+                            <FormGroup label="Workspace" labelFor="ms-workspace">
+                                <HTMLSelect
+                                    id="ms-workspace"
+                                    fill
+                                    options={["Engineering", "Design", "Research", "Operations"]}
+                                />
+                            </FormGroup>
+                            <FormGroup
+                                label="Description"
+                                labelFor="ms-description"
+                                helperText="Optional — a short summary of the project's goals."
+                            >
+                                <TextArea
+                                    id="ms-description"
+                                    rows={3}
+                                    fill
+                                    placeholder="What is this project about?"
+                                />
+                            </FormGroup>
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="members"
+                    title="Members"
+                    panel={
+                        <div className="flex flex-col gap-4 p-5">
+                            <FormGroup
+                                label="Invite by email"
+                                labelFor="ms-invite"
+                                helperText="Separate multiple addresses with commas."
+                            >
+                                <InputGroup
+                                    id="ms-invite"
+                                    type="email"
+                                    leftIcon="envelope"
+                                    placeholder="name@company.com"
+                                    fill
+                                />
+                            </FormGroup>
+                            <RadioGroup
+                                name="ms-role"
+                                label="Default role"
+                                selectedValue={role}
+                                onChange={(val) => setRole(val)}
+                                options={[
+                                    { value: "owner", label: "Owner — full access, can manage members" },
+                                    { value: "editor", label: "Editor — can create and edit content" },
+                                    { value: "viewer", label: "Viewer — read-only access" },
+                                ]}
+                            />
+                            <Switch label="Send an invitation email" defaultChecked />
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="review"
+                    title="Review"
+                    panel={
+                        <div className="flex flex-col gap-4 p-5">
+                            <Callout intent="primary" title="Ready to create">
+                                Review the summary below, then choose Create to set up your project.
+                            </Callout>
+                            <dl className="m-0 grid grid-cols-[140px_1fr] gap-x-4 gap-y-2 text-body">
+                                <dt className="text-foreground-muted">Project name</dt>
+                                <dd className="m-0 text-foreground">Apollo Initiative</dd>
+                                <dt className="text-foreground-muted">Workspace</dt>
+                                <dd className="m-0 text-foreground">Engineering</dd>
+                                <dt className="text-foreground-muted">Default role</dt>
+                                <dd className="m-0 text-foreground capitalize">{role}</dd>
+                                <dt className="text-foreground-muted">Notifications</dt>
+                                <dd className="m-0 text-foreground">Invitation email on</dd>
+                            </dl>
+                        </div>
+                    }
+                />
+            </MultistepDialog>
+        </div>
+    );
+}
+
+/**
  * Drawer showcase. Renders ONE drawer OPEN by default (right edge, 360px = SMALL) so the
  * harness can screenshot and computed-style-diff the portaled panel, header, body.
  *
@@ -1924,6 +2230,7 @@ function PopoverGallery() {
             <div className="flex items-center justify-center" style={{ minHeight: 200, paddingTop: 80 }}>
                 <Popover
                     defaultOpen={true}
+                    ariaLabel="Example popover"
                     content={
                         <div style={{ width: 200 }}>Short popover content.</div>
                     }
@@ -2112,11 +2419,11 @@ function MenuGallery() {
                         data-compare="menu-item-active"
                     />
 
-                    {/* Item with submenu caret */}
+                    {/* Item with a secondary label */}
                     <MenuItem
                         icon="cog"
                         text="Settings"
-                        hasSubmenu={true}
+                        label="⌘,"
                     />
 
                     {/* Plain divider */}
@@ -3265,6 +3572,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Default (primary, value=5)</p>
                 <div className="w-[320px]" data-compare="slider-default">
                     <Slider
+                        aria-label="Default slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3282,6 +3590,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Success intent (value=6)</p>
                 <div className="w-[320px]" data-compare="slider-success">
                     <Slider
+                        aria-label="Success slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3297,6 +3606,7 @@ function SliderGallery() {
                 <p className="text-[12px] text-foreground-muted">Disabled (value=3)</p>
                 <div className="w-[320px]" data-compare="slider-disabled">
                     <Slider
+                        aria-label="Disabled slider"
                         min={0}
                         max={10}
                         stepSize={1}
@@ -3327,6 +3637,66 @@ function SliderGallery() {
  * NOTE: These elements are portaled to document.body, so the harness finds them
  * via document.querySelectorAll("[data-compare]") which scans the full document.
  */
+/**
+ * Live demo of the `useHotkeys` engine. Registers a global counter shortcut and a
+ * local one (only active while the focused box has focus). With the surrounding
+ * `HotkeysProvider`, pressing `?` opens the generated help dialog listing all of them.
+ */
+function HotkeysLiveDemo() {
+    const [count, setCount] = useState(0);
+    const [reset, setReset] = useState(0);
+
+    useHotkeys([
+        {
+            combo: "mod+shift+u",
+            label: "Increment counter",
+            global: true,
+            group: "Demo",
+            preventDefault: true,
+            onKeyDown: () => setCount((c) => c + 1),
+        },
+        {
+            combo: "mod+shift+0",
+            label: "Reset counter",
+            global: true,
+            group: "Demo",
+            preventDefault: true,
+            onKeyDown: () => {
+                setCount(0);
+                setReset((r) => r + 1);
+            },
+        },
+        {
+            combo: "r",
+            label: "Local: refresh (focus the box first)",
+            group: "Demo",
+            onKeyDown: () => setReset((r) => r + 1),
+        },
+    ]);
+
+    return (
+        <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3 text-body text-foreground">
+                <span>
+                    Counter: <strong>{count}</strong>
+                </span>
+                <span className="text-foreground-muted">resets: {reset}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-body-sm text-foreground-muted">
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="mod+shift+u" minimal /> increment
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="mod+shift+0" minimal /> reset
+                </span>
+                <span className="inline-flex items-center gap-2">
+                    <KeyCombo combo="?" minimal /> open this dialog
+                </span>
+            </div>
+        </div>
+    );
+}
+
 function HotkeysGallery() {
     const dark = useContext(DarkContext);
 
@@ -3338,26 +3708,34 @@ function HotkeysGallery() {
     ] as const;
 
     return (
-        <div className="flex flex-col gap-4">
-            <p className="text-body text-foreground-muted">
-                The hotkeys dialog below is open by default for comparison harness screenshots.
-            </p>
-            {/* Standalone KeyCombo specimens (visible outside dialog) */}
-            <div className="flex flex-wrap items-center gap-4">
-                <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
-                <KeyCombo combo="mod+s" />
-                <KeyCombo combo="mod+shift+n" />
-                <KeyCombo combo="ctrl+z" />
+        <HotkeysProvider dark={dark} dialogTitle="Keyboard shortcuts">
+            <div className="flex flex-col gap-4">
+                <p className="text-body text-foreground-muted">
+                    The hotkeys dialog below is open by default for comparison harness screenshots.
+                </p>
+                {/* Standalone KeyCombo specimens (visible outside dialog) */}
+                <div className="flex flex-wrap items-center gap-4">
+                    <span className="text-body-sm text-foreground-muted">KeyCombo:</span>
+                    <KeyCombo combo="mod+s" />
+                    <KeyCombo combo="mod+shift+n" />
+                    <KeyCombo combo="ctrl+z" />
+                </div>
+
+                {/* Live engine demo — exercises useHotkeys + HotkeysProvider. */}
+                <Section title="Live engine (useHotkeys)">
+                    <HotkeysLiveDemo />
+                </Section>
+
+                <HotkeysDialog
+                    open={true}
+                    onOpenChange={() => {}}
+                    dark={dark}
+                    title="Keyboard shortcuts"
+                    hotkeys={HOTKEYS}
+                    globalGroupName="Global"
+                />
             </div>
-            <HotkeysDialog
-                open={true}
-                onOpenChange={() => {}}
-                dark={dark}
-                title="Keyboard shortcuts"
-                hotkeys={HOTKEYS}
-                globalGroupName="Global"
-            />
-        </div>
+        </HotkeysProvider>
     );
 }
 
@@ -3385,6 +3763,7 @@ function TagInputGallery() {
                         values={values}
                         onChange={(v) => setValues(v as string[])}
                         placeholder="Add a tag…"
+                        inputProps={{ "aria-label": "Tags" }}
                         fill
                         data-compare="tag-input-container"
                         _firstTagCompare="tag-input-tag"
@@ -3399,6 +3778,7 @@ function TagInputGallery() {
                         values={largeValues}
                         onChange={(v) => setLargeValues(v as string[])}
                         placeholder="Add a tag…"
+                        inputProps={{ "aria-label": "Tags" }}
                         large
                         fill
                     />
@@ -3410,6 +3790,7 @@ function TagInputGallery() {
                     values={intentValues}
                     onChange={(v) => setIntentValues(v as string[])}
                     placeholder="Add a tag…"
+                    inputProps={{ "aria-label": "Tags" }}
                     intent="danger"
                     fill
                 />
@@ -3421,6 +3802,7 @@ function TagInputGallery() {
                         values={["locked", "read-only"]}
                         onChange={() => {}}
                         placeholder="Disabled"
+                        inputProps={{ "aria-label": "Tags" }}
                         disabled
                         fill
                     />
@@ -3433,6 +3815,7 @@ function TagInputGallery() {
                         values={["design", "ui", "ux"]}
                         onChange={() => {}}
                         placeholder="Tags…"
+                        inputProps={{ "aria-label": "Tags" }}
                         leftIcon="search"
                         fill
                     />
@@ -3479,18 +3862,18 @@ function SelectGallery() {
                 if (filterInput) filterInput.setAttribute("data-compare", "select-filter");
             }
 
-            // select-item-active: Apple is index 0 (first item, active by default)
+            // select-item-active: Apple is index 0 (first item, active by default).
+            // The option's inner content element (a listbox option renders a presentational
+            // <div>, not an interactive button/anchor) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "select-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "select-item-active");
             }
 
             // select-item: Cherry is index 2 (0-based) in the list
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "select-item");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "select-item");
             }
         }
         tag();
@@ -3523,6 +3906,7 @@ function SelectGallery() {
                             <MenuItem disabled text="No results." />
                         }
                         dark={dark}
+                        fill
                         popoverProps={{ open: true, onOpenChange: () => {} }}
                     >
                         <Button
@@ -3626,18 +4010,17 @@ function SuggestGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="suggest-menu"]');
             if (!menuUl) return;
 
-            // suggest-item: Apple is index 0 (non-active, non-selected)
+            // suggest-item: Apple is index 0 (non-active, non-selected). The option's inner
+            // content element (presentational <div> for a listbox option) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "suggest-item");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "suggest-item");
             }
 
             // suggest-item-active: Cherry is index 2 (active because it's the selectedItem)
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "suggest-item-active");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "suggest-item-active");
             }
         }
         tag();
@@ -3740,18 +4123,18 @@ function MultiSelectGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="multi-select-menu"]');
             if (!menuUl) return;
 
-            // multi-select-item-active: Apple is index 0 (first item = active by default)
+            // multi-select-item-active: Apple is index 0 (first item = active by default).
+            // The option's inner content element (presentational <div> for a listbox option)
+            // is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "multi-select-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "multi-select-item-active");
             }
 
             // multi-select-item: Durian is index 3 (non-active, non-selected)
             const durianLi = menuUl.children[3] as HTMLElement | undefined;
-            if (durianLi) {
-                const btn = durianLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "multi-select-item");
+            if (durianLi?.firstElementChild) {
+                durianLi.firstElementChild.setAttribute("data-compare", "multi-select-item");
             }
         }
         tag();
@@ -3854,18 +4237,17 @@ function OmnibarGallery() {
             const menuUl = document.querySelector<HTMLElement>('[data-compare="omnibar-menu"]');
             if (!menuUl) return;
 
-            // omnibar-item-active: Apple is index 0 (first item, active by default)
+            // omnibar-item-active: Apple is index 0 (first item, active by default). The
+            // option's inner content element (presentational <div>) is the measured node.
             const appleLi = menuUl.children[0] as HTMLElement | undefined;
-            if (appleLi) {
-                const btn = appleLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "omnibar-item-active");
+            if (appleLi?.firstElementChild) {
+                appleLi.firstElementChild.setAttribute("data-compare", "omnibar-item-active");
             }
 
             // omnibar-item: Cherry is index 2 (non-active, non-first item)
             const cherryLi = menuUl.children[2] as HTMLElement | undefined;
-            if (cherryLi) {
-                const btn = cherryLi.querySelector("button,a");
-                if (btn) btn.setAttribute("data-compare", "omnibar-item");
+            if (cherryLi?.firstElementChild) {
+                cherryLi.firstElementChild.setAttribute("data-compare", "omnibar-item");
             }
         }
         tag();
@@ -4045,38 +4427,38 @@ function OpenDateInput({ dark }: { dark: boolean }) {
     // so the harness reliably sees both input + calendar in the DOM.
     return (
         <div className="flex flex-col gap-2 items-start">
-            {/* The input field with data-compare tag */}
-            <div
-                className="relative inline-block"
-                style={{ minWidth: 200 }}
-            >
-                {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
-                <InputGroup
-                    type="text"
-                    value="1/15/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="date-input-field"
-                />
-            </div>
-
-            {/* Popover calendar always visible — portaled with dark support */}
+            {/* Popover calendar always visible — portaled with dark support.
+                Mirrors DateInput's own Popover config: arrow visible, no minimal,
+                no inner padding. The input field is the Popover trigger so the arrow
+                centers over the input (matching the live component's behavior). */}
             <Popover
                 open={true}
                 onOpenChange={() => {}}
+                ariaLabel="Choose date"
                 content={
                     <DatePickerForDateInput dark={dark} />
                 }
                 side="bottom"
                 align="start"
                 sideOffset={4}
-                arrow={false}
-                minimal={true}
+                arrow={true}
+                minimal={false}
                 hasContentPadding={false}
                 dark={dark}
             >
-                {/* Invisible anchor so Popover has a trigger (it won't be seen) */}
-                <span />
+                <div
+                    className="relative inline-block"
+                    style={{ minWidth: 200 }}
+                >
+                    {/* No rightElement — matches Blueprint's default (no calendar icon) for harness parity */}
+                    <InputGroup
+                        type="text"
+                        value="1/15/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="date-input-field"
+                    />
+                </div>
             </Popover>
         </div>
     );
@@ -4215,42 +4597,44 @@ function DateRangeInputGallery() {
 function OpenDateRangeInput({ dark }: { dark: boolean }) {
     return (
         <div className="flex flex-col gap-2 items-start">
-            {/* Two input fields side-by-side, matching Blueprint's control-group layout */}
-            <div className="inline-flex flex-row items-stretch">
-                {/* Start input — tagged for harness */}
-                <InputGroup
-                    type="text"
-                    value="1/8/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="dri-start"
-                />
-                {/* End input — tagged for harness */}
-                <InputGroup
-                    type="text"
-                    value="1/20/2026"
-                    onChange={() => {}}
-                    placeholder="M/d/yyyy"
-                    data-compare="dri-end"
-                />
-            </div>
-
-            {/* Popover always visible — portaled DateRangePicker */}
+            {/* Popover always visible — portaled DateRangePicker.
+                Mirrors DateRangeInput's own Popover config: arrow visible, no minimal,
+                no inner padding (the calendar carries its own). Trigger is the
+                inline-flex row containing both inputs so the arrow centers over the
+                trigger row (matching the live component's behavior). */}
             <Popover
                 open={true}
                 onOpenChange={() => {}}
+                ariaLabel="Choose date range"
                 content={
                     <DateRangePickerForDRI />
                 }
                 side="bottom"
                 align="start"
                 sideOffset={4}
-                arrow={false}
-                minimal={true}
+                arrow={true}
+                minimal={false}
                 hasContentPadding={false}
                 dark={dark}
             >
-                <span />
+                <div className="inline-flex flex-row items-stretch">
+                    {/* Start input — tagged for harness */}
+                    <InputGroup
+                        type="text"
+                        value="1/8/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="dri-start"
+                    />
+                    {/* End input — tagged for harness */}
+                    <InputGroup
+                        type="text"
+                        value="1/20/2026"
+                        onChange={() => {}}
+                        placeholder="M/d/yyyy"
+                        data-compare="dri-end"
+                    />
+                </div>
             </Popover>
         </div>
     );
@@ -4348,17 +4732,18 @@ function TimezoneSelectGallery() {
             if (!menuUl) return;
             menuUl.setAttribute("data-compare", "tz-menu");
 
-            // tz-item: "New York" — index 6 in the minimal list (0-based)
-            // Order: 0=UTC, 1=Honolulu, 2=Anchorage, 3=LA, 4=Denver, 5=Chicago, 6=NewYork
-            const nyLi = menuUl.children[6] as HTMLElement | undefined;
-            if (nyLi) {
-                const btn = nyLi.querySelector("button,a");
-                if (btn) {
-                    btn.setAttribute("data-compare", "tz-item");
-                    // tz-item-offset: the label span (offset text) inside the item
-                    const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
-                    if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
-                }
+            // tz-item: "Denver" — index 6 in the minimal list (0-based).
+            // Order now matches Blueprint's MINIMAL_TIMEZONE_ITEMS exactly:
+            //   0=UTC, 1=Pago Pago, 2=Honolulu, 3=Marquesas, 4=Anchorage, 5=LA, 6=Denver, 7=Mexico City, 8=New York …
+            const itemLi = menuUl.children[6] as HTMLElement | undefined;
+            // The option's inner content element (presentational <div> for a listbox option)
+            // is the measured node.
+            const btn = itemLi?.firstElementChild;
+            if (btn) {
+                btn.setAttribute("data-compare", "tz-item");
+                // tz-item-offset: the label span (offset text) inside the item
+                const labelSpan = btn.querySelector<HTMLElement>(".menu-item-label");
+                if (labelSpan) labelSpan.setAttribute("data-compare", "tz-item-offset");
             }
         }
         tag();
@@ -4403,8 +4788,307 @@ function TimezoneSelectGallery() {
 }
 
 /** Registry of component showcases. Add an entry per component as it's built. */
+/**
+ * ResizeSensor showcase — a resizable box that reports its observed size. The box
+ * carries `data-compare` (its static styling is comparable; the live size text is
+ * behavioral and not a fidelity target).
+ */
+function ResizeSensorGallery() {
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Reports its observed size (drag the corner)">
+                <ResizeSensor
+                    onResize={(entries) => {
+                        const r = entries[0].contentRect;
+                        setSize({ width: Math.round(r.width), height: Math.round(r.height) });
+                    }}
+                >
+                    <div
+                        data-compare="resize-sensor-box"
+                        className="overflow-auto rounded-md text-body text-foreground"
+                        style={{ width: 240, height: 96, padding: 12, border: "1px solid var(--border)", resize: "both" }}
+                    >
+                        Observed size: {size.width}×{size.height}px
+                    </div>
+                </ResizeSensor>
+            </Section>
+        </div>
+    );
+}
+
+/** Chip used by the OverflowList demo (natural width, doesn't shrink). */
+function OverflowChip({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
+    return (
+        <span
+            className="text-body-sm"
+            style={{
+                padding: "2px 8px",
+                marginRight: 4,
+                borderRadius: 4,
+                whiteSpace: "nowrap",
+                background: accent ? "var(--color-primary)" : "var(--surface)",
+                color: accent ? "white" : "var(--foreground)",
+                border: accent ? undefined : "1px solid var(--border)",
+            }}
+        >
+            {children}
+        </span>
+    );
+}
+
+/**
+ * OverflowList showcase — a fixed-width container collapses items into a "+N" chip.
+ * The container carries `data-compare`; resize the window to see it recompute.
+ */
+function OverflowListGallery() {
+    const items = ["Home", "Reports", "Q3", "Financials", "Summary", "Appendix", "Notes", "Draft"];
+    const overflowRenderer = (overflow: string[]) =>
+        overflow.length > 0 ? <OverflowChip accent>+{overflow.length}</OverflowChip> : null;
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Collapse from start (overflow leads)">
+                <div data-compare="overflow-list-start" style={{ width: 280, border: "1px solid var(--border)", borderRadius: 6, padding: 8 }}>
+                    <OverflowList<string>
+                        items={items}
+                        collapseFrom="start"
+                        visibleItemRenderer={(item) => <OverflowChip key={item}>{item}</OverflowChip>}
+                        overflowRenderer={overflowRenderer}
+                    />
+                </div>
+            </Section>
+            <Section title="Collapse from end (overflow trails)">
+                <div data-compare="overflow-list-end" style={{ width: 280, border: "1px solid var(--border)", borderRadius: 6, padding: 8 }}>
+                    <OverflowList<string>
+                        items={items}
+                        collapseFrom="end"
+                        visibleItemRenderer={(item) => <OverflowChip key={item}>{item}</OverflowChip>}
+                        overflowRenderer={overflowRenderer}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/** Portal showcase — render a fixed banner into document.body, escaping local stacking. */
+function PortalGallery() {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Render into document.body">
+                <Button onClick={() => setOpen((o) => !o)}>
+                    {open ? "Remove" : "Render"} portaled banner
+                </Button>
+                {open && (
+                    <Portal>
+                        <div
+                            data-compare="portal-banner"
+                            style={{
+                                position: "fixed",
+                                bottom: 16,
+                                right: 16,
+                                padding: "8px 12px",
+                                borderRadius: 6,
+                                background: "#2d72d2",
+                                color: "white",
+                                zIndex: 50,
+                            }}
+                        >
+                            Portaled to document.body
+                        </div>
+                    </Portal>
+                )}
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * DataTable showcase — the virtualized, Blueprint-Table2-faithful grid.
+ *
+ * Compare keys (must match the Blueprint reference gallery):
+ *   data-table-basic      — the whole grid (header + numbered gutter + ruled cells), cropped
+ *                            and pixel-diffed against Blueprint's <Table2>.
+ *   data-table-virtual    — 1,000-row virtualized grid (windowing, sticky header).
+ *   data-table-selection  — a controlled cell-range selection + focused cell (Loop 3),
+ *                            diffed against Blueprint's selectedRegions + focusedCell.
+ */
+interface DataTablePerson {
+    name: string;
+    age: number;
+    role: string;
+    location: string;
+}
+
+const DATA_TABLE_ROWS: DataTablePerson[] = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+
+const DATA_TABLE_COLUMNS: DataTableColumn<DataTablePerson>[] = [
+    { id: "name", header: "Name", accessor: "name", width: 160 },
+    { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+    { id: "role", header: "Role", accessor: "role", width: 120 },
+    { id: "location", header: "Location", accessor: "location", width: 120 },
+];
+
+const DATA_TABLE_ROLES = ["Engineer", "Designer", "Manager", "Analyst"];
+const DATA_TABLE_CITIES = ["London", "Seattle", "Austin", "Lagos", "Prague", "Osaka"];
+const DATA_TABLE_MANY: DataTablePerson[] = Array.from({ length: 1000 }, (_, i) => ({
+    name: `Person ${i + 1}`,
+    age: 20 + (i % 50),
+    role: DATA_TABLE_ROLES[i % DATA_TABLE_ROLES.length],
+    location: DATA_TABLE_CITIES[i % DATA_TABLE_CITIES.length],
+}));
+
+function DataTableGallery() {
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Basic grid (sticky header · numbered gutter · ruled cells)">
+                <div data-compare="data-table-basic" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        enableColumnResizing
+                        enableColumnReordering
+                    />
+                </div>
+            </Section>
+            <Section title="Virtualized (1,000 rows · fixed height · scroll to test windowing)">
+                <div data-compare="data-table-virtual" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_MANY}
+                        columns={DATA_TABLE_COLUMNS}
+                        height={300}
+                        enableColumnResizing
+                    />
+                </div>
+            </Section>
+            <Section title="Selection (cell range + focused cell)">
+                <div data-compare="data-table-selection" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        selection={[{ rows: [1, 2], cols: [1, 2] }]}
+                        focusedCell={{ row: 1, col: 1 }}
+                    />
+                </div>
+            </Section>
+            <Section title="Editable cells (double-click Name or Role · Enter commits · Esc reverts)">
+                <div data-compare="data-table-editable" style={{ width: 460 }}>
+                    <EditableDataTableSpecimen />
+                </div>
+            </Section>
+            {/* Loading is VISUAL-ONLY (no data-compare): Blueprint's loading bars are
+                Math.random()-driven 25-75% widths (its `LoadableContent` `variableLength`),
+                so an exact diff is impossible by design. analyst uses deterministic full-width
+                bars; the Skeleton primitive's own fidelity is gated by skeleton-box/-line. */}
+            <Section title="Loading (deterministic full-width skeleton cells · headers · gutter)">
+                <div style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        loading
+                    />
+                </div>
+            </Section>
+            <Section title="Multiple selection (Cmd/Ctrl-click adds a region · two regions shown)">
+                <div data-compare="data-table-multi" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        selectionMode="multi"
+                        selection={[
+                            { rows: [0, 0], cols: [0, 0] },
+                            { rows: [2, 3], cols: [2, 3] },
+                        ]}
+                        focusedCell={{ row: 2, col: 2 }}
+                    />
+                </div>
+            </Section>
+            <Section title="No gutter">
+                <div style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        numberedRows={false}
+                    />
+                </div>
+            </Section>
+            <DataTableUsage />
+        </div>
+    );
+}
+
+/**
+ * Usage reference for the DataTable public API (Loop 7 docs). Not a compare specimen —
+ * a quick-start the gallery shows beneath the live grids.
+ */
+function DataTableUsage() {
+    return (
+        <Section title="Usage">
+            <pre className="overflow-auto rounded-bp bg-[#f6f7f9] p-4 text-[12px] leading-5 text-foreground dark:bg-[#2f343c]">
+                {`import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+interface Person { name: string; age: number; role: string }
+
+const columns: DataTableColumn<Person>[] = [
+  { id: "name", header: "Name", accessor: "name", width: 160, editable: true },
+  { id: "age",  header: "Age",  accessor: "age",  width: 60, align: "right" },
+  // function accessor + custom cell renderer:
+  { id: "role", header: "Role", accessor: (r) => r.role,
+    cell: ({ value }) => <strong>{String(value)}</strong> },
+];
+
+<DataTable
+  data={people}
+  columns={columns}
+  height={360}                 // fixed height ⇒ virtualized scroll (omit ⇒ grow to fit)
+  enableColumnResizing         // drag a header's right edge
+  enableColumnReordering       // select a column, then drag its handle
+  selectionMode="multi"        // "single" (default) | "multi" (Cmd/Ctrl-click) | "none"
+  loading={isFetching}         // skeleton cells while data streams in
+  onCellEdit={({ row, columnId, value }) => save(row, columnId, value)}
+/>
+
+// Keyboard: arrows move · Shift+arrows extend · Tab/Enter advance (wrap) ·
+// Home/End row ends (Cmd/Ctrl ⇒ grid corners) · PageUp/PageDown · Cmd/Ctrl-C copies TSV ·
+// Enter/F2 edits an editable cell · double-click edits.`}
+            </pre>
+        </Section>
+    );
+}
+
+/** Editable-cells specimen (Loop 5): Name + Role columns commit edits into local state. */
+const DATA_TABLE_EDITABLE_COLUMNS: DataTableColumn<DataTablePerson>[] = [
+    { id: "name", header: "Name", accessor: "name", width: 160, editable: true },
+    { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+    { id: "role", header: "Role", accessor: "role", width: 120, editable: true },
+    { id: "location", header: "Location", accessor: "location", width: 120 },
+];
+
+function EditableDataTableSpecimen() {
+    const [rows, setRows] = useState(DATA_TABLE_ROWS);
+    return (
+        <DataTable<DataTablePerson>
+            data={rows}
+            columns={DATA_TABLE_EDITABLE_COLUMNS}
+            onCellEdit={({ row, columnId, value }) =>
+                setRows((prev) => prev.map((r, i) => (i === row ? { ...r, [columnId]: value } : r)))
+            }
+        />
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
+    { id: "anchor-button", title: "AnchorButton", render: () => <AnchorButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
@@ -4427,6 +5111,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "multistep-dialog", title: "MultistepDialog", render: () => <MultistepDialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
@@ -4443,6 +5128,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "data-table", title: "DataTable", render: () => <DataTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
@@ -4460,6 +5146,9 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
     { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
     { id: "timezone-select", title: "TimezoneSelect", render: () => <TimezoneSelectGallery /> },
+    { id: "resize-sensor", title: "ResizeSensor", render: () => <ResizeSensorGallery /> },
+    { id: "overflow-list", title: "OverflowList", render: () => <OverflowListGallery /> },
+    { id: "portal", title: "Portal", render: () => <PortalGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -4467,6 +5156,8 @@ const params = new URLSearchParams(window.location.search);
 const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
+/** `?palette=datex` selects the example alternate theme (P2.5 themeability proof). */
+const INITIAL_DATEX = params.get("palette") === "datex";
 
 /**
  * Components whose specimens render a portaled/floating overlay OPEN by default (for the
@@ -4476,7 +5167,7 @@ const INITIAL_DARK = params.get("theme") === "dark";
  * so screenshots + computed-style diffs are unaffected.
  */
 const OVERLAY_IDS = new Set([
-    "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
+    "dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
     "select", "suggest", "multi-select", "timezone-select", "date-input", "date-range-input",
 ]);
 
@@ -4493,40 +5184,263 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
     );
 }
 
+/**
+ * Sidebar category grouping. Each COMPONENTS id should appear in exactly one group;
+ * any id missing from every group is collected into "Other" so nothing is silently
+ * dropped from the gallery (a guard against this list drifting from COMPONENTS).
+ */
+const CATEGORIES: { label: string; ids: string[] }[] = [
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
+    { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
+    { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
+    { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
+    { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+    { label: "Data", ids: ["data-table"] },
+    { label: "Infrastructure", ids: ["resize-sensor", "overflow-list", "portal"] },
+];
+
+type ComponentEntry = (typeof COMPONENTS)[number];
+
+const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
+    const byId = new Map(COMPONENTS.map((c) => [c.id, c]));
+    const groups = CATEGORIES.map((g) => ({
+        label: g.label,
+        items: g.ids.map((id) => byId.get(id)).filter((c): c is ComponentEntry => c != null),
+    }));
+    const seen = new Set(CATEGORIES.flatMap((g) => g.ids));
+    const leftover = COMPONENTS.filter((c) => !seen.has(c.id));
+    if (leftover.length) groups.push({ label: "Other", items: leftover });
+    return groups;
+})();
+
+/** The selected component is driven by the URL hash (`#button`) so links are shareable. */
+function useHash(): string {
+    const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
+    useEffect(() => {
+        const onChange = () => setHash(decodeURIComponent(window.location.hash.replace(/^#/, "")));
+        window.addEventListener("hashchange", onChange);
+        return () => window.removeEventListener("hashchange", onChange);
+    }, []);
+    return hash;
+}
+
+function Sidebar({
+    selectedId,
+    dark,
+    onToggleDark,
+    view,
+    onViewChange,
+    datex,
+    onToggleDatex,
+}: {
+    selectedId: string;
+    dark: boolean;
+    onToggleDark: () => void;
+    view: "showcase" | "demos";
+    onViewChange: (v: "showcase" | "demos") => void;
+    datex: boolean;
+    onToggleDatex: () => void;
+}) {
+    return (
+        <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+                <span className="text-heading-sm font-semibold text-foreground">analyst-ui</span>
+                <div className="flex items-center gap-1">
+                    <Button
+                        size="small"
+                        variant="minimal"
+                        intent={datex ? "primary" : "none"}
+                        aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
+                        aria-pressed={datex}
+                        icon={<Icon icon="tint" className="!text-current" />}
+                        onClick={onToggleDatex}
+                    />
+                    <Button
+                        size="small"
+                        variant="minimal"
+                        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                        icon={<Icon icon={dark ? "lightbulb" : "moon"} className="!text-current" />}
+                        onClick={onToggleDark}
+                    />
+                </div>
+            </div>
+            <div className="border-b border-border px-3 py-2">
+                <SegmentedControl
+                    fill
+                    options={[
+                        { label: "Showcase", value: "showcase" },
+                        { label: "Demos", value: "demos" },
+                    ]}
+                    value={view}
+                    onValueChange={(v) => onViewChange(v as "showcase" | "demos")}
+                />
+            </div>
+            {view === "demos" ? (
+                <nav className="flex-1 overflow-y-auto px-2 py-3">
+                    <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                        Demo apps
+                    </div>
+                    <ul className="flex flex-col gap-px">
+                        {DEMOS.map((d) => (
+                            <li key={d.id}>
+                                <a
+                                    href={`#demo-${d.id}`}
+                                    className="block rounded-bp px-2 py-1 text-body-sm text-foreground transition-colors hover:bg-[var(--interactive-hover)]"
+                                >
+                                    {d.title}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            ) : (
+            <nav className="flex-1 overflow-y-auto px-2 py-3">
+                {CATEGORY_GROUPS.map((group) => (
+                    <div key={group.label} className="mb-4">
+                        <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                            {group.label}
+                        </div>
+                        <ul className="flex flex-col gap-px">
+                            {group.items.map((c) => {
+                                const active = c.id === selectedId;
+                                return (
+                                    <li key={c.id}>
+                                        <a
+                                            href={`#${c.id}`}
+                                            aria-current={active ? "page" : undefined}
+                                            className={cn(
+                                                "block rounded-bp px-2 py-1 text-body-sm transition-colors",
+                                                active
+                                                    ? "bg-primary text-primary-foreground"
+                                                    : "text-foreground hover:bg-[var(--interactive-hover)]",
+                                            )}
+                                        >
+                                            {c.title}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+            </nav>
+            )}
+        </aside>
+    );
+}
+
+/** The Demos view: renders the demo selected via the URL hash (`#demo-<id>`), full-bleed. */
+function DemosView() {
+    const dark = useContext(DarkContext);
+    const hash = useHash();
+    const demoId = hash.startsWith("demo-") ? hash.slice("demo-".length) : "";
+    const demo = DEMOS.find((d) => d.id === demoId) ?? DEMOS[0];
+    if (!demo) {
+        return (
+            <div className="p-10 text-body text-foreground-muted">No demos registered.</div>
+        );
+    }
+    const DemoComponent = demo.component;
+    // Each demo gets its own Toaster so `useToaster()` works inside the demo subtree.
+    return (
+        <Toaster dark={dark} position="top">
+            <DemoComponent />
+        </Toaster>
+    );
+}
+
+/** Main pane: title + the selected component's gallery. Overlays stay behind a Show toggle. */
+function ComponentView({ component }: { component: ComponentEntry }) {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, [component.id]);
+    return (
+        <div id={component.id} className="flex flex-col gap-5">
+            <h2 className="text-heading-lg font-semibold text-foreground">{component.title}</h2>
+            {OVERLAY_IDS.has(component.id) ? (
+                <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
+            ) : (
+                component.render()
+            )}
+        </div>
+    );
+}
+
+type AppView = "showcase" | "demos";
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    const [datex, setDatex] = useState(INITIAL_DATEX);
 
-    const shown = ONLY ? COMPONENTS.filter((c) => c.id === ONLY) : COMPONENTS;
-    // Isolated single-component view (harness mode): no header, just the specimens.
-    const isolated = ONLY != null && shown.length > 0;
+    // The theme (seed set) must be applied at the document root: light-mode semantic
+    // tokens are declared on `:root`, so their `var(--seed)` substitution resolves
+    // against the root's seeds. Setting `data-theme` on a descendant would leave those
+    // already-computed (default-seed) values inherited unchanged. Applying it on <html>
+    // also lets portaled content (rendered at <body>) inherit the theme automatically.
+    useEffect(() => {
+        const el = document.documentElement;
+        if (datex) el.setAttribute("data-theme", "datex");
+        else el.removeAttribute("data-theme");
+    }, [datex]);
+    const [view, setView] = useState<AppView>(() =>
+        decodeURIComponent(window.location.hash.replace(/^#/, "")).startsWith("demo-") ? "demos" : "showcase",
+    );
+    // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
+    const hash = useHash();
+
+    // If the hash points at a demo (e.g. via a shared in-session link), switch to the Demos view.
+    useEffect(() => {
+        if (hash.startsWith("demo-")) setView("demos");
+    }, [hash]);
+
+    // Isolated single-component view (harness mode): no chrome, just the specimens.
+    // This path MUST stay behavior-identical for tools/compare.sh.
+    if (ONLY != null && COMPONENTS.some((c) => c.id === ONLY)) {
+        const c = COMPONENTS.find((x) => x.id === ONLY)!;
+        return (
+            <DarkContext.Provider value={dark}>
+                <div className={dark ? "dark" : ""}>
+                    <div className="min-h-screen bg-background text-foreground p-10">
+                        <div className="mx-auto flex max-w-[760px] flex-col gap-8">
+                            <div id={c.id} className="flex flex-col gap-2.5">
+                                {c.render()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </DarkContext.Provider>
+        );
+    }
+
+    const selected = COMPONENTS.find((c) => c.id === hash) ?? COMPONENTS[0];
 
     return (
         <DarkContext.Provider value={dark}>
-        <div className={dark ? "dark" : ""}>
-            <div className="min-h-screen bg-background text-foreground p-10">
-                <div className="mx-auto flex max-w-[760px] flex-col gap-8">
-                    {!isolated && (
-                        <header className="flex items-center justify-between">
-                            <h1 className="text-heading-lg font-semibold text-foreground">analyst-ui</h1>
-                            <Button onClick={() => setDark((d) => !d)}>Toggle {dark ? "light" : "dark"}</Button>
-                        </header>
+            <div className={dark ? "dark" : ""}>
+                <div className="flex min-h-screen bg-background text-foreground">
+                    <Sidebar
+                        selectedId={selected.id}
+                        dark={dark}
+                        onToggleDark={() => setDark((d) => !d)}
+                        view={view}
+                        onViewChange={setView}
+                        datex={datex}
+                        onToggleDatex={() => setDatex((p) => !p)}
+                    />
+                    {view === "showcase" ? (
+                        <main className="flex-1 overflow-x-hidden px-10 py-8">
+                            <div className="mx-auto max-w-[820px]">
+                                <ComponentView component={selected} />
+                            </div>
+                        </main>
+                    ) : (
+                        <main className="flex-1 min-w-0 overflow-x-hidden">
+                            <DemosView />
+                        </main>
                     )}
-
-                    {shown.map((c) => (
-                        <div key={c.id} id={c.id} className="flex flex-col gap-2.5">
-                            {!isolated && (
-                                <h2 className="text-heading-lg font-semibold text-foreground">{c.title}</h2>
-                            )}
-                            {!isolated && OVERLAY_IDS.has(c.id) ? (
-                                <OverlaySpecimen title={c.title}>{c.render()}</OverlaySpecimen>
-                            ) : (
-                                c.render()
-                            )}
-                        </div>
-                    ))}
                 </div>
             </div>
-        </div>
         </DarkContext.Provider>
     );
 }

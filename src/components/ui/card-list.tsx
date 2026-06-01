@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { Children, cloneElement, forwardRef, isValidElement } from "react";
 
 import { cn } from "@/lib/utils";
 import { Card } from "./card";
@@ -101,6 +101,15 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
     { bordered = true, compact = false, className, children, ...htmlProps },
     ref,
 ) {
+    // The container is role="list", so its direct children must be role="listitem"
+    // (axe aria-required-children / WCAG 1.3.1). Each child Card forwards `role`, so
+    // stamp it here unless the consumer already set an explicit role.
+    const items = Children.map(children, (child) =>
+        isValidElement<{ role?: string }>(child) && child.props.role == null
+            ? cloneElement(child, { role: "listitem" })
+            : child,
+    );
+
     return (
         <Card
             ref={ref}
@@ -136,10 +145,11 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
                 compact ? "[&>div]:px-4" : "[&>div]:px-5",
 
                 // ── Divider between rows ─────────────────────────────────────────────────
-                // Use $pt-divider-black-muted (rgba(0,0,0,0.1)) — lighter than Section's 0.15.
-                // Dark: $pt-dark-divider-white-muted (rgba(255,255,255,0.1)).
+                // Use $pt-divider-black-muted — Blueprint v6.15 renders this as
+                // rgba(20,20,20,0.1) (matches the elevation hairline ring), lighter than
+                // Section's 0.15. Dark: $pt-dark-divider-white-muted (rgba(255,255,255,0.1)).
                 "[&>div:not(:last-child)]:border-b",
-                "[&>div:not(:last-child)]:border-b-[rgba(0,0,0,0.1)]",
+                "[&>div:not(:last-child)]:border-b-[rgba(20,20,20,0.1)]",
                 "dark:[&>div:not(:last-child)]:border-b-[rgba(255,255,255,0.1)]",
 
                 // ── Interactive child Card hover/active ──────────────────────────────────
@@ -183,7 +193,7 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
             )}
             {...htmlProps}
         >
-            {children}
+            {items}
         </Card>
     );
 });

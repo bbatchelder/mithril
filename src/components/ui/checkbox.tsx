@@ -37,6 +37,7 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { smallMinus, smallTick } from "./icons";
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "type"> {
     /** Visible label rendered next to the indicator. */
@@ -123,7 +124,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 disabled ? "text-foreground-disabled" : "text-foreground",
                 large ? "text-body-lg" : "text-body",
@@ -190,8 +193,11 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                     !alignRight && (large ? "-ml-7 mr-2" : "-ml-6 mr-2"),
                     // Right-aligned: margin-left = 8px (= ml-2)
                     alignRight && "ml-2",
-                    // Flex centering for icon children
-                    "flex items-center justify-center",
+                    // Inline-flex centering for icon children. MUST be inline-flex, not flex:
+                    // a block-level flex breaks the label's inline flow and drops the text to
+                    // the next line. inline-flex keeps the indicator inline AND wins the
+                    // display-utility merge over the `inline-block` above (tailwind-merge keeps last).
+                    "inline-flex items-center justify-center",
 
                     // === UNCHECKED resting ===
                     // Background: transparent
@@ -217,8 +223,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                     // === DISABLED ===
                     // Unchecked disabled: bg = hover bg, no shadow (light AND dark — override dark shadow too)
                     disabled && !isActive && "bg-[rgba(143,153,168,0.15)] shadow-none dark:shadow-none cursor-not-allowed",
-                    // Checked/indeterminate disabled: bg = rgba(blue-3, 0.5) = rgba(45,114,210,0.5), no shadow
-                    disabled && isActive && "bg-[rgba(45,114,210,0.5)] shadow-none dark:shadow-none cursor-not-allowed",
+                    // Checked/indeterminate disabled: primary @ 50%, no shadow
+                    disabled && isActive && "bg-primary/50 shadow-none dark:shadow-none cursor-not-allowed",
                     // indicatorProps.className is merged LAST so callers (e.g. ControlCard) can
                     // override indicator margins/positioning without fighting specificity.
                     // (indicatorProps is spread above for non-className attrs; className is folded
@@ -228,7 +234,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             >
                 {/* Tick icon — shown when checked (and not indeterminate) */}
                 <Icon
-                    icon="small-tick"
+                    icon={smallTick}
                     size={iconSize}
                     aria-hidden="true"
                     className={cn(
@@ -242,7 +248,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                 />
                 {/* Dash icon — shown when indeterminate */}
                 <Icon
-                    icon="small-minus"
+                    icon={smallMinus}
                     size={iconSize}
                     aria-hidden="true"
                     className={cn(

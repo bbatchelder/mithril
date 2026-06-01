@@ -2,8 +2,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef, useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
-export type TextAreaIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TextAreaIntent = Intent;
 export type TextAreaSize = "small" | "medium" | "large";
 
 /**

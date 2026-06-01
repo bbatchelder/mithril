@@ -81,7 +81,9 @@ export const Navbar = forwardRef<HTMLDivElement, NavbarProps>(function Navbar(
             ref={ref}
             className={cn(
                 // Base: bg, shadow, height, padding, width
-                "bg-surface shadow-card-1",
+                // shadow-overlay-1: elevation-1 with Blueprint's rgba(20,20,20) hairline ring
+                // (light) + dark drop/highlight layer order (see tokens.css, Cluster A/B).
+                "bg-surface shadow-overlay-1",
                 "h-[50px] w-full",
                 "px-4",
                 // Flex layout: left group left, right group right
