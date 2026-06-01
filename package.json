@@ -35,7 +35,8 @@
         "test:watch": "vitest",
         "typecheck:test": "tsc -p tsconfig.test.json",
         "gen:icons": "node tools/gen-icons.mjs",
-        "gen:registry": "node tools/gen-registry.mjs"
+        "gen:registry": "node tools/gen-registry.mjs",
+        "build:registry": "pnpm dlx shadcn@4.9.0 build registry.json --output dist/r && node tools/rewrite-registry-urls.mjs"
     },
     "dependencies": {
         "@radix-ui/react-context-menu": "^2.2.16",

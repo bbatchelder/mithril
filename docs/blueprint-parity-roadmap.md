@@ -119,8 +119,17 @@ See **P0.3** (cross-listed) — resolved.
 
 ## P2 — Distribution & DX polish (turn near-wins into clean wins)
 
-### P2.1 — Make the shadcn install path actually work
+### P2.1 — Make the shadcn install path actually work ✅ done (handoff 0080)
 
+- **Resolved (handoff 0080):** `pnpm build:registry` runs the official `shadcn build` (pinned 4.9.0 via
+  `pnpm dlx`) to emit per-item JSON with source inlined, then `tools/rewrite-registry-urls.mjs` rewrites
+  every cross-component `registryDependencies` from bare names → full URLs and copies the `registry.json`
+  index — all into `dist/r/`. `deploy.yml` runs it after `pnpm build`, so Pages now serves the registry at
+  `https://bbatchelder.github.io/analyst-ui/r/<name>.json`. New `ci.yml` gates PRs/main on
+  build + test + a **registry-drift guard** (`pnpm gen:registry` then `git diff --exit-code registry.json`)
+  + a `build:registry` smoke test. Verified end-to-end into a scratch project both ways: direct URL
+  (`shadcn add <url>/r/select.json` → full transitive closure) and the `@analyst-ui` namespace
+  (`shadcn add @analyst-ui/button`, deduping already-installed deps). README updated with both methods.
 - **Problem:** `registry.json` is generated but **never served** — only the demo gallery is deployed.
   The README's `npx shadcn add <url>/button` is aspirational; the only real path today is hand-copying.
 - **Action:** Serve the registry: emit `registry.json` (and per-item JSON if needed) into the deployed

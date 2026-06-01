@@ -91,7 +91,38 @@ analyst-ui follows the shadcn model: you copy the source into your own project a
 > [appraisal](./docs/comparison-vs-blueprint.md)); if you need framework-agnostic drop-in CSS, that's a
 > reason to prefer Blueprint.
 
-### Copy the source (the working path today)
+### Install via the shadcn registry (recommended)
+
+The registry is hosted at **`https://bbatchelder.github.io/analyst-ui/r/`** — one entry per component,
+with its npm `dependencies` and cross-component `registryDependencies` (e.g. `Select` pulls in `Popover`,
+`Menu`, and `InputGroup`; everything pulls in the design tokens + `cn`) resolved automatically. Two ways
+to install — both fetch transitive dependencies for you:
+
+```bash
+# 1. Direct URL — zero config:
+npx shadcn@latest add https://bbatchelder.github.io/analyst-ui/r/button.json
+```
+
+```jsonc
+// 2. Namespaced — add this once to your components.json…
+{
+  "registries": {
+    "@analyst-ui": "https://bbatchelder.github.io/analyst-ui/r/{name}.json"
+  }
+}
+```
+
+```bash
+# …then install by short name (and tab-complete the rest):
+npx shadcn@latest add @analyst-ui/button @analyst-ui/select
+```
+
+> The components are styled with Tailwind v4 — make sure `@import "tailwindcss";` is in your CSS before
+> adding components (the `tokens` style is pulled in automatically as a dependency).
+
+### Or copy the source by hand
+
+The registry is just a convenience over copying files — you own the source either way:
 
 1. Copy [`src/styles/tokens.css`](./src/styles/tokens.css) into your project and `@import` it after Tailwind:
    ```css
@@ -101,23 +132,7 @@ analyst-ui follows the shadcn model: you copy the source into your own project a
 2. Copy the `cn` helper ([`src/lib/utils.ts`](./src/lib/utils.ts)) — most components import it.
 3. Copy the component file(s) you want from [`src/components/ui/`](./src/components/ui/) and install their
    peer deps (each component's npm + cross-component dependencies are listed in
-   [`registry.json`](./registry.json)).
-
-### shadcn registry (generated, not yet hosted)
-
-[`registry.json`](./registry.json) is a complete shadcn-style registry — one entry per component, with its
-npm `dependencies` and internal `registryDependencies` (e.g. `Select` pulls in `Popover`, `Menu`, and
-`InputGroup`) resolved automatically. Regenerate it from source with `pnpm gen:registry`.
-
-> ⚠️ **The registry is not yet served anywhere** — only the demo gallery is deployed, so the
-> `npx shadcn add` command below does **not** work yet. Until the registry is hosted at a stable URL,
-> copying the source (above) is the only install method. Hosting it is tracked in the
-> [roadmap](./docs/blueprint-parity-roadmap.md) (P2.1).
-
-```bash
-# once the registry is hosted at <registry-url>:
-npx shadcn@latest add <registry-url>/button
-```
+   [`registry.json`](./registry.json), regenerated from source with `pnpm gen:registry`).
 
 ## Design tokens
 
@@ -168,6 +183,7 @@ docs/
 tools/
   gen-icons.mjs       regenerate the icon glyph map
   gen-registry.mjs    regenerate registry.json from source
+  rewrite-registry-urls.mjs  post-process built items → URL deps (pnpm build:registry)
   compare.sh          screenshot + computed-style diff vs Blueprint
   blueprint-reference/  isolated Blueprint v6.15 gallery for side-by-side comparison
   comparison/         the comparison harness internals
@@ -192,11 +208,10 @@ Being upfront (full detail + the fix plan are in the [appraisal](./docs/comparis
   ARIA), and **ContextMenu** (no arrow-key/submenu nav) need work; **Hotkeys** is display-only (no binding
   engine).
 - **Missing capabilities.** No data grid (Blueprint's `Table2` has no equivalent — `HTMLTable` is styling
-  only), no `MultistepDialog`, `ButtonGroup`, or `AnchorButton`.
+  only).
 - **Icons don't tree-shake.** All 706 glyphs are one static map; importing `Icon` pulls them all (~195 KB
   gzip) unless you trim the map by hand.
-- **Tailwind v4 required**, **registry not yet hosted** (copy-the-source is the only install path today),
-  and **tokens are frozen** to Blueprint v6.15 (see above).
+- **Tailwind v4 required** and **tokens are frozen** to Blueprint v6.15 (see above).
 
 ## Contributing
 

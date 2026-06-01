@@ -1,0 +1,50 @@
+name: CI
+
+# Build/test/lint gate for PRs and main. The deploy workflow (deploy.yml) only runs on
+# main and publishes the gallery + registry; this is the freshness/correctness gate that
+# runs BEFORE merge.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # tsc -b + vite build (typecheck is part of build).
+      - run: pnpm build
+
+      - run: pnpm test
+
+      # Registry-drift guard: registry.json must be in lock-step with the component source.
+      # Regenerate it and fail if anything changed (i.e. someone edited a component's imports
+      # without running `pnpm gen:registry`).
+      - name: Registry drift guard
+        run: |
+          pnpm gen:registry
+          git diff --exit-code registry.json \
+            || (echo "::error::registry.json is stale — run 'pnpm gen:registry' and commit the result." && exit 1)
+
+      # Smoke-test that the installable registry builds (shadcn build + URL rewrite).
+      # Runs after `pnpm build` because it emits into dist/ (which vite cleans).
+      - run: pnpm build:registry
