@@ -98,7 +98,7 @@ const STEPPER_COLORS: Record<NumericInputIntent, string> = {
     none: "bg-light-gray-5 hover:bg-light-gray-4 active:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 text-foreground dark:text-white",
     primary: "bg-primary hover:bg-primary-hover active:bg-primary-active text-primary-foreground",
     success: "bg-success hover:bg-success-hover active:bg-success-active text-success-foreground",
-    warning: "bg-orange-5 hover:bg-orange-4 active:bg-orange-3 text-warning-foreground",
+    warning: "bg-warning-solid-bg hover:bg-warning-disabled active:bg-warning text-warning-foreground",
     danger: "bg-danger hover:bg-danger-hover active:bg-danger-active text-danger-foreground",
 };
 

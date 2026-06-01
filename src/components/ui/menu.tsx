@@ -128,64 +128,60 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
 // Active (keyboard/selected) state colors per intent — Blueprint's menu-item-active mixin.
 // Light: rgba(intentBg, 0.1) bg, intentFg text
 // Dark:  rgba(intentBg, 0.2) bg, intentFg-dark text
+// Theme-aware: bg = intent rest seed at alpha (default tier-3 = blue-3 etc.);
+// text/icon = canonical intent-text token (tier-2 light / tier-5 dark).
 const ACTIVE_CLASSES: Record<MenuIntent, string> = {
     // none → uses primary colors (Blueprint behavior: no-intent active = primary tinted)
     none: [
-        // bg: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
-        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-        // text: blue2 light / blue5 dark
-        "text-blue-2 dark:text-blue-5",
-        // icons inherit intent color
-        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+        "bg-primary/10 dark:bg-primary/20",
+        "text-intent-primary-text",
+        "[&_.menu-icon]:text-intent-primary-text",
     ].join(" "),
     primary: [
-        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-        "text-blue-2 dark:text-blue-5",
-        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+        "bg-primary/10 dark:bg-primary/20",
+        "text-intent-primary-text",
+        "[&_.menu-icon]:text-intent-primary-text",
     ].join(" "),
     success: [
-        "bg-[rgba(35,133,81,0.1)] dark:bg-[rgba(35,133,81,0.2)]",
-        "text-green-2 dark:text-green-5",
-        "[&_.menu-icon]:text-green-2 dark:[&_.menu-icon]:text-green-5",
+        "bg-success/10 dark:bg-success/20",
+        "text-intent-success-text",
+        "[&_.menu-icon]:text-intent-success-text",
     ].join(" "),
     warning: [
-        "bg-[rgba(200,118,25,0.1)] dark:bg-[rgba(200,118,25,0.2)]",
-        "text-orange-2 dark:text-orange-5",
-        "[&_.menu-icon]:text-orange-2 dark:[&_.menu-icon]:text-orange-5",
+        "bg-warning/10 dark:bg-warning/20",
+        "text-intent-warning-text",
+        "[&_.menu-icon]:text-intent-warning-text",
     ].join(" "),
     danger: [
-        "bg-[rgba(205,66,70,0.1)] dark:bg-[rgba(205,66,70,0.2)]",
-        "text-red-2 dark:text-red-5",
-        "[&_.menu-icon]:text-red-2 dark:[&_.menu-icon]:text-red-5",
+        "bg-danger/10 dark:bg-danger/20",
+        "text-intent-danger-text",
+        "[&_.menu-icon]:text-intent-danger-text",
     ].join(" "),
 };
 
 // Intent (non-active) text colors — Blueprint's menu-item-intent mixin.
-// Light: palette -2 tier; Dark: palette -5 tier
+// Text = canonical intent-text token; hover/active bg = intent rest seed at alpha.
 const INTENT_CLASSES: Record<MenuIntent, string> = {
     none: "",
     primary: [
-        // text: blue2 light / blue5 dark
-        "text-blue-2 dark:text-blue-5",
-        // hover: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
-        "hover:bg-[rgba(45,114,210,0.1)] dark:hover:bg-[rgba(45,114,210,0.2)]",
-        // active (mouse press): rgba(blue3, 0.2) light / rgba(blue3, 0.3) dark
-        "active:bg-[rgba(45,114,210,0.2)] dark:active:bg-[rgba(45,114,210,0.3)]",
+        "text-intent-primary-text",
+        "hover:bg-primary/10 dark:hover:bg-primary/20",
+        "active:bg-primary/20 dark:active:bg-primary/30",
     ].join(" "),
     success: [
-        "text-green-2 dark:text-green-5",
-        "hover:bg-[rgba(35,133,81,0.1)] dark:hover:bg-[rgba(35,133,81,0.2)]",
-        "active:bg-[rgba(35,133,81,0.2)] dark:active:bg-[rgba(35,133,81,0.3)]",
+        "text-intent-success-text",
+        "hover:bg-success/10 dark:hover:bg-success/20",
+        "active:bg-success/20 dark:active:bg-success/30",
     ].join(" "),
     warning: [
-        "text-orange-2 dark:text-orange-5",
-        "hover:bg-[rgba(200,118,25,0.1)] dark:hover:bg-[rgba(200,118,25,0.2)]",
-        "active:bg-[rgba(200,118,25,0.2)] dark:active:bg-[rgba(200,118,25,0.3)]",
+        "text-intent-warning-text",
+        "hover:bg-warning/10 dark:hover:bg-warning/20",
+        "active:bg-warning/20 dark:active:bg-warning/30",
     ].join(" "),
     danger: [
-        "text-red-2 dark:text-red-5",
-        "hover:bg-[rgba(205,66,70,0.1)] dark:hover:bg-[rgba(205,66,70,0.2)]",
-        "active:bg-[rgba(205,66,70,0.2)] dark:active:bg-[rgba(205,66,70,0.3)]",
+        "text-intent-danger-text",
+        "hover:bg-danger/10 dark:hover:bg-danger/20",
+        "active:bg-danger/20 dark:active:bg-danger/30",
     ].join(" "),
 };
 

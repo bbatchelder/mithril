@@ -521,10 +521,10 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                                         isToday && highlightCurrentDay && "border border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
                                         // Blueprint: today font-weight is overridden back to 400 (not bold)
                                         isToday && "font-normal",
-                                        // Selected: Blueprint $blue3, white text, rounded-4px
-                                        isSelected && "bg-blue-3 text-white cursor-pointer",
-                                        isSelected && "hover:bg-blue-2",
-                                        isSelected && "active:bg-blue-1",
+                                        // Selected: primary intent seed (rest/hover/active), white text, rounded-4px
+                                        isSelected && "bg-primary text-white cursor-pointer",
+                                        isSelected && "hover:bg-primary-hover",
+                                        isSelected && "active:bg-primary-active",
                                         // Disabled
                                         isDisabled && "cursor-not-allowed text-foreground-disabled bg-transparent hover:bg-transparent",
                                     )}

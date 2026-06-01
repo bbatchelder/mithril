@@ -96,13 +96,17 @@ For a component to follow the theme, its intent colors must route through the
 - `text-intent-{intent}-minimal-text` — button minimal/outlined intent text (color-mix dark).
 - `bg-{intent}/10`, `stroke-[var(--color-{intent})]` … for tinted/SVG fills.
 
-Do **not** hardcode `bg-blue-3`, `text-green-2`, `stroke-[#2d72d2]`, etc. — those point
-at the fixed palette and won't re-tint. (Spinner/ProgressBar use
-`stroke-[var(--color-primary)]` arbitrary classes — always emitted, and the seed vars
-stay alive via other utilities.) Verified theme-aware: Button, Icon, Spinner,
-ProgressBar, Tag, Callout. Other components may still carry palette literals; converting
-them is mechanical (swap the literal for the matching seed/intent token) and gated by
-`tools/compare.sh` staying clean in the default theme.
+Do **not** hardcode `bg-blue-3`, `text-green-2`, `stroke-[#2d72d2]`,
+`bg-[rgba(45,114,210,0.1)]`, etc. — those point at the fixed palette and won't re-tint.
+(Spinner/ProgressBar/Slider use `bg-[var(--color-primary)]`/`bg-primary` — always emitted,
+and the seed vars stay alive via other utilities.)
+
+The whole library is now theme-aware — every component routes intent colors through
+seeds/intent tokens, verified by `tools/compare.sh` staying clean in the default theme
+(both light and dark): Button, Icon, Spinner, ProgressBar, Tag, Callout, Menu, Toast,
+FormGroup, EditableText, Link, DatePicker, DateRangePicker, Tree, Tabs, NumericInput,
+Checkbox, Radio, Switch, Slider, DataTable, MultistepDialog. Neutral/"none" grays are
+intentionally left on the palette (they track the neutral ramp, not an intent seed).
 
 ## How derivation works (P2.5)
 

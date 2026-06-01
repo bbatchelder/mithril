@@ -99,13 +99,14 @@ export interface SliderProps
     _tagInternals?: boolean;
 }
 
-// Intent fill colors — literal values to defeat Tailwind v4 tree-shaking
+// Intent fill colors — intent rest seeds (re-tint with the theme); "none" is the
+// neutral track fill. (Seed utilities are emitted; vars stay alive elsewhere.)
 const INTENT_FILL_CLASS: Record<SliderIntent, string> = {
     none: "bg-[rgba(95,107,124,0.2)] dark:bg-[rgba(17,20,24,0.5)]",
-    primary: "bg-[#2d72d2]",
-    success: "bg-[#238551]",
-    warning: "bg-[#c87619]",
-    danger: "bg-[#cd4246]",
+    primary: "bg-primary",
+    success: "bg-success",
+    warning: "bg-warning",
+    danger: "bg-danger",
 };
 
 /** Count decimal places in a number */

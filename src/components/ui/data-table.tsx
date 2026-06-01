@@ -852,7 +852,7 @@ export function DataTable<TRow>({
                 {resizeGuideX != null && (
                     <div
                         aria-hidden
-                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-[#2d72d2]"
+                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-primary"
                         style={{ left: resizeGuideX - 3 }}
                     />
                 )}
@@ -862,7 +862,7 @@ export function DataTable<TRow>({
                     <div
                         data-reorder-guide
                         aria-hidden
-                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-[#2d72d2]"
+                        className="pointer-events-none absolute inset-y-0 z-50 w-[3px] bg-primary"
                         style={{ left: reorderGuideX - 1 }}
                     />
                 )}

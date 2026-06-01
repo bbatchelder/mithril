@@ -223,8 +223,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                     // === DISABLED ===
                     // Unchecked disabled: bg = hover bg, no shadow (light AND dark — override dark shadow too)
                     disabled && !isActive && "bg-[rgba(143,153,168,0.15)] shadow-none dark:shadow-none cursor-not-allowed",
-                    // Checked/indeterminate disabled: bg = rgba(blue-3, 0.5) = rgba(45,114,210,0.5), no shadow
-                    disabled && isActive && "bg-[rgba(45,114,210,0.5)] shadow-none dark:shadow-none cursor-not-allowed",
+                    // Checked/indeterminate disabled: primary @ 50%, no shadow
+                    disabled && isActive && "bg-primary/50 shadow-none dark:shadow-none cursor-not-allowed",
                     // indicatorProps.className is merged LAST so callers (e.g. ControlCard) can
                     // override indicator margins/positioning without fighting specificity.
                     // (indicatorProps is spread above for non-className attrs; className is folded

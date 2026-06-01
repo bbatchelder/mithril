@@ -267,8 +267,8 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                     effectiveChecked && !disabled && "group-hover:bg-primary-hover",
                     // active: $blue1 = #184a90
                     effectiveChecked && !disabled && "group-active:bg-primary-active",
-                    // disabled checked: rgba($blue3, 0.5) = rgba(45,114,210,0.5)
-                    effectiveChecked && disabled && "bg-[rgba(45,114,210,0.5)]",
+                    // disabled checked: primary @ 50%
+                    effectiveChecked && disabled && "bg-primary/50",
 
                     // === Text color on the track (for inner labels) ===
                     // Unchecked: inherit foreground (set on label above)

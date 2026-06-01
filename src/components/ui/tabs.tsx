@@ -262,7 +262,7 @@ function TabTitle({ tabId, title, icon, disabled = false, vertical, children }: 
                 // Horizontal: stretch to the tab-list height so the underline sits at the bottom.
                 !vertical && "self-stretch",
                 // Vertical: rounded pill + padding + full width; selected gets a subtle bg.
-                vertical && cn("rounded-bp px-2 w-full", "data-[state=active]:bg-blue-3/20"),
+                vertical && cn("rounded-bp px-2 w-full", "data-[state=active]:bg-primary/20"),
                 // Selected text color = link; horizontal selected has square corners.
                 "data-[state=active]:text-link dark:data-[state=active]:text-link",
                 !vertical && "data-[state=active]:rounded-none",

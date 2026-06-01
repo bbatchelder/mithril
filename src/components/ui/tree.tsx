@@ -330,11 +330,11 @@ function TreeNodeItem({
                         "active:bg-[rgba(143,153,168,0.3)]",
                         "cursor-pointer",
                     ],
-                    // Selected: blue-3 background + white text
+                    // Selected: primary intent seed background + white text
                     isSelected && [
-                        "bg-blue-3 text-white",
-                        // Override hover/active on selected (keep blue bg)
-                        "hover:bg-blue-3 dark:hover:bg-blue-3",
+                        "bg-primary text-white",
+                        // Override hover/active on selected (keep the intent bg)
+                        "hover:bg-primary dark:hover:bg-primary",
                     ],
                     // Disabled: foreground-disabled color
                     isDisabled && "text-foreground-disabled",

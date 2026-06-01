@@ -180,7 +180,7 @@ export function MultistepDialog({
                                     onClick={(e) => goTo(i, e)}
                                     className={cn(
                                         "m-1 flex w-[calc(100%-8px)] items-center rounded-bp bg-transparent px-[14px] py-[6px] text-left text-[14px]",
-                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2d72d2]",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         "enabled:cursor-pointer enabled:hover:bg-[#f6f7f9] dark:enabled:hover:bg-[#2f343c]",
                                         "disabled:cursor-not-allowed",
                                     )}
@@ -191,7 +191,7 @@ export function MultistepDialog({
                                         className={cn(
                                             "flex h-6 w-6 flex-none items-center justify-center rounded-[50%] text-white",
                                             isActive
-                                                ? "bg-[#2d72d2]"
+                                                ? "bg-primary"
                                                 : isViewed
                                                   ? "bg-[#8f99a8]"
                                                   : "bg-[rgba(95,107,124,0.6)] dark:bg-[rgba(171,179,191,0.6)]",
@@ -204,7 +204,7 @@ export function MultistepDialog({
                                         className={cn(
                                             "flex-1 truncate pl-2",
                                             isActive
-                                                ? "text-[#2d72d2] dark:text-[#8abbff]"
+                                                ? "text-primary dark:text-intent-primary-text"
                                                 : isViewed
                                                   ? "text-foreground"
                                                   : "text-[rgba(95,107,124,0.6)] dark:text-[rgba(171,179,191,0.6)]",

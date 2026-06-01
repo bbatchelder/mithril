@@ -566,23 +566,23 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                         "px-2 py-0 m-0",
                                         "transition-colors duration-100",
 
-                                        // Endpoints (range_start / range_end) — filled blue like selected day
-                                        isEndpoint && "bg-blue-3 text-white cursor-pointer",
-                                        isEndpoint && "hover:bg-blue-2",
-                                        isEndpoint && "active:bg-blue-1",
+                                        // Endpoints (range_start / range_end) — filled with the primary seed like selected day
+                                        isEndpoint && "bg-primary text-white cursor-pointer",
+                                        isEndpoint && "hover:bg-primary-hover",
+                                        isEndpoint && "active:bg-primary-active",
                                         // Start: square right edge (continues into range band)
                                         isRangeStart && !isRangeEnd && "[border-top-right-radius:0px] [border-bottom-right-radius:0px]",
                                         // End: square left edge (continues from range band)
                                         isRangeEnd && !isRangeStart && "[border-top-left-radius:0px] [border-bottom-left-radius:0px]",
 
-                                        // Range middle — light blue background band, no border-radius
-                                        // Light: rgba($blue3, 0.1), color=$blue2
-                                        // Dark: rgba($blue3, 0.2), color=$light-gray5 (foreground)
-                                        isRangeMiddle && "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-                                        isRangeMiddle && "text-blue-2 dark:text-foreground",
+                                        // Range middle — primary-tinted background band, no border-radius
+                                        // Light: primary @ 0.1, text = intent primary text (tier-2)
+                                        // Dark: primary @ 0.2, text = foreground
+                                        isRangeMiddle && "bg-primary/10 dark:bg-primary/20",
+                                        isRangeMiddle && "text-intent-primary-text dark:text-foreground",
                                         isRangeMiddle && "[border-radius:0px]",
                                         isRangeMiddle && "cursor-pointer",
-                                        isRangeMiddle && "hover:bg-[rgba(45,114,210,0.2)] dark:hover:bg-[rgba(45,114,210,0.4)]",
+                                        isRangeMiddle && "hover:bg-primary/20 dark:hover:bg-primary/40",
 
                                         // Outside month: hidden (Blueprint hides these in range mode)
                                         isOutside && "invisible",
