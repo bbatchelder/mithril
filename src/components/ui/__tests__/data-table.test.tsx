@@ -278,6 +278,27 @@ describe("DataTable — column resize (Loop 4)", () => {
         expect(container.querySelectorAll("[data-resize-handle]")).toHaveLength(2);
     });
 
+    it("updates the selection overlay geometry after a resize (regression)", () => {
+        // A column selection over column 0; resizing column 0 must grow its overlay, not
+        // leave it boxed at the old width. (Bug: geo memo keyed on the stable leafColumns
+        // array ref, so colX stayed stale after a resize.)
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={COLUMNS}
+                enableColumnResizing
+                selection={[{ rows: null, cols: [0, 0] }]}
+            />,
+        );
+        const overlayWidth = () =>
+            parseInt((container.querySelector("[data-selection-region]") as HTMLElement).style.width, 10);
+        expect(overlayWidth()).toBe(150); // column 0 default width
+        const handle = container.querySelectorAll("[data-resize-handle]")[0];
+        fireEvent.mouseDown(handle, { clientX: 150 });
+        fireEvent.mouseUp(document, { clientX: 230 }); // +80px
+        expect(overlayWidth()).toBe(230);
+    });
+
     it("grabbing a resize handle does not also select the column", () => {
         const { container } = render(
             <DataTable<Person> data={ROWS} columns={COLUMNS} enableColumnResizing />,

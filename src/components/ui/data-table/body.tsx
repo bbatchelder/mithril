@@ -94,13 +94,19 @@ export function DataTableBody<TRow>({
 
     // Static geometry for turning regions into pixel rects. `colX` is the cumulative
     // left edge of each data column; `colX[0]` is the gutter width (first column's edge).
+    //
+    // Key the memo on the *widths*, NOT the `leafColumns` array — TanStack returns a stable
+    // array reference even after a resize, so depending on it leaves `colX` (and thus every
+    // selection overlay) stale at the old column sizes. `widthsKey` changes whenever any
+    // column's `getSize()` changes, so the overlays follow a resize.
+    const colWidths = leafColumns.map((col) => col.getSize());
+    const widthsKey = colWidths.join(",");
     const geo: GridGeometry = useMemo(() => {
         const colX: number[] = [gutterWidth];
-        for (const col of leafColumns) colX.push(colX[colX.length - 1] + col.getSize());
-        return { colX, rowHeight, rowCount: rows.length, colCount: leafColumns.length };
-        // getSize() changes are captured via the table's column sizing state, which
-        // re-renders this component; depend on the derived widths string to be safe.
-    }, [gutterWidth, rowHeight, rows.length, leafColumns]);
+        for (const w of colWidths) colX.push(colX[colX.length - 1] + w);
+        return { colX, rowHeight, rowCount: rows.length, colCount: colWidths.length };
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- widthsKey encodes colWidths
+    }, [gutterWidth, rowHeight, rows.length, widthsKey]);
 
     return (
         <div
@@ -181,6 +187,7 @@ export function DataTableBody<TRow>({
                     <div
                         key={i}
                         aria-hidden
+                        data-selection-region
                         className={cn(
                             "pointer-events-none absolute z-10 box-border border border-[#2d72d2] dark:border-[#4c90f0]",
                             "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(76,144,240,0.1)]",
@@ -194,6 +201,7 @@ export function DataTableBody<TRow>({
             {focusedCell && (
                 <div
                     aria-hidden
+                    data-focus-region
                     className="pointer-events-none absolute z-10 box-border border-2 border-[#2d72d2]"
                     style={(() => {
                         const r = regionRect(cellRegion(focusedCell.row, focusedCell.col), geo);
