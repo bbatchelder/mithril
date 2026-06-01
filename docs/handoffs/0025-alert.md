@@ -18,7 +18,7 @@ wrapper pattern established by Dialog. Registered in both galleries under `id="a
 
 ## Portal + dark-mode rules applied (all 4)
 
-1. **Analyst portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
+1. **Mithril portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
    — implemented directly in alert.tsx (same as dialog.tsx). Passes `dark` from DarkContext in AlertGallery.
 
 2. **The alert surface sets `text-foreground`**
@@ -122,7 +122,7 @@ which `AlertProps` doesn't extend). But at runtime it works via `...overlayProps
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | alert-panel | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | Token uses pure black; Blueprint uses `$black=#111418`. Sub-perceptual. |
 | Dark | alert-panel | boxShadow | Identical layers, different order | Same layers, different order | String comparison artifact; visually identical. |

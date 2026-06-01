@@ -1,16 +1,16 @@
 # 0087 — DataTable styling fidelity: body cells get their own surface background
 
 - **Date:** 2026-06-01
-- **Focus:** Continue the styling-fidelity pass from 0086. User reported the analyst body cells
+- **Focus:** Continue the styling-fidelity pass from 0086. User reported the mithril body cells
   shared the column-header background; Blueprint draws them on a distinct surface.
 - **Branch:** `public-readiness` — not merged.
 
 ## What was wrong
 
-Analyst painted the whole grid with `bg-background`, so the body cells, header, and gutter were all
+Mithril painted the whole grid with `bg-background`, so the body cells, header, and gutter were all
 the **same** color. Blueprint draws the body on a distinct cell surface:
 
-| element | Blueprint light | Blueprint dark | analyst before |
+| element | Blueprint light | Blueprint dark | mithril before |
 | --- | --- | --- | --- |
 | header / gutter / corner | `#f6f7f9` (light-gray-5) | `#383e47` (dark-gray-4) | `#f6f7f9` / `#383e47` ✓ |
 | **body cell** | `#ffffff` (white) | `#2f343c` (dark-gray-3) | `#f6f7f9` / `#383e47` ✗ |

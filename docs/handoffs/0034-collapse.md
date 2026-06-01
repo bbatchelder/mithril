@@ -68,7 +68,7 @@ Both light and dark themes: **2 match, 0 differ** — a perfect computed-style m
 ## Design decisions
 
 - **`const` object instead of `enum`**: TypeScript `enum` is not allowed when `erasableSyntaxOnly`
-  is enabled (analyst-ui tsconfig). Used `const AnimationState = { ... } as const` pattern instead.
+  is enabled (mithril tsconfig). Used `const AnimationState = { ... } as const` pattern instead.
   Same 6-state machine as Blueprint (`OPEN_START`, `OPENING`, `OPEN`, `CLOSING_START`, `CLOSING`, `CLOSED`).
 
 - **Identical six-state animation machine**: Directly mirrors Blueprint's state machine for
@@ -84,7 +84,7 @@ Both light and dark themes: **2 match, 0 differ** — a perfect computed-style m
   and box-sizing resets). Without this, Tailwind-preflight-rendered divs default to `auto`. Added
   `minWidth: 0` to the container inline style to match.
 
-- **Content parity between galleries**: The analyst-ui paragraph uses `className="text-body"` (no
+- **Content parity between galleries**: The mithril paragraph uses `className="text-body"` (no
   vertical padding) and blueprint-reference uses a bare `<p>`. Both galleries produce the same
   measured height (36px for the 2-line paragraph at 760px width) because Tailwind preflight and
   Blueprint's base styles both reset `<p>` margins to 0.

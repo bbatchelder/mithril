@@ -60,7 +60,7 @@ Two independent, low-risk refactors that improve the public API without touching
     dropped the now-redundant `as` cast; `hasIcon` excludes `false`.
 
 ### Galleries (verification)
-- **button** "With icons" — analyst converted to the string API (`icon="add"`, `endIcon="share"`, …),
+- **button** "With icons" — mithril converted to the string API (`icon="add"`, `endIcon="share"`, …),
   matching the reference's existing idiom and dropping the `<Icon className="!text-current">` boilerplate.
   Added `data-compare="btn-icon-only"` (both galleries) on the icon-only button.
 - **tag** — added `data-compare="tag-icon-string"` specimen (`<Tag icon="tick">`) on both sides to exercise
@@ -109,7 +109,7 @@ Two independent, low-risk refactors that improve the public API without touching
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm test         # 240 pass
 pnpm build        # green

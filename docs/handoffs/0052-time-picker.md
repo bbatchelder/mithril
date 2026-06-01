@@ -80,9 +80,9 @@ const [value, setValue] = useState(() => {
 
 ## Design decisions
 
-- **No external dependency for analyst-ui**: TimePicker is built entirely from scratch using
+- **No external dependency for mithril**: TimePicker is built entirely from scratch using
   the `Icon` component (chevron-up/chevron-down already in icon set) and `HTMLSelect` (for AM/PM).
-  No `react-day-picker` or `@blueprintjs/datetime` needed in the analyst-ui root.
+  No `react-day-picker` or `@blueprintjs/datetime` needed in the mithril root.
 
 - **`@blueprintjs/datetime@6.1.1` in reference gallery only**: Added to
   `tools/blueprint-reference/package.json` for side-by-side comparison. CSS imported in
@@ -110,16 +110,16 @@ const [value, setValue] = useState(() => {
 
 ## Accepted deltas
 
-- **`time-picker-input` fontSize (both themes)**: analyst 14px vs blueprint 13.333px.
+- **`time-picker-input` fontSize (both themes)**: mithril 14px vs blueprint 13.333px.
   Blueprint's `$pt-font-size = 14px` but the reference gallery's body font-size is effectively
   13.333px (Blueprint's body CSS sets `font-size: 14px` but inputs may inherit differently
   in that React 18 context). Our 14px is correct per spec. **FALSE DIFF — ACCEPTED.**
 
-- **`time-picker-ampm` dark color**: analyst `rgb(246,247,249)` vs blueprint `rgb(255,255,255)`.
-  Known dark foreground delta from project memory — analyst uses `#f6f7f9` (light-gray-5) as
+- **`time-picker-ampm` dark color**: mithril `rgb(246,247,249)` vs blueprint `rgb(255,255,255)`.
+  Known dark foreground delta from project memory — mithril uses `#f6f7f9` (light-gray-5) as
   dark text color; Blueprint reference computes pure white. **KNOWN ACCEPTED DELTA.**
 
-- **`time-picker-ampm` dark backgroundColor**: analyst `rgb(47,52,60)` vs blueprint `rgb(48,55,64)`.
+- **`time-picker-ampm` dark backgroundColor**: mithril `rgb(47,52,60)` vs blueprint `rgb(48,55,64)`.
   Blueprint v6.15's compiled CSS uses `color-mix(in srgb, #5f6b7c 40%, #111418)` which computes
   to rgb(48,55,64). Our `dark:bg-dark-gray-3 = #2f343c = rgb(47,52,60)`. Delta is 1-3 per channel,
   sub-perceptual. Same class of delta as Button/Card/Dialog's shadow base color. **ACCEPTED.**
@@ -151,7 +151,7 @@ Screenshot confirmation (light + dark):
 - **`@blueprintjs/datetime@6.1.1`** — reference gallery only (`tools/blueprint-reference/package.json`).
   CSS imported in `tools/blueprint-reference/src/main.tsx`.
 
-No new dependencies in the analyst-ui root.
+No new dependencies in the mithril root.
 
 ## Changes to existing files
 
@@ -179,7 +179,7 @@ No new dependencies in the analyst-ui root.
 > Blueprint spec: `packages/datetime/src/components/date-picker/datePicker.tsx`
 > Blueprint SCSS: `packages/datetime/src/components/date-picker/_date-picker.scss`
 >
-> 1. `pnpm add react-day-picker@^8` in analyst-ui root (Blueprint uses rdp v8 internally)
+> 1. `pnpm add react-day-picker@^8` in mithril root (Blueprint uses rdp v8 internally)
 > 2. `cd tools/blueprint-reference && pnpm add @blueprintjs/datetime` (already done — also covers DatePicker)
 > 3. Build DatePicker component in `src/components/ui/date-picker.tsx`
 > 4. Register in both galleries under `id="date-picker"`

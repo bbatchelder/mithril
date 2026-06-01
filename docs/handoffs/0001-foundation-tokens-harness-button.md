@@ -33,7 +33,7 @@ fill, with start/end icons).
 
 - **Blueprint is a design spec, not code.** We re-implement on Radix/CVA/Tailwind and port only the tokens.
 - **Reference app is isolated** (`tools/blueprint-reference`, React 18) to avoid Tailwind preflight altering
-  Blueprint's CSS and to satisfy Blueprint's React-18 peer dep. Keeps `analyst-ui` clean and version-exact.
+  Blueprint's CSS and to satisfy Blueprint's React-18 peer dep. Keeps `mithril` clean and version-exact.
 - **Button color mapping uses literal named utility classes** (`bg-primary`, `bg-blue-3/10`) in
   per-(variant,intent) maps, *not* CSS-var-driven `bg-[var(--x)]`. Reason: Tailwind v4 tree-shakes theme
   vars only referenced via `var()`, so the var-driven approach silently drops palette colors. Named
@@ -76,8 +76,8 @@ fill, with start/end icons).
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui preview → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril preview → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 # then in the browser, screenshot-compare the two (approve localhost once per port)
 ```

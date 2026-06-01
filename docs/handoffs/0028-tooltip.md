@@ -26,7 +26,7 @@ Registered in both galleries under `id="tooltip"` with 2 `data-compare` specimen
 
 ## Portal + dark-mode rules applied (all 4)
 
-1. **Analyst portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
+1. **Mithril portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
    — implemented directly in tooltip.tsx. Passes `dark` from DarkContext in TooltipGallery.
 
 2. **Tooltip bubble sets EXPLICIT bg + text (not via --foreground inheritance)**
@@ -159,7 +159,7 @@ naturally picks the first tooltip.
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | tooltip-content | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | Token uses pure black; Blueprint uses `$black=#111418`. Sub-perceptual. Same as Dialog/Drawer/Popover. |
 | Light | tooltip-content | minWidth | `0px` | `auto` | Radix Tooltip.Content internally sets `min-width: 0` as part of its positioning reset. Blueprint has no explicit min-width. Visual difference: none. |

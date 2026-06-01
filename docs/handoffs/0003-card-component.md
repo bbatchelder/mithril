@@ -12,7 +12,7 @@ Built `Card` (CVA + Radix-free div) matching Blueprint's surface: `elevation` 0�
 Added card shadow tokens to `tokens.css` (the five surface elevations plus a selection ring), with
 the dark-mode inset highlights Blueprint layers at elevations 1–4. Registered Card in both galleries
 and verified with the harness: **light 7/7, dark 7/7 exact** (computed-style diff + screenshots).
-The user also resolved 0002's open question: **keep analyst's slightly-darker dark text** — do not
+The user also resolved 0002's open question: **keep mithril's slightly-darker dark text** — do not
 match Blueprint's near-white global foreground.
 
 ## Current state
@@ -79,8 +79,8 @@ All six `shadow-card-*` utilities confirmed present in the built CSS (tree-shaki
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 tools/compare.sh card both                 # re-verify Card (auto-starts servers if down)
 ```

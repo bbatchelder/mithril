@@ -28,7 +28,7 @@ Built `src/components/ui/radio.tsx` exporting both `Radio` and `RadioGroup` with
 
 - **React state for effectiveChecked** — Same rationale as Checkbox: `peer-checked:` Tailwind variants only work on siblings of the peer, not descendants. The dot is inside the indicator, so we track checked state in React. Works for both controlled (via `isControlled` check) and uncontrolled (via `onChange` handler).
 
-- **RadioGroup `onChange` signature** — Our analyst API uses `(value: string, event)` for convenience (caller doesn't need `e.currentTarget.value`). Blueprint uses `(event: React.ChangeEvent<HTMLInputElement>)`. This is a deliberate API modernization: cleaner ergonomics, not drop-in compatible.
+- **RadioGroup `onChange` signature** — Our mithril API uses `(value: string, event)` for convenience (caller doesn't need `e.currentTarget.value`). Blueprint uses `(event: React.ChangeEvent<HTMLInputElement>)`. This is a deliberate API modernization: cleaner ergonomics, not drop-in compatible.
 
 - **RadioGroup with children uses `cloneElement`** — Same approach as Blueprint's RadioGroup source. We inject `name`, `checked`, `onChange`, and `disabled` into child Radio elements via `cloneElement`. This is the idiomatic pattern for this type of group.
 
@@ -42,7 +42,7 @@ Built `src/components/ui/radio.tsx` exporting both `Radio` and `RadioGroup` with
 
 - **No indeterminate state for Radio** — Radio never has indeterminate. Do not add it.
 
-- **Blueprint RadioGroup `name` is optional** — Blueprint auto-generates a unique name if omitted. Our analyst RadioGroup requires `name` (explicit is cleaner for a modern API).
+- **Blueprint RadioGroup `name` is optional** — Blueprint auto-generates a unique name if omitted. Our mithril RadioGroup requires `name` (explicit is cleaner for a modern API).
 
 ## Next steps
 

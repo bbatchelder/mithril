@@ -75,7 +75,7 @@ happen to have a `data-compare` key but are not SVG path elements.
 ## Gotchas / things to know
 
 - **`[fill-opacity:0]` not `fill-transparent`** — see above. This was the only non-obvious
-  mismatch. The first run showed `fillOpacity: 1 (analyst) vs 0 (blueprint)` for all 9 specimens.
+  mismatch. The first run showed `fillOpacity: 1 (mithril) vs 0 (blueprint)` for all 9 specimens.
 
 - **Dark track is near-invisible** — `rgba(17, 20, 24, 0.5)` on a `#1c2127` background is by
   design. It's what Blueprint specifies (`rgba($black, 0.5)` where `$black = #111418`).
@@ -104,8 +104,8 @@ happen to have a `data-compare` key but are not SVG path elements.
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 tools/compare.sh spinner both              # re-verify Spinner (auto-starts servers if down)
 tools/compare.sh divider both              # regression: divider should still be 3/3 exact

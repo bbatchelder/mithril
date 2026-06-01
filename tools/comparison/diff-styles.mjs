@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Diff computed styles of paired [data-compare] specimens between analyst-ui and
+// Diff computed styles of paired [data-compare] specimens between mithril and
 // Blueprint. Invoked by compare.sh; can also be run standalone:
-//   node tools/comparison/diff-styles.mjs <analyst.styles.json> <blueprint.styles.json> [label]
+//   node tools/comparison/diff-styles.mjs <mithril.styles.json> <blueprint.styles.json> [label]
 //
 // Each input is the raw `agent-browser eval --json` envelope whose `data.result`
 // is itself a JSON string of { "<compare-key>": { "<cssProp>": "<value>", ... } }.
@@ -12,7 +12,7 @@ import { waiversFor, isStyleWaived, isUnpairedWaived } from "./waivers.mjs";
 const [analystPath, blueprintPath, label = ""] = process.argv.slice(2);
 const waivers = waiversFor(label);
 if (!analystPath || !blueprintPath) {
-    console.error("usage: diff-styles.mjs <analyst.styles.json> <blueprint.styles.json> [label]");
+    console.error("usage: diff-styles.mjs <mithril.styles.json> <blueprint.styles.json> [label]");
     process.exit(2);
 }
 
@@ -70,7 +70,7 @@ const onlyA = [];
 const onlyB = [];
 const waivedUnpaired = [];
 
-console.log(`${C.bold}computed-style diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(analyst → blueprint)${C.reset}`);
+console.log(`${C.bold}computed-style diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(mithril → blueprint)${C.reset}`);
 
 for (const key of keys) {
     if (!(key in B)) {
@@ -92,12 +92,12 @@ for (const key of keys) {
     console.log(`\n${C.yellow}● ${key}${C.reset}`);
     for (const p of diffs) {
         console.log(`    ${p}`);
-        console.log(`      ${C.red}analyst  ${A[key][p] ?? "—"}${C.reset}`);
+        console.log(`      ${C.red}mithril  ${A[key][p] ?? "—"}${C.reset}`);
         console.log(`      ${C.green}blueprnt ${B[key][p] ?? "—"}${C.reset}`);
     }
 }
 
-if (onlyA.length) console.log(`\n${C.dim}only in analyst:  ${onlyA.join(", ")}${C.reset}`);
+if (onlyA.length) console.log(`\n${C.dim}only in mithril:  ${onlyA.join(", ")}${C.reset}`);
 if (onlyB.length) console.log(`${C.dim}only in blueprint: ${onlyB.join(", ")}${C.reset}`);
 
 const accepted =

@@ -110,7 +110,7 @@ The portaled surface wraps the `content` prop in:
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light + Dark | context-menu-surface | height | `193px` | `192px` | Same 1px H6 line-height rounding as Menu (browser rounds 17px leading to 18px at 14px/semibold). Sub-perceptual, same root cause as documented in 0030-menu. |
 

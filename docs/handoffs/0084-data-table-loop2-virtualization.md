@@ -27,7 +27,7 @@ This is **Loop 2 of a 7-loop phase** (P1.1). Remaining: 3 selection, 4 resize/re
     0.936 dark — no regression). `data-table-virtual` (460×300) renders the correct **windowed 14 of 1,000
     rows** at scroll 0 with the sticky header — crop SSIM 0.646 light / 0.636 dark; the larger mismatch
     (~6–8%) is cumulative cross-engine text antialiasing over 14 visible rows (sub-perceptual; same nature
-    as Loop 1, just more rows). The analyst full-page screenshot confirms virtualization works in a real
+    as Loop 1, just more rows). The mithril full-page screenshot confirms virtualization works in a real
     (agent-)browser: 14 windowed rows out of 1,000, bottom row clipped, header pinned.
 - **Registry:** regenerated — `data-table` now lists **both** `@tanstack/react-table` +
   `@tanstack/react-virtual` (the subdir scan picks up `body.tsx`'s new import). 67 items.
@@ -67,7 +67,7 @@ This is **Loop 2 of a 7-loop phase** (P1.1). Remaining: 3 selection, 4 resize/re
   initial windowing (14/1,000), and scroll fires the *same* range computation. Worth one glance after a
   clean browser profile if convenient.
 - **Sub-perceptual delta (carried from Loop 1):** the residual crop mismatch is cross-engine text
-  antialiasing (React-18 reference vs React-19 analyst); the computed-style gate is clean apart from the
+  antialiasing (React-18 reference vs React-19 mithril); the computed-style gate is clean apart from the
   `minWidth: auto vs 0px` Section-parent wrapper artifact.
 
 ## Next steps (Loop 3 — selection: row + cell + focused cell)
@@ -89,7 +89,7 @@ This is **Loop 2 of a 7-loop phase** (P1.1). Remaining: 3 selection, 4 resize/re
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm install          # `pnpm install --force` if ERR_PNPM_IGNORED_BUILDS
 pnpm build && pnpm test                       # green / 275

@@ -83,7 +83,7 @@ export function Portal({ children, className, container, onChildrenMount }: Port
             return;
         }
         const element = document.createElement("div");
-        const classes = cn("analyst-portal", className, context.portalClassName);
+        const classes = cn("mithril-portal", className, context.portalClassName);
         if (classes) element.className = classes;
         portalContainer.appendChild(element);
         setPortalElement(element);
@@ -98,7 +98,7 @@ export function Portal({ children, className, container, onChildrenMount }: Port
     // Keep the container's classes in sync when className/context change.
     useEffect(() => {
         if (portalElement != null) {
-            const classes = cn("analyst-portal", className, context.portalClassName);
+            const classes = cn("mithril-portal", className, context.portalClassName);
             portalElement.className = classes;
         }
     }, [portalElement, className, context.portalClassName]);

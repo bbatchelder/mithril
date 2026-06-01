@@ -20,7 +20,7 @@ Registered in both galleries under `id="toast"` with 2 `data-compare` specimens
 
 ## Portal + dark-mode rules applied (all 4)
 
-1. **Analyst Viewport wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
+1. **Mithril Viewport wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
    — implemented in `ToastProvider`. Passes `dark` from DarkContext in `ToastGallery`.
 
 2. **Toast card sets explicit `text-foreground` for no-intent toast** — so text is correct in portal
@@ -125,7 +125,7 @@ function MyContent() {
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light + Dark | toast-card | minWidth | `300px` | `min(300px, 100%)` | CSS computed-value representation difference only. Both resolve to 300px in the gallery context (container is wider). Visual output identical. Blueprint uses `min()` CSS function for responsiveness. |
 | Dark | toast-card | boxShadow | layers in order: ring, 20px-drop, 10px-drop, 2 inset highlights | layers: ring, 20px-drop, 2 inset highlights, 10px-drop | Same 5 shadow layers, just serialized in different order by the browser. Sub-perceptual. Same as Dialog/Popover dark shadow order issue. |

@@ -18,7 +18,7 @@
 
 Probing both galleries live, Blueprint's dark mode:
 
-| Element | Blueprint dark | Analyst (before) | |
+| Element | Blueprint dark | Mithril (before) | |
 |---|---|---|---|
 | Body / menu / general text | `#f6f7f9` | `#f6f7f9` | already matched |
 | Intent solid buttons (primary/success/danger) | `#ffffff` | `#ffffff` | already matched |
@@ -50,18 +50,18 @@ timezone-select 4·0 — **in both themes**. No light-mode regression (`dark:` i
    default `gap-2` (8px) on top of the icon's own `mx-[2px]`. Blueprint has no icon→text gap there.
    Added `gap-0` to the header-back button (`panel-stack.tsx`). Now 58px, specimen pairs cleanly.
 
-2. **TimezoneSelect dataset aligned to Blueprint.** Analyst's `MINIMAL_IANA_CODES` claimed to "match
+2. **TimezoneSelect dataset aligned to Blueprint.** Mithril's `MINIMAL_IANA_CODES` claimed to "match
    Blueprint's MINIMAL_TIMEZONE_ITEMS" but was a different, smaller curated set in a different order.
-   Replaced it with Blueprint 6.15's exact 33-item list/order (using analyst's alias codes for three:
+   Replaced it with Blueprint 6.15's exact 33-item list/order (using mithril's alias codes for three:
    `Asia/Calcutta`≙Kolkata, `Asia/Katmandu`≙Kathmandu, `Asia/Rangoon`≙Yangon), and changed `initialItems`
    to **map over the code list** (preserve order) instead of `filter` (allItems order). Fixed the stale
    "index 6 = New York" comment in BOTH galleries — Blueprint's real order puts **Denver** at index 6.
    Result: tz-item-offset specimen SSIM **0.144 → 0.953**, tz-item 0.647 → 0.927, tz-menu 0.636 → 0.902.
-   - Residual: tz-item/tz-menu still ~23px narrower and tz-trigger ~6px — analyst keeps its cleaner
+   - Residual: tz-item/tz-menu still ~23px narrower and tz-trigger ~6px — mithril keeps its cleaner
      product labels ("Calcutta"/"Sydney" vs Blueprint "India - Kolkata"/"Melbourne, Sydney"). Accepted.
-   - **Did NOT pair `popover-content`** in the reference: analyst's Popover auto-tags its transparent
+   - **Did NOT pair `popover-content`** in the reference: mithril's Popover auto-tags its transparent
      transition WRAPPER, which is a different nesting level than Blueprint's styled `.bp6-popover-content`
-     panel — pairing them yields a false bg/shadow/radius diff. The benign "only in analyst" note is honest.
+     panel — pairing them yields a false bg/shadow/radius diff. The benign "only in mithril" note is honest.
 
 3. **Menu min-width quieted (deterministic).** Menu `<ul>` is `flex flex-col`, so its `<li>` children
    were flex items (`min-width: auto`) where Blueprint's block `<ul>` resolves them to `0px`. Added
@@ -100,6 +100,6 @@ The library is feature-complete and now has **no open dark fidelity deltas**. Re
 1. (optional) Menu 1px height (menu-header 18 vs 17) — sub-perceptual, pre-existing.
 2. (optional) TimezoneSelect: adopt Blueprint's exact minimal-item *labels* ("India - Kolkata",
    "Melbourne, Sydney") to also close the ~23px menu-width specimen delta — but that overwrites
-   analyst's deliberately-cleaner product labels. Held.
+   mithril's deliberately-cleaner product labels. Held.
 
 Otherwise: **open the PR to merge `public-readiness` → `main`.**

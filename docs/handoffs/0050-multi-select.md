@@ -139,7 +139,7 @@ const [selected, setSelected] = useState<string[]>(["Banana", "Cherry"]);
   flex container — same visual spacing, different implementation property. This is the standard
   gap-vs-margin delta (identical in appearance). **ACCEPTED**.
 
-- **`only in analyst: popover-content`**: Radix's portaled popover wrapper element has
+- **`only in mithril: popover-content`**: Radix's portaled popover wrapper element has
   `data-compare="popover-content"` from the Popover component. It has no Blueprint counterpart
   and is simply ignored by the diff. **ACCEPTED** (same as Select/Suggest).
 

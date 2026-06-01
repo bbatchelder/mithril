@@ -119,7 +119,7 @@ const [stack, setStack] = useState<PanelInfo[]>([rootPanel]);
 - **Title centering**: Two `flex:1` span siblings flank the title — the left one holds the back
   button, the right one is empty — keeping the title visually centered as long as the back button
   text is shorter than half the header width. Mirrors Blueprint's approach exactly.
-- **No CSSTransition**: We skip `react-transition-group` in the analyst-ui implementation. The static
+- **No CSSTransition**: We skip `react-transition-group` in the mithril implementation. The static
   visual states (resting state: active panel fully visible, back button + title) are pixel-faithful.
   For animation, the container gets a `bp6-panel-stack2-push` / `bp6-panel-stack2-pop` direction class
   that consumers could hook into with CSS. See "Accepted deltas" for the animation caveat.
@@ -129,7 +129,7 @@ const [stack, setStack] = useState<PanelInfo[]>([rootPanel]);
 ## Accepted deltas
 
 1. **Dark `panel-stack-back` color: `rgb(246,247,249)` vs `rgb(255,255,255)`** — intentional.
-   Analyst-ui uses `#f6f7f9` (light-gray-5) as the dark theme foreground; Blueprint uses pure white.
+   Mithril-ui uses `#f6f7f9` (light-gray-5) as the dark theme foreground; Blueprint uses pure white.
    Documented in `agent-memory/dark-foreground-decision.md`. Not a visual fidelity gap (sub-perceptual).
 
 2. **Blueprint screenshot shows panel at opacity:0 during CSSTransition enter**: Blueprint's
@@ -137,7 +137,7 @@ const [stack, setStack] = useState<PanelInfo[]>([rootPanel]);
    `opacity:0; transform:translateX(100%)`. The screenshot is captured mid-animation. The computed-style
    diff still works (finds the DOM elements, reads their styles) and matches correctly. The visual
    mismatch is a harness timing artifact, not a fidelity issue with the rendered component.
-   Analyst-ui renders the active panel immediately (no animation delay), which is actually better UX
+   Mithril-ui renders the active panel immediately (no animation delay), which is actually better UX
    for the static gallery specimen.
 
 ## compare.sh results

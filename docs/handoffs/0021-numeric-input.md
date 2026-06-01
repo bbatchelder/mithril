@@ -137,13 +137,13 @@ numeric-input · dark:   6 match · 1 differ
 
 Specimen: `ni-step-button` (the increment stepper button, default/none intent)
 
-| Property | analyst | blueprint |
+| Property | mithril | blueprint |
 |---|---|---|
 | `color` | `rgb(246, 247, 249)` | `rgb(255, 255, 255)` |
 | `backgroundColor` | `rgb(47, 52, 60)` | `rgb(48, 55, 64)` |
 
 **Why accepted:** These are the known-intentional dark theme color decisions documented since
-handoff 0002 (Button component). The analyst-ui dark foreground is slightly darker `#f6f7f9`
+handoff 0002 (Button component). The mithril dark foreground is slightly darker `#f6f7f9`
 vs Blueprint's near-white `#ffffff` (our intentional design decision). The button background
 `rgb(47,52,60)` vs `rgb(48,55,64)` is the color-mix result (dark-gray-3) vs Blueprint's static
 value — a sub-4/channel difference that is sub-perceptual.

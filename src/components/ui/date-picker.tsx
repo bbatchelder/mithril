@@ -420,7 +420,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         formatWeekdayName,
                     }}
                     classNames={{
-                        root: "rdp-analyst inline-block",
+                        root: "rdp-mithril inline-block",
                         months: "flex flex-col",
                         month: "flex flex-col mx-1",
                         month_caption: "",

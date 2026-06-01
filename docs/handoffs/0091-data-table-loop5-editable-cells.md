@@ -33,7 +33,7 @@ From `@blueprintjs/table@6.1.1/lib/css/table.css` + `@blueprintjs/core` `bluepri
 - With both editing- and selection-enabled, the cell cursor stays `cell` (selection-enabled rule wins
   by source order), so editable cells keep the Loop-3 crosshair — no cursor change was needed.
 
-Live check (analyst gallery, editing open): the editor's computed `boxShadow` came back as
+Live check (mithril gallery, editing open): the editor's computed `boxShadow` came back as
 `rgba(33,93,176,0.753) 0 0 0 1px inset, rgba(33,93,176,0.753) 0 0 0 1px, rgba(17,20,24,0.2) 0 1px 1px inset`,
 `backgroundColor rgb(255,255,255)`, `fontSize 12px`, `padding 8px/8px`, `position absolute`, rect
 160×20, focused, selection `[0,13]` — i.e. the full Blueprint editing spec, verbatim.
@@ -81,11 +81,11 @@ Live check (analyst gallery, editing open): the editor's computed `boxShadow` ca
   (above), not by a crop diff.
 - **Blueprint's `EditableCell2` does not respond to synthetic `dblclick`** dispatched from the console
   (its own React event wiring differs) — the same persistent-tab flakiness noted in 0082/0084. Our
-  editor *does* open from a synthetic dblclick (React `onDoubleClick`), so the analyst side was
+  editor *does* open from a synthetic dblclick (React `onDoubleClick`), so the mithril side was
   verifiable live; the Blueprint side was verified from its stylesheet instead.
 - The reference specimen wraps `EditableCell2` in a small stateful `EditableDataTableReference` so
   `onConfirm` edits persist (Blueprint needs a controlled `value`). Name + Role are editable there,
-  matching the analyst specimen.
+  matching the mithril specimen.
 - `EditableCell` imports `alignClass` from `./gutter` (same as `body.tsx`) so editing text aligns with
   resting text (right-aligned numeric columns, etc.). Age in the specimen is intentionally **not**
   editable, so no alignment edge case ships, but the support is there.
@@ -102,7 +102,7 @@ keydown dispatcher; mind the resting-state focus outline vs the compare crop (us
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 CI=true pnpm install
 CI=true pnpm build && CI=true pnpm test         # green / 311

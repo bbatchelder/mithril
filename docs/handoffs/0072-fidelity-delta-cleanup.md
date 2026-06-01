@@ -41,7 +41,7 @@ Verified via `tools/compare.sh <id> both` (computed-style gate), `pnpm build` gr
   (radix-arrow-box-sizing) and `minWidth 0/auto` (getComputedStyle artifact, renders identical);
   `sc-default minWidth`; `slider-handle` dark `color` (invisible knob); tag/key `marginRight`
   (gap-based spacing); date-* nav padding/minWidth & field padding (fixed 30×30 box); date-* day
-  near-white color; `fontSize 14/13.333` (UA default; analyst truer to intent); `tag-input` ghost
+  near-white color; `fontSize 14/13.333` (UA default; mithril truer to intent); `tag-input` ghost
   dark color (empty input).
 
 - **Not verified / assumed:** the accepted items above were *not* re-run this session (unchanged
@@ -52,7 +52,7 @@ Verified via `tools/compare.sh <id> both` (computed-style gate), `pnpm build` gr
 
 - **Blueprint has two shadow families, not one.** Cards render the elevation hairline as
   `rgba(0,0,0,.1)`; floating panels render it as `rgba(20,20,20,.1)`, and dark panels interleave the
-  second drop with the inset highlights. analyst had collapsed both into `--card-shadow-*`, so a
+  second drop with the inset highlights. mithril had collapsed both into `--card-shadow-*`, so a
   global token edit fixed panels but regressed all 4 card elevations (caught via harness). The split
   into `--overlay-shadow-*` is the correct model. **Do not "simplify" them back together.**
 - The hairline deltas are sub-perceptual (1px @ 10% alpha); fixed anyway for exact computed match per
@@ -75,8 +75,8 @@ Added a waiver layer so the harness stops re-flagging reviewed-benign deltas whi
 regressions:
 
 - `tools/comparison/accepted-deltas.json` — per-component waivers: **styles** (value-pinned
-  `[analyst, blueprint]` pairs — suppressed only while the live values still match; drift re-flags),
-  **unpaired** (`only in analyst` keys covered under their own id), **visual** (`expectSize` /
+  `[mithril, blueprint]` pairs — suppressed only while the live values still match; drift re-flags),
+  **unpaired** (`only in mithril` keys covered under their own id), **visual** (`expectSize` /
   `ssimArtifact` — a *new* size mismatch always re-flags).
 - `tools/comparison/waivers.mjs` — shared loader + matchers; `diff-styles.mjs` / `diff-specimens.mjs`
   consult it. `CMP_NO_WAIVERS=1` disables all waivers for re-auditing.

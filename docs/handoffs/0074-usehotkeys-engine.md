@@ -116,12 +116,12 @@ unit tests. Dev server confirmed serving at `:5176/#demo-mission`.
    path in `button.tsx`. Blueprint refs: `buttonGroup.tsx`, `anchorButton.tsx`, `multistepDialog.tsx`.
 2. **P2.8 submenus** — the now-keyboard-capable `Menu` unblocks declarative `MenuItem` submenus (Radix
    `*.Sub` via `MenuItemSlotContext`); also Popover `interactionKind="hover"`.
-3. **P1.1 data grid** — the big multi-loop phase (TanStack Table + Virtual under analyst's API + tokens).
+3. **P1.1 data grid** — the big multi-loop phase (TanStack Table + Virtual under mithril's API + tokens).
 
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 pnpm test                       # 89 pass (16 in hotkeys.test.tsx)
 pnpm build                      # green
 tools/compare.sh hotkeys both   # 6 match · 0 differ both themes

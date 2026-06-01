@@ -1,17 +1,17 @@
 # Roadmap to a hands-down recommendation
 
-> **Audience:** the analyst-ui development team.
+> **Audience:** the mithril development team.
 > **Goal:** close every gap that currently makes [`comparison-vs-blueprint.md`](./comparison-vs-blueprint.md)
-> recommend Blueprint for serious apps, so that analyst-ui becomes the **unconditional** choice over
+> recommend Blueprint for serious apps, so that mithril becomes the **unconditional** choice over
 > Blueprint for greenfield work — without giving up the things it already wins on (clean API, small CSS,
 > ownership, React 19).
 >
-> Every item below traces to an adversarially-verified finding (audit of 2026-05-29, analyst-ui
+> Every item below traces to an adversarially-verified finding (audit of 2026-05-29, mithril
 > `public-readiness` vs Blueprint v6.15). Items are tiered by how much they move the recommendation.
 
 ## The core problem to internalize
 
-analyst-ui's distribution model is *own-the-source*. That makes two things **non-optional** rather than
+mithril's distribution model is *own-the-source*. That makes two things **non-optional** rather than
 nice-to-have:
 
 1. **Accessibility must be correct in the box** — consumers inherit our behavior and rarely re-derive
@@ -58,7 +58,7 @@ this correctly — use it as the reference pattern.
 | **Tabs** (`tabs.tsx`) | No `onKeyDown` at all — cannot move between tabs | Add arrow-key focus movement with wrap across **enabled** tabs (Home/End optional), honoring roving `tabIndex` already present (~`:337`) | Keyboard user can traverse tabs; matches Blueprint `tabs.tsx` `handleKeyDown`; test asserts focus moves + wraps |
 | **Menu / MenuItem** (`menu.tsx`) | Hardcoded `role="menuitem"`, no roving-tabindex, no arrow nav, no `roleStructure` | Add roving tabindex + Arrow/Home/End/typeahead nav; add a `roleStructure` prop (`menuitem`/`listoption`/`none`) emitting correct role + `aria-selected` | Arrow keys move active item; listbox variant emits `option`/`aria-selected`; tests cover both |
 | **Select / Suggest / MultiSelect / Omnibar** | Missing the **combobox WAI-ARIA pattern** entirely | On the input/trigger set `role=combobox`, `aria-expanded`, `aria-controls`, `aria-haspopup="listbox"`, `aria-autocomplete="list"`, `aria-activedescendant`; render the list as `role=listbox` with `role=option` items (depends on Menu `roleStructure` above) | Screen reader announces active option; matches Blueprint `select.tsx` + `queryList.tsx`; tests assert the attributes track active item |
-| **ContextMenu** (`context-menu.tsx`) | Wraps Radix but feeds it analyst `<Menu>`, so no arrow-nav/typeahead/submenu | Either (a) route items through `RadixContextMenu.Item`/`.Sub` so Radix's collection drives nav, or (b) reuse the now-keyboard-capable Menu from above. Add submenu support | Arrow keys + typeahead work in context menus; submenus open; test covers nav |
+| **ContextMenu** (`context-menu.tsx`) | Wraps Radix but feeds it mithril `<Menu>`, so no arrow-nav/typeahead/submenu | Either (a) route items through `RadixContextMenu.Item`/`.Sub` so Radix's collection drives nav, or (b) reuse the now-keyboard-capable Menu from above. Add submenu support | Arrow keys + typeahead work in context menus; submenus open; test covers nav |
 | **NumericInput** (`numeric-input.tsx`) | No `role=spinbutton` / `aria-value*` on the input | Add `role="spinbutton"` (when numeric-only) + `aria-valuenow/min/max` on the input, mirroring Blueprint `numericInput.tsx:466-471` | SR announces a spinbutton with current/min/max; test asserts values update on step |
 | **Alert** (`alert.tsx`) | `role="dialog"` not `alertdialog` | Override the Radix Content role to `alertdialog` (or set `aria-roledescription`) for confirmation semantics | Alert exposes `role="alertdialog"`; test asserts it |
 | **Hotkeys** (`hotkeys.tsx`) | ✅ done (handoff 0074) — `useHotkeys` engine added; see **P0.3** | — | Combos fire; `?` opens the dialog; 16 behavior tests |
@@ -86,12 +86,12 @@ this correctly — use it as the reference pattern.
 
 ## P1 — Completeness (close the capability gaps)
 
-> These are the components/capabilities Blueprint has and analyst lacks. Without them, Blueprint stays
+> These are the components/capabilities Blueprint has and mithril lacks. Without them, Blueprint stays
 > the answer for any app that needs them.
 
 ### P1.1 — Data grid (the big one) ✅ done (7-loop phase)
 
-> Composing **TanStack Table v8 + TanStack Virtual v3** under analyst's API + tokens. Modern `columns`
+> Composing **TanStack Table v8 + TanStack Virtual v3** under mithril's API + tokens. Modern `columns`
 > array + `data` API (not Blueprint's `<Column>` children). Loop plan:
 > `~/.claude/plans/snuggly-wibbling-clover.md`.
 > - [x] **Loop 1** — engine wiring + static grid skeleton (handoff 0083): sticky header, numbered gutter,
@@ -127,7 +127,7 @@ this correctly — use it as the reference pattern.
 - **Problem:** No equivalent to Blueprint's **Table2** (~13k LOC: virtualized rows/cols, selection,
   resize, reorder, editable cells, clipboard). `html-table` is CSS-only.
 - **Action:** Build a `DataTable`/`Table` component. Strongly consider composing a headless engine
-  (e.g. TanStack Table + TanStack Virtual) under analyst's API + tokens rather than re-deriving 13k LOC.
+  (e.g. TanStack Table + TanStack Virtual) under mithril's API + tokens rather than re-deriving 13k LOC.
   Cover: column resize/reorder, row/cell/region selection, editable cells, sticky headers, virtualized
   scroll, keyboard cell navigation, clipboard copy.
 - **Done when:** a virtualized, selectable, resizable grid ships with keyboard nav + tests; documented
@@ -158,11 +158,11 @@ See **P0.3** (cross-listed) — resolved.
   `pnpm dlx`) to emit per-item JSON with source inlined, then `tools/rewrite-registry-urls.mjs` rewrites
   every cross-component `registryDependencies` from bare names → full URLs and copies the `registry.json`
   index — all into `dist/r/`. `deploy.yml` runs it after `pnpm build`, so Pages now serves the registry at
-  `https://bbatchelder.github.io/analyst-ui/r/<name>.json`. New `ci.yml` gates PRs/main on
+  `https://bbatchelder.github.io/mithril/r/<name>.json`. New `ci.yml` gates PRs/main on
   build + test + a **registry-drift guard** (`pnpm gen:registry` then `git diff --exit-code registry.json`)
   + a `build:registry` smoke test. Verified end-to-end into a scratch project both ways: direct URL
-  (`shadcn add <url>/r/select.json` → full transitive closure) and the `@analyst-ui` namespace
-  (`shadcn add @analyst-ui/button`, deduping already-installed deps). README updated with both methods.
+  (`shadcn add <url>/r/select.json` → full transitive closure) and the `@mithril` namespace
+  (`shadcn add @mithril/button`, deduping already-installed deps). README updated with both methods.
 - **Problem:** `registry.json` is generated but **never served** — only the demo gallery is deployed.
   The README's `npx shadcn add <url>/button` is aspirational; the only real path today is hand-copying.
 - **Action:** Serve the registry: emit `registry.json` (and per-item JSON if needed) into the deployed
@@ -278,7 +278,7 @@ See **P0.3** (cross-listed) — resolved.
   auto hover-Popover) — for the ContextMenu case via Radix `*.Sub` through `MenuItemSlotContext`, and a
   hosted model (likely Radix `DropdownMenu`) for standalone menus.
 - **Popover `interactionKind`:** add `hover`/`hover-target-only` modes (+ open/close delays) so
-  hovercards can be Popovers. analyst already has `matchTargetWidth`; this fills the remaining behavioral
+  hovercards can be Popovers. mithril already has `matchTargetWidth`; this fills the remaining behavioral
   gap. (Radix Popover is click/focus-only — may need a small hover wrapper or Floating UI for hover.)
 - **Controlled inputs:** consider an `AsyncControllableInput`-equivalent / shared controlled-state
   helper instead of per-component `internalChecked` + `useEffect` mirroring, to dodge the known React
@@ -306,7 +306,7 @@ See **P0.3** (cross-listed) — resolved.
 
 ## What "hands-down" looks like (acceptance)
 
-analyst-ui becomes the unconditional recommendation over Blueprint when **all** of the following are
+mithril becomes the unconditional recommendation over Blueprint when **all** of the following are
 true:
 
 1. **A11y parity:** Tabs/Menu/Select-family/ContextMenu/NumericInput/Alert/Hotkeys all pass keyboard +
@@ -321,7 +321,7 @@ true:
 6. **Theme is derivable** (or the freeze is a documented, fallback-backed intentional choice) with
    `@supports` graceful degradation (P2.5, P2.6).
 
-At that point analyst-ui keeps everything it already wins — cleaner API, ~16.6 KB CSS, lean deps,
+At that point mithril keeps everything it already wins — cleaner API, ~16.6 KB CSS, lean deps,
 React 19, owned source, verified fidelity — **and** matches Blueprint on the axes where Blueprint
 currently wins. That is the hands-down state.
 

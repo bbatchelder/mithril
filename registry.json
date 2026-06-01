@@ -1,7 +1,7 @@
 {
     "$schema": "https://ui.shadcn.com/schema/registry.json",
-    "name": "analyst-ui",
-    "homepage": "https://github.com/bbatchelder/analyst-ui",
+    "name": "mithril",
+    "homepage": "https://github.com/bbatchelder/mithril",
     "items": [
         {
             "name": "tokens",
@@ -20,7 +20,7 @@
             "name": "utils",
             "type": "registry:lib",
             "title": "cn() utility",
-            "description": "The `cn` class-merging helper (clsx + tailwind-merge), taught analyst-ui's custom font-size scale so size and color utilities don't collide.",
+            "description": "The `cn` class-merging helper (clsx + tailwind-merge), taught mithril's custom font-size scale so size and color utilities don't collide.",
             "dependencies": [
                 "clsx",
                 "tailwind-merge"

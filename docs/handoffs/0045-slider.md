@@ -13,7 +13,7 @@ both galleries under `id="slider"`. The blueprint-reference gallery uses Bluepri
 component directly. Verified with `tools/compare.sh slider both`.
 
 **Fix-up pass fixes (on top of initial commit):**
-1. **Tick-label styling**: Removed tooltip-style dark pill backgrounds from axis tick labels. Blueprint's `.bp6-slider-axis .bp6-slider-label` has NO background — plain text only. Analyst now renders them as transparent-bg plain text matching Blueprint.
+1. **Tick-label styling**: Removed tooltip-style dark pill backgrounds from axis tick labels. Blueprint's `.bp6-slider-axis .bp6-slider-label` has NO background — plain text only. Mithril now renders them as transparent-bg plain text matching Blueprint.
 2. **Handle value badge**: Added missing `.bp6-slider-handle .bp6-slider-label`-equivalent span inside each handle, showing the current value with dark-gray-5 bg (#404854) in light mode and light-gray-3 bg (#e5e8eb) in dark mode, plus `$pt-tooltip-box-shadow` / `$pt-dark-tooltip-box-shadow`.
 3. **Internal data-compare tagging**: Added `_tagInternals` prop to Slider; tagged `slider-track`, `slider-progress`, `slider-handle`, `slider-axis-label`, `slider-handle-label` on the `slider-default` specimen only. Blueprint reference uses `BpSliderWithInternalCompare` wrapper + `useEffect` + `querySelector` to tag Blueprint's internal DOM nodes.
 4. **Track structure**: Fixed track to have transparent background (matching Blueprint), with a full-width gray bg div inside the track container + the intent-colored fill div on top. Also added `min-w-0` to avoid `min-width: auto` noise.
@@ -165,17 +165,17 @@ component directly. Verified with `tools/compare.sh slider both`.
 ## Accepted deltas
 
 - **Handle shadow base color** (light): `rgba(0,0,0,0.502)` vs Blueprint `rgba(18,20,24,0.502)`.
-  Analyst uses pure `#000000` for `$black`; Blueprint resolves to `rgb(18,20,24)`. Sub-perceptual
+  Mithril uses pure `#000000` for `$black`; Blueprint resolves to `rgb(18,20,24)`. Sub-perceptual
   at ~50% alpha (both appear as near-black).
 - **Handle shadow base color** (dark): `rgba(0,0,0,0.2)` vs Blueprint `rgba(15,20,25,0.2)`.
   Same `$black` variable difference. Sub-perceptual.
 - **Handle-label shadow base** (light): `rgba(0,0,0,0.102)` vs `rgba(20,20,20,0.102)`. First layer
   only; other layers match exactly (`rgba(0,0,0,0.102)`). Sub-perceptual at 10% opacity.
 - **Handle-label shadow base** (dark): `rgba(0,0,0,0.4)` vs `rgba(17,20,25,0.4)`. Same pattern.
-- **Dark handle text color**: analyst `rgb(246,247,249)` vs Blueprint `rgb(165,170,179)`. Blueprint's
+- **Dark handle text color**: mithril `rgb(246,247,249)` vs Blueprint `rgb(165,170,179)`. Blueprint's
   resolved color for `.bp6-slider-handle` text in dark mode differs from our inherited dark body text.
   The handle value badge has its own explicit text color so this doesn't affect badge rendering.
-- **Track min-width**: analyst `auto` vs Blueprint `0px`. The `w-full` class sets `min-width: auto`
+- **Track min-width**: mithril `auto` vs Blueprint `0px`. The `w-full` class sets `min-width: auto`
   in Tailwind. Visual effect is the same (track fills available width). Structural-only.
 
 ## compare.sh results
@@ -186,7 +186,7 @@ slider · dark:   6 match · 2 differ
 ```
 
 Paired internal keys (both themes): `slider-track`, `slider-progress`, `slider-handle`,
-`slider-axis-label`, `slider-handle-label` (all pair correctly — present in both analyst and Blueprint).
+`slider-axis-label`, `slider-handle-label` (all pair correctly — present in both mithril and Blueprint).
 
 Remaining 2 diffs per theme:
 1. `slider-handle` boxShadow — base color `rgba(0,0,0)` vs `rgba(18,20,24)` (sub-perceptual `$black` difference)

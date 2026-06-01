@@ -1,6 +1,6 @@
-# Handoff: SOC Analyst Console demo app
+# Handoff: SOC Mithril Console demo app
 
-> Branch: `demo-apps` (cut from `public-readiness`) · Worktree: `../analyst-ui-demo-apps`
+> Branch: `demo-apps` (cut from `public-readiness`) · Worktree: `../mithril-demo-apps`
 > Goal of this stream of work: add **example demo applications** that show how the
 > owned components compose into real product UIs — separate from the per-component showcase.
 
@@ -8,11 +8,11 @@
 
 - A new top-level **Showcase / Demos** toggle lives in the left sidebar (`src/App.tsx`).
   "Showcase" is the existing per-component gallery (unchanged); "Demos" lists full example apps.
-- One demo is built and committed: the **SOC (Security Operations Center) Analyst Console**
+- One demo is built and committed: the **SOC (Security Operations Center) Mithril Console**
   ("Sentinel SOC") under `src/demos/soc/`.
 - `pnpm build` is green (`tsc -b && vite build`, 0 type errors). No new dependencies.
   The shared component library (`src/components/ui/*`) is untouched.
-- Committed on `demo-apps` as `Add SOC Analyst Console demo app behind a Showcase/Demos toggle`.
+- Committed on `demo-apps` as `Add SOC Mithril Console demo app behind a Showcase/Demos toggle`.
 
 ## How to run / view
 

@@ -137,20 +137,20 @@ const [values, setValues] = useState<string[]>(["apple", "banana"]);
 
 ## Accepted deltas
 
-- **`tag-input-ghost` fontSize**: analyst `14px` vs Blueprint `13.3333px`. Blueprint's ghost
+- **`tag-input-ghost` fontSize**: mithril `14px` vs Blueprint `13.3333px`. Blueprint's ghost
   `<input>` doesn't inherit font-size (browser input default = 13.33px). Our `text-body` = 14px
   is intentionally more readable. Sub-perceptual on an empty input element.
 
-- **`tag-input-ghost` color (light)**: analyst `rgb(28,33,39)` vs Blueprint `rgb(0,0,0)`.
+- **`tag-input-ghost` color (light)**: mithril `rgb(28,33,39)` vs Blueprint `rgb(0,0,0)`.
   Blueprint ghost input inherits browser default text color (black); ours inherits `text-foreground`
   = dark-gray-1. Both are dark, sub-perceptual distinction.
 
-- **`tag-input-ghost` color (dark)**: analyst `rgb(246,247,249)` vs Blueprint `rgb(165,170,179)`.
+- **`tag-input-ghost` color (dark)**: mithril `rgb(246,247,249)` vs Blueprint `rgb(165,170,179)`.
   Our intentional dark-foreground decision (documented in agent memory: `dark-foreground-decision.md`).
   Blueprint's dark ghost gets `typography-color-default-rest` ≈ gray-4; we use our standard
   dark foreground (#f6f7f9). The dark background makes both readable.
 
-- **`tag-input-tag` marginRight**: analyst `0px` vs Blueprint `4px`. Blueprint uses `pt-flex-margin`
+- **`tag-input-tag` marginRight**: mithril `0px` vs Blueprint `4px`. Blueprint uses `pt-flex-margin`
   which adds `margin-right: 4px` to chip elements; we use CSS `gap: 4px` on the container.
   Same visual 4px gap between chips, different CSS mechanism. Identical to the hotkey-key
   marginRight accepted delta from Phase 4.

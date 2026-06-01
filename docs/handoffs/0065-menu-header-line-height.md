@@ -14,7 +14,7 @@
   `text-body` shadowed it and the h6 inherited `--leading-bp` (~18px) instead of 17px. Reordered.
 - **Bug B (reference gallery):** the menu-header crop was *also* low-SSIM because the hand-written
   reference `<h6>` was missing `class="bp6-heading"` — it fell back to the UA default font-size (~9.38px)
-  instead of Blueprint's real 14px. Switched it to the real `<H6>` component. **analyst was correct.**
+  instead of Blueprint's real 14px. Switched it to the real `<H6>` component. **mithril was correct.**
 - **TimezoneSelect:** width delta is now closed *by decision* — documented in-code as an intentional
   deviation. We keep the cleaner labels.
 
@@ -45,10 +45,10 @@ Probing both galleries live showed the *reference* h6 rendering at **font-size 9
 Traced to Blueprint source (`../blueprint`): `MenuDivider title` renders the React `<H6>` component, which
 emits `<h6 class="bp6-heading">`. The `$headings` map (`_typography.scss`) gives `h6.bp6-heading`
 **14px / line-height 16px**; the `menu-heading` mixin then overrides line-height to `$pt-icon-size + 1 =
-17px`. So Blueprint's real menu header is **14px / 600 / 17px — exactly what analyst already renders.**
+17px`. So Blueprint's real menu header is **14px / 600 / 17px — exactly what mithril already renders.**
 
 The reference gallery had a hand-written **bare `<h6>`** (no class) to preserve `data-compare`, so it fell
-back to the browser default h6 size (0.67em = 9.38px). That was the false diff — **analyst was right.**
+back to the browser default h6 size (0.67em = 9.38px). That was the false diff — **mithril was right.**
 
 Fix (`tools/blueprint-reference/src/App.tsx`): use the real `<H6>Actions</H6>` component instead of `<h6>`.
 

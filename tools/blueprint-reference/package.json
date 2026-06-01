@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "private": true,
     "type": "module",
-    "description": "Isolated, version-matched (@blueprintjs/core@6.15) reference gallery for pixel-comparing analyst-ui against legacy Blueprint. Not part of the analyst-ui package.",
+    "description": "Isolated, version-matched (@blueprintjs/core@6.15) reference gallery for pixel-comparing mithril against legacy Blueprint. Not part of the mithril package.",
     "scripts": {
         "dev": "vite --port 5174 --strictPort"
     },

@@ -66,7 +66,7 @@ gate **13 match · 0 differ** in both themes.
   in this version. Blueprint also styles `.bp6-popover-target > .bp6-button`; deferred as a follow-up if a
   real use-case needs an attached popover-trigger button in a group.
 - **`alignText` not implemented** — Blueprint's `ButtonGroup.alignText` pushes a button's icon/text to the
-  edges, which is really a `Button` feature analyst's `Button` doesn't have yet. Skipped for v1; revisit if
+  edges, which is really a `Button` feature mithril's `Button` doesn't have yet. Skipped for v1; revisit if
   needed (would be a Button change, then a passthrough).
 
 ## Gotchas / things to know
@@ -98,7 +98,7 @@ gate **13 match · 0 differ** in both themes.
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 pnpm test                            # 99 pass (9 in button-group.test.tsx)
 pnpm build                           # green
 tools/compare.sh button-group both   # computed-style 13 match · 0 differ both themes

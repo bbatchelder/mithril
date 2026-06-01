@@ -2,7 +2,7 @@
 
 - **Date:** 2026-05-29
 - **Focus:** The last open *real* (non-harness) fidelity item — NumericInput's `style.width`
-  landed on the wrapper instead of the inner `<input>`, so at a given width prop analyst's
+  landed on the wrapper instead of the inner `<input>`, so at a given width prop mithril's
   control was ~30px narrower than Blueprint's (carried as 0060 gotcha #2 / 0061 next-step #1).
 - **Branch / commit:** `public-readiness` @ `6c01fd8` going in (2 commits past handoff 0061).
 
@@ -10,7 +10,7 @@
 
 Single-component fix. Blueprint's `NumericInput` spreads `htmlInputProps` (incl. `style`)
 onto its inner `InputGroup`, so a `width` sizes the **field** and the ~30px stepper sits
-**outside** it (total ≈ width + 2px gap + 30). Analyst was instead applying `style` to the
+**outside** it (total ≈ width + 2px gap + 30). Mithril was instead applying `style` to the
 outer flex-row wrapper, so the stepper ate into the width and the field shrank.
 
 Fix routes `style` to the inner `InputGroup` (which forwards it to the `<input>`) when not
@@ -24,7 +24,7 @@ Fix routes `style` to the inner `InputGroup` (which forwards it to the `<input>`
 | Light overall SSIM | 0.9727 | **0.9949** |
 | Dark overall SSIM | 0.9357 | **0.9799** |
 | Light computed-style | match w/ ~30px size flags | **7/7 match, 0 size flags** |
-| Specimen sizes | analyst ~30px narrow | **exact** (120×30, 140×40, 268×30) |
+| Specimen sizes | mithril ~30px narrow | **exact** (120×30, 140×40, 268×30) |
 
 Remaining dark diff is `ni-step-button` color `rgb(246,247,249)` vs `rgb(255,255,255)` +
 bg `rgb(47,52,60)` vs `rgb(48,55,64)` — the documented dark `--foreground` /
@@ -46,7 +46,7 @@ content-sized (matches Blueprint). fill ⇒ unchanged (100% wrapper, field flexe
 
 - **Route width to the input, not the wrapper — faithful to Blueprint's API.** Blueprint's
   `renderInput()` spreads `removeNonHTMLProps(this.props)` (which includes `style`) onto
-  `InputGroup`; analyst's `InputGroup` likewise forwards `style` to the `<input>`. So the
+  `InputGroup`; mithril's `InputGroup` likewise forwards `style` to the `<input>`. So the
   prop semantics now match: `<NumericInput style={{width:120}}>` ⇒ 120px field + ~30px stepper.
 - **Gate `flex-1`/`fill` on the component's `fill` prop.** Without a width and without `fill`,
   forcing `fill` on the InputGroup would collapse the field to 0 inside a `flex-1`/basis-0

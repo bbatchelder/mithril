@@ -81,7 +81,7 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(function Label(
                 // Display + margins: Blueprint label.bp6-label
                 "block mt-0 mb-[16px]",
                 // Color: Blueprint uses $pt-heading-color = $pt-text-color = dark-gray-1 light / light-gray-5 dark
-                // In analyst: text-foreground covers this. Dark: same via CSS var.
+                // In mithril: text-foreground covers this. Dark: same via CSS var.
                 "text-foreground",
                 // Disabled: forced to disabled text color
                 disabled && "text-foreground-disabled",

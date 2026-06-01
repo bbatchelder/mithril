@@ -12,7 +12,7 @@ component built on `react-day-picker v10` with a custom `MonthCaption` component
 (via `useDayPicker()` hook) that renders the [Month ▼] [Year ▼] [<] [>] caption row
 matching Blueprint's layout. Reuses `TimePicker`, `HTMLSelect`, `Icon`, `cn`.
 
-Installed `react-day-picker@10.0.1` in the analyst-ui root.
+Installed `react-day-picker@10.0.1` in the mithril root.
 Blueprint reference already had `@blueprintjs/datetime@6.1.1` from Phase 6 #1.
 
 Registered in both galleries under `id="date-picker"` with two specimens:
@@ -120,7 +120,7 @@ const [month, setMonth] = useState(new Date(2026, 0, 1));
 
 ## Fix: Calendar sizing bug resolved (post-commit fixup)
 
-A layout fidelity gap was discovered and fixed after the initial commit: the analyst
+A layout fidelity gap was discovered and fixed after the initial commit: the mithril
 calendar was stretched to the full container width (~760px) instead of being compact
 (~250px like Blueprint). Root cause: `month_grid: "w-full border-collapse"` caused
 the `<table>` to stretch to 100% width, spreading day columns far apart.
@@ -134,19 +134,19 @@ the `<table>` to stretch to 100% width, spreading day columns far apart.
 4. Fixed `day` cell class: `"text-center align-middle"` (was `"p-0 text-center"`)
 
 The 2px transparent border and 8px padding are inherited from `.bp6-button.bp6-minimal`
-in Blueprint (via rdp v8's class mapping). Now analyst matches the same computed values.
+in Blueprint (via rdp v8's class mapping). Now mithril matches the same computed values.
 
 ## Accepted deltas
 
-- **`date-picker-day` / `date-picker-nav` dark foreground color**: analyst `rgb(246,247,249)`
+- **`date-picker-day` / `date-picker-nav` dark foreground color**: mithril `rgb(246,247,249)`
   vs blueprint `rgb(255,255,255)`. Known dark foreground delta from project memory —
-  analyst uses `#f6f7f9` (light-gray-5) as dark text color; Blueprint reference renders
+  mithril uses `#f6f7f9` (light-gray-5) as dark text color; Blueprint reference renders
   pure white. **KNOWN ACCEPTED DELTA.**
 
-- **`only in analyst: time-picker-divider, time-picker-input`**: The second specimen
+- **`only in mithril: time-picker-divider, time-picker-input`**: The second specimen
   (DatePicker with TimePicker) renders our TimePicker component which has `data-compare`
   keys `time-picker-input` and `time-picker-divider` hardcoded. Blueprint's DatePicker+
-  TimePicker specimen doesn't have these tags. These appear as "only in analyst" orphans
+  TimePicker specimen doesn't have these tags. These appear as "only in mithril" orphans
   but don't affect the match/differ count. **ORPHAN KEYS — HARMLESS.**
 
 ## compare.sh results (after fix)
@@ -174,7 +174,7 @@ Screenshot confirmation (light + dark — compact layout):
 
 ## New dependencies added
 
-- **`react-day-picker@10.0.1`** — analyst-ui root (`package.json` + `pnpm-lock.yaml`).
+- **`react-day-picker@10.0.1`** — mithril root (`package.json` + `pnpm-lock.yaml`).
   Calendar engine for DatePicker. v10 is newer than Blueprint's internal v8; API
   differences documented in Design decisions above.
 

@@ -10,7 +10,7 @@
 
 DataTable now exists as a multi-file component: `data-table.tsx` (public component + types) plus a
 `data-table/` directory of internals (`header.tsx`, `body.tsx`, `gutter.tsx`). It renders a real grid via
-**TanStack Table v8** (`getCoreRowModel`) dressed in analyst tokens: a sticky column-header row, a numbered
+**TanStack Table v8** (`getCoreRowModel`) dressed in mithril tokens: a sticky column-header row, a numbered
 row-header gutter, ruled cells, and Blueprint's box-shadow frame. The API is the **modern flat `columns`
 array + `data`** (not Blueprint's `<Column>` children) — see the plan/architecture decision. Registered in
 both galleries under id `data-table` (new **"Data"** sidebar category); the Blueprint reference gallery
@@ -32,7 +32,7 @@ This is **Loop 1 of a 7-loop phase**. Remaining loops: 2 virtualization, 3 selec
     matches (460×150 both themes). Cell/header/gutter geometry, borders, backgrounds, and frame match
     Blueprint's **exact CSS values** (extracted from `@blueprintjs/table` `lib/css/table.css`, captured in
     code comments). The residual 1–2.6% is cross-engine text antialiasing (React 18 reference vs React 19
-    analyst) — sub-perceptual; see Gotchas.
+    mithril) — sub-perceptual; see Gotchas.
 - **Registry:** `registry.json` regenerated — **67 items**. `data-table` ships 4 files (entry + 3
   subfiles), npm dep `@tanstack/react-table`, registryDeps `utils` + `tokens`. (`@tanstack/react-virtual`
   is **not** listed yet — Loop 2 adds the import.)
@@ -48,7 +48,7 @@ This is **Loop 1 of a 7-loop phase**. Remaining loops: 2 virtualization, 3 selec
 - Row-header/gutter: `font 12px; padding 0 4px; text-align right; min-width 30px`; border
   `inset 0 -1px 0 <b>, 1px 0 0 <b>`.
 - Frame: `.bp6-table-container { box-shadow: 0 0 0 1px <b> }` (no layout border).
-- Surface: light `#f6f7f9` (== analyst `--background`), dark `#383e47` (no analyst token → literal).
+- Surface: light `#f6f7f9` (== mithril `--background`), dark `#383e47` (no mithril token → literal).
 - `<b>` = `rgba(17,20,24,0.15)` light · `rgba(17,20,24,0.4)` dark. Cell text == `--foreground`.
 
 ## Decisions made (and why)
@@ -64,7 +64,7 @@ This is **Loop 1 of a 7-loop phase**. Remaining loops: 2 virtualization, 3 selec
   header. (Cell content *does* follow `align`.)
 - **Box-shadow frame, not a layout border** — matches Blueprint's `box-shadow:0 0 0 1px` and avoids the 2px
   layout-height inflation that misaligned every row border in the pixel diff (was the main SSIM killer).
-- **Dark surface `#383e47` as a literal** — Blueprint's table surface (dark-gray-4) has no analyst token;
+- **Dark surface `#383e47` as a literal** — Blueprint's table surface (dark-gray-4) has no mithril token;
   light surface uses the `bg-background` token (it equals Blueprint's `#f6f7f9`).
 - **Added a `height?: number` prop** (not in the original API sketch) — a grid needs a bounded height to
   scroll; required by Loop 2's virtualization. Omitted → grid grows to fit (Loop 1 default).
@@ -77,7 +77,7 @@ This is **Loop 1 of a 7-loop phase**. Remaining loops: 2 virtualization, 3 selec
   keeps re-injecting a harmless `allowBuilds:` placeholder above it — ignore it. If `pnpm build` ever
   aborts with `ERR_PNPM_IGNORED_BUILDS`, run `pnpm install --force` to execute esbuild's postinstall.
 - **Sub-perceptual delta (documented, accepted):** the per-specimen crop's residual ~1–2.6% mismatch is
-  text antialiasing differing between the React-18 Blueprint reference and the React-19 analyst render at
+  text antialiasing differing between the React-18 Blueprint reference and the React-19 mithril render at
   ~1px sub-pixel positions. The computed-style gate is clean except `minWidth: auto vs 0px` on the
   `data-compare` **wrapper div** — an artifact of the two galleries' different `Section` parents (Blueprint
   `BpSection` content sets `min-width:0` on children), NOT the DataTable.
@@ -102,7 +102,7 @@ This is **Loop 1 of a 7-loop phase**. Remaining loops: 2 virtualization, 3 selec
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm install          # if node_modules is stale; `pnpm install --force` if ERR_PNPM_IGNORED_BUILDS
 pnpm build && pnpm test                      # green / 272

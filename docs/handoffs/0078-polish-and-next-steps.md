@@ -12,7 +12,7 @@ After MultistepDialog shipped (0077), the user asked to (1) make the demo realis
 empty area under the footer. That review surfaced **two latent fidelity gaps in other components**, both
 now fixed:
 
-1. **Control vertical spacing** — analyst `Radio`/`Checkbox`/`Switch` were missing Blueprint's
+1. **Control vertical spacing** — mithril `Radio`/`Checkbox`/`Switch` were missing Blueprint's
    `.bp6-control { margin-bottom: 8px }`, and the `RadioGroup` label used `mb-2` vs Blueprint's
    `.bp6-label` 16px. Stacked controls rendered ~8px/row too tight.
 2. **Icon-only Button width** — icon-only buttons grew to 32px (16px icon + 8×2 padding) instead of
@@ -27,14 +27,14 @@ Both fixed at the source (not papered over in the demo), with zero compare regre
   - `MultistepDialogGallery` in **both** galleries now has real per-step content: step 1 FormGroup +
     InputGroup/HTMLSelect/TextArea; step 2 email InputGroup + RadioGroup (Owner/Editor/Viewer) + Switch;
     step 3 a primary `Callout` summary + a `<dl>` definition list. Mirrored on the Blueprint side so the
-    fidelity compare stays apples-to-apples (analyst uses our APIs; reference uses Blueprint's — note
+    fidelity compare stays apples-to-apples (mithril uses our APIs; reference uses Blueprint's — note
     Blueprint `RadioGroup.onChange` passes the event, ours passes the value; reference uses inline styles,
     not Tailwind).
   - **Radio/Checkbox/Switch:** block mode now `block mb-2` (Blueprint `.bp6-control` margin-bottom 8px).
   - **RadioGroup label:** `mb-2` → `mb-4` (Blueprint `.bp6-label` 16px).
   - **control-card:** reset bumped to `!mb-0` (important) so cards stay flush regardless of Tailwind
     class ordering vs the control's new `mb-2`.
-  - **Callout icon (Review step):** analyst `Callout.icon` is a **ReactNode**, not an `IconName` — passing
+  - **Callout icon (Review step):** mithril `Callout.icon` is a **ReactNode**, not an `IconName` — passing
     `icon="info-sign"` rendered a dark/foreground glyph. Fixed by **omitting `icon`** so `intent="primary"`
     supplies its default `info-sign` in the correct blue. (This is exactly the P2.4 footgun — see next steps.)
 - **`47a00cf` — icon-only buttons render square**
@@ -58,7 +58,7 @@ Both fixed at the source (not papered over in the demo), with zero compare regre
 ## Accepted residual deltas (documented)
 
 - **Close-button SSIM ~0.93–0.97** is now purely small-cross **glyph anti-aliasing** + the centering
-  mechanism difference (analyst flex-center-overflow vs Blueprint negative-margin). Sub-perceptual; the
+  mechanism difference (mithril flex-center-overflow vs Blueprint negative-margin). Sub-perceptual; the
   size mismatch (the real issue) is gone.
 - **`button` gallery text specimens** still show "size mismatch" / low SSIM (e.g. `btn-size-medium`
   0.595) — **pre-existing**, verified identical by `git stash`. It's the documented per-Button
@@ -102,14 +102,14 @@ column. With one-sentence panels the rail was taller, leaving blank space under 
 
 4. **P1.1 — the data grid (`DataTable`/`Table`).**
    - Biggest feature-parity lever; a **multi-loop phase of its own**. Compose a headless engine
-     (TanStack Table + TanStack Virtual) under analyst's API + tokens: column resize/reorder, row/cell/
+     (TanStack Table + TanStack Virtual) under mithril's API + tokens: column resize/reorder, row/cell/
      region selection, editable cells, sticky headers, virtualized scroll, keyboard cell nav, clipboard.
    - Not release-blocking; scope deliberately before starting.
 
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm test         # 240 pass
 pnpm build        # green

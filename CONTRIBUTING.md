@@ -1,6 +1,6 @@
-# Contributing to analyst-ui
+# Contributing to mithril
 
-Thanks for your interest! analyst-ui has one overriding principle: **pixel-faithful to Blueprint, with a
+Thanks for your interest! mithril has one overriding principle: **pixel-faithful to Blueprint, with a
 clean modern API.** Everything below serves that.
 
 ## Principles

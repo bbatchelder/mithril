@@ -80,7 +80,7 @@ This is **Loop 4 of the 7(+1)-loop P1.1 phase.** Remaining: 4b reorder, 5 editab
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm install
 pnpm build && pnpm test                       # green / 301

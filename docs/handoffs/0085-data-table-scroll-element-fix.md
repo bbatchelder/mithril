@@ -73,7 +73,7 @@ to that plan; this was a fix to Loop 2.
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm build && pnpm test                       # green / 276
 # verify the live scroll fix (real browser, uncached):

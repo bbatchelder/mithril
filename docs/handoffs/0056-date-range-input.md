@@ -98,7 +98,7 @@ Key differences from Blueprint's implementation (by design):
 
 ## Dual-gallery harness approach
 
-**Analyst gallery (`src/App.tsx`):**
+**Mithril gallery (`src/App.tsx`):**
 - Two specimens: interactive `DateRangeInput` (defaultValue Jan 8–20) + open specimen
 - Open specimen: two plain `InputGroup` fields + forced-open `Popover` containing `DateRangePickerForDRI`
 - `DateRangePickerForDRI`: wraps `DateRangePicker` + `useEffect` to retag `drp-day-endpoint`
@@ -126,7 +126,7 @@ None. Both themes are **PERFECT** (3 match · 0 differ).
 
 ## Orphan keys (harmless)
 
-- **`only in analyst: drp-day, drp-day-range, drp-nav-next, drp-nav-prev, popover-content`** —
+- **`only in mithril: drp-day, drp-day-range, drp-nav-next, drp-nav-prev, popover-content`** —
   these come from the nested `DateRangePicker` (retains its own `data-compare` keys) and the
   `Popover` component's hardcoded `data-compare="popover-content"`. Blueprint reference doesn't
   tag these. **ORPHAN KEYS — HARMLESS.**

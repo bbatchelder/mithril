@@ -794,7 +794,7 @@ export interface UseHotkeysReturnValue {
 }
 
 const HOTKEYS_PROVIDER_NOT_FOUND =
-    "[analyst-ui] useHotkeys was used outside of a HotkeysProvider. Hotkeys will still fire, but won't appear in the help dialog and `?` won't open it. Wrap your app in <HotkeysProvider>.";
+    "[mithril] useHotkeys was used outside of a HotkeysProvider. Hotkeys will still fire, but won't appear in the help dialog and `?` won't open it. Wrap your app in <HotkeysProvider>.";
 
 /**
  * Register global and local keyboard shortcuts for a component.

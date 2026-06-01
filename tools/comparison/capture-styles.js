@@ -1,7 +1,7 @@
 // Computed-style capture for the comparison harness, evaluated in-page by
 // `agent-browser eval`. Returns JSON: { "<data-compare key>": { <prop>: <value> } }.
 //
-// Why the gymnastics: analyst-ui emits colors as rgb() while Blueprint v6.15 emits
+// Why the gymnastics: mithril emits colors as rgb() while Blueprint v6.15 emits
 // oklch()/oklab()/color(srgb …). To compare apples-to-apples we render every color
 // token to a 1×1 canvas and read the pixel back as rgb — getComputedStyle/canvas
 // fillStyle now PRESERVE the authored color space, so only getImageData normalizes.
@@ -10,7 +10,7 @@
 (() => {
     // Props that are both meaningful AND comparable across the two implementations.
     // Deliberately omitted: fontFamily / lineHeight / vertical padding / borderStyle —
-    // analyst (flex + fixed height) and Blueprint (padding + line-height) diverge there
+    // mithril (flex + fixed height) and Blueprint (padding + line-height) diverge there
     // structurally while looking identical; height + the screenshots cover sizing.
     var PROPS = [
         "color",

@@ -89,7 +89,7 @@ Phase B is now complete **except the data grid**. Remaining, roughly in order:
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm build && pnpm test          # green / 261
 # new infra:

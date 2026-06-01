@@ -1,6 +1,6 @@
 // Generates registry.json from the component source in src/components/ui.
 //
-// analyst-ui is distributed shadcn-style: consumers own the component source,
+// mithril is distributed shadcn-style: consumers own the component source,
 // pulled via a registry. This script keeps registry.json in lock-step with the
 // actual code by parsing each component's imports to derive:
 //   - npm `dependencies`        (from @radix-ui/*, react-day-picker, cva, …)
@@ -104,7 +104,7 @@ const items = [
         type: "registry:lib",
         title: "cn() utility",
         description:
-            "The `cn` class-merging helper (clsx + tailwind-merge), taught analyst-ui's custom font-size scale so size and color utilities don't collide.",
+            "The `cn` class-merging helper (clsx + tailwind-merge), taught mithril's custom font-size scale so size and color utilities don't collide.",
         dependencies: ["clsx", "tailwind-merge"],
         files: [{ path: "src/lib/utils.ts", type: "registry:lib", target: "lib/utils.ts" }],
     },
@@ -221,8 +221,8 @@ for (const file of files) {
 
 const registry = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
-    name: "analyst-ui",
-    homepage: "https://github.com/bbatchelder/analyst-ui",
+    name: "mithril",
+    homepage: "https://github.com/bbatchelder/mithril",
     items,
 };
 

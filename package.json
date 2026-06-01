@@ -1,18 +1,18 @@
 {
-    "name": "analyst-ui",
+    "name": "@bbatchelder/mithril",
     "version": "0.0.0",
     "private": true,
     "description": "A modern, pixel-faithful reimplementation of Palantir Blueprint's design language — built on React 19, Radix primitives, Tailwind v4, and CVA. Distributed shadcn-style as owned source.",
     "type": "module",
     "license": "Apache-2.0",
     "packageManager": "pnpm@11.4.0",
-    "homepage": "https://github.com/bbatchelder/analyst-ui",
+    "homepage": "https://github.com/bbatchelder/mithril",
     "repository": {
         "type": "git",
-        "url": "https://github.com/bbatchelder/analyst-ui.git"
+        "url": "https://github.com/bbatchelder/mithril.git"
     },
     "bugs": {
-        "url": "https://github.com/bbatchelder/analyst-ui/issues"
+        "url": "https://github.com/bbatchelder/mithril/issues"
     },
     "keywords": [
         "blueprint",

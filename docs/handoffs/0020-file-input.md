@@ -76,7 +76,7 @@ small:  box h=24px, browse h=20px (smaller button), margin=(24-20)/2=2px,
 Blueprint's `.bp6-file-upload-input` uses `line-height` equal to box height for vertical centering.
 Our implementation uses `flex items-center` which achieves identical visual result without the
 line-height dependency. The harness doesn't diff line-height (deliberately omitted in capture-styles.js
-comment: "analyst (flex + fixed height) and Blueprint (padding + line-height) diverge there structurally
+comment: "mithril (flex + fixed height) and Blueprint (padding + line-height) diverge there structurally
 while looking identical").
 
 ### Font size is per-size (matching InputGroup)
@@ -113,8 +113,8 @@ html-select · dark:   1 match · 4 differ     (same 4 pre-existing accepted del
 ```
 
 Pre-existing dark accepted deltas (Button/HTMLSelect shared — see handoff 0019):
-- `color`: analyst rgb(246,247,249) vs blueprint rgb(255,255,255) — dark foreground decision
-- `backgroundColor`: analyst rgb(47,52,60) vs blueprint rgb(48,55,64) — color-mix vs static value
+- `color`: mithril rgb(246,247,249) vs blueprint rgb(255,255,255) — dark foreground decision
+- `backgroundColor`: mithril rgb(47,52,60) vs blueprint rgb(48,55,64) — color-mix vs static value
 
 ## Gotchas / things to know
 

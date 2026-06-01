@@ -25,7 +25,7 @@ The grid gains the last of the `Table2`-parity features:
   (`floor((clientHeight − 30px header) / rowHeight)`, ≥1). All respect Shift to extend from the
   anchor. `moveFocus` was refactored to delegate to a shared `applyFocus(r, c, extend)` core that
   Home/End/Page reuse for absolute positioning.
-- **Docs** — a `DataTableUsage` section at the bottom of the analyst gallery (quick-start code +
+- **Docs** — a `DataTableUsage` section at the bottom of the mithril gallery (quick-start code +
   keyboard cheatsheet); `skeleton` added to the data-table registry deps.
 
 This is **Loop 7 of 7 — the DataTable / P1.1 phase is complete.**
@@ -91,7 +91,7 @@ This is **Loop 7 of 7 — the DataTable / P1.1 phase is complete.**
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 CI=true pnpm install
 CI=true pnpm build && CI=true pnpm test         # green / 337

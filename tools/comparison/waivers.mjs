@@ -2,7 +2,7 @@
 // exposes per-component lookups used by diff-styles.mjs and diff-specimens.mjs.
 //
 // A waiver suppresses a KNOWN, reviewed delta but still catches regressions:
-//   - style waivers are VALUE-PINNED (the live analyst/blueprint values must still match
+//   - style waivers are VALUE-PINNED (the live mithril/blueprint values must still match
 //     a recorded pair, color-tolerant) — change the value and it re-surfaces.
 //   - visual expectSize waivers re-flag if the size mismatch drifts from the recorded one.
 //   - visual ssimArtifact waivers re-flag the moment a NEW size mismatch appears.
@@ -66,7 +66,7 @@ export function valuesEqual(a, b) {
 
 /**
  * Is this (specimen, prop) delta an accepted, still-matching waiver?
- * Returns true only when the live analyst & blueprint values match one recorded pair.
+ * Returns true only when the live mithril & blueprint values match one recorded pair.
  */
 export function isStyleWaived(waivers, key, prop, analystVal, blueprintVal) {
     const pairs = waivers.styles?.[key]?.[prop];
@@ -76,7 +76,7 @@ export function isStyleWaived(waivers, key, prop, analystVal, blueprintVal) {
     );
 }
 
-/** Specimen keys expected to be "only in analyst" (paired/verified under their own id). */
+/** Specimen keys expected to be "only in mithril" (paired/verified under their own id). */
 export function isUnpairedWaived(waivers, key) {
     return Array.isArray(waivers.unpaired) && waivers.unpaired.includes(key);
 }

@@ -21,7 +21,7 @@ rendering is visually correct — the diffs are all sub-perceptual or structural
 
 ## Portal + dark-mode rules applied (all 4)
 
-1. **Analyst portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
+1. **Mithril portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
    — implemented directly in popover.tsx. Passes `dark` from DarkContext in PopoverGallery.
 
 2. **Popover content panel sets `text-foreground`**
@@ -131,7 +131,7 @@ Blueprint's arrow div is `30px` high (the square side length), while Radix rende
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | popover-content | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | Token uses pure black; Blueprint uses `$black=#111418`. Sub-perceptual. Same as Dialog/Drawer. |
 | Light | popover-content | height | `58px` | `36px` | Content text wraps differently due to max-width constraints. Dynamic layout, not a CSS property mismatch. |
@@ -147,7 +147,7 @@ Blueprint's arrow div is `30px` high (the square side length), while Radix rende
 
 No `color` delta appeared in this component's diff. The `text-foreground` on the outer
 `Popover.Content` element correctly picks up the dark context color (dark-gray1 = rgb(28,33,39)
-for analyst vs near-white for Blueprint). This is KNOWN-INTENTIONAL (same as all other dark components).
+for mithril vs near-white for Blueprint). This is KNOWN-INTENTIONAL (same as all other dark components).
 
 ## Specimens registered (both galleries, 2 keyed)
 
@@ -198,14 +198,14 @@ Two problems were identified and fixed:
 ### Problem 1 — Gallery specimen equivalence
 
 **Root cause:** Both galleries used long wrapping text content without a fixed width.
-The analyst panel had `hasContentPadding={true}` (20px padding, default) making it 58px tall.
+The mithril panel had `hasContentPadding={true}` (20px padding, default) making it 58px tall.
 The Blueprint panel had no padding (Blueprint's default Popover has no padding — only `bp6-popover-content-sizing` adds it), making it 36px.
 
 **Fix:**
 - Both galleries now render `<div style={{ width: 200 }}>Short popover content.</div>` — a fixed-width div with identical short text.
-- The analyst gallery uses `hasContentPadding={false}` to match Blueprint's raw `<Popover>` default (no padding).
+- The mithril gallery uses `hasContentPadding={false}` to match Blueprint's raw `<Popover>` default (no padding).
 - Blueprint reference: unchanged (already has no padding by default).
-- Decision: The gallery specimen uses `hasContentPadding={false}` to match Blueprint's true zero-padding default. The analyst API keeps `hasContentPadding={true}` as its default (the common use case), which users can explicitly enable. The gallery is purely a comparison fixture.
+- Decision: The gallery specimen uses `hasContentPadding={false}` to match Blueprint's true zero-padding default. The mithril API keeps `hasContentPadding={true}` as its default (the common use case), which users can explicitly enable. The gallery is purely a comparison fixture.
 - Result: height delta resolved — both panels now measure identically for the content area.
 
 ### Problem 2 — Arrow shape
@@ -232,7 +232,7 @@ popover · dark:   1 match · 1 differ  — popover-arrow MATCH; popover-content
 **Resolved deltas:** height (58px vs 36px) RESOLVED; popover-arrow height (15px vs 30px) RESOLVED.
 
 **Remaining (all KNOWN-INTENTIONAL):**
-| Theme | Specimen | Property | Analyst | Blueprint | Status |
+| Theme | Specimen | Property | Mithril | Blueprint | Status |
 |---|---|---|---|---|---|
 | Light | popover-content | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | KNOWN — pure black vs Blueprint's `$black=#111418` |
 | Light | popover-content | minWidth | `0px` | `auto` | KNOWN — Radix positioning reset |

@@ -3,7 +3,7 @@
 // Writes a diff IMAGE (the primary artifact) plus an SSIM + pixel-mismatch number
 // as a triage hint.
 //
-//   node diff-pixels.mjs <analyst.png> <blueprint.png> <diff-out.png> [label]
+//   node diff-pixels.mjs <mithril.png> <blueprint.png> <diff-out.png> [label]
 //
 // WHY this exists: the computed-style diff (diff-styles.mjs) only inspects the tagged
 // [data-compare] elements, so it is blind to layout-FLOW bugs — e.g. a Checkbox label
@@ -11,7 +11,7 @@
 // fine; the breakage is the sibling text's flow). A whole-render diff surfaces exactly
 // that: the diff image shows the misplaced/duplicated content at a glance.
 //
-// ALIGNMENT: analyst-ui and Blueprint are independent implementations, so their
+// ALIGNMENT: mithril and Blueprint are independent implementations, so their
 // galleries start content a few px apart; without alignment every text edge shows up
 // "doubled" — noise that buries the signal. We apply ONE global (dx,dy) shift that
 // best registers the two, then diff. This cancels the benign uniform offset while
@@ -27,7 +27,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 const [aPath, bPath, outPath, label = ""] = process.argv.slice(2);
 if (!aPath || !bPath || !outPath) {
-    console.error("usage: diff-pixels.mjs <analyst.png> <blueprint.png> <diff-out.png> [label]");
+    console.error("usage: diff-pixels.mjs <mithril.png> <blueprint.png> <diff-out.png> [label]");
     process.exit(2);
 }
 

@@ -31,7 +31,7 @@ with Blueprint's exact glow styling. Added the `bp-skeleton-glow` `@keyframes` t
   toggles `[animation:none]` override. This lets the harness disable animation for
   deterministic diffs while the animated version works identically.
 
-- **Animation disabled on both gallery sides** — both analyst and Blueprint reference apply
+- **Animation disabled on both gallery sides** — both mithril and Blueprint reference apply
   `animation: none` (via `animate={false}` or inline `style={{ animation: "none" }}`) on the
   keyed `data-compare` specimens. This freezes `backgroundColor` at the start color
   (`rgba(211,216,222,0.2)`) making it deterministically comparable. Animated specimens are
@@ -39,7 +39,7 @@ with Blueprint's exact glow styling. Added the `bp-skeleton-glow` `@keyframes` t
 
 - **Same colors in both light and dark themes** — Blueprint's skeleton SCSS has no dark-theme
   override (confirmed by searching `_dark-theme.scss` and grep across all SCSS files). The same
-  `rgba($light-gray1, 0.2)` → `rgba($gray1, 0.2)` applies in both themes. The analyst
+  `rgba($light-gray1, 0.2)` → `rgba($gray1, 0.2)` applies in both themes. The mithril
   implementation uses the same values.
 
 - **`background-clip: padding-box`** — expressed as `[background-clip:padding-box]` Tailwind
@@ -76,8 +76,8 @@ with Blueprint's exact glow styling. Added the `bp-skeleton-glow` `@keyframes` t
   `skeleton-color-start`). `boxShadow` is captured as "none". `color` is captured as transparent
   (rgba(0,0,0,0)). `borderRadius` is 2px.
 
-- The dark-mode card in the analyst "modifier pattern" section renders the skeletonized children
-  with a slightly darker appearance than Blueprint's dark card — this is intentional: analyst's
+- The dark-mode card in the mithril "modifier pattern" section renders the skeletonized children
+  with a slightly darker appearance than Blueprint's dark card — this is intentional: mithril's
   dark Card uses `#252a31` while Blueprint's `bp6-card.bp6-dark` uses the same value. The slight
   visual difference in screenshots is from the container (card shadow/background) not the skeleton
   itself.

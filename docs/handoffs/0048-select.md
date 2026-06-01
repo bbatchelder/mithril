@@ -168,14 +168,14 @@ const [selected, setSelected] = useState<string | null>(null);
 
 ## Accepted deltas
 
-- **`select-trigger` dark `color`**: analyst `rgb(246,247,249)` vs Blueprint `rgb(255,255,255)`.
+- **`select-trigger` dark `color`**: mithril `rgb(246,247,249)` vs Blueprint `rgb(255,255,255)`.
   Our intentional dark foreground `#f6f7f9` (documented in `dark-foreground-decision.md` memory).
 
-- **`select-trigger` dark `backgroundColor`**: analyst `rgb(47,52,60)` vs Blueprint `rgb(48,55,64)`.
+- **`select-trigger` dark `backgroundColor`**: mithril `rgb(47,52,60)` vs Blueprint `rgb(48,55,64)`.
   A 1-unit difference per channel between `dark-gray-3 (#2f343c)` and Blueprint's dark button bg.
   Sub-perceptual.
 
-- **`only in analyst: popover-content`**: Radix's portaled popover wrapper element has
+- **`only in mithril: popover-content`**: Radix's portaled popover wrapper element has
   `data-compare="popover-content"` from the Popover component's own `data-compare`. It has no
   Blueprint counterpart and is simply ignored by the diff.
 
@@ -204,7 +204,7 @@ Screenshot confirmation (light + dark):
 ## New dependencies added
 
 - `@blueprintjs/select@6.2.1` — installed in `tools/blueprint-reference/` only (the reference
-  gallery needs it to render Blueprint's canonical Select). NOT added to analyst-ui.
+  gallery needs it to render Blueprint's canonical Select). NOT added to mithril.
 - `@blueprintjs/select/lib/css/blueprint-select.css` imported in `tools/blueprint-reference/src/main.tsx`.
 
 ## Current state

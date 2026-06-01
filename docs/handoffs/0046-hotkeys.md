@@ -140,18 +140,18 @@ Blueprint `Dialog` — the same pattern as DialogGallery, AlertGallery, etc.
 
 ## Accepted deltas
 
-- **`hotkey-key` marginRight**: analyst `0px` vs Blueprint `4px`. Blueprint uses
-  `margin-right: 4px` on each key cap child (CSS API via `pt-flex-margin`); analyst uses
+- **`hotkey-key` marginRight**: mithril `0px` vs Blueprint `4px`. Blueprint uses
+  `margin-right: 4px` on each key cap child (CSS API via `pt-flex-margin`); mithril uses
   `gap: 4px` on the container. Same visual gap between key caps, different CSS mechanism.
   The 4px `marginRight` on individual caps is invisible when the gap is the same.
 
-- **"only in analyst": `dialog-body, dialog-close, dialog-header, dialog-panel`**: These
+- **"only in mithril": `dialog-body, dialog-close, dialog-header, dialog-panel`**: These
   are the existing `Dialog` component's own `data-compare` attributes. They're not present
   in the Blueprint reference gallery's hotkeys tagging (which uses a separate useEffect
   with `querySelector` only for hotkeys-specific elements). Not a fidelity concern.
 
 - **Blueprint renders SVG icons inside key caps**: Blueprint's `KeyComboTag` renders icon
-  SVGs (⌘ icon, ⇧ icon, etc.) from `@blueprintjs/icons`, while analyst renders Unicode
+  SVGs (⌘ icon, ⇧ icon, etc.) from `@blueprintjs/icons`, while mithril renders Unicode
   symbols. Visually similar at this scale; the icon SVGs require adding a new icon subset
   that doesn't exist in our vendored icons. The computed styles (`color`, `backgroundColor`,
   `boxShadow`, `height`) all match.
@@ -164,7 +164,7 @@ hotkeys · dark:   5 match · 1 differ
 ```
 
 Paired keys (both themes): `hotkey-key`, `hotkey-combo`, `hotkey-row`, `hotkey-label`,
-`hotkey-group-heading`, `hotkey-column` — all pair correctly in both analyst and Blueprint.
+`hotkey-group-heading`, `hotkey-column` — all pair correctly in both mithril and Blueprint.
 
 Remaining 1 diff per theme:
 - `hotkey-key` marginRight — `0px` vs `4px`. Sub-structural gap implementation difference

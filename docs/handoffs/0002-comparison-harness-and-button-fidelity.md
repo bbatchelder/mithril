@@ -38,7 +38,7 @@ used the harness to find and fix four real Button fidelity gaps. Button is now *
   **no longer works** — this Chromium preserves the authored color space (oklch stays oklch). Painting a
   pixel and reading it back is the reliable normalizer. See `tools/comparison/capture-styles.js`.
 - **Diff omits structurally-divergent props** (`fontFamily`, `lineHeight`, vertical padding, `borderStyle`),
-  drops zero-width border colors, and strips Tailwind's transparent no-op shadow layers — analyst
+  drops zero-width border colors, and strips Tailwind's transparent no-op shadow layers — mithril
   (flex+fixed-height) and Blueprint (padding+line-height) differ there while looking identical.
 - **Button fixes (all sourced from Blueprint v6.15):**
   - `tailwind-merge` was silently dropping the custom `text-body-lg` (it lumped the font-size class with
@@ -70,7 +70,7 @@ used the harness to find and fix four real Button fidelity gaps. Button is now *
 > Continue the vertical slice. For each component: build with CVA → register in BOTH galleries (same `id`,
 > matching `data-compare` keys) → `tools/compare.sh <id>` → confirm light+dark → update registry.
 
-1. **(Optional, foundational) Dark `--foreground`.** analyst dark text = `light-gray-5` (#f6f7f9);
+1. **(Optional, foundational) Dark `--foreground`.** mithril dark text = `light-gray-5` (#f6f7f9);
    Blueprint derives `intent.default.rest` (gray-1) → near-white (`lightnessOffset 0.212`). Decide whether
    to match globally — it shifts ALL dark text, so it's a deliberate call, not a button patch. This is the
    only non-cosmetic diff left on Button.
@@ -83,8 +83,8 @@ used the harness to find and fix four real Button fidelity gaps. Button is now *
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 tools/compare.sh button both               # re-verify Button (auto-starts servers if down)
 ```

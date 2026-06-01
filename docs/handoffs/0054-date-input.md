@@ -90,20 +90,20 @@ Blueprint reference gallery:
 
 ## Accepted deltas
 
-- **`date-input-field` paddingRight — light + dark: analyst 8px vs blueprint 0px.**
+- **`date-input-field` paddingRight — light + dark: mithril 8px vs blueprint 0px.**
   Blueprint's `DateInput` uses the `renderTarget` API which sets `padding-right: 0px` as an inline
   style on the input when no rightElement is present. This is an implementation detail of Blueprint's
-  `InputGroup` (they compute right-padding inline to match slot width). Analyst uses consistent `px-2`
+  `InputGroup` (they compute right-padding inline to match slot width). Mithril uses consistent `px-2`
   CSS class (8px) as the base horizontal padding for all inputs. Both look identical — the date string
   "1/15/2026" is short and doesn't overflow either way. **IMPLEMENTATION DETAIL — ACCEPTED.**
 
-- **`date-input-day` dark color: analyst `rgb(246,247,249)` vs blueprint `rgb(255,255,255)`.**
-  Known dark foreground delta from project memory — analyst uses `#f6f7f9` (light-gray-5) as
+- **`date-input-day` dark color: mithril `rgb(246,247,249)` vs blueprint `rgb(255,255,255)`.**
+  Known dark foreground delta from project memory — mithril uses `#f6f7f9` (light-gray-5) as
   dark text color; Blueprint reference renders pure white. **KNOWN ACCEPTED DELTA.**
 
 ## Orphan keys (harmless)
 
-- **`only in analyst: date-picker-nav, date-picker-weekday, popover-content`** — these come from
+- **`only in mithril: date-picker-nav, date-picker-weekday, popover-content`** — these come from
   the `DatePicker` subcomponent retaining its own `data-compare` keys (`date-picker-nav`,
   `date-picker-weekday`) and the `Popover` component's hardcoded `data-compare="popover-content"`.
   Blueprint reference doesn't tag these. They appear as orphans in the diff but do NOT affect the

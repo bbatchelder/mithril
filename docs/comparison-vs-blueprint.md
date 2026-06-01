@@ -1,11 +1,11 @@
-# analyst-ui vs. Blueprint — an honest appraisal
+# mithril vs. Blueprint — an honest appraisal
 
-> **Who this is for:** anyone deciding whether to adopt **analyst-ui** or stay on **Palantir Blueprint**
+> **Who this is for:** anyone deciding whether to adopt **mithril** or stay on **Palantir Blueprint**
 > (`@blueprintjs/*`). It is written to help you choose, not to sell you. Every claim below was checked
-> against the actual source of *both* libraries (analyst-ui's components and a clone of Blueprint v6.15)
-> and then adversarially re-verified. Where analyst-ui falls short, this document says so plainly.
+> against the actual source of *both* libraries (mithril's components and a clone of Blueprint v6.15)
+> and then adversarially re-verified. Where mithril falls short, this document says so plainly.
 
-analyst-ui is a from-scratch reimplementation of Blueprint's **design language** on a modern stack
+mithril is a from-scratch reimplementation of Blueprint's **design language** on a modern stack
 (React 19 · TypeScript · Tailwind v4 · Radix primitives · CVA), distributed shadcn-style so you **own
 the component source**. Blueprint is treated as the *design spec*, not a code source. The result is
 visually faithful to Blueprint v6.15 with a cleaner, more modern API — but it is **not** a maturity- or
@@ -15,7 +15,7 @@ behavior-equivalent drop-in replacement, and the differences matter.
 
 ## TL;DR
 
-**Pick analyst-ui if** you are greenfield on **React 19 + Tailwind v4**, you want to *own and restyle*
+**Pick mithril if** you are greenfield on **React 19 + Tailwind v4**, you want to *own and restyle*
 the component source, you value a clean modern prop API and a small CSS payload, and your app needs
 **none of**: a data grid, a global hotkey system, or a multi-step wizard dialog — **and** you are
 prepared to finish the keyboard/ARIA behavior on a handful of components yourself.
@@ -24,8 +24,8 @@ prepared to finish the keyboard/ARIA behavior on a handful of components yoursel
 accessibility, breadth of components, a real test safety net, `npm`-update bug/security fixes, and a
 CSS file that drops into any React app regardless of your build tooling.
 
-Neither is strictly better. analyst-ui wins the **authoring experience**; Blueprint wins the
-**engineering maturity**. The honest catch is that most of analyst-ui's headline advantages are
+Neither is strictly better. mithril wins the **authoring experience**; Blueprint wins the
+**engineering maturity**. The honest catch is that most of mithril's headline advantages are
 **double-edged** — see "The ownership trade" below.
 
 ---
@@ -34,23 +34,23 @@ Neither is strictly better. analyst-ui wins the **authoring experience**; Bluepr
 
 | Dimension | Edge | Why (verified) |
 | --- | --- | --- |
-| **API ergonomics** (new code) | **analyst-ui** | Union props (`variant`/`size`/`intent`), no boolean-soup, Radix-idiomatic `open`/`onOpenChange`, generic function components, **4** `@deprecated` markers vs Blueprint's **59** |
-| **Styling & theming** | *Depends* | analyst: typed CVA + Tailwind, **~16.6 KB gzip CSS** for all 56 components — but **requires** Tailwind v4. Blueprint: drop-in **~66 KB gzip** `blueprint.css`, zero build coupling, a real token-derivation pipeline |
-| **Distribution / ownership** | *Double-edged* | analyst: in-tree, auditable, minimal deps. Blueprint: `npm update` ships fixes; analyst's `npx shadcn add` path **is not actually wired up yet** |
-| **Accessibility & behavior** | **Blueprint (decisive)** | analyst's Radix-backed components are solid; its **hand-rolled** Tabs/Menu/Select-family/Hotkeys have real keyboard & ARIA gaps |
-| **Visual fidelity** | **analyst matches** | Palette/intents/type are an exact 1:1 port; dark surfaces correctly OKLCH-derived. But values are *frozen* to v6.15 |
-| **Completeness & maturity** | **Blueprint (decisive)** | No data grid, no hotkey engine, no MultistepDialog; analyst is new, single-author, **53 tests** vs Blueprint's **152** |
-| **Bundle size** | *Split* | analyst leaner on CSS always & on JS for icon-light apps; **Blueprint far leaner on icons** (per-glyph tree-shaking) |
+| **API ergonomics** (new code) | **mithril** | Union props (`variant`/`size`/`intent`), no boolean-soup, Radix-idiomatic `open`/`onOpenChange`, generic function components, **4** `@deprecated` markers vs Blueprint's **59** |
+| **Styling & theming** | *Depends* | mithril: typed CVA + Tailwind, **~16.6 KB gzip CSS** for all 56 components — but **requires** Tailwind v4. Blueprint: drop-in **~66 KB gzip** `blueprint.css`, zero build coupling, a real token-derivation pipeline |
+| **Distribution / ownership** | *Double-edged* | mithril: in-tree, auditable, minimal deps. Blueprint: `npm update` ships fixes; mithril's `npx shadcn add` path **is not actually wired up yet** |
+| **Accessibility & behavior** | **Blueprint (decisive)** | mithril's Radix-backed components are solid; its **hand-rolled** Tabs/Menu/Select-family/Hotkeys have real keyboard & ARIA gaps |
+| **Visual fidelity** | **mithril matches** | Palette/intents/type are an exact 1:1 port; dark surfaces correctly OKLCH-derived. But values are *frozen* to v6.15 |
+| **Completeness & maturity** | **Blueprint (decisive)** | No data grid, no hotkey engine, no MultistepDialog; mithril is new, single-author, **53 tests** vs Blueprint's **152** |
+| **Bundle size** | *Split* | mithril leaner on CSS always & on JS for icon-light apps; **Blueprint far leaner on icons** (per-glyph tree-shaking) |
 
 ---
 
-## Where analyst-ui genuinely wins
+## Where mithril genuinely wins
 
 These held up under scrutiny — they are real, not marketing.
 
 - **A cleaner, more modern API.** `Button` takes `variant`/`size`/`intent` unions with **zero**
   deprecated boolean duplicates; Blueprint's still carries `large`/`small`/`minimal`/`outlined`/
-  `rightIcon` as deprecated shims it must dispatch at runtime. Across the library analyst carries **4**
+  `rightIcon` as deprecated shims it must dispatch at runtime. Across the library mithril carries **4**
   `@deprecated` markers vs Blueprint's **59**. Overlays use the symmetric Radix idiom
   (`open` / `defaultOpen` / `onOpenChange`) instead of Blueprint's `isOpen` / `defaultIsOpen` /
   `onInteraction(nextOpenState, e)` split. `Select<T>` is a plain generic function with a reusable
@@ -66,7 +66,7 @@ These held up under scrutiny — they are real, not marketing.
   `react-transition-group` and `normalize.css`.
 
 - **React 19 native.** Blueprint v6.15 pins its peer dependency to React 18 across every package;
-  analyst-ui is built and typed for React 19.
+  mithril is built and typed for React 19.
 
 - **Unusually honest engineering.** The fidelity work is documented delta-by-delta with commit hashes,
   and the project openly records its own limitations (including a silently-failed edit in one handoff).
@@ -76,7 +76,7 @@ These held up under scrutiny — they are real, not marketing.
 
 ## Where Blueprint genuinely wins
 
-These are the load-bearing reasons analyst-ui is **not yet** a hands-down replacement.
+These are the load-bearing reasons mithril is **not yet** a hands-down replacement.
 
 ### 1. Accessibility — the decisive gap
 
@@ -89,7 +89,7 @@ primitives, which are at genuine parity-or-better:
 - ✅ **SegmentedControl** (a faithful port of Blueprint's accessible radiogroup)
 - ✅ **Date pickers** (calendar grid delegated to `react-day-picker` v10)
 
-It previously **broke down** wherever analyst hand-rolled the widget or fed Radix non-Radix children.
+It previously **broke down** wherever mithril hand-rolled the widget or fed Radix non-Radix children.
 As of the `a11y-behavior-gaps` work (handoffs 0066–0070) those gaps are **closed**, each with Vitest
 keyboard/ARIA coverage (53 tests) and an axe-core audit over the gallery in both themes:
 
@@ -133,10 +133,10 @@ found no AA failures on active body/control text. The deltas it *does* surface a
 
 ### 2. Completeness
 
-Blueprint ships substantial capabilities analyst has **no counterpart** for:
+Blueprint ships substantial capabilities mithril has **no counterpart** for:
 
 - **Table2** — a ~13,000-LOC virtualized data grid (selection, resize, reorder, editable cells,
-  clipboard). analyst's `html-table` is CSS-only styling of a `<table>`.
+  clipboard). mithril's `html-table` is CSS-only styling of a `<table>`.
 - **A real hotkey engine** (see above).
 - **MultistepDialog / DialogStep**, **ButtonGroup**, **AnchorButton**, and reusable behavioral infra
   (standalone `ResizeSensor`, `OverflowList`, `Overlay2`, `Portal`/provider, hooks).
@@ -146,24 +146,24 @@ parity** — they are shells.
 
 ### 3. Maturity, testing & risk
 
-- **Tests: 53 vs 152.** analyst now has a Vitest + Testing Library suite (53 keyboard/ARIA tests) plus
+- **Tests: 53 vs 152.** mithril now has a Vitest + Testing Library suite (53 keyboard/ARIA tests) plus
   an axe-core audit and the screenshot/computed-style harness; Blueprint has 152 colocated test files.
   Coverage is targeted at the remediated behaviors, not yet exhaustive.
-- analyst is a young, single-author project; Blueprint is a years-old, multi-package production library
+- mithril is a young, single-author project; Blueprint is a years-old, multi-package production library
   with published versions, an issue history, and a large user base.
 
 ### 4. Icons
 
-analyst vendors **all 706 glyphs as one static map** with **no tree-shaking** — importing the `Icon`
+mithril vendors **all 706 glyphs as one static map** with **no tree-shaking** — importing the `Icon`
 component drags in **~195 KB gzip** of path data regardless of how many icons you use (the documented
 escape hatch is "trim the map by hand"). Blueprint ships **per-icon ES modules** with default
 async/lazy loading, so unused glyphs cost nothing.
 
 ### 5. Distribution & upgrades
 
-- Blueprint bug/security fixes arrive as a **version bump** (`npm update`). analyst's owned source gets
+- Blueprint bug/security fixes arrive as a **version bump** (`npm update`). mithril's owned source gets
   **no automatic upstream fixes** — ever.
-- analyst's headline `npx shadcn@latest add <url>/button` install path **is aspirational**: the
+- mithril's headline `npx shadcn@latest add <url>/button` install path **is aspirational**: the
   `registry.json` is never served (only the demo gallery is deployed). Today the only working adoption
   path is **hand-copying files**.
 
@@ -171,14 +171,14 @@ async/lazy loading, so unused glyphs cost nothing.
 
 Blueprint **derives** its theme at runtime via `oklch(from <intent> …)` with an `@supports` sRGB
 fallback — change one variable and the whole theme re-derives, and it degrades gracefully on older
-browser engines. analyst **bakes the resolved sRGB values as frozen literals** (it even hand-patches
+browser engines. mithril **bakes the resolved sRGB values as frozen literals** (it even hand-patches
 one-off hex values) and ships **no `@supports` fallback** for its raw `oklch()`/`color-mix()` usage. So
 "matches Blueprint exactly" is **non-inferiority to a frozen v6.15 snapshot**, not an advantage that
 lets the theme evolve or re-theme from a single source.
 
 ---
 
-## On visual fidelity (analyst's strongest claim)
+## On visual fidelity (mithril's strongest claim)
 
 This one largely holds. The static palette (16 color scales), intents, and type scale are a verified,
 byte-exact 1:1 port of Blueprint's design tokens, and the harder dark surface/elevation values are
@@ -200,7 +200,7 @@ a reason on its own to switch.
 
 ## The ownership trade (read this before deciding)
 
-Almost every analyst-ui advantage and its biggest liability are **the same fact viewed from two sides**:
+Almost every mithril advantage and its biggest liability are **the same fact viewed from two sides**:
 
 | The pitch | The catch |
 | --- | --- |
@@ -217,17 +217,17 @@ you want to *consume* a UI library and get on with your product, it is not.
 ## Decision guide
 
 - **Greenfield React 19 + Tailwind v4 app, design-system-savvy team, no data grid / hotkeys / wizard
-  needs, willing to harden a11y →** analyst-ui is a great fit and a genuinely nicer authoring experience.
+  needs, willing to harden a11y →** mithril is a great fit and a genuinely nicer authoring experience.
 - **You need a data grid, a global hotkey system, or multi-step dialogs →** Blueprint (or pair Blueprint
-  with analyst-ui only for the surface analyst covers well).
+  with mithril only for the surface mithril covers well).
 - **Accessibility/Section-508/WCAG is a hard requirement out of the box →** the §1 keyboard/ARIA gaps are
-  now closed and tested, so analyst-ui is viable for most surfaces; verify the two remaining items
+  now closed and tested, so mithril is viable for most surfaces; verify the two remaining items
   (Hotkeys engine, the documented contrast deltas) against your specific requirements.
 - **You're not on Tailwind, or you want drop-in CSS with no build coupling →** Blueprint.
-- **You want to own, audit, and restyle every line, and you'll invest in maintenance →** analyst-ui.
+- **You want to own, audit, and restyle every line, and you'll invest in maintenance →** mithril.
 
 ---
 
-*This appraisal reflects the state of both libraries as audited on 2026-05-29 (analyst-ui at branch
+*This appraisal reflects the state of both libraries as audited on 2026-05-29 (mithril at branch
 `public-readiness`; Blueprint v6.15). For the prioritized plan to close the gaps above, see
 [`docs/blueprint-parity-roadmap.md`](./blueprint-parity-roadmap.md).*
