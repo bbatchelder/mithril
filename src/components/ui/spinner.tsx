@@ -1,6 +1,7 @@
 import { createElement, forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 /**
  * Spinner component — pixel-faithful reimplementation of Blueprint's `bp6-spinner`.
@@ -57,7 +58,7 @@ export const SpinnerSize = {
     LARGE: 100,
 } as const;
 
-export type SpinnerIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type SpinnerIntent = Intent;
 
 export interface SpinnerProps extends React.HTMLAttributes<HTMLElement> {
     /**

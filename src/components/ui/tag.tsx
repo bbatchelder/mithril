@@ -1,9 +1,10 @@
 import { forwardRef, useCallback } from "react";
 
 import { cn } from "@/lib/utils";
-import { Icon } from "./icon";
+import type { Intent } from "@/lib/types";
+import { Icon, resolveIcon, type IconProp } from "./icon";
 
-export type TagIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TagIntent = Intent;
 export type TagSize = "medium" | "large";
 
 // ── Solid intent colors ─────────────────────────────────────────────────────
@@ -140,14 +141,17 @@ export interface TagProps extends React.HTMLAttributes<HTMLSpanElement> {
     active?: boolean;
 
     /**
-     * Icon rendered before the text content.
+     * Icon rendered before the text content. An icon-name string (e.g. `"tick"`) or a custom
+     * element. A bare name renders at 16px in the tag's text color (Blueprint's default); pass a
+     * custom `<Icon size={…} />` element for a different size.
      */
-    icon?: React.ReactNode;
+    icon?: IconProp;
 
     /**
-     * Icon rendered after the text content (before the remove button).
+     * Icon rendered after the text content (before the remove button). An icon-name string or a
+     * custom element. See {@link icon} for sizing/color behavior.
      */
-    endIcon?: React.ReactNode;
+    endIcon?: IconProp;
 
     /**
      * When provided, renders a remove (×) button. The callback receives the
@@ -238,10 +242,10 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
             )}
             {...props}
         >
-            {/* Left icon */}
-            {icon != null && (
+            {/* Left icon — string names render as a 16px <Icon> inheriting the tag's text color. */}
+            {resolveIcon(icon, { className: "!text-current" }) && (
                 <span className="inline-flex shrink-0 items-center">
-                    {icon}
+                    {resolveIcon(icon, { className: "!text-current" })}
                 </span>
             )}
 
@@ -253,9 +257,9 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
             )}
 
             {/* Right/end icon */}
-            {endIcon != null && (
+            {resolveIcon(endIcon, { className: "!text-current" }) && (
                 <span className="inline-flex shrink-0 items-center">
-                    {endIcon}
+                    {resolveIcon(endIcon, { className: "!text-current" })}
                 </span>
             )}
 

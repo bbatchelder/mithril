@@ -136,18 +136,18 @@ function ButtonGallery() {
             </Section>
 
             <Section title="With icons">
+                {/* P2.4: icon/endIcon accept a bare icon-name string (no <Icon> import needed) — the
+                    same ergonomic API as Blueprint. A string is rendered as <Icon> with !text-current
+                    so the glyph inherits the button's text color. Custom elements still work. */}
                 <Row label="">
-                    <Button icon={<Icon icon="plus" className="!text-current" />} aria-label="Add" />
-                    <Button icon={<Icon icon="plus" className="!text-current" />} intent="primary">
+                    <Button icon="add" aria-label="Add" data-compare="btn-icon-only" />
+                    <Button icon="add" intent="primary">
                         Start icon
                     </Button>
-                    <Button endIcon={<Icon icon="share" className="!text-current" />} intent="primary">
+                    <Button endIcon="share" intent="primary">
                         End icon
                     </Button>
-                    <Button
-                        icon={<Icon icon="cog" className="!text-current" />}
-                        endIcon={<Icon icon="chevron-down" className="!text-current" />}
-                    >
+                    <Button icon="cog" endIcon="caret-down">
                         Both
                     </Button>
                 </Row>
@@ -771,6 +771,11 @@ function TagGallery() {
                     </Tag>
                     <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">
                         End icon
+                    </Tag>
+                    {/* P2.4: a bare icon-name string renders at Blueprint's default 16px, inheriting
+                        the tag's text color. (The size={12} specimens above pass a custom element.) */}
+                    <Tag icon="tick" data-compare="tag-icon-string">
+                        String name
                     </Tag>
                 </div>
             </Section>

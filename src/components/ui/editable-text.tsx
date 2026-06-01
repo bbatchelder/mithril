@@ -2,8 +2,9 @@ import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, u
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
-export type EditableTextIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type EditableTextIntent = Intent;
 
 export interface EditableTextProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {
     /**

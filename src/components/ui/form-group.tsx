@@ -44,8 +44,9 @@
 
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
-export type FormGroupIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type FormGroupIntent = Intent;
 
 // ─── Label ──────────────────────────────────────────────────────────────────
 

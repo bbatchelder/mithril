@@ -2,6 +2,7 @@ import * as RadixSlider from "@radix-ui/react-slider";
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 /**
  * Slider component — pixel-faithful reimplementation of Blueprint's `.bp6-slider`.
@@ -49,7 +50,7 @@ import { cn } from "@/lib/utils";
  * @see https://blueprintjs.com/docs/#core/components/sliders.slider
  */
 
-export type SliderIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type SliderIntent = Intent;
 
 export interface SliderProps
     extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {

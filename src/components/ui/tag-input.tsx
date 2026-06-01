@@ -11,12 +11,13 @@ import {
 } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
 import { Tag, type TagProps } from "./tag";
 
 // TODO(phase5): QueryList integration happens in MultiSelect
 
-export type TagInputIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TagInputIntent = Intent;
 
 /** How a value was added to the TagInput. */
 export type TagInputAddMethod = "default" | "blur" | "paste";

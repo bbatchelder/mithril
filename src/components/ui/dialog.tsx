@@ -74,7 +74,7 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
-import { Icon } from "./icon";
+import { Icon, resolveIcon, type IconProp } from "./icon";
 
 export interface DialogProps {
     /** Controlled open state. */
@@ -85,8 +85,8 @@ export interface DialogProps {
     onOpenChange?: (open: boolean) => void;
     /** Dialog title — when provided, renders the dialog header. */
     title?: React.ReactNode;
-    /** Icon rendered in the header before the title (use `<Icon icon="..." />`). */
-    icon?: React.ReactNode;
+    /** Icon rendered in the header before the title. An icon-name string (e.g. `"cog"`) or a custom element. */
+    icon?: IconProp;
     /** Show the close button in the header. @default true */
     closeButton?: boolean;
     /**
@@ -216,9 +216,9 @@ export function Dialog({
                                     )}
                                 >
                                     {/* Icon — Blueprint: flex: 0 0 auto; margin-left: -$pt-spacing = -4px; margin-right: $dialog-padding*0.5 = 8px */}
-                                    {icon != null && (
+                                    {resolveIcon(icon) && (
                                         <span className="flex-[0_0_auto] -ml-1 mr-2 text-foreground-muted">
-                                            {icon}
+                                            {resolveIcon(icon)}
                                         </span>
                                     )}
                                     {/* Title — Blueprint: flex: 1 1 auto; font-size: 14px; ellipsis

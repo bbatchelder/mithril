@@ -1,10 +1,11 @@
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
-import { Icon } from "./icon";
+import type { Intent } from "@/lib/types";
+import { resolveIcon, type IconProp } from "./icon";
 import type { IconName } from "./icons";
 
-export type CalloutIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type CalloutIntent = Intent;
 
 // ── Default intent icons ────────────────────────────────────────────────────
 // Blueprint: when `icon` is omitted and intent is set, a default icon is shown.
@@ -78,11 +79,12 @@ export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
     /**
      * Icon to render on the left side.
      * - Omit (undefined): shows the default intent icon (or no icon for intent="none").
-     * - Pass a ReactNode: renders that element as the icon.
-     * - Pass null: explicitly suppresses the icon even when intent is set.
+     * - Pass an icon-name string (e.g. `"info-sign"`): renders that glyph in the intent color.
+     * - Pass a custom element: renders it as-is.
+     * - Pass null (or false): explicitly suppresses the icon even when intent is set.
      * @default undefined (auto by intent)
      */
-    icon?: React.ReactNode | null;
+    icon?: IconProp;
 
     /**
      * Optional title text rendered as an h5 heading inside the callout.
@@ -134,37 +136,18 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(function Callout
     },
     ref,
 ) {
-    // Resolve the icon element to render:
-    //   - iconProp=null → no icon
-    //   - iconProp=undefined → default icon by intent (may be null for intent="none")
-    //   - iconProp=ReactNode → use as-is
-    let iconElement: React.ReactNode = null;
-    let hasIcon = false;
-
-    if (iconProp === null) {
-        // Explicitly suppressed
-        iconElement = null;
-        hasIcon = false;
-    } else if (iconProp !== undefined) {
-        // Explicit custom element
-        iconElement = iconProp;
-        hasIcon = true;
-    } else {
-        // Auto: pick by intent
-        const defaultIconName = DEFAULT_INTENT_ICONS[intent];
-        if (defaultIconName !== null) {
-            iconElement = (
-                <Icon
-                    icon={defaultIconName}
-                    size={16}
-                    aria-hidden
-                    tabIndex={-1}
-                    className={ICON_COLOR[intent]}
-                />
-            );
-            hasIcon = true;
-        }
-    }
+    // Resolve the icon to render. Omitting `icon` (undefined) falls back to the intent's
+    // default glyph name; an explicit name/element/false/null is used directly. `resolveIcon`
+    // then turns a name string into an <Icon> (in the intent color) and passes elements through —
+    // so the default-icon and string-icon paths share one render. null/false → no icon.
+    const iconSource = iconProp === undefined ? DEFAULT_INTENT_ICONS[intent] : iconProp;
+    const iconElement = resolveIcon(iconSource, {
+        size: 16,
+        "aria-hidden": true,
+        tabIndex: -1,
+        className: ICON_COLOR[intent],
+    });
+    const hasIcon = iconElement != null && iconElement !== false;
 
     const hasBodyContent = children != null && children !== false && children !== "";
 
@@ -221,9 +204,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(function Callout
                     )}
                     aria-hidden
                 >
-                    {typeof iconElement === "object" && iconElement !== null && "props" in (iconElement as object)
-                        ? iconElement
-                        : iconElement}
+                    {iconElement}
                 </span>
             )}
 

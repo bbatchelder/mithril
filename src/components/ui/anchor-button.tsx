@@ -3,6 +3,7 @@ import { forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants, ButtonGroupContext } from "./button";
+import { resolveIcon, type IconProp } from "./icon";
 import { Spinner } from "./spinner";
 
 export interface AnchorButtonProps
@@ -12,10 +13,10 @@ export interface AnchorButtonProps
     active?: boolean;
     /** Disable the anchor: removes `href`, sets `aria-disabled`, takes it out of the tab order. */
     disabled?: boolean;
-    /** Icon rendered before the text. */
-    icon?: React.ReactNode;
-    /** Icon rendered after the text. */
-    endIcon?: React.ReactNode;
+    /** Icon rendered before the text. An icon-name string (e.g. `"add"`) or a custom element. */
+    icon?: IconProp;
+    /** Icon rendered after the text. An icon-name string or a custom element. */
+    endIcon?: IconProp;
     /** Show a centered spinner and disable the anchor; width is preserved. */
     loading?: boolean;
     /** Expand to fill the container width. */
@@ -79,6 +80,11 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
     // layout/width stable; `invisible` (visibility:hidden) would drop the name entirely.
     const hidden = loading ? "opacity-0" : undefined;
 
+    // Resolve string icon names to <Icon> (with `!text-current` so the glyph inherits the
+    // anchor's text color); a custom element / false / null passes through unchanged.
+    const iconNode = resolveIcon(icon, { className: "!text-current" });
+    const endIconNode = resolveIcon(endIcon, { className: "!text-current" });
+
     return (
         <a
             ref={ref}
@@ -118,9 +124,9 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
                     <Spinner size={resolvedSize === "large" ? 20 : 16} />
                 </span>
             )}
-            {icon != null && <span className={cn("inline-flex", hidden)}>{icon}</span>}
+            {iconNode && <span className={cn("inline-flex", hidden)}>{iconNode}</span>}
             {children != null && <span className={hidden}>{children}</span>}
-            {endIcon != null && <span className={cn("inline-flex", hidden)}>{endIcon}</span>}
+            {endIconNode && <span className={cn("inline-flex", hidden)}>{endIconNode}</span>}
         </a>
     );
 });

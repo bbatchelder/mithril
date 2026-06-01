@@ -87,6 +87,14 @@ const items = [
         dependencies: ["clsx", "tailwind-merge"],
         files: [{ path: "src/lib/utils.ts", type: "registry:lib", target: "lib/utils.ts" }],
     },
+    {
+        name: "types",
+        type: "registry:lib",
+        title: "Shared types",
+        description:
+            "Cross-component TypeScript types (the `Intent` vocabulary) defined once so every control shares one source of truth. Dependency-free.",
+        files: [{ path: "src/lib/types.ts", type: "registry:lib", target: "lib/types.ts" }],
+    },
 ];
 
 for (const file of files) {
@@ -97,6 +105,7 @@ for (const file of files) {
     const npm = new Set();
     const registryDeps = new Set();
     let usesUtils = false;
+    let usesTypes = false;
 
     for (const spec of specifiers) {
         // internal cross-component import: "./menu" or "@/components/ui/menu".
@@ -111,6 +120,10 @@ for (const file of files) {
             usesUtils = true;
             continue;
         }
+        if (spec === "@/lib/types") {
+            usesTypes = true;
+            continue;
+        }
         const npmPkg = NPM_PREFIXES.find((p) => spec === p || spec.startsWith(p));
         if (npmPkg) {
             // @radix-ui/react-dialog → keep full package; others are the prefix itself
@@ -119,6 +132,7 @@ for (const file of files) {
     }
 
     if (usesUtils) registryDeps.add("utils");
+    if (usesTypes) registryDeps.add("types");
     // Every component renders against the design tokens.
     registryDeps.add("tokens");
 
@@ -144,9 +158,10 @@ for (const file of files) {
         files: itemFiles,
     };
     if (npm.size) item.dependencies = [...npm].sort();
-    // Stable order: internal components first (alpha), then utils, then tokens last.
+    // Stable order: internal components first (alpha), then lib items (utils/types),
+    // then tokens last.
     item.registryDependencies = [...registryDeps].sort((a, b) => {
-        const rank = (x) => (x === "tokens" ? 2 : x === "utils" ? 1 : 0);
+        const rank = (x) => (x === "tokens" ? 2 : x === "utils" || x === "types" ? 1 : 0);
         return rank(a) - rank(b) || a.localeCompare(b);
     });
     items.push(item);
@@ -160,4 +175,4 @@ const registry = {
 };
 
 writeFileSync(join(ROOT, "registry.json"), JSON.stringify(registry, null, 4) + "\n");
-console.log(`Wrote registry.json — ${items.length} items (${files.length} components + tokens + utils).`);
+console.log(`Wrote registry.json — ${items.length} items (${files.length} components + tokens + utils + types).`);

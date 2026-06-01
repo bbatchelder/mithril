@@ -3,9 +3,11 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
+import { resolveIcon, type IconProp } from "./icon";
 import { Spinner } from "./spinner";
 
-export type ButtonIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type ButtonIntent = Intent;
 export type ButtonVariant = "solid" | "outlined" | "minimal";
 export type ButtonSize = "small" | "medium" | "large";
 
@@ -118,10 +120,10 @@ export interface ButtonProps
     asChild?: boolean;
     /** Persistent pressed appearance. */
     active?: boolean;
-    /** Icon rendered before the text. */
-    icon?: React.ReactNode;
-    /** Icon rendered after the text. */
-    endIcon?: React.ReactNode;
+    /** Icon rendered before the text. An icon-name string (e.g. `"add"`) or a custom element. */
+    icon?: IconProp;
+    /** Icon rendered after the text. An icon-name string or a custom element. */
+    endIcon?: IconProp;
     /** Show a centered spinner and disable the button; width is preserved. */
     loading?: boolean;
     /** Expand to fill the container width. */
@@ -137,9 +139,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     const resolvedVariant = variant ?? group?.variant;
     const resolvedSize = size ?? group?.size;
 
+    // Resolve string icon names to <Icon> (with `!text-current` so the glyph inherits
+    // the button's text color instead of Icon's default `text-foreground`). A custom
+    // element / false / null passes through; the SVG is sized by `[&_svg]:size-*` above.
+    const iconNode = resolveIcon(icon, { className: "!text-current" });
+    const endIconNode = resolveIcon(endIcon, { className: "!text-current" });
+
     // Icon-only (no text children): render square so the button matches Blueprint's
     // square icon buttons instead of growing 2px wider than its min-width.
-    const iconOnly = !asChild && children == null && (icon != null || endIcon != null);
+    const iconOnly = !asChild && children == null && (!!iconNode || !!endIconNode);
 
     const classes = cn(
         buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill, iconOnly }),
@@ -179,9 +187,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
                     <Spinner size={resolvedSize === "large" ? 20 : 16} />
                 </span>
             )}
-            {icon != null && <span className={cn("inline-flex", hidden)}>{icon}</span>}
+            {iconNode && <span className={cn("inline-flex", hidden)}>{iconNode}</span>}
             {children != null && <span className={hidden}>{children}</span>}
-            {endIcon != null && <span className={cn("inline-flex", hidden)}>{endIcon}</span>}
+            {endIconNode && <span className={cn("inline-flex", hidden)}>{endIconNode}</span>}
         </button>
     );
 });

@@ -2,9 +2,10 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
 
-export type InputGroupIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type InputGroupIntent = Intent;
 export type InputGroupSize = "small" | "medium" | "large";
 
 /**

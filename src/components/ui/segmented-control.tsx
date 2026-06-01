@@ -2,9 +2,11 @@ import { forwardRef, useCallback, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { buttonVariants, type ButtonSize } from "@/components/ui/button";
+import { resolveIcon, type IconProp } from "@/components/ui/icon";
 
-export type SegmentedControlIntent = "none" | "primary";
+export type SegmentedControlIntent = Extract<Intent, "none" | "primary">;
 
 export interface SegmentedControlOption {
     /** Display label for the segment. */
@@ -13,8 +15,8 @@ export interface SegmentedControlOption {
     value: string;
     /** Whether this specific segment is disabled. */
     disabled?: boolean;
-    /** Optional icon rendered before the label. */
-    icon?: React.ReactNode;
+    /** Optional icon rendered before the label. An icon-name string (e.g. `"list"`) or a custom element. */
+    icon?: IconProp;
 }
 
 export interface SegmentedControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
@@ -267,9 +269,9 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
                             className={segmentClasses}
                             onClick={() => !isDisabled && handleClick(option.value)}
                         >
-                            {option.icon != null && (
+                            {resolveIcon(option.icon, { className: "!text-current" }) && (
                                 <span className="inline-flex [&_svg]:size-4 [&_svg]:shrink-0">
-                                    {option.icon}
+                                    {resolveIcon(option.icon, { className: "!text-current" })}
                                 </span>
                             )}
                             <span>{option.label}</span>

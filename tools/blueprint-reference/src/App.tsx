@@ -66,7 +66,7 @@ function ButtonGallery() {
 
             <Section title="With icons">
                 <Row label="">
-                    <Button icon="add" aria-label="Add" />
+                    <Button icon="add" aria-label="Add" data-compare="btn-icon-only" />
                     <Button icon="add" text="Start icon" intent="primary" />
                     <Button endIcon="share" text="End icon" intent="primary" />
                     <Button icon="cog" endIcon="caret-down" text="Both" />
@@ -724,6 +724,7 @@ function TagGallery() {
                     <TaggedTag icon={<Icon icon="tick" size={12} />} dataCompare="tag-icon">With icon</TaggedTag>
                     <Tag icon={<Icon icon="tick" size={12} />} intent="success">Success icon</Tag>
                     <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">End icon</Tag>
+                    <TaggedTag icon="tick" dataCompare="tag-icon-string">String name</TaggedTag>
                 </div>
             </Section>
 

@@ -30,6 +30,7 @@ import { cloneElement, isValidElement, useCallback, useEffect, useId, useRef, us
 import type { ReactElement, ReactNode, KeyboardEvent, MouseEvent } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Popover } from "./popover";
 import { Menu } from "./menu";
 import { Tag, type TagProps } from "./tag";
@@ -49,7 +50,7 @@ export type { ItemModifiers, ItemRendererProps };
  * Types
  * ============================================================ */
 
-export type MultiSelectIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type MultiSelectIntent = Intent;
 
 export interface MultiSelectProps<T> {
     /** All items in the list. */

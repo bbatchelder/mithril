@@ -71,10 +71,11 @@ import * as RadixTooltip from "@radix-ui/react-tooltip";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 export type TooltipSide = "top" | "right" | "bottom" | "left";
 export type TooltipAlign = "start" | "center" | "end";
-export type TooltipIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type TooltipIntent = Intent;
 
 export interface TooltipProps {
     /**

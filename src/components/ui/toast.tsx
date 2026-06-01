@@ -60,11 +60,12 @@ import * as RadixToast from "@radix-ui/react-toast";
 import { createContext, useCallback, useContext, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type ToastIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type ToastIntent = Intent;
 export type ToastPosition =
     | "top"
     | "top-left"

@@ -66,7 +66,7 @@ import * as RadixDialog from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
-import { Icon } from "./icon";
+import { Icon, resolveIcon, type IconProp } from "./icon";
 
 /** Common drawer sizes. */
 export const DrawerSize = {
@@ -97,8 +97,8 @@ export interface DrawerProps {
     size?: number | string;
     /** Drawer title — when provided, renders the drawer header. */
     title?: React.ReactNode;
-    /** Icon rendered in the header before the title (use `<Icon icon="..." />`). */
-    icon?: React.ReactNode;
+    /** Icon rendered in the header before the title. An icon-name string (e.g. `"cog"`) or a custom element. */
+    icon?: IconProp;
     /** Show the close button in the header. @default true */
     closeButton?: boolean;
     /**
@@ -240,9 +240,9 @@ export function Drawer({
                                 )}
                             >
                                 {/* Icon — Blueprint: color $pt-icon-color (muted); margin-right: $drawer-padding*0.5 = 10px */}
-                                {icon != null && (
+                                {resolveIcon(icon) && (
                                     <span className="flex-[0_0_auto] mr-[10px] text-foreground-muted">
-                                        {icon}
+                                        {resolveIcon(icon)}
                                     </span>
                                 )}
                                 {/* Title — Blueprint: H4 (heading); flex: 1 1 auto; line-height inherited; margin: 0

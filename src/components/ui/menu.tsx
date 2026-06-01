@@ -10,13 +10,14 @@
 import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
 
 /* ============================================================
  * Types
  * ============================================================ */
 
-export type MenuIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type MenuIntent = Intent;
 
 /**
  * Slot for integrating MenuItem with a parent menu *system* that owns keyboard

@@ -1,11 +1,24 @@
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { ICON_GLYPHS, type IconName } from "./icons";
 
 export type { IconName };
 
-export type IconIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type IconIntent = Intent;
+
+/**
+ * An icon slot prop: either an icon-name string (autocompleted from the Blueprint
+ * set) or a custom element. Mirrors Blueprint's `IconName | MaybeElement`.
+ *
+ * The union is `IconName | React.ReactElement`, NOT `... | React.ReactNode`:
+ * `ReactNode` already includes `string`, so unioning it would collapse the whole
+ * type back to `ReactNode` and kill `IconName` autocomplete. `ReactElement` excludes
+ * `string`, keeping name suggestions while still accepting any element. `false`/`null`
+ * are allowed so `cond && <Icon/>` and explicit suppression type-check.
+ */
+export type IconProp = IconName | React.ReactElement | false | null;
 
 export interface IconProps extends React.HTMLAttributes<HTMLSpanElement> {
     /** Glyph name (from the vendored Blueprint subset). */
@@ -124,3 +137,20 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
         </span>
     );
 });
+
+/**
+ * Resolve an icon-slot prop to a renderable node.
+ *
+ * Lets every icon-accepting component take a bare icon name (`icon="add"`) without
+ * the caller importing `<Icon>`: a string is rendered as `<Icon>`, anything else
+ * (an element, or `false`/`null` for "no icon") is returned as-is. Hosts pass
+ * `iconProps` to control the string case's size/color (e.g. `{ className: "!text-current" }`
+ * so the glyph inherits a colored button's text color instead of Icon's default
+ * `text-foreground`).
+ */
+export function resolveIcon(
+    icon: IconProp | undefined,
+    iconProps?: Omit<IconProps, "icon">,
+): React.ReactNode {
+    return typeof icon === "string" ? <Icon icon={icon} {...iconProps} /> : icon;
+}

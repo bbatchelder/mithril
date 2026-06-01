@@ -51,10 +51,11 @@ import * as RadixDialog from "@radix-ui/react-dialog";
 import { useCallback } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Button, type ButtonIntent } from "./button";
-import { Icon, type IconIntent } from "./icon";
+import { Icon, type IconIntent, type IconProp } from "./icon";
 
-export type AlertIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type AlertIntent = Intent;
 
 export interface AlertProps {
     /** Controlled open state. */
@@ -63,8 +64,8 @@ export interface AlertProps {
     defaultOpen?: boolean;
     /** Called when the open state changes (including dismiss). */
     onOpenChange?: (open: boolean) => void;
-    /** Large icon displayed on the left of the body (Blueprint: 40px, intent-colored). */
-    icon?: string | React.ReactNode;
+    /** Large icon displayed on the left of the body (Blueprint: 40px, intent-colored). An icon-name string or a custom element. */
+    icon?: IconProp;
     /** Intent applied to the confirm button and icon color. */
     intent?: AlertIntent;
     /**
@@ -173,8 +174,9 @@ export function Alert({
         [handleConfirm, onOpenChange],
     );
 
-    // Whether an icon will be rendered (used to decide whether to render the icon slot)
-    const hasIcon = icon != null;
+    // Whether an icon will be rendered (used to decide whether to render the icon slot).
+    // IconProp allows `false`/`null` to mean "no icon", so exclude both.
+    const hasIcon = icon != null && icon !== false;
 
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
@@ -251,7 +253,7 @@ export function Alert({
                                     typeof icon === "string" ? (
                                         <Icon
                                             data-compare="alert-icon"
-                                            icon={icon as Parameters<typeof Icon>[0]["icon"]}
+                                            icon={icon}
                                             size={40}
                                             intent={intent as IconIntent}
                                             className="flex-[0_0_auto] mr-5 mt-0 text-[40px]"

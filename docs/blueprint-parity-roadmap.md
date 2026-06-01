@@ -142,8 +142,13 @@ See **P0.3** (cross-listed) — resolved.
 - **Done when:** importing `Icon` + using 3 glyphs ships ≈ those 3, not 195 KB; measured in a sample
   bundle; documented.
 
-### P2.3 — Unify the type vocabulary
+### P2.3 — Unify the type vocabulary ✅ done (handoff 0079)
 
+- **Resolved (handoff 0079):** added `src/lib/types.ts` exporting one `Intent` (registered as a `types`
+  registry:lib item, pulled in transitively like `cn`). All 18 `*Intent` unions now alias it
+  (`export type ButtonIntent = Intent`), keeping each component's public type name while the vocabulary
+  is defined once; `SegmentedControlIntent` narrows via `Extract<Intent, "none" | "primary">`. A consumer
+  can now write `(intent: Intent) => …` generically.
 - **Problem:** No shared `Intent` type — ~19 duplicated `*Intent` string unions
   (`ButtonIntent`, `MenuIntent`, `TagIntent`, `InputGroupIntent`, …). Consumers can't write generic
   intent-typed helpers. Blueprint has shared `IntentProps`/`ActionProps`/`ControlledValueProps`/
@@ -154,8 +159,14 @@ See **P0.3** (cross-listed) — resolved.
 - **Done when:** one `Intent` type is the single source; components import it; a consumer can type
   `(intent: Intent) => …` generically.
 
-### P2.4 — Normalize the icon prop convention
+### P2.4 — Normalize the icon prop convention ✅ done (handoff 0079)
 
+- **Resolved (handoff 0079):** added `resolveIcon()` + the `IconProp` type to `icon.tsx`. Every icon slot
+  now accepts `IconProp` (`IconName | React.ReactElement | false | null` — NOT `… | ReactNode`, which
+  would collapse to `ReactNode` and kill `IconName` autocomplete; mirrors Blueprint's `IconName |
+  MaybeElement`). Wired into button, anchor-button, callout, dialog, drawer, tag, segmented-control, and
+  alert (upgraded). A string renders as `<Icon>` with host-appropriate size/color; custom elements pass
+  through. `<Button icon="add" />` / `<Callout icon="info-sign" />` now work with no `<Icon>` import.
 - **Problem:** Inconsistent: `MenuItem.icon` is `IconName` (string) but `Button.icon`/`endIcon` are
   `React.ReactNode`, forcing `icon={<Icon icon="add" />}` + an import for every button.
 - **Action:** Accept `IconName | React.ReactNode` everywhere (string → render `<Icon>` internally).

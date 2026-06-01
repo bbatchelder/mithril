@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 /**
  * ProgressBar component — pixel-faithful reimplementation of Blueprint's `bp6-progress-bar`.
@@ -44,7 +45,7 @@ import { cn } from "@/lib/utils";
  * @see https://blueprintjs.com/docs/#core/components/progress-bar
  */
 
-export type ProgressBarIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type ProgressBarIntent = Intent;
 
 export interface ProgressBarProps extends React.HTMLAttributes<HTMLDivElement> {
     /**
