@@ -4827,7 +4827,7 @@ function OverflowChip({ children, accent }: { children: React.ReactNode; accent?
                 marginRight: 4,
                 borderRadius: 4,
                 whiteSpace: "nowrap",
-                background: accent ? "#2d72d2" : "var(--surface)",
+                background: accent ? "var(--color-primary)" : "var(--surface)",
                 color: accent ? "white" : "var(--foreground)",
                 border: accent ? undefined : "1px solid var(--border)",
             }}

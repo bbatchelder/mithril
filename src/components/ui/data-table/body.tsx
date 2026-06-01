@@ -255,20 +255,22 @@ export function DataTableBody<TRow>({
                         aria-hidden
                         data-selection-region
                         className={cn(
-                            "pointer-events-none absolute z-10 box-border border border-[#2d72d2] dark:border-[#4c90f0]",
-                            "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(76,144,240,0.1)]",
+                            // Selection overlay — primary intent seed (rest light / disabled=tier-4 dark)
+                            // so it re-tints with the theme.
+                            "pointer-events-none absolute z-10 box-border border border-primary dark:border-primary-disabled",
+                            "bg-primary/10 dark:bg-primary-disabled/10",
                         )}
                         style={{ left: r.x, top: r.y, width: r.width, height: r.height }}
                     />
                 );
             })}
 
-            {/* Focused-cell outline — a 2px border above the region fill (Blueprint #2d72d2). */}
+            {/* Focused-cell outline — a 2px border above the region fill (primary intent seed). */}
             {focusedCell && (
                 <div
                     aria-hidden
                     data-focus-region
-                    className="pointer-events-none absolute z-10 box-border border-2 border-[#2d72d2]"
+                    className="pointer-events-none absolute z-10 box-border border-2 border-primary"
                     style={(() => {
                         const r = regionRect(cellRegion(focusedCell.row, focusedCell.col), geo);
                         return { left: r.x, top: r.y, width: r.width, height: r.height };
