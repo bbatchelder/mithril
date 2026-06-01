@@ -12,6 +12,12 @@ import { GutterCell, alignClass } from "./gutter";
  *   box-shadow: inset 0 -1px 0 <border>, inset -1px 0 0 <border>  (bottom + right)
  *   border = rgba(17,20,24,0.15) light · rgba(17,20,24,0.4) dark
  *
+ * Body background is the **cell surface** — white (`#ffffff`) light · dark-gray-3 (`#2f343c`)
+ * dark — which is distinct from the header/gutter chrome (light-gray-5 `#f6f7f9` · dark-gray-4
+ * `#383e47`). Blueprint paints this on the body client (`.bp6-table-body-virtual-client`) with
+ * transparent cells over it; we do the same on the rowgroup, so the gutter cells (their own gray
+ * bg) and data cells (transparent) layer correctly and the body fills white past the last column.
+ *
  * Loop 2: rows are **virtualized** with `@tanstack/react-virtual`. The body is a relative
  * spacer of `getTotalSize()` px; each visible row is absolutely positioned via
  * `translateY(round(start))` (offsets rounded to integers to avoid border-seam flicker).
@@ -52,7 +58,11 @@ export function DataTableBody<TRow>({
     });
 
     return (
-        <div role="rowgroup" className="relative" style={{ height: virtualizer.getTotalSize() }}>
+        <div
+            role="rowgroup"
+            className="relative bg-white dark:bg-[#2f343c]"
+            style={{ height: virtualizer.getTotalSize() }}
+        >
             {virtualizer.getVirtualItems().map((virtualRow) => {
                 const row = rows[virtualRow.index];
                 return (
