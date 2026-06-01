@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Icon } from "./icon";
+import { chevronLeft } from "./icons";
 
 /**
  * PanelStack — pixel-faithful reimplementation of Blueprint's `.bp6-panel-stack2`.
@@ -322,11 +323,14 @@ function PanelView({ panel, previousPanel, showHeader, isActive, onOpen, onClose
                                 variant="minimal"
                                 size="small"
                                 // margin-left: $pt-spacing = 4px; padding-left: 0
-                                className="ml-1 pl-0 whitespace-nowrap"
+                                // gap-0: Blueprint's header-back has no icon→text gap (the icon's
+                                // own mx-2px supplies the 2px spacing). The Button default gap-2
+                                // would make this button 8px wider than Blueprint's 58px. See handoff 0064.
+                                className="ml-1 pl-0 gap-0 whitespace-nowrap"
                                 // chevron-left icon; margin: 0 2px around icon
                                 icon={
                                     <Icon
-                                        icon="chevron-left"
+                                        icon={chevronLeft}
                                         size={16}
                                         // Blueprint reduces margin around icon in header-back: margin: 0 ($pt-spacing * 0.5) = 0 2px
                                         className="mx-[2px]"

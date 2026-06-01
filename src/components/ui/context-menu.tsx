@@ -41,6 +41,34 @@ import * as RadixContextMenu from "@radix-ui/react-context-menu";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { MenuItemSlotContext, type MenuItemSlotProps } from "./menu";
+
+/**
+ * Slot that renders a MenuItem's interactive element as a Radix ContextMenu.Item, so
+ * Radix supplies roving focus, arrow-key navigation, typeahead, and Escape. Provided to
+ * the consumer's `<Menu>`/`<MenuItem>` content via MenuItemSlotContext — consumers keep
+ * authoring `content={<Menu><MenuItem/></Menu>}` unchanged.
+ */
+function RadixMenuItemSlot({
+    className,
+    disabled,
+    textValue,
+    onSelect,
+    children,
+    "data-compare": dataCompare,
+}: MenuItemSlotProps) {
+    return (
+        <RadixContextMenu.Item
+            className={className}
+            disabled={disabled}
+            textValue={textValue}
+            onSelect={(event) => onSelect?.(event)}
+            data-compare={dataCompare}
+        >
+            {children}
+        </RadixContextMenu.Item>
+    );
+}
 
 export interface ContextMenuProps {
     /**
@@ -157,11 +185,12 @@ export function ContextMenu({
                             // border-radius: 4px ($pt-border-radius)
                             "rounded-bp",
                             // box-shadow: $pt-popover-box-shadow = $pt-elevation-shadow-3
-                            // Use shadow-card-3 (same as Popover/Dialog — has correct dark inset highlight)
-                            "shadow-card-3",
-                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%) = rgb(94,95,97))
+                            // Use shadow-overlay-3 (same as Popover/Dialog — rgba(20,20,20) light
+                            // hairline ring + Blueprint dark drop/highlight layer order).
+                            "shadow-overlay-3",
+                            // Dark mode: add the extra popover border ring (hsl(215,3%,38%) = rgb(94,96,100))
                             // Blueprint's $pt-dark-popover-box-shadow includes this 1px outset ring.
-                            "dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]",
+                            "dark:[box-shadow:rgb(94,96,100)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px,rgba(0,0,0,0.302)_0px_10px_30px_-5px]",
                             // z-index: above normal content (Blueprint $pt-z-index-overlay)
                             "z-[20]",
                             // Suppress Radix focus outline
@@ -188,7 +217,11 @@ export function ContextMenu({
                                 "rounded-bp",
                             )}
                         >
-                            {content}
+                            {/* Inject the Radix item slot so the consumer's MenuItems
+                                become Radix ContextMenu.Items (keyboard nav + typeahead). */}
+                            <MenuItemSlotContext.Provider value={RadixMenuItemSlot}>
+                                {content}
+                            </MenuItemSlotContext.Provider>
                         </div>
                     </RadixContextMenu.Content>
                 </div>

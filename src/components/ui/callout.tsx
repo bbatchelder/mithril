@@ -1,10 +1,11 @@
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
-import { Icon } from "./icon";
-import type { IconName } from "./icons";
+import type { Intent } from "@/lib/types";
+import { resolveIcon, type IconProp } from "./icon";
+import { error, infoSign, tick, warningSign, type IconGlyph } from "./icons";
 
-export type CalloutIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type CalloutIntent = Intent;
 
 // ── Default intent icons ────────────────────────────────────────────────────
 // Blueprint: when `icon` is omitted and intent is set, a default icon is shown.
@@ -14,12 +15,12 @@ export type CalloutIntent = "none" | "primary" | "success" | "warning" | "danger
 //   danger   → error
 //   none     → no icon (even if intent=none, no default icon)
 // To suppress the default icon explicitly, pass icon={null}.
-const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconName | null> = {
+const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconGlyph | null> = {
     none: null,
-    primary: "info-sign",
-    success: "tick",
-    warning: "warning-sign",
-    danger: "error",
+    primary: infoSign,
+    success: tick,
+    warning: warningSign,
+    danger: error,
 };
 
 // ── Intent color classes ─────────────────────────────────────────────────────
@@ -31,40 +32,39 @@ const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconName | null> = {
 // Non-minimal bg: rgba(intentColor, 0.1) light / rgba(intentColor, 0.2) dark.
 // Blueprint maps intent color as: primary→blue3, success→green3, warning→orange3, danger→red3.
 
+// Theme-aware: text/icon use the canonical intent-text token (--intent-*-text =
+// tier-2 light / tier-5 dark); bg uses the intent rest seed at 10%/20% alpha. All
+// re-tint when a theme overrides the intent seeds.
 const CALLOUT_INTENT: Record<CalloutIntent, { text: string; bg: string }> = {
     none: { text: "", bg: "" },
     primary: {
-        // light: blue-2 (#215db0) / dark: blue-5 (#8abbff=rgb(138,187,255))
-        text: "text-blue-2 dark:text-blue-5",
-        bg: "bg-blue-3/10 dark:bg-blue-3/20",
+        text: "text-intent-primary-text",
+        bg: "bg-primary/10 dark:bg-primary/20",
     },
     success: {
-        // light: green-2 (#1c6e42) / dark: green-5 (#72ca9b=rgb(114,202,155))
-        text: "text-green-2 dark:text-green-5",
-        bg: "bg-green-3/10 dark:bg-green-3/20",
+        text: "text-intent-success-text",
+        bg: "bg-success/10 dark:bg-success/20",
     },
     warning: {
-        // light: orange-2 (#935610) / dark: orange-5 (#fbb360=rgb(251,179,96))
-        text: "text-orange-2 dark:text-orange-5",
-        bg: "bg-orange-3/10 dark:bg-orange-3/20",
+        text: "text-intent-warning-text",
+        bg: "bg-warning/10 dark:bg-warning/20",
     },
     danger: {
-        // light: red-2 (#ac2f33) / dark: red-5 (#fa999c=rgb(250,153,156))
-        text: "text-red-2 dark:text-red-5",
-        bg: "bg-red-3/10 dark:bg-red-3/20",
+        text: "text-intent-danger-text",
+        bg: "bg-danger/10 dark:bg-danger/20",
     },
 };
 
 // ── Icon color classes ───────────────────────────────────────────────────────
 // No intent: $pt-icon-color = gray-1 (light) / $pt-dark-icon-color = gray-4 (dark)
 //   = foreground-muted token
-// With intent: same as text color (palette tier -2 light / tier -5 dark)
+// With intent: same as text color (canonical intent-text token).
 const ICON_COLOR: Record<CalloutIntent, string> = {
     none: "text-foreground-muted",
-    primary: "text-blue-2 dark:text-blue-5",
-    success: "text-green-2 dark:text-green-5",
-    warning: "text-orange-2 dark:text-orange-5",
-    danger: "text-red-2 dark:text-red-5",
+    primary: "text-intent-primary-text",
+    success: "text-intent-success-text",
+    warning: "text-intent-warning-text",
+    danger: "text-intent-danger-text",
 };
 
 export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -78,11 +78,12 @@ export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
     /**
      * Icon to render on the left side.
      * - Omit (undefined): shows the default intent icon (or no icon for intent="none").
-     * - Pass a ReactNode: renders that element as the icon.
-     * - Pass null: explicitly suppresses the icon even when intent is set.
+     * - Pass an icon-name string (e.g. `"info-sign"`): renders that glyph in the intent color.
+     * - Pass a custom element: renders it as-is.
+     * - Pass null (or false): explicitly suppresses the icon even when intent is set.
      * @default undefined (auto by intent)
      */
-    icon?: React.ReactNode | null;
+    icon?: IconProp;
 
     /**
      * Optional title text rendered as an h5 heading inside the callout.
@@ -134,37 +135,18 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(function Callout
     },
     ref,
 ) {
-    // Resolve the icon element to render:
-    //   - iconProp=null → no icon
-    //   - iconProp=undefined → default icon by intent (may be null for intent="none")
-    //   - iconProp=ReactNode → use as-is
-    let iconElement: React.ReactNode = null;
-    let hasIcon = false;
-
-    if (iconProp === null) {
-        // Explicitly suppressed
-        iconElement = null;
-        hasIcon = false;
-    } else if (iconProp !== undefined) {
-        // Explicit custom element
-        iconElement = iconProp;
-        hasIcon = true;
-    } else {
-        // Auto: pick by intent
-        const defaultIconName = DEFAULT_INTENT_ICONS[intent];
-        if (defaultIconName !== null) {
-            iconElement = (
-                <Icon
-                    icon={defaultIconName}
-                    size={16}
-                    aria-hidden
-                    tabIndex={-1}
-                    className={ICON_COLOR[intent]}
-                />
-            );
-            hasIcon = true;
-        }
-    }
+    // Resolve the icon to render. Omitting `icon` (undefined) falls back to the intent's
+    // default glyph name; an explicit name/element/false/null is used directly. `resolveIcon`
+    // then turns a name string into an <Icon> (in the intent color) and passes elements through —
+    // so the default-icon and string-icon paths share one render. null/false → no icon.
+    const iconSource = iconProp === undefined ? DEFAULT_INTENT_ICONS[intent] : iconProp;
+    const iconElement = resolveIcon(iconSource, {
+        size: 16,
+        "aria-hidden": true,
+        tabIndex: -1,
+        className: ICON_COLOR[intent],
+    });
+    const hasIcon = iconElement != null && iconElement !== false;
 
     const hasBodyContent = children != null && children !== false && children !== "";
 
@@ -221,9 +203,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(function Callout
                     )}
                     aria-hidden
                 >
-                    {typeof iconElement === "object" && iconElement !== null && "props" in (iconElement as object)
-                        ? iconElement
-                        : iconElement}
+                    {iconElement}
                 </span>
             )}
 

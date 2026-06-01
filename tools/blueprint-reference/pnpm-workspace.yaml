@@ -1,0 +1,9 @@
+# pnpm 11 config for this standalone, gitignored Blueprint reference gallery.
+#
+# esbuild (vite's bundler) ships a working binary; its postinstall is build-script
+# bookkeeping pnpm 11 flags as "ignored". Whitelist it, and disable the pre-run deps
+# check so `pnpm dev` (and therefore tools/compare.sh) doesn't abort on
+# ERR_PNPM_IGNORED_BUILDS when deps are already installed and functional.
+onlyBuiltDependencies:
+  - esbuild
+verifyDepsBeforeRun: false

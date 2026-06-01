@@ -60,11 +60,13 @@ import * as RadixToast from "@radix-ui/react-toast";
 import { createContext, useCallback, useContext, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
+import { smallCross } from "./icons";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type ToastIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type ToastIntent = Intent;
 export type ToastPosition =
     | "top"
     | "top-left"
@@ -128,26 +130,28 @@ const INTENT_CLASSES: Record<Exclude<ToastIntent, "none">, {
     iconColor: string;
     btn: string;
 }> = {
+    // Solid intent fills via seeds (rest/hover/active = intent tier-3/2/1), so they
+    // re-tint with the theme. Warning uses the lightened-amber --warning-solid-bg
+    // (≈ orange-5) + warning-disabled/warning for hover/active.
     primary: {
-        card: "bg-blue-3 text-white",
+        card: "bg-primary text-white",
         iconColor: "text-white/70",
-        btn: "bg-blue-3 text-white hover:!bg-blue-2 active:!bg-blue-1",
+        btn: "bg-primary text-white hover:!bg-primary-hover active:!bg-primary-active",
     },
     success: {
-        card: "bg-green-3 text-white",
+        card: "bg-success text-white",
         iconColor: "text-white/70",
-        btn: "bg-green-3 text-white hover:!bg-green-2 active:!bg-green-1",
+        btn: "bg-success text-white hover:!bg-success-hover active:!bg-success-active",
     },
     warning: {
-        // Blueprint: $orange5 bg (#fbb360), $dark-gray1 text, $orange4 hover, $orange3 active
-        card: "bg-orange-5 text-dark-gray-1",
+        card: "bg-warning-solid-bg text-dark-gray-1",
         iconColor: "text-dark-gray-1/70",
-        btn: "bg-orange-5 text-dark-gray-1 hover:!bg-orange-4 active:!bg-orange-3",
+        btn: "bg-warning-solid-bg text-dark-gray-1 hover:!bg-warning-disabled active:!bg-warning",
     },
     danger: {
-        card: "bg-red-3 text-white",
+        card: "bg-danger text-white",
         iconColor: "text-white/70",
-        btn: "bg-red-3 text-white hover:!bg-red-2 active:!bg-red-1",
+        btn: "bg-danger text-white hover:!bg-danger-hover active:!bg-danger-active",
     },
 };
 
@@ -262,7 +266,7 @@ function ToastContent({
                                 hasIntent && intentCls?.iconColor,
                             )}
                         >
-                            <Icon icon="small-cross" />
+                            <Icon icon={smallCross} />
                         </button>
                     </RadixToast.Close>
                 )}
@@ -330,8 +334,7 @@ export function Toast({
                 // Blueprint: border-radius 4px ($pt-border-radius)
                 "rounded-bp",
                 // Blueprint: min-width min(300px,100%), max-width min(500px,100%)
-                // We use 300px / 500px since the viewport constrains total width already.
-                "min-w-[300px] max-w-[500px]",
+                "min-w-[min(300px,100%)] max-w-[min(500px,100%)]",
                 // Blueprint: margin-top 20px (margin between stacked toasts)
                 // NOTE: The viewport uses gap-[20px] for spacing, so this matches.
                 // Blueprint .bp6-toast has margin: $toast-margin 0 0 (20px top).
@@ -343,14 +346,14 @@ export function Toast({
                 // Dark: $pt-dark-toast-box-shadow = $pt-dark-elevation-shadow-3 = shadow-card-3 dark
                 !hasIntent && [
                     "shadow-[inset_0_0_0_1px_rgba(17,20,24,0.2),_0_2px_4px_rgba(17,20,24,0.2),_0_8px_24px_rgba(17,20,24,0.2)]",
-                    "dark:shadow-card-3",
+                    "dark:shadow-overlay-3",
                 ],
                 // Intent card: intent-specific bg + text
                 hasIntent && intentCls?.card,
                 // Intent cards use the same toast box-shadow (Blueprint: same mixin, different bg)
                 hasIntent && [
                     "shadow-[inset_0_0_0_1px_rgba(17,20,24,0.2),_0_2px_4px_rgba(17,20,24,0.2),_0_8px_24px_rgba(17,20,24,0.2)]",
-                    "dark:shadow-card-3",
+                    "dark:shadow-overlay-3",
                 ],
                 // Text color for no-intent toast — set explicitly for portal context
                 !hasIntent && "text-foreground",

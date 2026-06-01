@@ -26,15 +26,23 @@
  * @see https://blueprintjs.com/docs/#select/multi-select
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactNode, KeyboardEvent, MouseEvent } from "react";
+import { cloneElement, isValidElement, useCallback, useEffect, useId, useRef, useState } from "react";
+import type { ReactElement, ReactNode, KeyboardEvent, MouseEvent } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Popover } from "./popover";
 import { Menu } from "./menu";
 import { Tag, type TagProps } from "./tag";
 import { Icon, type IconName } from "./icon";
 import { type ItemModifiers, type ItemRendererProps, useQueryList } from "./select";
+
+/** The subset of MenuItem props MultiSelect injects onto each rendered option. */
+type MultiSelectOptionAriaProps = {
+    id?: string;
+    roleStructure?: "menuitem" | "listoption" | "none";
+    selected?: boolean;
+};
 
 export type { ItemModifiers, ItemRendererProps };
 
@@ -42,7 +50,7 @@ export type { ItemModifiers, ItemRendererProps };
  * Types
  * ============================================================ */
 
-export type MultiSelectIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type MultiSelectIntent = Intent;
 
 export interface MultiSelectProps<T> {
     /** All items in the list. */
@@ -248,6 +256,10 @@ export function MultiSelect<T>({
     const menuRef = useRef<HTMLUListElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // Stable ids for the WAI-ARIA combobox wiring.
+    const listboxId = useId();
+    const optionId = (index: number) => `${listboxId}-option-${index}`;
+
     // When popoverProps.open is explicitly provided, honour it for gallery mode
     const controlledOpen = popoverProps?.open;
     const resolvedOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
@@ -379,10 +391,16 @@ export function MultiSelect<T>({
     // Blueprint MultiSelect wraps the menu in a div with 4px padding (select-popover),
     // and the menu has -4px left/right margin to extend to full popover width.
     // This matches Blueprint's .bp6-select-popover > .bp6-popover-content behavior.
+    const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
+    const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
+
     const popoverContent = (
         <div onKeyDown={ql.handleKeyDown} className="p-1">
             <Menu
                 ulRef={menuRef}
+                id={listboxId}
+                role="listbox"
+                aria-multiselectable
                 data-compare="multi-select-menu"
                 className={cn(
                     "-mx-1 overflow-auto",
@@ -394,9 +412,7 @@ export function MultiSelect<T>({
                 {ql.filteredItems.length === 0
                     ? noResults
                     : ql.filteredItems.map((item, index) => {
-                          const isActive =
-                              ql.activeItem != null &&
-                              ql.filteredItems.indexOf(ql.activeItem) === index;
+                          const isActive = activeIndex === index;
                           const isDisabled = isItemDisabledFn(item, index, itemDisabled);
                           const rendered = itemRenderer(item, {
                               item,
@@ -416,7 +432,15 @@ export function MultiSelect<T>({
                                   }
                               },
                           });
-                          return rendered;
+                          // Inject WAI-ARIA option semantics (see Select). aria-selected
+                          // reflects whether the item is already chosen.
+                          return isValidElement(rendered)
+                              ? cloneElement(rendered as ReactElement<MultiSelectOptionAriaProps>, {
+                                    id: optionId(index),
+                                    roleStructure: "listoption",
+                                    selected: selectedItems.some((s) => s === item),
+                                })
+                              : rendered;
                       })}
             </Menu>
         </div>
@@ -460,9 +484,19 @@ export function MultiSelect<T>({
             matchTargetWidth
             dark={dark}
             disabled={disabled}
+            // Anchor (not Trigger): the ghost input owns all the popup ARIA
+            // (aria-haspopup/expanded/controls). A Trigger would stamp those onto the roleless
+            // container <div> — invalid there (axe aria-allowed-attr). Open/close is driven by
+            // focus/typing here, so we don't need Radix's click-to-toggle.
+            anchorOnly
+            // Keep DOM focus on the ghost input when the listbox opens (combobox contract) —
+            // Radix would otherwise move focus into the panel and break type-to-filter.
+            autoFocusContent={false}
+            // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
+            ariaLabel="Options"
             {...restPopoverProps}
         >
-            {/* Trigger: the TagInput-like container with chips + ghost input */}
+            {/* Anchor: the TagInput-like container with chips + ghost input (positioning only, no ARIA) */}
             {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
             <div
                 ref={containerRef}
@@ -539,6 +573,17 @@ export function MultiSelect<T>({
                         onChange={handleInputChange}
                         onFocus={handleInputFocus}
                         onKeyDown={handleInputKeyDown}
+                        // WAI-ARIA combobox: the ghost input owns the multi-select listbox.
+                        role="combobox"
+                        aria-expanded={resolvedOpen}
+                        aria-controls={listboxId}
+                        aria-activedescendant={activeDescendantId}
+                        aria-autocomplete="list"
+                        aria-haspopup="listbox"
+                        // A placeholder is not an accessible name (WCAG 4.1.2 / 2.4.6),
+                        // and resolvedPlaceholder goes undefined once items are picked —
+                        // so name the combobox from the raw placeholder.
+                        aria-label={placeholder}
                         className={cn(
                             "flex-[1_1_auto] bg-transparent border-none outline-none shadow-none",
                             "text-foreground placeholder:text-foreground-muted placeholder:opacity-100",

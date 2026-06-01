@@ -1,6 +1,7 @@
-import { Alert, Alignment, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
+import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, MultistepDialog, DialogStep, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
+import { Cell as BpCell, Column as BpColumn, EditableCell2 as BpEditableCell2, Table2 as BpTable2, TableLoadingOption } from "@blueprintjs/table";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -66,7 +67,7 @@ function ButtonGallery() {
 
             <Section title="With icons">
                 <Row label="">
-                    <Button icon="add" aria-label="Add" />
+                    <Button icon="add" aria-label="Add" data-compare="btn-icon-only" />
                     <Button icon="add" text="Start icon" intent="primary" />
                     <Button endIcon="share" text="End icon" intent="primary" />
                     <Button icon="cog" endIcon="caret-down" text="Both" />
@@ -75,6 +76,72 @@ function ButtonGallery() {
 
             <Section title="Fill">
                 <Button fill={true} intent="primary" text="Fill button" />
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for ButtonGroup. `data-compare` keys MUST match analyst-ui's
+ * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
+ */
+function ButtonGroupGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Solid (horizontal)">
+                <ButtonGroup data-compare="bg-solid-container">
+                    <Button text="First" data-compare="bg-solid-first" />
+                    <Button text="Middle" data-compare="bg-solid-mid" />
+                    <Button text="Last" data-compare="bg-solid-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Outlined (horizontal)">
+                <ButtonGroup variant="outlined" data-compare="bg-outlined-container">
+                    <Button text="First" data-compare="bg-outlined-first" />
+                    <Button text="Middle" data-compare="bg-outlined-mid" />
+                    <Button text="Last" data-compare="bg-outlined-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Minimal (horizontal)">
+                <ButtonGroup variant="minimal">
+                    <Button text="First" />
+                    <Button text="Middle" />
+                    <Button text="Last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Vertical (solid)">
+                <ButtonGroup vertical={true} data-compare="bg-vert-container">
+                    <Button text="First" data-compare="bg-vert-first" />
+                    <Button text="Middle" data-compare="bg-vert-mid" />
+                    <Button text="Last" data-compare="bg-vert-last" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Intents (per-button)">
+                <ButtonGroup>
+                    <Button intent="primary" text="Save" />
+                    <Button intent="success" text="Apply" />
+                    <Button intent="danger" text="Delete" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="With icons + size (group-level)">
+                <ButtonGroup size="large">
+                    <Button icon="chevron-left" aria-label="Previous" />
+                    <Button text="Center" />
+                    <Button endIcon="chevron-right" text="Next" />
+                </ButtonGroup>
+            </Section>
+
+            <Section title="Fill">
+                <ButtonGroup fill={true} data-compare="bg-fill-container">
+                    <Button text="Left" />
+                    <Button text="Center" />
+                    <Button text="Right" />
+                </ButtonGroup>
             </Section>
         </div>
     );
@@ -111,6 +178,49 @@ function CardGallery() {
                         Compact (16px padding)
                     </Card>
                 </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for AnchorButton. `data-compare` keys MUST match analyst-ui's
+ * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
+ */
+function AnchorButtonGallery() {
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+            <Section title="Variant × Intent">
+                {VARIANTS.map((variant) => (
+                    <Row key={variant} label={variant}>
+                        {INTENTS.map((intent) => (
+                            <AnchorButton
+                                key={intent}
+                                href="#"
+                                variant={variant}
+                                intent={intent}
+                                text={intent}
+                                data-compare={`anchorbtn-${variant}-${intent}`}
+                            />
+                        ))}
+                    </Row>
+                ))}
+            </Section>
+
+            <Section title="States (solid / primary)">
+                <Row label="">
+                    <AnchorButton href="#" intent="primary" text="Default" data-compare="anchorbtn-solid" />
+                    <AnchorButton href="#" intent="primary" text="Disabled" disabled={true} data-compare="anchorbtn-disabled" />
+                    <AnchorButton href="#" intent="primary" text="Loading" loading={true} />
+                    <AnchorButton href="#" intent="primary" text="Active" active={true} />
+                </Row>
+            </Section>
+
+            <Section title="With icons">
+                <Row label="">
+                    <AnchorButton href="#" icon="add" text="Start icon" intent="primary" data-compare="anchorbtn-icon" />
+                    <AnchorButton href="#" endIcon="share" text="End icon" intent="primary" />
+                </Row>
             </Section>
         </div>
     );
@@ -615,6 +725,7 @@ function TagGallery() {
                     <TaggedTag icon={<Icon icon="tick" size={12} />} dataCompare="tag-icon">With icon</TaggedTag>
                     <Tag icon={<Icon icon="tick" size={12} />} intent="success">Success icon</Tag>
                     <Tag endIcon={<Icon icon="caret-down" size={12} />} intent="primary">End icon</Tag>
+                    <TaggedTag icon="tick" dataCompare="tag-icon-string">String name</TaggedTag>
                 </div>
             </Section>
 
@@ -885,6 +996,19 @@ function CheckboxGallery() {
                     <TaggedCheckbox dataCompare="cb-indeterminate" label="Indeterminate" indeterminate={true} />
                     <TaggedCheckbox dataCompare="cb-disabled" label="Disabled" disabled={true} />
                     <TaggedCheckbox dataCompare="cb-checked-disabled" label="Disabled checked" disabled={true} defaultChecked={true} />
+                </div>
+            </Section>
+
+            {/* Whole-control specimens — data-compare on an inline-block wrapper so the
+                per-specimen crop covers box + label (mirrors analyst-ui's CheckboxGallery). */}
+            <Section title="Whole control (box + label)">
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
+                    <span data-vcompare="cb-control-unchecked" style={{ display: "inline-block" }}>
+                        <Checkbox label="Unchecked" />
+                    </span>
+                    <span data-vcompare="cb-control-checked" style={{ display: "inline-block" }}>
+                        <Checkbox label="Checked" defaultChecked={true} />
+                    </span>
                 </div>
             </Section>
 
@@ -1913,10 +2037,15 @@ function DrawerGallery() {
             const panel = document.querySelector(`.${Classes.DRAWER}`);
             const header = panel?.querySelector(`.${Classes.DRAWER_HEADER}`);
             const body = panel?.querySelector(`.${Classes.DRAWER_BODY}`);
+            // Blueprint's drawer close button reuses the dialog close-button class
+            // (drawer.tsx → className={Classes.DIALOG_CLOSE_BUTTON}). analyst's Drawer
+            // tags its close button drawer-close, so pair it here for the harness.
+            const close = panel?.querySelector(`.${Classes.DIALOG_CLOSE_BUTTON}`);
 
             if (panel) panel.setAttribute("data-compare", "drawer-panel");
             if (header) header.setAttribute("data-compare", "drawer-header");
             if (body) body.setAttribute("data-compare", "drawer-body");
+            if (close) close.setAttribute("data-compare", "drawer-close");
         }
         tag();
         const t = setTimeout(tag, 100);
@@ -1948,6 +2077,176 @@ function DrawerGallery() {
                     </p>
                 </div>
             </Drawer>
+        </div>
+    );
+}
+
+/**
+ * Blueprint reference for MultistepDialog. Renders ONE wizard open by default (step 2 of 3
+ * active, via initialStepIndex={1}) so the harness captures a viewed/active step plus the
+ * Back+Next footer simultaneously.
+ *
+ * Blueprint portals to document.body; we querySelector + setAttribute the inner elements after
+ * mount (same pattern as Dialog/Drawer references). Inherited Dialog keys (dialog-panel/-header/
+ * -footer/-close) pair with the analyst MultistepDialog's composed Dialog; multistep-* keys pair
+ * the panels/rail/active-step/circle/right-panel.
+ *
+ * Must match analyst-ui MultistepDialogGallery exactly.
+ *
+ * Dark mode: portalClassName={Classes.DARK} when ?theme=dark (same fix as Dialog/Drawer).
+ */
+function MultistepDialogGallery() {
+    const dark = new URLSearchParams(window.location.search).get("theme") === "dark";
+    const [role, setRole] = useState("editor");
+
+    useEffect(() => {
+        function tag() {
+            const dialog = document.querySelector(`.${Classes.DIALOG}`);
+            if (!dialog) return;
+            const set = (sel: string, key: string, root: Element = dialog) => {
+                const el = root.querySelector(sel);
+                if (el) el.setAttribute("data-compare", key);
+            };
+            dialog.setAttribute("data-compare", "dialog-panel");
+            set(`.${Classes.DIALOG_HEADER}`, "dialog-header");
+            set(`.${Classes.DIALOG_FOOTER}`, "dialog-footer");
+            set(`.${Classes.DIALOG_CLOSE_BUTTON}`, "dialog-close");
+            set(`.${Classes.MULTISTEP_DIALOG_PANELS}`, "multistep-panels");
+            set(`.${Classes.MULTISTEP_DIALOG_LEFT_PANEL}`, "multistep-rail");
+            set(`.${Classes.MULTISTEP_DIALOG_RIGHT_PANEL}`, "multistep-panel");
+            const active = dialog.querySelector(
+                `.${Classes.DIALOG_STEP_CONTAINER}.${Classes.ACTIVE}`,
+            );
+            if (active) {
+                active.setAttribute("data-compare", "multistep-step-active");
+                const icon = active.querySelector(`.${Classes.DIALOG_STEP_ICON}`);
+                if (icon) icon.setAttribute("data-compare", "multistep-circle-active");
+            }
+        }
+        tag();
+        const t = setTimeout(tag, 100);
+        return () => clearTimeout(t);
+    }, []);
+
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <p style={{ fontSize: 14, opacity: 0.6, margin: 0 }}>
+                The wizard below is open by default (on step 2) for comparison harness screenshots.
+            </p>
+            <MultistepDialog
+                isOpen={true}
+                title="Create project"
+                icon="projects"
+                isCloseButtonShown={true}
+                initialStepIndex={1}
+                finalButtonProps={{ text: "Create" }}
+                onClose={() => {}}
+                portalClassName={dark ? Classes.DARK : undefined}
+            >
+                <DialogStep
+                    id="info"
+                    title="Project info"
+                    panel={
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <FormGroup
+                                label="Project name"
+                                labelInfo="(required)"
+                                labelFor="ms-project-name"
+                                helperText="Shown in the workspace sidebar and in URLs."
+                            >
+                                <InputGroup
+                                    id="ms-project-name"
+                                    leftIcon="projects"
+                                    defaultValue="Apollo Initiative"
+                                    fill
+                                />
+                            </FormGroup>
+                            <FormGroup label="Workspace" labelFor="ms-workspace">
+                                <HTMLSelect
+                                    id="ms-workspace"
+                                    fill
+                                    options={["Engineering", "Design", "Research", "Operations"]}
+                                />
+                            </FormGroup>
+                            <FormGroup
+                                label="Description"
+                                labelFor="ms-description"
+                                helperText="Optional — a short summary of the project's goals."
+                            >
+                                <TextArea
+                                    id="ms-description"
+                                    rows={3}
+                                    fill
+                                    placeholder="What is this project about?"
+                                />
+                            </FormGroup>
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="members"
+                    title="Members"
+                    panel={
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <FormGroup
+                                label="Invite by email"
+                                labelFor="ms-invite"
+                                helperText="Separate multiple addresses with commas."
+                            >
+                                <InputGroup
+                                    id="ms-invite"
+                                    type="email"
+                                    leftIcon="envelope"
+                                    placeholder="name@company.com"
+                                    fill
+                                />
+                            </FormGroup>
+                            <RadioGroup
+                                name="ms-role"
+                                label="Default role"
+                                selectedValue={role}
+                                onChange={(e) => setRole((e.target as HTMLInputElement).value)}
+                                options={[
+                                    { value: "owner", label: "Owner — full access, can manage members" },
+                                    { value: "editor", label: "Editor — can create and edit content" },
+                                    { value: "viewer", label: "Viewer — read-only access" },
+                                ]}
+                            />
+                            <Switch label="Send an invitation email" defaultChecked />
+                        </div>
+                    }
+                />
+                <DialogStep
+                    id="review"
+                    title="Review"
+                    panel={
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}>
+                            <Callout intent="primary" title="Ready to create">
+                                Review the summary below, then choose Create to set up your project.
+                            </Callout>
+                            <dl
+                                style={{
+                                    margin: 0,
+                                    display: "grid",
+                                    gridTemplateColumns: "140px 1fr",
+                                    columnGap: 16,
+                                    rowGap: 8,
+                                    fontSize: 14,
+                                }}
+                            >
+                                <dt className={Classes.TEXT_MUTED}>Project name</dt>
+                                <dd style={{ margin: 0 }}>Apollo Initiative</dd>
+                                <dt className={Classes.TEXT_MUTED}>Workspace</dt>
+                                <dd style={{ margin: 0 }}>Engineering</dd>
+                                <dt className={Classes.TEXT_MUTED}>Default role</dt>
+                                <dd style={{ margin: 0, textTransform: "capitalize" }}>{role}</dd>
+                                <dt className={Classes.TEXT_MUTED}>Notifications</dt>
+                                <dd style={{ margin: 0 }}>Invitation email on</dd>
+                            </dl>
+                        </div>
+                    }
+                />
+            </MultistepDialog>
         </div>
     );
 }
@@ -2219,7 +2518,11 @@ function MenuGallery() {
                         role="separator"
                         data-compare="menu-header"
                     >
-                        <h6>{/* must be h6 to match Blueprint internal markup */}Actions</h6>
+                        {/* Use the real <H6> component, not a bare <h6>: Blueprint's
+                            MenuDivider renders <H6> which carries class="bp6-heading"
+                            (font-size 14px). A bare <h6> falls back to the UA default
+                            (~9.38px), which made this specimen falsely diff. */}
+                        <H6>Actions</H6>
                     </li>
 
                     {/* Plain item with icon */}
@@ -2244,13 +2547,12 @@ function MenuGallery() {
                         data-compare="menu-item-active"
                     />
 
-                    {/* Item with submenu caret — using children triggers Blueprint's submenu rendering */}
+                    {/* Item with a secondary label (analyst-ui dropped the no-op submenu caret) */}
                     <MenuItem
                         icon="cog"
                         text="Settings"
-                    >
-                        <MenuItem text="Sub item 1" />
-                    </MenuItem>
+                        label="⌘,"
+                    />
 
                     {/* Plain divider — use raw <li> to forward data-compare.
                         Blueprint renders <MenuDivider> as:
@@ -4867,12 +5169,18 @@ function TimezoneSelectGallery() {
             if (!menuUl) return;
             menuUl.setAttribute("data-compare", "tz-menu");
 
-            // tz-item: "New York" — index 6 in the minimal list
-            // Blueprint's MINIMAL_TIMEZONE_ITEMS order:
-            //   0=UTC, 1=Hawaii(Honolulu), 2=Alaska(Anchorage), 3=LA, 4=Denver, 5=Chicago, 6=NewYork
-            const nyLi = menuUl.children[6] as HTMLElement | undefined;
-            if (nyLi) {
-                const anchor = nyLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
+            // NOTE: we deliberately do NOT tag .bp6-popover-content as "popover-content" here.
+            // Analyst's Popover auto-tags its transparent transition WRAPPER (shadow, no bg/radius),
+            // which sits at a different nesting level than Blueprint's styled .bp6-popover-content
+            // panel — pairing them yields a false bg/shadow/radius diff. The harness's benign
+            // "only in analyst: popover-content" note is the honest signal.
+
+            // tz-item: "Denver" — index 6 in Blueprint's MINIMAL_TIMEZONE_ITEMS.
+            // Real order: 0=UTC, 1=Pago Pago, 2=Hawaii(Honolulu), 3=Marquesas, 4=Alaska(Anchorage),
+            //   5=LA, 6=Denver, 7=Mexico City, 8=New York … (analyst's minimal list now matches this order).
+            const itemLi = menuUl.children[6] as HTMLElement | undefined;
+            if (itemLi) {
+                const anchor = itemLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
                 if (anchor) {
                     anchor.setAttribute("data-compare", "tz-item");
                     // tz-item-offset: Blueprint renders the label (shortName) as a span.bp6-menu-item-label
@@ -4929,8 +5237,173 @@ function TimezoneSelectGallery() {
     );
 }
 
+/**
+ * Blueprint reference for DataTable (`<Table2>`). `data-compare` keys MUST match
+ * analyst-ui's gallery so the harness can crop + diff the grids side-by-side.
+ */
+const DATA_TABLE_ROWS = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+
+const DATA_TABLE_ROLES = ["Engineer", "Designer", "Manager", "Analyst"];
+const DATA_TABLE_CITIES = ["London", "Seattle", "Austin", "Lagos", "Prague", "Osaka"];
+const DATA_TABLE_MANY = Array.from({ length: 1000 }, (_, i) => ({
+    name: `Person ${i + 1}`,
+    age: 20 + (i % 50),
+    role: DATA_TABLE_ROLES[i % DATA_TABLE_ROLES.length],
+    location: DATA_TABLE_CITIES[i % DATA_TABLE_CITIES.length],
+}));
+
+function DataTableGallery() {
+    const rows = DATA_TABLE_ROWS;
+    const many = DATA_TABLE_MANY;
+    return (
+        <div className="flex flex-col gap-6">
+            <BpSection title="Basic grid (sticky header · numbered gutter · ruled cells)">
+                <div data-compare="data-table-basic" style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        enableColumnReordering
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Virtualized (1,000 rows · fixed height · scroll to test windowing)">
+                <div data-compare="data-table-virtual" style={{ width: 460, height: 300 }}>
+                    <BpTable2 numRows={many.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{many[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{many[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{many[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{many[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Selection (cell range + focused cell)">
+                <div data-compare="data-table-selection" style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        selectedRegions={[{ rows: [1, 2], cols: [1, 2] }]}
+                        enableFocusedCell={true}
+                        focusedCell={{ row: 1, col: 1, focusSelectionEnd: false }}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Editable cells (double-click Name or Role · Enter commits · Esc reverts)">
+                <div data-compare="data-table-editable" style={{ width: 460, height: 150 }}>
+                    <EditableDataTableReference />
+                </div>
+            </BpSection>
+            {/* Visual-only (no data-compare): Blueprint randomizes loading-bar widths
+                (`LoadableContent variableLength`, Math.random 25-75%), so no exact diff. */}
+            <BpSection title="Loading (Blueprint variable-width skeleton — random per render)">
+                <div style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        loadingOptions={[
+                            TableLoadingOption.CELLS,
+                            TableLoadingOption.COLUMN_HEADERS,
+                            TableLoadingOption.ROW_HEADERS,
+                        ]}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Multiple selection (Cmd/Ctrl-click adds a region · two regions shown)">
+                <div data-compare="data-table-multi" style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        enableMultipleSelection
+                        selectedRegions={[
+                            { rows: [0, 0], cols: [0, 0] },
+                            { rows: [2, 3], cols: [2, 3] },
+                        ]}
+                        enableFocusedCell={true}
+                        focusedCell={{ row: 2, col: 2, focusSelectionEnd: false }}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+        </div>
+    );
+}
+
+/** Editable-cells reference (Loop 5): Name + Role use Blueprint's `EditableCell2`. */
+function EditableDataTableReference() {
+    const [rows, setRows] = useState(DATA_TABLE_ROWS);
+    const setCell = (key: "name" | "role", r: number, value: string) =>
+        setRows((prev) => prev.map((row, i) => (i === r ? { ...row, [key]: value } : row)));
+    return (
+        <BpTable2 numRows={rows.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+            <BpColumn
+                name="Name"
+                cellRenderer={(r) => (
+                    <BpEditableCell2 value={rows[r].name} onConfirm={(v) => setCell("name", r, v)} />
+                )}
+            />
+            <BpColumn
+                name="Age"
+                cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+            />
+            <BpColumn
+                name="Role"
+                cellRenderer={(r) => (
+                    <BpEditableCell2 value={rows[r].role} onConfirm={(v) => setCell("role", r, v)} />
+                )}
+            />
+            <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+        </BpTable2>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
+    { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
+    { id: "anchor-button", title: "AnchorButton", render: () => <AnchorButtonGallery /> },
     { id: "card", title: "Card", render: () => <CardGallery /> },
     { id: "icon", title: "Icon", render: () => <IconGallery /> },
     { id: "text", title: "Text", render: () => <TextGallery /> },
@@ -4953,6 +5426,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
     { id: "dialog", title: "Dialog", render: () => <DialogGallery /> },
+    { id: "multistep-dialog", title: "MultistepDialog", render: () => <MultistepDialogGallery /> },
     { id: "alert", title: "Alert", render: () => <AlertGallery /> },
     { id: "drawer", title: "Drawer", render: () => <DrawerGallery /> },
     { id: "popover", title: "Popover", render: () => <PopoverGallery /> },
@@ -4969,6 +5443,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "tree", title: "Tree", render: () => <TreeGallery /> },
     { id: "panel-stack", title: "PanelStack", render: () => <PanelStackGallery /> },
     { id: "html-table", title: "HTMLTable", render: () => <HTMLTableGallery /> },
+    { id: "data-table", title: "DataTable", render: () => <DataTableGallery /> },
     { id: "editable-text", title: "EditableText", render: () => <EditableTextGallery /> },
     { id: "entity-title", title: "EntityTitle", render: () => <EntityTitleGallery /> },
     { id: "non-ideal-state", title: "NonIdealState", render: () => <NonIdealStateGallery /> },
@@ -4994,32 +5469,209 @@ const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
 
+/**
+ * Sidebar category grouping — kept in lock-step with the analyst-ui gallery
+ * (src/App.tsx) so the two galleries navigate identically for side-by-side comparison.
+ * Any id missing from every group falls into "Other" so nothing is dropped.
+ */
+const CATEGORIES: { label: string; ids: string[] }[] = [
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
+    { label: "Overlays", ids: ["dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
+    { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
+    { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
+    { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+    { label: "Data", ids: ["data-table"] },
+];
+
+type ComponentEntry = (typeof COMPONENTS)[number];
+
+const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
+    const byId = new Map(COMPONENTS.map((c) => [c.id, c]));
+    const groups = CATEGORIES.map((g) => ({
+        label: g.label,
+        items: g.ids.map((id) => byId.get(id)).filter((c): c is ComponentEntry => c != null),
+    }));
+    const seen = new Set(CATEGORIES.flatMap((g) => g.ids));
+    const leftover = COMPONENTS.filter((c) => !seen.has(c.id));
+    if (leftover.length) groups.push({ label: "Other", items: leftover });
+    return groups;
+})();
+
+/**
+ * Components whose specimens render an overlay OPEN by default (for the harness). In the
+ * sidebar view these are gated behind a Show/Hide toggle so navigating to them doesn't
+ * trap the page behind a modal. Mirrors analyst-ui's OVERLAY_IDS.
+ */
+const OVERLAY_IDS = new Set([
+    "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
+    "select", "suggest", "multi-select", "timezone-select", "date-input", "date-range-input",
+]);
+
+function OverlaySpecimen({ title, children }: { title: string; children: React.ReactNode }) {
+    const [show, setShow] = useState(false);
+    return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+            <Button
+                intent="primary"
+                icon={show ? "chevron-down" : "chevron-right"}
+                text={show ? `Hide ${title}` : `Show ${title}`}
+                onClick={() => setShow((s) => !s)}
+            />
+            {show && children}
+        </div>
+    );
+}
+
+/** Selected component is driven by the URL hash (`#button`) — shareable, matches analyst-ui. */
+function useHash(): string {
+    const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
+    useEffect(() => {
+        const onChange = () => setHash(decodeURIComponent(window.location.hash.replace(/^#/, "")));
+        window.addEventListener("hashchange", onChange);
+        return () => window.removeEventListener("hashchange", onChange);
+    }, []);
+    return hash;
+}
+
+function Sidebar({ selectedId, dark, onToggleDark }: { selectedId: string; dark: boolean; onToggleDark: () => void }) {
+    const c = dark
+        ? { bg: "#252a31", border: "rgba(255,255,255,0.15)", text: "#f6f7f9", muted: "#abb3bf" }
+        : { bg: "#ffffff", border: "rgba(17,20,24,0.15)", text: "#1c2127", muted: "#5f6b7c" };
+    return (
+        <aside
+            style={{
+                position: "sticky",
+                top: 0,
+                height: "100vh",
+                width: 240,
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+                borderRight: `1px solid ${c.border}`,
+                background: c.bg,
+                overflow: "hidden",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "12px 16px",
+                    borderBottom: `1px solid ${c.border}`,
+                }}
+            >
+                <span style={{ fontSize: 16, fontWeight: 600, color: c.text }}>Blueprint reference</span>
+                <Button
+                    variant="minimal"
+                    size="small"
+                    aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                    icon={dark ? "lightbulb" : "moon"}
+                    onClick={onToggleDark}
+                />
+            </div>
+            <nav style={{ flex: 1, overflowY: "auto", padding: "12px 8px" }}>
+                {CATEGORY_GROUPS.map((group) => (
+                    <div key={group.label} style={{ marginBottom: 16 }}>
+                        <div
+                            style={{
+                                padding: "0 8px 4px",
+                                fontSize: 11,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.04em",
+                                color: c.muted,
+                            }}
+                        >
+                            {group.label}
+                        </div>
+                        <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 1 }}>
+                            {group.items.map((item) => {
+                                const active = item.id === selectedId;
+                                return (
+                                    <li key={item.id}>
+                                        <a
+                                            href={`#${item.id}`}
+                                            aria-current={active ? "page" : undefined}
+                                            style={{
+                                                display: "block",
+                                                padding: "4px 8px",
+                                                borderRadius: 2,
+                                                fontSize: 14,
+                                                textDecoration: "none",
+                                                background: active ? "#2d72d2" : "transparent",
+                                                color: active ? "#ffffff" : c.text,
+                                            }}
+                                        >
+                                            {item.title}
+                                        </a>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                ))}
+            </nav>
+        </aside>
+    );
+}
+
+function ComponentView({ component }: { component: ComponentEntry }) {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, [component.id]);
+    return (
+        <div id={component.id} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{component.title}</h2>
+            {OVERLAY_IDS.has(component.id) ? (
+                <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
+            ) : (
+                component.render()
+            )}
+        </div>
+    );
+}
+
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
+    const hash = useHash();
 
-    const shown = ONLY ? COMPONENTS.filter((c) => c.id === ONLY) : COMPONENTS;
-    const isolated = ONLY != null && shown.length > 0;
+    // Isolated single-component view (harness mode): no chrome, just the specimens.
+    // This path MUST stay behavior-identical for tools/compare.sh.
+    if (ONLY != null && COMPONENTS.some((c) => c.id === ONLY)) {
+        const c = COMPONENTS.find((x) => x.id === ONLY)!;
+        return (
+            <div className={dark ? "bp6-dark" : ""} style={{ minHeight: "100vh", background: dark ? "#1c2127" : "#f6f7f9", padding: 40 }}>
+                <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
+                    <div id={c.id} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        {c.render()}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const selected = COMPONENTS.find((c) => c.id === hash) ?? COMPONENTS[0];
 
     return (
         <div
             className={dark ? "bp6-dark" : ""}
-            style={{ minHeight: "100vh", background: dark ? "#1c2127" : "#f6f7f9", padding: 40 }}
+            style={{
+                minHeight: "100vh",
+                display: "flex",
+                background: dark ? "#1c2127" : "#f6f7f9",
+                color: dark ? "#f6f7f9" : "#1c2127",
+            }}
         >
-            <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 32 }}>
-                {!isolated && (
-                    <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <h1 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>Blueprint reference</h1>
-                        <Button text={`Toggle ${dark ? "light" : "dark"}`} onClick={() => setDark((d) => !d)} />
-                    </header>
-                )}
-
-                {shown.map((c) => (
-                    <div key={c.id} id={c.id} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        {!isolated && <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>{c.title}</h2>}
-                        {c.render()}
-                    </div>
-                ))}
-            </div>
+            <Sidebar selectedId={selected.id} dark={dark} onToggleDark={() => setDark((d) => !d)} />
+            <main style={{ flex: 1, padding: "32px 40px", overflowX: "hidden" }}>
+                <div style={{ maxWidth: 820, margin: "0 auto" }}>
+                    <ComponentView component={selected} />
+                </div>
+            </main>
         </div>
     );
 }

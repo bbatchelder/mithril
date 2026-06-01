@@ -7,16 +7,38 @@
  * @see https://blueprintjs.com/docs/#core/components/menu
  */
 
-import { forwardRef } from "react";
+import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
 
 /* ============================================================
  * Types
  * ============================================================ */
 
-export type MenuIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type MenuIntent = Intent;
+
+/**
+ * Slot for integrating MenuItem with a parent menu *system* that owns keyboard
+ * navigation — e.g. Radix ContextMenu. When a slot is provided via context, each
+ * MenuItem renders its interactive element through the slot (a Radix `Item`) so the
+ * parent supplies roving focus, typeahead, and Escape. ContextMenu sets this; in all
+ * other contexts it is null and MenuItem renders its own `<button>`/`<a>`.
+ */
+export interface MenuItemSlotProps {
+    className?: string;
+    disabled?: boolean;
+    /** Plain-text label for the parent's typeahead. */
+    textValue?: string;
+    /** Activation (click / Enter / Space), driven by the parent menu system. */
+    onSelect?: (event: Event) => void;
+    /** Forwarded to the rendered item for the comparison harness. */
+    "data-compare"?: string;
+    children: React.ReactNode;
+}
+export type MenuItemSlot = React.ComponentType<MenuItemSlotProps>;
+export const MenuItemSlotContext = createContext<MenuItemSlot | null>(null);
 export type MenuSize = "small" | "medium" | "large";
 
 /* ============================================================
@@ -41,10 +63,14 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
     { className, size = "medium", ulRef, children, ...props },
     ref,
 ) {
+    // When inside a parent menu system (Radix ContextMenu sets the slot), that parent's
+    // Content element is the role="menu"; this <ul> is then presentational to avoid a
+    // nested/duplicate menu role.
+    const slotted = useContext(MenuItemSlotContext) != null;
     return (
         <ul
             ref={ulRef ?? ref}
-            role="menu"
+            role={slotted ? "none" : "menu"}
             {...props}
             className={cn(
                 // Blueprint .bp6-menu metrics:
@@ -60,6 +86,9 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
                 "min-w-[180px]",
                 // flex column for child spacing
                 "flex flex-col",
+                // Blueprint's .bp6-menu is block, so its li children resolve min-width to 0px.
+                // Our flex-col makes them flex items (min-width: auto); reset to 0 to match.
+                "[&>li]:min-w-0",
                 // Size context — pass via data attribute for MenuItem children
                 size !== "medium" && `menu-size-${size}`,
                 className,
@@ -99,64 +128,60 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
 // Active (keyboard/selected) state colors per intent — Blueprint's menu-item-active mixin.
 // Light: rgba(intentBg, 0.1) bg, intentFg text
 // Dark:  rgba(intentBg, 0.2) bg, intentFg-dark text
+// Theme-aware: bg = intent rest seed at alpha (default tier-3 = blue-3 etc.);
+// text/icon = canonical intent-text token (tier-2 light / tier-5 dark).
 const ACTIVE_CLASSES: Record<MenuIntent, string> = {
     // none → uses primary colors (Blueprint behavior: no-intent active = primary tinted)
     none: [
-        // bg: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
-        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-        // text: blue2 light / blue5 dark
-        "text-blue-2 dark:text-blue-5",
-        // icons inherit intent color
-        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+        "bg-primary/10 dark:bg-primary/20",
+        "text-intent-primary-text",
+        "[&_.menu-icon]:text-intent-primary-text",
     ].join(" "),
     primary: [
-        "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(45,114,210,0.2)]",
-        "text-blue-2 dark:text-blue-5",
-        "[&_.menu-icon]:text-blue-2 dark:[&_.menu-icon]:text-blue-5",
+        "bg-primary/10 dark:bg-primary/20",
+        "text-intent-primary-text",
+        "[&_.menu-icon]:text-intent-primary-text",
     ].join(" "),
     success: [
-        "bg-[rgba(35,133,81,0.1)] dark:bg-[rgba(35,133,81,0.2)]",
-        "text-green-2 dark:text-green-5",
-        "[&_.menu-icon]:text-green-2 dark:[&_.menu-icon]:text-green-5",
+        "bg-success/10 dark:bg-success/20",
+        "text-intent-success-text",
+        "[&_.menu-icon]:text-intent-success-text",
     ].join(" "),
     warning: [
-        "bg-[rgba(200,118,25,0.1)] dark:bg-[rgba(200,118,25,0.2)]",
-        "text-orange-2 dark:text-orange-5",
-        "[&_.menu-icon]:text-orange-2 dark:[&_.menu-icon]:text-orange-5",
+        "bg-warning/10 dark:bg-warning/20",
+        "text-intent-warning-text",
+        "[&_.menu-icon]:text-intent-warning-text",
     ].join(" "),
     danger: [
-        "bg-[rgba(205,66,70,0.1)] dark:bg-[rgba(205,66,70,0.2)]",
-        "text-red-2 dark:text-red-5",
-        "[&_.menu-icon]:text-red-2 dark:[&_.menu-icon]:text-red-5",
+        "bg-danger/10 dark:bg-danger/20",
+        "text-intent-danger-text",
+        "[&_.menu-icon]:text-intent-danger-text",
     ].join(" "),
 };
 
 // Intent (non-active) text colors — Blueprint's menu-item-intent mixin.
-// Light: palette -2 tier; Dark: palette -5 tier
+// Text = canonical intent-text token; hover/active bg = intent rest seed at alpha.
 const INTENT_CLASSES: Record<MenuIntent, string> = {
     none: "",
     primary: [
-        // text: blue2 light / blue5 dark
-        "text-blue-2 dark:text-blue-5",
-        // hover: rgba(blue3, 0.1) light / rgba(blue3, 0.2) dark
-        "hover:bg-[rgba(45,114,210,0.1)] dark:hover:bg-[rgba(45,114,210,0.2)]",
-        // active (mouse press): rgba(blue3, 0.2) light / rgba(blue3, 0.3) dark
-        "active:bg-[rgba(45,114,210,0.2)] dark:active:bg-[rgba(45,114,210,0.3)]",
+        "text-intent-primary-text",
+        "hover:bg-primary/10 dark:hover:bg-primary/20",
+        "active:bg-primary/20 dark:active:bg-primary/30",
     ].join(" "),
     success: [
-        "text-green-2 dark:text-green-5",
-        "hover:bg-[rgba(35,133,81,0.1)] dark:hover:bg-[rgba(35,133,81,0.2)]",
-        "active:bg-[rgba(35,133,81,0.2)] dark:active:bg-[rgba(35,133,81,0.3)]",
+        "text-intent-success-text",
+        "hover:bg-success/10 dark:hover:bg-success/20",
+        "active:bg-success/20 dark:active:bg-success/30",
     ].join(" "),
     warning: [
-        "text-orange-2 dark:text-orange-5",
-        "hover:bg-[rgba(200,118,25,0.1)] dark:hover:bg-[rgba(200,118,25,0.2)]",
-        "active:bg-[rgba(200,118,25,0.2)] dark:active:bg-[rgba(200,118,25,0.3)]",
+        "text-intent-warning-text",
+        "hover:bg-warning/10 dark:hover:bg-warning/20",
+        "active:bg-warning/20 dark:active:bg-warning/30",
     ].join(" "),
     danger: [
-        "text-red-2 dark:text-red-5",
-        "hover:bg-[rgba(205,66,70,0.1)] dark:hover:bg-[rgba(205,66,70,0.2)]",
-        "active:bg-[rgba(205,66,70,0.2)] dark:active:bg-[rgba(205,66,70,0.3)]",
+        "text-intent-danger-text",
+        "hover:bg-danger/10 dark:hover:bg-danger/20",
+        "active:bg-danger/20 dark:active:bg-danger/30",
     ].join(" "),
 };
 
@@ -173,8 +198,6 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     active?: boolean;
     /** Whether this item is non-interactive. */
     disabled?: boolean;
-    /** If true, renders a caret-right icon indicating a submenu exists. */
-    hasSubmenu?: boolean;
     /** Navigate to this URL when clicked. Renders as <a>. */
     href?: string;
     /** Click handler. */
@@ -185,6 +208,20 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLLIElement>,
     small?: boolean;
     /** Size mode. Overrides large/small shorthands. */
     size?: MenuSize;
+    /**
+     * ARIA role structure (ports Blueprint's `roleStructure`):
+     * - `"menuitem"` (default): `<li role="none"><button role="menuitem">` — for a `role="menu"` parent.
+     * - `"listoption"`: `<li role="option" aria-selected>` (inner role removed) — for a `role="listbox"`
+     *   parent (the combobox listbox of Select/Suggest/MultiSelect/Omnibar).
+     * - `"none"`: `<li role="none">` with no inner role — for wrapping in a custom list.
+     * @default "menuitem"
+     */
+    roleStructure?: "menuitem" | "listoption" | "none";
+    /**
+     * Whether this option is selected. Only applies when `roleStructure="listoption"`; sets
+     * `aria-selected` on the option. (Show your own tick via the `icon` prop.)
+     */
+    selected?: boolean;
 }
 
 export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuItem(
@@ -195,17 +232,32 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         intent = "none",
         active = false,
         disabled = false,
-        hasSubmenu = false,
         href,
         onClick,
         large = false,
         small = false,
         size,
+        roleStructure = "menuitem",
+        selected,
         className,
         ...liProps
     },
     ref,
 ) {
+    // A parent menu system (Radix ContextMenu) may inject a slot to own keyboard nav.
+    const Slot = useContext(MenuItemSlotContext);
+
+    // Role structure (mirrors Blueprint): [liRole, targetRole, ariaSelected].
+    const [liRole, targetRole, ariaSelected]: [
+        string | undefined,
+        string | undefined,
+        boolean | undefined,
+    ] =
+        roleStructure === "listoption"
+            ? ["option", undefined, Boolean(selected)]
+            : roleStructure === "none"
+              ? ["none", undefined, undefined]
+              : ["none", "menuitem", undefined];
     // Extract data-compare to forward to the inner interactive element
     // (mirrors Blueprint: MenuItem spreads htmlProps onto the inner <a>, not the <li>)
     const dataCompare = (liProps as Record<string, unknown>)["data-compare"] as string | undefined;
@@ -221,6 +273,10 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         "flex flex-row items-start gap-[8px]",
         // border-radius: 4px
         "rounded-bp",
+        // Suppress browser default focus ring — Blueprint's .bp6-menu-item is `outline:none`.
+        // The active/hover bg + intent text already provide the focus indication, so the
+        // browser ring on top reads as a duplicate "outline + filled bg" treatment.
+        "outline-none focus:outline-none focus-visible:outline-none",
         // padding: 4px 8px (medium); line-height: 22px
         effectiveSize === "small" && "px-[8px] py-[2px]",
         effectiveSize === "medium" && "px-[8px] py-[4px]",
@@ -275,16 +331,6 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         </span>
     ) : null;
 
-    const caretNode = hasSubmenu ? (
-        <span className={cn(
-            "menu-icon flex flex-col justify-center shrink-0",
-            effectiveSize === "small" ? "h-[20px]" : "h-[22px]",
-            !disabled && !active && "text-foreground-muted",
-        )} aria-hidden="true">
-            <Icon icon="caret-right" size={16} />
-        </span>
-    ) : null;
-
     const content = (
         <>
             {iconNode}
@@ -292,17 +338,38 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
                 {text}
             </span>
             {labelNode}
-            {caretNode}
         </>
     );
 
-    const inner = href && !disabled ? (
+    const inner = Slot ? (
+        // Inside a parent menu system (Radix ContextMenu): render the interactive element
+        // through the slot so the parent owns roving focus, typeahead, and activation.
+        <Slot
+            className={cn(innerClasses, "text-left")}
+            disabled={disabled}
+            textValue={typeof text === "string" ? text : undefined}
+            onSelect={(event) => onClick?.(event as unknown as React.MouseEvent)}
+            data-compare={dataCompare}
+        >
+            {content}
+        </Slot>
+    ) : roleStructure === "listoption" ? (
+        // Listbox option (Select/Suggest/MultiSelect): the <li role="option"> IS the
+        // option. Focus stays on the combobox input (aria-activedescendant), so the
+        // inner element must NOT be a focusable button/anchor — that would nest an
+        // interactive control inside the option (axe nested-interactive / WCAG 4.1.2).
+        // The click handler lives on the <li> (below) so a click anywhere in the option
+        // selects; keyboard selection happens on the input. This inner div is presentational.
+        <div className={innerClasses} data-compare={dataCompare}>
+            {content}
+        </div>
+    ) : href && !disabled ? (
         <a
             href={href}
             onClick={onClick}
             className={innerClasses}
             tabIndex={0}
-            role="menuitem"
+            role={targetRole}
             data-compare={dataCompare}
         >
             {content}
@@ -314,7 +381,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
             disabled={disabled}
             className={cn(innerClasses, "border-none bg-none text-left")}
             tabIndex={disabled ? -1 : 0}
-            role="menuitem"
+            role={targetRole}
             aria-disabled={disabled}
             data-compare={dataCompare}
         >
@@ -325,7 +392,11 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
     return (
         <li
             ref={ref}
-            role="none"
+            role={liRole}
+            aria-selected={ariaSelected}
+            // In listbox mode the option itself is the click target (its inner div is
+            // presentational), so a click anywhere in the option selects it.
+            onClick={roleStructure === "listoption" && !disabled ? onClick : undefined}
             className={cn("block", className)}
             {...liProps}
         >
@@ -386,11 +457,14 @@ export const MenuDivider = forwardRef<HTMLLIElement, MenuDividerProps>(function 
                 <h6 className={cn(
                     // Blueprint .menu-heading: bold, overflow-ellipsis
                     "font-semibold overflow-hidden text-ellipsis whitespace-nowrap",
-                    // line-height: 17px (icon size 16px + 1px for descenders)
-                    "leading-[17px]",
                     // font-size: 14px (same as body — Blueprint heading-typography
                     // for H6 uses the same font size, just bold)
                     "text-body",
+                    // line-height: 17px (icon size 16px + 1px for descenders).
+                    // MUST come AFTER text-body so tailwind-merge keeps it — text-body
+                    // otherwise shadows leading-* with the default --leading-bp (~18px).
+                    // See the matching note on MenuItem above.
+                    "leading-[17px]",
                     // margin: 0; padding: 8px 8px 0 8px
                     "m-0 px-[8px] pt-[8px] pb-0",
                     // color: foreground (heading color = text color in Blueprint)

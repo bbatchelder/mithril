@@ -155,8 +155,9 @@ function buildControlClassName(alignIndicator: AlignIndicator, compact: boolean)
         // space for the indicator. In a card, the indicator's margin is zeroed (see INDICATOR_RESET_CLASS)
         // and we use the uniform card padding + gap instead.
         padding,
-        // Remove Blueprint's default block margin-bottom on controls
-        "mb-0",
+        // Remove the control's default block margin-bottom (mb-2) inside a card.
+        // `!` so it wins over the control's own mb-2 regardless of Tailwind class order.
+        "!mb-0",
         // Cursor and selection: card handles interaction
         "cursor-pointer",
         "select-none",

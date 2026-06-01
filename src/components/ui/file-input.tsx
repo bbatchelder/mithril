@@ -36,7 +36,10 @@ export type FileInputSize = "small" | "medium" | "large";
 export interface FileInputProps extends Omit<React.LabelHTMLAttributes<HTMLLabelElement>, "onChange"> {
     /**
      * Display text when no file is selected (or when hasSelection is false).
-     * Color is foreground-muted (placeholder-like).
+     * Rendered in `--foreground-disabled` (rgba(95,107,124,0.6) light / rgba(171,179,191,0.6)
+     * dark) — Blueprint's exact empty-state prompt color (`.bp6-file-upload-input`). Note this
+     * is a faithful Blueprint-parity delta that sits below WCAG AA (~2.45:1 light); consumers
+     * who need AA can darken this class. See the contrast posture in docs/comparison-vs-blueprint.
      * @default "Choose file..."
      */
     text?: React.ReactNode;
@@ -128,7 +131,11 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
             className={cn(
                 // Wrapper: inline-block by default; fill → block/100%
                 "relative",
-                fill ? "block w-full" : "inline-block",
+                // Blueprint's computed width is 253px (input min-width + button gutter +
+                // 3px border accounting). Required because both the native input and the
+                // visible box span are position:absolute — the label has no in-flow content,
+                // so without an explicit width a flex-column parent stretches it to 100%.
+                fill ? "block w-full" : "inline-block w-[253px]",
                 // Height matches the box span (sized by size variant)
                 size === "small" && "h-6",
                 size === "medium" && "h-7.5",
@@ -250,8 +257,9 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                         // Default/none solid Button colors (mirrors HTMLSelect and Button solid/none)
                         "bg-light-gray-5 shadow-button",
                         "text-foreground",
-                        "dark:bg-dark-gray-3 dark:shadow-button",
-                        "dark:text-foreground",
+                        "dark:bg-[#303740] dark:shadow-button",
+                        // White in dark to match Blueprint's none-control text (Delta #1, handoff 0064).
+                        "dark:text-white",
                         // Hover: Blueprint pt-button-hover (via label:hover → span:hover inheritance)
                         // Note: hover is verified visually; the harness only captures resting state.
                         // Disabled: muted appearance

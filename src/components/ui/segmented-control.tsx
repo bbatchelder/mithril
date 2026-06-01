@@ -2,9 +2,11 @@ import { forwardRef, useCallback, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 import { buttonVariants, type ButtonSize } from "@/components/ui/button";
+import { resolveIcon, type IconProp } from "@/components/ui/icon";
 
-export type SegmentedControlIntent = "none" | "primary";
+export type SegmentedControlIntent = Extract<Intent, "none" | "primary">;
 
 export interface SegmentedControlOption {
     /** Display label for the segment. */
@@ -13,8 +15,8 @@ export interface SegmentedControlOption {
     value: string;
     /** Whether this specific segment is disabled. */
     disabled?: boolean;
-    /** Optional icon rendered before the label. */
-    icon?: React.ReactNode;
+    /** Optional icon rendered before the label. An icon-name string (e.g. `"list"`) or a custom element. */
+    icon?: IconProp;
 }
 
 export interface SegmentedControlProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange"> {
@@ -62,6 +64,9 @@ export interface SegmentedControlProps extends Omit<React.HTMLAttributes<HTMLDiv
  */
 const trackVariants = cva(
     // Base: display flex, gap 2px = 0.5, padding 2px = 0.5, rounded-bp = 4px
+    // NOTE: do NOT pin the track's min-width to quiet the harness sc-default flag. min-width:auto
+    // resolves per-specimen (flex-item-ness depends on each gallery container), so Blueprint's
+    // track computes 0px in one specimen and auto in others — forcing a value is whack-a-mole.
     "flex gap-0.5 p-0.5 rounded-bp bg-light-gray-5 dark:bg-dark-gray-2",
     {
         variants: {
@@ -230,9 +235,13 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
                         );
                     } else {
                         // Unselected: muted text, transparent bg (minimal). Override default foreground.
+                        // Must re-assert the dark color too: baseClasses (minimal/none) carries
+                        // `dark:text-white`/`dark:[&_svg]:fill-white`, whose `.dark`-scoped selector
+                        // out-specifies a plain `text-foreground-muted` in dark mode (would render
+                        // the unselected segment white). Blueprint's unselected segment is muted.
                         segmentClasses = cn(
                             baseClasses,
-                            "text-foreground-muted",
+                            "text-foreground-muted dark:text-foreground-muted dark:[&_svg]:fill-current",
                             // disabled segments stay disabled text (opacity is handled by button disabled:opacity-50)
                         );
                     }
@@ -260,9 +269,9 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
                             className={segmentClasses}
                             onClick={() => !isDisabled && handleClick(option.value)}
                         >
-                            {option.icon != null && (
+                            {resolveIcon(option.icon, { className: "!text-current" }) && (
                                 <span className="inline-flex [&_svg]:size-4 [&_svg]:shrink-0">
-                                    {option.icon}
+                                    {resolveIcon(option.icon, { className: "!text-current" })}
                                 </span>
                             )}
                             <span>{option.label}</span>

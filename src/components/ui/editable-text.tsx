@@ -2,8 +2,9 @@ import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, u
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
-export type EditableTextIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type EditableTextIntent = Intent;
 
 export interface EditableTextProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {
     /**
@@ -409,14 +410,14 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(functi
     // ── Styles ─────────────────────────────────────────────────────────────
     const hasValue = value !== "";
 
-    // Intent → text color (mirrors Blueprint's $pt-intent-text-colors and $pt-dark-intent-text-colors)
-    // Light: blue-2/green-2/orange-2/red-2; Dark: blue-5/green-5/orange-5/red-5
+    // Intent → text color via the canonical intent-text token (Blueprint
+    // $pt-intent-text-colors: tier-2 light / tier-5 dark), so it re-tints with the theme.
     const intentTextClass: Record<EditableTextIntent, string> = {
         none: "text-foreground",
-        primary: "text-blue-2 dark:text-blue-5",
-        success: "text-green-2 dark:text-green-5",
-        warning: "text-orange-2 dark:text-orange-5",
-        danger: "text-red-2 dark:text-red-5",
+        primary: "text-intent-primary-text",
+        success: "text-intent-success-text",
+        warning: "text-intent-warning-text",
+        danger: "text-intent-danger-text",
     };
 
     // The ::before pseudo ring div:

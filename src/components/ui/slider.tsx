@@ -2,6 +2,7 @@ import * as RadixSlider from "@radix-ui/react-slider";
 import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
 
 /**
  * Slider component — pixel-faithful reimplementation of Blueprint's `.bp6-slider`.
@@ -49,7 +50,7 @@ import { cn } from "@/lib/utils";
  * @see https://blueprintjs.com/docs/#core/components/sliders.slider
  */
 
-export type SliderIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type SliderIntent = Intent;
 
 export interface SliderProps
     extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "defaultValue"> {
@@ -98,13 +99,14 @@ export interface SliderProps
     _tagInternals?: boolean;
 }
 
-// Intent fill colors — literal values to defeat Tailwind v4 tree-shaking
+// Intent fill colors — intent rest seeds (re-tint with the theme); "none" is the
+// neutral track fill. (Seed utilities are emitted; vars stay alive elsewhere.)
 const INTENT_FILL_CLASS: Record<SliderIntent, string> = {
     none: "bg-[rgba(95,107,124,0.2)] dark:bg-[rgba(17,20,24,0.5)]",
-    primary: "bg-[#2d72d2]",
-    success: "bg-[#238551]",
-    warning: "bg-[#c87619]",
-    danger: "bg-[#cd4246]",
+    primary: "bg-primary",
+    success: "bg-success",
+    warning: "bg-warning",
+    danger: "bg-danger",
 };
 
 /** Count decimal places in a number */
@@ -168,6 +170,10 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
         vertical = false,
         _tagInternals = false,
         className,
+        // role="slider" lives on the Thumb, so pull the naming attrs out of the root
+        // spread and forward them there (axe aria-input-field-name / WCAG 4.1.2).
+        "aria-label": ariaLabel,
+        "aria-labelledby": ariaLabelledby,
         ...htmlProps
     },
     ref,
@@ -301,26 +307,30 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
 
                 {/* Handle (Blueprint .bp6-slider-handle) */}
                 <RadixSlider.Thumb
+                    aria-label={ariaLabel}
+                    aria-labelledby={ariaLabelledby}
                     className={cn(
-                        // 16×16px, border-radius:4px, position:absolute
+                        // 16×16px, border-radius:4px (Blueprint .bp6-slider-handle), position:absolute
                         // overflow:visible so the value badge can show outside the handle bounds
                         "block h-4 w-4 rounded-bp overflow-visible",
                         // Light: button-like bg + handle box-shadow
-                        // bg = pt-button default ≈ light-gray-5 (#f6f7f9)
+                        // Blueprint computed: rgba(18,20,24,0.502) 0 0 0 1px, rgba(18,20,24,0.502) 0 1px 1px 0
                         "bg-[#f6f7f9]",
-                        // handle-box-shadow: 0 0 0 1px rgba(black,0.5), 0 1px 1px rgba(black,0.5)
-                        "shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_1px_1px_rgba(0,0,0,0.5)]",
+                        "shadow-[0_0_0_1px_rgba(18,20,24,0.5),0_1px_1px_rgba(18,20,24,0.5)]",
                         // hover: slightly deeper shadow
-                        "hover:shadow-[0_0_0_1px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.6)] hover:cursor-grab hover:z-[2]",
+                        "hover:shadow-[0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.6)] hover:cursor-grab hover:z-[2]",
                         // active (grabbed): inset shadow + border + drop shadow
-                        "active:shadow-[inset_0_1px_1px_rgba(0,0,0,0.1),0_0_0_1px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.2)] active:cursor-grabbing",
-                        // focus: z-index
-                        "focus:z-[1] focus:outline-none",
+                        "active:shadow-[inset_0_1px_1px_rgba(18,20,24,0.1),0_0_0_1px_rgba(18,20,24,0.5),0_1px_2px_rgba(18,20,24,0.2)] active:cursor-grabbing",
+                        // focus: raise above siblings + a visible focus-visible ring
+                        // (WCAG 2.4.7). Matches Button's focus treatment; the bare
+                        // :focus state stays ring-free so visual parity holds.
+                        "focus:z-[1] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                         // Dark: gray-4 bg + dark-button-box-shadow
                         "dark:bg-[#abb3bf]",
-                        "dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.2)]",
-                        "dark:hover:bg-[#8f99a8] dark:hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.4)]",
-                        "dark:active:bg-[#738091] dark:active:shadow-[inset_0_1px_1px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(0,0,0,0.4)]",
+                        // Dark drop-shadow base = Blueprint's $pt-dark-elevation shadow color rgba(15,20,25,…), not pure black.
+                        "dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.2)]",
+                        "dark:hover:bg-[#8f99a8] dark:hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.4)]",
+                        "dark:active:bg-[#738091] dark:active:shadow-[inset_0_1px_1px_rgba(15,20,25,0.1),inset_0_0_0_1px_rgba(255,255,255,0.1),0_1px_2px_rgba(15,20,25,0.4)]",
                         // Disabled state (handled by parent opacity, also pointer-events:none)
                         disabled && "pointer-events-none bg-[#c5cbd3] shadow-none dark:bg-[#5f6b7c] dark:shadow-none",
                     )}
@@ -350,16 +360,19 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                                 // Dark: light-gray-3 bg (#e5e8eb) + dark-gray-5 text (#404854)
                                 "dark:bg-[#e5e8eb] dark:text-[#404854]",
                                 // box-shadow: $pt-tooltip-box-shadow (light) / $pt-dark-tooltip-box-shadow (dark)
-                                // Light: elevation-shadow-3 = 0 0 0 1px rgba(black,10%), 0 20px 25px -5px rgba(0,0,0,10%), ...
-                                "shadow-[0_0_0_1px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)]",
-                                // Dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba(black,0.4), 0 8px 24px rgba(black,0.4)
-                                "dark:shadow-[0_2px_4px_rgba(0,0,0,0.4),0_8px_24px_rgba(0,0,0,0.4)]",
+                                // Light: $pt-tooltip-box-shadow = elevation-shadow-3 — the hairline
+                                // ring uses Blueprint's rgba(20,20,20) elevation-border color.
+                                "shadow-[0_0_0_1px_rgba(20,20,20,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_15px_-3px_rgba(0,0,0,0.1)]",
+                                // Dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba(#0f1419,0.4), 0 8px 24px rgba(#0f1419,0.4)
+                                "dark:shadow-[0_2px_4px_rgba(17,20,25,0.4),0_8px_24px_rgba(17,20,25,0.4)]",
                                 // Disabled: no box-shadow (Blueprint .bp6-disabled .bp6-slider-label { box-shadow: none })
                                 disabled && "shadow-none dark:shadow-none",
                             )}
                             style={{
                                 // margin-left: handle-size/2 = 8px (centers within handle)
-                                // transform: translate(-50%, label-offset) = translate(-50%, 20px)
+                                // translate(-50%, 20px) puts the pill at y = thumbTop(12) + 20 = 32,
+                                // just below the handle (handle ends at y=28). The tick-axis container
+                                // below positions axis labels at the same y=32 so they share a row.
                                 marginLeft: "8px",
                                 transform: "translate(-50%, 20px)",
                                 top: 0,
@@ -395,10 +408,11 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                                     // Blueprint's .bp6-slider-label has no color set, inherits body text
                                 )}
                                 style={{
-                                    // Blueprint: transform: translate(-50%, $label-offset)
-                                    // label-offset = 20px (= handle-size(16) + pt-spacing(4))
+                                    // Place axis labels at y=32 to share a row with the handle's value pill
+                                    // (handle top y=12 + pill translateY(20) = 32). 32px is also "below
+                                    // the handle" (handle bottom = y=28) so the row doesn't overlap the thumb.
                                     left: `${pct}%`,
-                                    transform: "translate(-50%, 20px)",
+                                    transform: "translate(-50%, 32px)",
                                 }}
                                 {...(_tagInternals && i === 0 ? { "data-compare": "slider-axis-label" } : {})}
                             >

@@ -15,7 +15,11 @@
  * so they live in @theme as static tokens.
  * ========================================================================== */
 
-@custom-variant dark (&:is(.dark *));
+/* Dark mode responds to BOTH the `.dark` class and `[data-mode="dark"]`, so a
+ * host can opt in with either convention. Theme (seed set) and mode (light/dark)
+ * are orthogonal: `[data-theme="…"]` swaps seeds; `.dark`/`[data-mode]` swaps the
+ * derivation scope — so every theme automatically has a light AND dark variant. */
+@custom-variant dark (&:is(.dark *, [data-mode="dark"] *));
 
 @theme {
     /* --- Palette: grays -------------------------------------------------- */
@@ -217,32 +221,44 @@
  * Semantic tokens — light theme (default)
  * ========================================================================== */
 :root {
+    /* Tell the UA which scheme is active so native scrollbars / form controls
+     * / spinners theme correctly (Blueprint sets the same). */
+    color-scheme: light;
+
+    /* ----------------------------------------------------------------------
+     * The values below are the *static fallbacks* (resolved sRGB literals,
+     * verified against Blueprint v6.15). The `@supports` block further down
+     * re-derives every seed-dependent one via `oklch(from var(--seed) …)` so
+     * the theme re-tints when a seed changes. Engines without relative-color
+     * support keep exactly these literals. See P2.5/P2.6 + docs/theming.md.
+     * -------------------------------------------------------------------- */
+
     /* Surfaces (back → front): app background, surface (cards/menus/dialogs),
-     * elevated (raised panels). */
+     * elevated (raised panels). Reference the neutral ramp seed directly. */
     --background: var(--color-light-gray-5); /* #f6f7f9 */
     --surface: var(--color-white); /* #ffffff */
     --elevated: var(--color-light-gray-4); /* #edeff2 */
 
-    /* Minimal/ghost interaction backgrounds (transparent at rest). */
+    /* Minimal/ghost interaction backgrounds — gray-3 tint (derived below). */
     --interactive-hover: rgba(143, 153, 168, 0.15); /* gray-3 @ 15% */
     --interactive-active: rgba(143, 153, 168, 0.3); /* gray-3 @ 30% */
 
     /* Text */
     --foreground: var(--color-dark-gray-1); /* #1c2127 */
     --foreground-muted: var(--color-gray-1); /* #5f6b7c */
-    --foreground-disabled: rgba(95, 107, 124, 0.6);
+    --foreground-disabled: rgba(95, 107, 124, 0.6); /* gray-1 @ 60% (derived below) */
     --heading: var(--foreground);
-    --link: var(--color-blue-2); /* #215db0 */
-    --selection: rgba(125, 188, 255, 0.6);
+    --link: var(--color-primary-hover); /* intent hover seed (blue-2 by default) */
+    --selection: rgba(125, 188, 255, 0.6); /* primary lightened (derived below) */
 
     /* Borders & dividers */
-    --border: rgba(95, 107, 124, 0.12); /* gray-1 @ 12% (surface border) */
-    --border-strong: rgba(95, 107, 124, 0.25); /* gray-1 @ 25% */
-    --divider: rgba(17, 20, 24, 0.15); /* black @ 15% */
-    --divider-muted: rgba(17, 20, 24, 0.1); /* black @ 10% */
+    --border: rgba(95, 107, 124, 0.12); /* gray-1 @ 12% (derived below) */
+    --border-strong: rgba(95, 107, 124, 0.25); /* gray-1 @ 25% (derived below) */
+    --divider: rgba(17, 20, 24, 0.15); /* black @ 15% (theme-invariant) */
+    --divider-muted: rgba(17, 20, 24, 0.1); /* black @ 10% (theme-invariant) */
 
     /* Focus */
-    --ring: rgba(33, 93, 176, 0.752); /* blue-2 @ 75.2% (WCAG AA) */
+    --ring: rgba(33, 93, 176, 0.752); /* primary-hover @ 75.2% (derived below) */
     --ring-width: 2px;
     --ring-offset: 2px;
 
@@ -254,51 +270,61 @@
     --input-shadow: inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
 
     /* Input intent shadows (resting) — Blueprint pt-input-intent mixin:
-     * inset 0 0 0 1px <intent-color-rest> + the base input-shadow.
-     * Light intent colors = pt-intent-colors: blue3/green3/orange3/red3. */
-    --input-intent-primary: inset 0 0 0 1px #2d72d2, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
-    --input-intent-success: inset 0 0 0 1px #238551, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
-    --input-intent-warning: inset 0 0 0 1px #c87619, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
-    --input-intent-danger:  inset 0 0 0 1px #cd4246, inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+     * inset 0 0 0 1px <intent-rest seed> + the base input-shadow. Pure seed
+     * refs, so these re-tint automatically (no derivation needed). */
+    --input-intent-primary: inset 0 0 0 1px var(--color-primary), inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-success: inset 0 0 0 1px var(--color-success), inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-warning: inset 0 0 0 1px var(--color-warning), inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
+    --input-intent-danger:  inset 0 0 0 1px var(--color-danger),  inset 0 0 0 1px rgba(17, 20, 24, 0.2), inset 0 1px 1px rgba(17, 20, 24, 0.3);
 
     /* Input focus shadows (no intent and per intent) — Blueprint input-transition-shadow(color, true):
      * inset 0 0 0 1px rgba(color, 0.752) + 0 0 0 1px rgba(color, 0.752) + inset 0 1px 1px rgba(black, 0.2).
-     * The outer (non-inset) shadow is the focus indicator ring.
-     * Light focus color = $pt-focus-indicator-color = rgba(blue2, 0.752) = rgba(33,93,176,0.752). */
+     * Light focus color = $pt-focus-indicator-color = rgba(blue2, 0.752). Derived below. */
     --input-focus: inset 0 0 0 1px rgba(33, 93, 176, 0.752), 0 0 0 1px rgba(33, 93, 176, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
     --input-focus-primary: inset 0 0 0 1px rgba(45, 114, 210, 0.752), 0 0 0 1px rgba(45, 114, 210, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
     --input-focus-success: inset 0 0 0 1px rgba(35, 133, 81, 0.752), 0 0 0 1px rgba(35, 133, 81, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
     --input-focus-warning: inset 0 0 0 1px rgba(200, 118, 25, 0.752), 0 0 0 1px rgba(200, 118, 25, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
     --input-focus-danger:  inset 0 0 0 1px rgba(205, 66, 70, 0.752), 0 0 0 1px rgba(205, 66, 70, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
 
-    /* Minimal/outlined intent text — Blueprint uses the intent *hover* shade (palette -2) in light. */
-    --intent-primary-text: var(--color-blue-2);
-    --intent-success-text: var(--color-green-2);
-    --intent-warning-text: var(--color-orange-2);
-    --intent-danger-text: var(--color-red-2);
+    /* Canonical intent text/icon color (Blueprint $pt-intent-text-colors) — used by
+     * Icon, Callout, typography. Light = intent *hover* shade (tier-2); dark = tier-5
+     * (set below). Pure seed ref in light, so it re-tints automatically. */
+    --intent-primary-text: var(--color-primary-hover);
+    --intent-success-text: var(--color-success-hover);
+    --intent-warning-text: var(--color-warning-hover);
+    --intent-danger-text: var(--color-danger-hover);
+
+    /* Button minimal/outlined intent text (Blueprint $button-minimal-intent-text-colors)
+     * — same tier-2 in light, but a color-mix lighten in dark (≠ canonical tier-5). */
+    --intent-primary-minimal-text: var(--color-primary-hover);
+    --intent-success-minimal-text: var(--color-success-hover);
+    --intent-warning-minimal-text: var(--color-warning-hover);
+    --intent-danger-minimal-text: var(--color-danger-hover);
 
     /* Tag solid warning bg/text — Blueprint lifts warning-rest by oklch l+0.19 for bg,
-     * and lightens warning-foreground (#111418) by oklch l+0.05 for text.
-     * Resolved: bg ≈ rgb(255,178,97), text ≈ rgb(28,31,36) */
+     * and lightens warning-foreground by oklch l+0.05 for text (derived below). */
     --tag-solid-warning-bg: rgb(255, 178, 97);
     --tag-solid-warning-text: rgb(28, 31, 36);
 
+    /* Button solid warning fill — Blueprint uses palette orange-5 (≈ warning tier-5,
+     * a hair different from the tag's l+0.19 lift). Derived from the warning seed below. */
+    --warning-solid-bg: rgb(251, 179, 96); /* orange-5 */
+
     /* Tag minimal-none background — Blueprint uses oklch(from gray-1 calc(l+0.16) c h / 0.15)
-     * which is theme-invariant (gray-1 doesn't change). Computed ≈ rgba(141,154,174,0.15).
-     * Distinct from --interactive-hover which goes white-based in dark mode. */
+     * which is theme-invariant (gray-1 doesn't change). Computed ≈ rgba(141,154,174,0.15). */
     --tag-minimal-bg: rgba(141, 154, 174, 0.15);
 
     /* Tag minimal-none text (light) — Blueprint uses typography-color-default-rest ≈ dark-gray-1. */
     --tag-minimal-none-text: var(--color-dark-gray-1);
 
-    /* Tag minimal intent text (light) — same as intent text for buttons/outlined. */
-    --tag-minimal-primary-text: var(--color-blue-2);
-    --tag-minimal-success-text: var(--color-green-2);
-    --tag-minimal-warning-text: var(--color-orange-2);
-    --tag-minimal-danger-text: var(--color-red-2);
+    /* Tag minimal intent text (light) — same as intent text (intent hover seed). */
+    --tag-minimal-primary-text: var(--color-primary-hover);
+    --tag-minimal-success-text: var(--color-success-hover);
+    --tag-minimal-warning-text: var(--color-warning-hover);
+    --tag-minimal-danger-text: var(--color-danger-hover);
 
-    /* Solid button: subtle inset border + 1px drop shadow (Blueprint v6.15 computed values). */
-    --button-shadow: inset 0 0 0 1px oklch(0.421111 0.0240744 257.113 / 0.325), 0 1px 2px rgba(17, 20, 24, 0.1);
+    /* Solid button: subtle inset border + 1px drop shadow (gray-1 darkened; derived below). */
+    --button-shadow: inset 0 0 0 1px rgba(69, 78, 91, 0.325), 0 1px 2px rgba(17, 20, 24, 0.1);
 
     /* Elevation (light) — Blueprint shadows 0–4 */
     --elevation-0: 0 0 0 1px rgba(0, 0, 0, 0.15), 0 0 5px 0 rgba(0, 0, 0, 0.02);
@@ -306,6 +332,15 @@
     --elevation-2: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --elevation-3: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
     --elevation-4: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+
+    /* Overlay / floating-panel shadows (light) — used by popover, dialog, alert,
+     * drawer, navbar, omnibar, tooltip & the slider value pill. Identical to the
+     * card elevations EXCEPT the hairline ring uses Blueprint's elevation-border
+     * color rgba(20,20,20,…) (cards use pure rgba(0,0,0,…) — verified distinct via
+     * the comparison harness). See docs/component-fidelity-deltas.md (Cluster A). */
+    --overlay-shadow-1: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --overlay-shadow-3: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --overlay-shadow-4: 0 0 0 1px rgba(20, 20, 20, 0.1), 0 25px 50px -12px rgba(0, 0, 0, 0.3);
 
     /* Card shadows (light) — the surface elevations, plus a primary selection ring.
      * Blueprint derives the ring from intent.primary.rest (blue-3) via relative oklch;
@@ -315,9 +350,8 @@
     --card-shadow-2: var(--elevation-2);
     --card-shadow-3: var(--elevation-3);
     --card-shadow-4: var(--elevation-4);
-    --card-shadow-selected:
-        0 0 0 3px oklch(from var(--color-blue-3) calc(l + 0.095) calc(c - 0.004) h / 0.2),
-        0 0 0 1px oklch(from var(--color-blue-3) calc(l + 0.095) calc(c - 0.004) h);
+    /* Selected card ring — primary lightened (derived below). */
+    --card-shadow-selected: 0 0 0 3px rgba(77, 144, 240, 0.2), 0 0 0 1px rgb(77, 144, 240);
 }
 
 /* =============================================================================
@@ -325,71 +359,79 @@
  * Dark surface colors verified against Blueprint's OKLCH-derived card/surface
  * values (card dark = oklch(from gray-1 calc(l*0.54) calc(c*0.481) h) → #252a31).
  * ========================================================================== */
-.dark {
+.dark,
+[data-mode="dark"] {
+    color-scheme: dark;
+
+    /* Static fallbacks (verified literals); seed-dependent values are re-derived
+     * in the @supports block below so dark re-tints with the theme too. */
+
     --background: var(--color-dark-gray-1); /* #1c2127 */
-    --surface: var(--color-dark-gray-2); /* #252a31 (derived card bg) */
+    --surface: var(--color-dark-gray-2); /* #252a31 (neutral ramp) */
     --elevated: var(--color-dark-gray-3); /* #2f343c */
 
-    --interactive-hover: rgba(255, 255, 255, 0.1);
+    --interactive-hover: rgba(255, 255, 255, 0.1); /* white-based (theme-invariant) */
     --interactive-active: rgba(255, 255, 255, 0.16);
 
     --foreground: var(--color-light-gray-5); /* #f6f7f9 */
     --foreground-muted: var(--color-gray-4); /* #abb3bf */
-    --foreground-disabled: rgba(171, 179, 191, 0.6);
+    --foreground-disabled: rgba(171, 179, 191, 0.6); /* gray-4 @ 60% (derived below) */
     --heading: var(--foreground);
-    --link: var(--color-blue-5); /* #8abbff */
-    --selection: rgba(125, 188, 255, 0.6);
+    --link: rgb(138, 187, 255); /* primary lightened ≈ blue-5 (derived below) */
+    --selection: rgba(125, 188, 255, 0.6); /* primary lightened (derived below) */
 
-    --border: rgba(255, 255, 255, 0.2);
+    --border: rgba(255, 255, 255, 0.2); /* white-based (theme-invariant) */
     --border-strong: rgba(255, 255, 255, 0.3);
     --divider: rgba(255, 255, 255, 0.2);
     --divider-muted: rgba(255, 255, 255, 0.1);
 
-    --ring: rgba(138, 187, 255, 0.752); /* blue-5 @ 75.2% */
+    --ring: rgba(138, 187, 255, 0.752); /* primary lightened @ 75.2% (derived below) */
 
     --code-foreground: var(--color-gray-4);
     --code-background: rgba(17, 20, 24, 0.3);
 
     --input-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
-    --button-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px oklch(0.189828 0.00940823 none / 0.2);
+    --button-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px rgba(20, 20, 20, 0.2);
 
-    /* Input intent shadows (dark) — pt-dark-input-intent-box-shadow-colors:
-     * blue4/green4/orange4/red4 as the border color + dark input-shadow. */
-    --input-intent-primary: inset 0 0 0 1px #4c90f0, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
-    --input-intent-success: inset 0 0 0 1px #32a467, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
-    --input-intent-warning: inset 0 0 0 1px #ec9a3c, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
-    --input-intent-danger:  inset 0 0 0 1px #e76a6e, inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    /* Input intent shadows (dark) — border = intent *disabled* seed (blue4/green4/
+     * orange4/red4). Pure seed refs, so these re-tint automatically. */
+    --input-intent-primary: inset 0 0 0 1px var(--color-primary-disabled), inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-success: inset 0 0 0 1px var(--color-success-disabled), inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-warning: inset 0 0 0 1px var(--color-warning-disabled), inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
+    --input-intent-danger:  inset 0 0 0 1px var(--color-danger-disabled),  inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(255, 255, 255, 0.3);
 
-    /* Input focus shadows (dark) — dark-input-transition-shadow(color, true):
-     * inset 0 0 0 1px rgba(color, 0.752) + 0 0 0 1px rgba(color, 0.752)
-     * (note: dark focus mixin does NOT add the inset 0 1px 1px layer).
-     * Dark focus color = $pt-dark-focus-indicator-color = rgba(blue5, 0.752) = rgba(138,187,255,0.752). */
+    /* Input focus shadows (dark) — rgba(color, 0.752); none = primary lightened
+     * (≈ blue5), per-intent = intent disabled seed. Derived below. */
     --input-focus: inset 0 0 0 1px rgba(138, 187, 255, 0.752), 0 0 0 1px rgba(138, 187, 255, 0.752);
     --input-focus-primary: inset 0 0 0 1px rgba(76, 144, 240, 0.752), 0 0 0 1px rgba(76, 144, 240, 0.752);
     --input-focus-success: inset 0 0 0 1px rgba(50, 164, 103, 0.752), 0 0 0 1px rgba(50, 164, 103, 0.752);
     --input-focus-warning: inset 0 0 0 1px rgba(236, 154, 60, 0.752), 0 0 0 1px rgba(236, 154, 60, 0.752);
     --input-focus-danger:  inset 0 0 0 1px rgba(231, 106, 110, 0.752), 0 0 0 1px rgba(231, 106, 110, 0.752);
 
-    /* Dark minimal/outlined intent text — Blueprint: color-mix(in oklch, intent-rest, white). */
-    --intent-primary-text: color-mix(in oklch, var(--color-blue-3) 51%, white);
-    --intent-success-text: color-mix(in oklch, var(--color-green-3) 54%, white);
-    --intent-warning-text: color-mix(in oklch, var(--color-orange-3) 53%, white);
-    --intent-danger-text: color-mix(in oklch, var(--color-red-3) 53%, white);
+    /* Canonical dark intent text/icon — Blueprint $pt-dark-intent-text-colors = tier-5
+     * (blue5/green5/orange5/red5). Derived from the rest seed below. */
+    --intent-primary-text: rgb(138, 187, 255); /* blue-5 */
+    --intent-success-text: rgb(114, 202, 155); /* green-5 */
+    --intent-warning-text: rgb(251, 179, 96); /* orange-5 */
+    --intent-danger-text: rgb(250, 153, 156); /* red-5 */
 
-    /* Tag solid warning: same formula applies in dark (warning-rest unchanged). */
+    /* Button minimal/outlined dark intent text — color-mix(intent-rest, white). Derived below. */
+    --intent-primary-minimal-text: rgb(149, 184, 235);
+    --intent-success-minimal-text: rgb(143, 189, 158);
+    --intent-warning-minimal-text: rgb(229, 183, 144);
+    --intent-danger-minimal-text: rgb(236, 159, 155);
+
+    /* Tag solid warning: same warning-based formula as light. Derived below. */
     --tag-solid-warning-bg: rgb(255, 178, 97);
     --tag-solid-warning-text: rgb(28, 31, 36);
 
-    /* Tag minimal-none bg: same gray-1 based formula as light (theme-invariant). */
+    /* Tag minimal-none bg: gray-1 based (theme-invariant). */
     --tag-minimal-bg: rgba(141, 154, 174, 0.15);
 
-    /* Tag minimal-none dark text: Blueprint computes oklch(from typography-dark-rest calc(l+0.24) c h) ≈ #f2f7ff */
+    /* Tag minimal-none dark text: dark-gray-1 lightened ≈ #f2f7ff (derived below). */
     --tag-minimal-none-text: rgb(242, 247, 255);
 
-    /* Tag minimal intent text (dark) — Blueprint: oklch(from intent-rest calc(l+N) calc(c-N) h)
-     * Resolved values from Blueprint reference browser rendering:
-     *   primary: rgb(123,185,255)  success: rgb(141,207,164)
-     *   warning: rgb(253,179,112)  danger:  rgb(255,139,136) */
+    /* Tag minimal intent text (dark) — intent-rest lightened (derived below). */
     --tag-minimal-primary-text: rgb(123, 185, 255);
     --tag-minimal-success-text: rgb(141, 207, 164);
     --tag-minimal-warning-text: rgb(253, 179, 112);
@@ -414,9 +456,142 @@
     --card-shadow-2: var(--elevation-2), var(--card-highlight);
     --card-shadow-3: var(--elevation-3), var(--card-highlight);
     --card-shadow-4: var(--elevation-4), var(--card-highlight);
-    --card-shadow-selected:
-        0 0 0 3px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h / 0.4),
-        0 0 0 1px oklch(from var(--color-blue-3) calc(l + 0.224) calc(c - 0.053) h);
+    /* Selected card ring — primary lightened, larger offsets in dark (derived below). */
+    --card-shadow-selected: 0 0 0 3px rgba(140, 187, 255, 0.4), 0 0 0 1px rgb(140, 187, 255);
+
+    /* Overlay / floating-panel shadows (dark). Same layers as the card elevations,
+     * but Blueprint orders the trailing drop AFTER the two inset edge-highlights
+     * (cards place both drops first, then the highlights). We interleave to match
+     * exactly. Level 4 has a single drop, so it equals card-shadow-4 untouched. */
+    --overlay-shadow-1: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 1px 10px 0 rgba(0, 0, 0, 0.2),
+        var(--card-highlight), 0 1px 10px -1px rgba(0, 0, 0, 0.2);
+    --overlay-shadow-3: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 25px -5px rgba(0, 0, 0, 0.3),
+        var(--card-highlight), 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+    --overlay-shadow-4: var(--card-shadow-4);
+}
+
+/* =============================================================================
+ * Runtime derivation (P2.5) + progressive enhancement (P2.6)
+ * -----------------------------------------------------------------------------
+ * Re-express every seed-dependent token as a relative-color derivation from its
+ * seed, so changing a seed (intent or neutral ramp) re-tints the whole theme.
+ * The offsets mirror Blueprint's DTCG `com.blueprint.derive` extensions
+ * (lightness/chroma/hue offsets, alpha) and were verified to reproduce the
+ * static fallbacks above byte-for-byte. Gated behind `@supports` so engines
+ * without relative-color (`oklch(from …)`) fall back to the literals above.
+ * ========================================================================== */
+@supports (color: oklch(from white l c h)) {
+    :root {
+        /* neutral-seed derived */
+        --interactive-hover: oklch(from var(--color-gray-3) l c h / 0.15);
+        --interactive-active: oklch(from var(--color-gray-3) l c h / 0.3);
+        --foreground-disabled: oklch(from var(--color-gray-1) l c h / 0.6);
+        --border: oklch(from var(--color-gray-1) l c h / 0.12);
+        --border-strong: oklch(from var(--color-gray-1) l c h / 0.25);
+        --button-shadow: inset 0 0 0 1px oklch(from var(--color-gray-1) calc(l - 0.103) calc(c - 0.006) h / 0.325), 0 1px 2px rgba(17, 20, 24, 0.1);
+
+        /* intent-seed derived */
+        --selection: oklch(from var(--color-primary) calc(l + 0.219) calc(c - 0.047) calc(h - 6.7) / 0.6);
+        --ring: oklch(from var(--color-primary-hover) l c h / 0.752);
+        --input-focus: inset 0 0 0 1px oklch(from var(--color-primary-hover) l c h / 0.752), 0 0 0 1px oklch(from var(--color-primary-hover) l c h / 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+        --input-focus-primary: inset 0 0 0 1px oklch(from var(--color-primary) l c h / 0.752), 0 0 0 1px oklch(from var(--color-primary) l c h / 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+        --input-focus-success: inset 0 0 0 1px oklch(from var(--color-success) l c h / 0.752), 0 0 0 1px oklch(from var(--color-success) l c h / 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+        --input-focus-warning: inset 0 0 0 1px oklch(from var(--color-warning) l c h / 0.752), 0 0 0 1px oklch(from var(--color-warning) l c h / 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
+        --input-focus-danger:  inset 0 0 0 1px oklch(from var(--color-danger) l c h / 0.752),  0 0 0 1px oklch(from var(--color-danger) l c h / 0.752),  inset 0 1px 1px rgba(17, 20, 24, 0.2);
+        --tag-solid-warning-bg: oklch(from var(--color-warning) calc(l + 0.19) c h);
+        --tag-solid-warning-text: oklch(from var(--color-warning-foreground) calc(l + 0.05) c h);
+        --warning-solid-bg: oklch(from var(--color-warning) calc(l + 0.177) calc(c - 0.010) calc(h + 6.26));
+        --card-shadow-selected:
+            0 0 0 3px oklch(from var(--color-primary) calc(l + 0.095) calc(c - 0.004) h / 0.2),
+            0 0 0 1px oklch(from var(--color-primary) calc(l + 0.095) calc(c - 0.004) h);
+    }
+
+    .dark,
+    [data-mode="dark"] {
+        /* neutral-seed derived */
+        --foreground-disabled: oklch(from var(--color-gray-4) l c h / 0.6);
+        --tag-minimal-none-text: oklch(from var(--color-dark-gray-1) calc(l + 0.729) calc(c - 0.0017) calc(h + 6.74));
+        /* Near-black drop shadow — neutral, not seed-tinted; restore Blueprint's exact value. */
+        --button-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 1px 2px oklch(0.189828 0.00940823 none / 0.2);
+
+        /* intent-seed derived (dark uses intent-rest lightened, ≈ palette tier 5) */
+        --link: oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93));
+        --ring: oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93) / 0.752);
+        --selection: oklch(from var(--color-primary) calc(l + 0.219) calc(c - 0.047) calc(h - 6.7) / 0.6);
+
+        /* canonical intent text/icon = tier-5 (intent-rest lightened, per-family offsets) */
+        --intent-primary-text: oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93));
+        --intent-success-text: oklch(from var(--color-success) calc(l + 0.223) calc(c - 0.011) calc(h + 3.83));
+        --intent-warning-text: oklch(from var(--color-warning) calc(l + 0.177) calc(c - 0.010) calc(h + 6.26));
+        --intent-danger-text:  oklch(from var(--color-danger)  calc(l + 0.205) calc(c - 0.059) calc(h - 4.86));
+
+        /* button minimal/outlined intent text = color-mix lighten */
+        --intent-primary-minimal-text: color-mix(in oklch, var(--color-primary) 51%, white);
+        --intent-success-minimal-text: color-mix(in oklch, var(--color-success) 54%, white);
+        --intent-warning-minimal-text: color-mix(in oklch, var(--color-warning) 53%, white);
+        --intent-danger-minimal-text: color-mix(in oklch, var(--color-danger) 53%, white);
+
+        --tag-minimal-primary-text: oklch(from var(--color-primary) calc(l + 0.211) calc(c - 0.044) calc(h - 5.28));
+        --tag-minimal-success-text: oklch(from var(--color-success) calc(l + 0.251) calc(c - 0.030) calc(h + 0.04));
+        --tag-minimal-warning-text: oklch(from var(--color-warning) calc(l + 0.181) calc(c - 0.020) calc(h + 0.22));
+        --tag-minimal-danger-text:  oklch(from var(--color-danger)  calc(l + 0.184) calc(c - 0.034) calc(h - 0.47));
+
+        --tag-solid-warning-bg: oklch(from var(--color-warning) calc(l + 0.19) c h);
+        --tag-solid-warning-text: oklch(from var(--color-warning-foreground) calc(l + 0.05) c h);
+
+        --input-focus: inset 0 0 0 1px oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93) / 0.752), 0 0 0 1px oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93) / 0.752);
+        --input-focus-primary: inset 0 0 0 1px oklch(from var(--color-primary-disabled) l c h / 0.752), 0 0 0 1px oklch(from var(--color-primary-disabled) l c h / 0.752);
+        --input-focus-success: inset 0 0 0 1px oklch(from var(--color-success-disabled) l c h / 0.752), 0 0 0 1px oklch(from var(--color-success-disabled) l c h / 0.752);
+        --input-focus-warning: inset 0 0 0 1px oklch(from var(--color-warning-disabled) l c h / 0.752), 0 0 0 1px oklch(from var(--color-warning-disabled) l c h / 0.752);
+        --input-focus-danger:  inset 0 0 0 1px oklch(from var(--color-danger-disabled) l c h / 0.752),  0 0 0 1px oklch(from var(--color-danger-disabled) l c h / 0.752);
+
+        --card-shadow-selected:
+            0 0 0 3px oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) h / 0.4),
+            0 0 0 1px oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) h);
+    }
+}
+
+/* =============================================================================
+ * Example alternate theme — "datex" (P2.5 themeability proof)
+ * -----------------------------------------------------------------------------
+ * A theme overrides ONLY seeds. Because every semantic token above derives from
+ * a seed, this single block re-tints BOTH the light and dark variants. Apply via
+ * `[data-theme="datex"]` (combine with `.dark`/`[data-mode]` for dark).
+ *
+ * All four intents are re-seeded (vivid violet primary + brand status colors);
+ * hover/active/disabled tiers mirror each color family's own Blueprint OKLCH
+ * steps. The neutral ramp is intentionally LEFT at the default grays so the
+ * background/surfaces match the default theme — datex re-tints intents only.
+ *
+ * NOTE: full runtime theming (a ThemeProvider/API + gallery switcher, option #3
+ * from the P2.5 discussion) is planned future work; this is the static proof.
+ * ========================================================================== */
+[data-theme="datex"] {
+    /* Primary — vivid violet, rest = rgb(91,8,178). */
+    --color-primary: #5b08b2;
+    --color-primary-hover: #470092;
+    --color-primary-active: #340073;
+    --color-primary-disabled: #7339d1;
+
+    /* Success — brand mint, rest = rgb(63,197,137). Bright enough that solid fills
+     * need dark text for contrast (white-on-mint fails AA). */
+    --color-success: #3fc589;
+    --color-success-hover: #39ac78;
+    --color-success-active: #339669;
+    --color-success-disabled: #4de6a2;
+    --color-success-foreground: #111418;
+
+    /* Warning — brand amber, rest = rgb(239,181,47). Keeps the default dark text. */
+    --color-warning: #efb52f;
+    --color-warning-hover: #bc8f2b;
+    --color-warning-active: #a07b29;
+    --color-warning-disabled: #ffdc57;
+
+    /* Danger — brand red, rest = rgb(226,52,57) (designed to match the palette). */
+    --color-danger: #e23439;
+    --color-danger-hover: #c01d25;
+    --color-danger-active: #a21920;
+    --color-danger-disabled: #fd6265;
 }
 
 /* =============================================================================
@@ -448,8 +623,14 @@
     --color-intent-warning-text: var(--intent-warning-text);
     --color-intent-danger-text: var(--intent-danger-text);
 
+    --color-intent-primary-minimal-text: var(--intent-primary-minimal-text);
+    --color-intent-success-minimal-text: var(--intent-success-minimal-text);
+    --color-intent-warning-minimal-text: var(--intent-warning-minimal-text);
+    --color-intent-danger-minimal-text: var(--intent-danger-minimal-text);
+
     --color-tag-solid-warning-bg: var(--tag-solid-warning-bg);
     --color-tag-solid-warning-text: var(--tag-solid-warning-text);
+    --color-warning-solid-bg: var(--warning-solid-bg);
     --color-tag-minimal-bg: var(--tag-minimal-bg);
     --color-tag-minimal-none-text: var(--tag-minimal-none-text);
     --color-tag-minimal-primary-text: var(--tag-minimal-primary-text);
@@ -465,6 +646,9 @@
     --shadow-elevation-2: var(--elevation-2);
     --shadow-elevation-3: var(--elevation-3);
     --shadow-elevation-4: var(--elevation-4);
+    --shadow-overlay-1: var(--overlay-shadow-1);
+    --shadow-overlay-3: var(--overlay-shadow-3);
+    --shadow-overlay-4: var(--overlay-shadow-4);
     --shadow-input: var(--input-shadow);
     --shadow-input-intent-primary: var(--input-intent-primary);
     --shadow-input-intent-success: var(--input-intent-success);

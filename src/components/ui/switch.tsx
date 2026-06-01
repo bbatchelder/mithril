@@ -168,7 +168,9 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 // Text color on the label itself (inherited by inner text if any)
                 disabled
@@ -265,8 +267,8 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                     effectiveChecked && !disabled && "group-hover:bg-primary-hover",
                     // active: $blue1 = #184a90
                     effectiveChecked && !disabled && "group-active:bg-primary-active",
-                    // disabled checked: rgba($blue3, 0.5) = rgba(45,114,210,0.5)
-                    effectiveChecked && disabled && "bg-[rgba(45,114,210,0.5)]",
+                    // disabled checked: primary @ 50%
+                    effectiveChecked && disabled && "bg-primary/50",
 
                     // === Text color on the track (for inner labels) ===
                     // Unchecked: inherit foreground (set on label above)
@@ -314,35 +316,46 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                 />
 
                 {/* Inner labels (optional): shown inside the track.
-                    $switch-indicator-child-outside-margin = 0.5em (8px std)
-                    $switch-indicator-child-inside-margin  = 1.2em (19.2px std)
-                    $switch-indicator-text-font-size = 0.7em
-                    First child (innerLabelChecked): visible when checked, hidden when unchecked
-                    Last child (innerLabel): visible when unchecked, hidden when checked */}
+                    Blueprint (_controls.scss): the two `.bp6-control-indicator-child` are
+                    `display: block`, stacked vertically. The HIDDEN one collapses via
+                    `line-height: 0` (height → 0) + `visibility: hidden`; the VISIBLE one gets
+                    `line-height: 1em` (= the track height). So the track is shrink-to-fit on the
+                    SINGLE widest child's margin-box (~49px std) — wide enough for "ON"/"OFF" and
+                    stable across toggles. The old bug absolutely-positioned these, so they
+                    contributed zero width and the track stayed at min-width, clipping the label.
+
+                    The line-height (leading-4/5 = 16/20px) is set directly on the text element
+                    so its line box equals the track height and the 0.7em text centers vertically;
+                    the hidden child gets leading-[0px] to collapse to zero height. Margins are in
+                    px (Blueprint's 0.5em/1.2em resolved at the 16/20px track font — outside toward
+                    the track edge, inside toward the knob) so they don't get scaled by the 0.7em
+                    text font:
+                      std:   outside 8px,  inside 19.2px
+                      large: outside 10px, inside 24px
+                    First child (checked): outside-left, inside-right.
+                    Last child  (unchecked): inside-left, outside-right. */}
                 {hasInnerLabels && (
                     <>
-                        {/* Checked inner label: shown left of knob when checked */}
+                        {/* Checked child — block, above-the-knob when checked */}
                         <span
                             className={cn(
-                                "bp6-switch-inner-text absolute top-1/2 -translate-y-1/2",
-                                "text-[0.7em] text-center",
-                                // margin-left = outside margin (0.5em = 8px), margin-right = inside (1.2em)
-                                "left-[0.5em]",
-                                // visibility: shown when checked
-                                effectiveChecked ? "visible" : "invisible",
+                                "bp6-switch-inner-text block text-center text-[0.7em]",
+                                large ? "ml-[10px] mr-[24px]" : "ml-2 mr-[19.2px]",
+                                effectiveChecked
+                                    ? large ? "visible leading-5" : "visible leading-4"
+                                    : "invisible leading-[0px]",
                             )}
                         >
                             {innerLabelChecked ?? innerLabel}
                         </span>
-                        {/* Unchecked inner label: shown right of knob when unchecked */}
+                        {/* Unchecked child — block, above-the-knob when unchecked */}
                         <span
                             className={cn(
-                                "bp6-switch-inner-text absolute top-1/2 -translate-y-1/2",
-                                "text-[0.7em] text-center",
-                                // margin-right = outside margin (0.5em = 8px)
-                                "right-[0.5em]",
-                                // visibility: shown when unchecked
-                                !effectiveChecked ? "visible" : "invisible",
+                                "bp6-switch-inner-text block text-center text-[0.7em]",
+                                large ? "ml-[24px] mr-[10px]" : "ml-[19.2px] mr-2",
+                                !effectiveChecked
+                                    ? large ? "visible leading-5" : "visible leading-4"
+                                    : "invisible leading-[0px]",
                             )}
                         >
                             {innerLabel}

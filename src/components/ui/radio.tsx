@@ -96,7 +96,9 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
     return (
         <label
             className={cn(
-                inline ? "inline-block" : "block",
+                // Blueprint `.bp6-control`: block with margin-bottom 8px (= $pt-spacing*2),
+                // so stacked controls breathe; inline → inline-block (group/consumer spacing).
+                inline ? "inline-block" : "block mb-2",
                 disabled ? "cursor-not-allowed" : "cursor-pointer",
                 disabled ? "text-foreground-disabled" : "text-foreground",
                 large ? "text-body-lg" : "text-body",
@@ -160,8 +162,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
                     !alignRight && (large ? "-ml-7 mr-2" : "-ml-6 mr-2"),
                     // Right-aligned: margin-left = 8px (= ml-2)
                     alignRight && "ml-2",
-                    // Flex centering for dot child
-                    "flex items-center justify-center",
+                    // Inline-flex centering for the dot child. MUST be inline-flex, not flex:
+                    // a block-level flex breaks the label's inline flow and drops the text to
+                    // the next line. inline-flex keeps the indicator inline AND wins the
+                    // display-utility merge over the `inline-block` above (tailwind-merge keeps last).
+                    "inline-flex items-center justify-center",
 
                     // === UNCHECKED resting ===
                     // Background: transparent
@@ -187,8 +192,8 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
                     // === DISABLED ===
                     // Unchecked disabled: bg = hover bg, no shadow (light AND dark — override dark shadow too)
                     disabled && !effectiveChecked && "bg-[rgba(143,153,168,0.15)] shadow-none dark:shadow-none cursor-not-allowed",
-                    // Checked disabled: bg = rgba(blue-3, 0.5) = rgba(45,114,210,0.5), no shadow
-                    disabled && effectiveChecked && "bg-[rgba(45,114,210,0.5)] shadow-none dark:shadow-none cursor-not-allowed",
+                    // Checked disabled: primary @ 50%, no shadow
+                    disabled && effectiveChecked && "bg-primary/50 shadow-none dark:shadow-none cursor-not-allowed",
                     // indicatorProps.className is merged LAST so callers (e.g. ControlCard) can
                     // override indicator margins/positioning without fighting specificity.
                     indicatorProps?.className,
@@ -327,7 +332,7 @@ export function RadioGroup({
     return (
         <div className={cn("flex", inline ? "flex-row flex-wrap gap-5" : "flex-col", className)}>
             {label && (
-                <label className="block text-body text-foreground mb-2 font-semibold">
+                <label className="block text-body text-foreground mb-4 font-semibold">
                     {label}
                 </label>
             )}

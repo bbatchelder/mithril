@@ -1,13 +1,28 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef } from "react";
+import { createContext, forwardRef, useContext } from "react";
 
 import { cn } from "@/lib/utils";
+import type { Intent } from "@/lib/types";
+import { resolveIcon, type IconProp } from "./icon";
 import { Spinner } from "./spinner";
 
-export type ButtonIntent = "none" | "primary" | "success" | "warning" | "danger";
+export type ButtonIntent = Intent;
 export type ButtonVariant = "solid" | "outlined" | "minimal";
 export type ButtonSize = "small" | "medium" | "large";
+
+/**
+ * Lets a `<ButtonGroup>` push shared `variant`/`size` defaults down to its child
+ * `<Button>`s without each call site repeating them. A button's own explicit
+ * `variant`/`size` prop always wins over the group's. Lives here (not in
+ * button-group.tsx) so Button stays self-contained — the dependency points
+ * ButtonGroup → Button, never the reverse.
+ */
+export interface ButtonGroupContextValue {
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+}
+export const ButtonGroupContext = createContext<ButtonGroupContextValue | null>(null);
 
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];
 
@@ -17,38 +32,45 @@ const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "dange
  * pressed (`:active`) fill so the `active` prop renders the same look.
  */
 const SOLID: Record<ButtonIntent, string> = {
-    none: "bg-light-gray-5 text-foreground hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-dark-gray-3 dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
+    // Dark rest bg = Blueprint's oklch-derived default-control surface rgb(48,55,64) = #303740
+    // (a hair lighter than the flat dark-gray-3 #2f343c used for panels). See handoff 0063.
+    // Dark "none"-control text + icon are white (#fff) to match Blueprint, not #f6f7f9.
+    // Body/menu text stays #f6f7f9; only the control text goes white. See handoff 0064 (Delta #1).
+    none: "bg-light-gray-5 text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-light-gray-4 active:bg-light-gray-2 data-[active=true]:bg-light-gray-2 dark:bg-[#303740] dark:hover:bg-dark-gray-2 dark:active:bg-dark-gray-1 dark:data-[active=true]:bg-dark-gray-1",
     primary:
         "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active data-[active=true]:bg-primary-active",
     success:
         "bg-success text-success-foreground hover:bg-success-hover active:bg-success-active data-[active=true]:bg-success-active",
-    // Warning solid is a Blueprint special case: light amber (orange-5) fill + black text.
+    // Warning solid is a Blueprint special case: lightened amber fill + dark text.
+    // Uses the warning seed tiers (rest = lightened-warning token ≈ orange-5,
+    // hover = warning-disabled = orange-4, active = warning rest = orange-3) so it re-tints.
     warning:
-        "bg-orange-5 text-warning-foreground hover:bg-orange-4 active:bg-orange-3 data-[active=true]:bg-orange-3",
+        "bg-warning-solid-bg text-warning-foreground hover:bg-warning-disabled active:bg-warning data-[active=true]:bg-warning",
     danger: "bg-danger text-danger-foreground hover:bg-danger-hover active:bg-danger-active data-[active=true]:bg-danger-active",
 };
 
-// Outlined/minimal intent text uses theme-aware `--intent-*-text` tokens (palette -2
-// in light, Blueprint's color-mix-with-white shade in dark). Outlined borders are that
-// same color at 60% alpha — Blueprint's `color-mix(in oklch, text 60%, transparent)`.
+// Outlined/minimal intent text uses theme-aware `--intent-*-minimal-text` tokens
+// (intent hover/-2 in light, Blueprint's color-mix-with-white shade in dark). Borders
+// are that same color at 60% alpha. Hover/active tints derive from the intent seed
+// (rest = tier-3; dark hover = tier-4 = the *disabled* seed) so they re-tint with the theme.
 const OUTLINED: Record<ButtonIntent, string> = {
-    none: "border-border-strong text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
+    none: "border-border-strong text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "border-intent-primary-text/60 text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
+        "border-intent-primary-minimal-text/60 text-intent-primary-minimal-text hover:bg-primary/10 active:bg-primary/20 data-[active=true]:bg-primary/20 dark:hover:bg-primary-disabled/15",
     success:
-        "border-intent-success-text/60 text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
+        "border-intent-success-minimal-text/60 text-intent-success-minimal-text hover:bg-success/10 active:bg-success/20 data-[active=true]:bg-success/20 dark:hover:bg-success-disabled/15",
     warning:
-        "border-intent-warning-text/60 text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
-    danger: "border-intent-danger-text/60 text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
+        "border-intent-warning-minimal-text/60 text-intent-warning-minimal-text hover:bg-warning/10 active:bg-warning/20 data-[active=true]:bg-warning/20 dark:hover:bg-warning-disabled/15",
+    danger: "border-intent-danger-minimal-text/60 text-intent-danger-minimal-text hover:bg-danger/10 active:bg-danger/20 data-[active=true]:bg-danger/20 dark:hover:bg-danger-disabled/15",
 };
 
 const MINIMAL: Record<ButtonIntent, string> = {
-    none: "text-foreground hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
+    none: "text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
-    success: "text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
-    warning: "text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
-    danger: "text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
+        "text-intent-primary-minimal-text hover:bg-primary/10 active:bg-primary/20 data-[active=true]:bg-primary/20 dark:hover:bg-primary-disabled/15",
+    success: "text-intent-success-minimal-text hover:bg-success/10 active:bg-success/20 data-[active=true]:bg-success/20 dark:hover:bg-success-disabled/15",
+    warning: "text-intent-warning-minimal-text hover:bg-warning/10 active:bg-warning/20 data-[active=true]:bg-warning/20 dark:hover:bg-warning-disabled/15",
+    danger: "text-intent-danger-minimal-text hover:bg-danger/10 active:bg-danger/20 data-[active=true]:bg-danger/20 dark:hover:bg-danger-disabled/15",
 };
 
 const VARIANT_MAP = { solid: SOLID, outlined: OUTLINED, minimal: MINIMAL } as const;
@@ -75,11 +97,22 @@ export const buttonVariants = cva(
                 large: "h-10 min-w-10 px-4 text-body-lg [&_svg]:size-5",
             },
             fill: { true: "w-full", false: "" },
+            // Icon-only buttons render square (no text to widen them). Blueprint keeps the
+            // default horizontal padding and pulls the icon in with negative margins so the
+            // button collapses to its square `min-width`; we instead pin `width` to the same
+            // square dimension (width is not a fidelity-compared prop, and padding/min-width
+            // stay intact). The icon centers and may overflow the content box, as in Blueprint.
+            iconOnly: { true: "", false: "" },
         },
-        compoundVariants: (["solid", "outlined", "minimal"] as const).flatMap((variant) =>
-            INTENTS.map((intent) => ({ variant, intent, class: VARIANT_MAP[variant][intent] })),
-        ),
-        defaultVariants: { variant: "solid", intent: "none", size: "medium", fill: false },
+        compoundVariants: [
+            ...(["solid", "outlined", "minimal"] as const).flatMap((variant) =>
+                INTENTS.map((intent) => ({ variant, intent, class: VARIANT_MAP[variant][intent] })),
+            ),
+            { iconOnly: true, fill: false, size: "small", class: "w-6" },
+            { iconOnly: true, fill: false, size: "medium", class: "w-7.5" },
+            { iconOnly: true, fill: false, size: "large", class: "w-10" },
+        ],
+        defaultVariants: { variant: "solid", intent: "none", size: "medium", fill: false, iconOnly: false },
     },
 );
 
@@ -90,10 +123,10 @@ export interface ButtonProps
     asChild?: boolean;
     /** Persistent pressed appearance. */
     active?: boolean;
-    /** Icon rendered before the text. */
-    icon?: React.ReactNode;
-    /** Icon rendered after the text. */
-    endIcon?: React.ReactNode;
+    /** Icon rendered before the text. An icon-name string (e.g. `"add"`) or a custom element. */
+    icon?: IconProp;
+    /** Icon rendered after the text. An icon-name string or a custom element. */
+    endIcon?: IconProp;
     /** Show a centered spinner and disable the button; width is preserved. */
     loading?: boolean;
     /** Expand to fill the container width. */
@@ -104,7 +137,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     { className, variant, intent, size, fill, active, icon, endIcon, loading = false, disabled, asChild = false, children, ...props },
     ref,
 ) {
-    const classes = cn(buttonVariants({ variant, intent, size, fill }), className);
+    // A parent ButtonGroup supplies variant/size defaults; an explicit prop overrides.
+    const group = useContext(ButtonGroupContext);
+    const resolvedVariant = variant ?? group?.variant;
+    const resolvedSize = size ?? group?.size;
+
+    // Resolve string icon names to <Icon> (with `!text-current` so the glyph inherits
+    // the button's text color instead of Icon's default `text-foreground`). A custom
+    // element / false / null passes through; the SVG is sized by `[&_svg]:size-*` above.
+    const iconNode = resolveIcon(icon, { className: "!text-current" });
+    const endIconNode = resolveIcon(endIcon, { className: "!text-current" });
+
+    // Icon-only (no text children): render square so the button matches Blueprint's
+    // square icon buttons instead of growing 2px wider than its min-width.
+    const iconOnly = !asChild && children == null && (!!iconNode || !!endIconNode);
+
+    const classes = cn(
+        buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill, iconOnly }),
+        className,
+    );
 
     if (asChild) {
         return (
@@ -114,7 +165,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         );
     }
 
-    const hidden = loading ? "invisible" : undefined;
+    // While loading, hide the label visually but keep it in the accessibility tree so the
+    // button retains its name (WCAG 4.1.2). `opacity-0` stays in the a11y tree and keeps
+    // layout/width stable; `invisible` (visibility:hidden) would drop the name entirely.
+    const hidden = loading ? "opacity-0" : undefined;
 
     return (
         <button
@@ -122,6 +176,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
             className={classes}
             data-active={active || undefined}
             disabled={disabled || loading}
+            aria-busy={loading || undefined}
             {...props}
         >
             {loading && (
@@ -132,12 +187,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
                     className="absolute inset-0 inline-flex items-center justify-center [&_path:last-child]:!stroke-current"
                     aria-hidden="true"
                 >
-                    <Spinner size={size === "large" ? 20 : 16} />
+                    <Spinner size={resolvedSize === "large" ? 20 : 16} />
                 </span>
             )}
-            {icon != null && <span className={cn("inline-flex", hidden)}>{icon}</span>}
+            {iconNode && <span className={cn("inline-flex", hidden)}>{iconNode}</span>}
             {children != null && <span className={hidden}>{children}</span>}
-            {endIcon != null && <span className={cn("inline-flex", hidden)}>{endIcon}</span>}
+            {endIconNode && <span className={cn("inline-flex", hidden)}>{endIconNode}</span>}
         </button>
     );
 });

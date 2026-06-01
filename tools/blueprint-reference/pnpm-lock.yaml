@@ -20,6 +20,9 @@ importers:
       '@blueprintjs/select':
         specifier: ^6.2.1
         version: 6.2.1(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@blueprintjs/table':
+        specifier: ^6.1.1
+        version: 6.1.1(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -171,6 +174,16 @@ packages:
 
   '@blueprintjs/select@6.2.1':
     resolution: {integrity: sha512-NBMxdAR7PE4Oyn5tN9AfKVzFpCRoQHaIuhNCCGFFjt22efgQscQF+ppHPe1+pUy4YIWB2KBwfBUT5bpIvNFPfA==}
+    peerDependencies:
+      '@types/react': '18'
+      react: '18'
+      react-dom: '18'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@blueprintjs/table@6.1.1':
+    resolution: {integrity: sha512-bjoEEHcH4++qhP++7srhQ8ZjaPV6yQExzY+gcGqksmd4PB6FN4rydrFOU6uE7cL9LFsjC3l70iAvC6NzQtTwnA==}
     peerDependencies:
       '@types/react': '18'
       react: '18'
@@ -1016,6 +1029,18 @@ snapshots:
       classnames: 2.5.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+      tslib: 2.6.3
+    optionalDependencies:
+      '@types/react': 18.3.29
+
+  '@blueprintjs/table@6.1.1(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@blueprintjs/core': 6.15.0(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@blueprintjs/icons': 6.10.0(@types/react@18.3.29)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      classnames: 2.5.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      react-innertext: 1.1.5(@types/react@18.3.29)(react@18.3.1)
       tslib: 2.6.3
     optionalDependencies:
       '@types/react': 18.3.29

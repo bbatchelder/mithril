@@ -51,8 +51,11 @@
  * utilities resolve correctly. Pass `dark` from the gallery's DarkContext.
  */
 
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from "react";
+
 import { cn } from "@/lib/utils";
 import { Dialog } from "./dialog";
+import { Icon, type IconName } from "./icon";
 
 // ---------------------------------------------------------------------------
 // Key combo parser
@@ -113,6 +116,20 @@ const KEY_SYMBOLS: Record<string, string> = {
     right: "→",
     delete: "⌫",
     escape: "Esc",
+};
+
+/**
+ * Modifier keys that Blueprint renders as a platform-glyph ICON paired with the
+ * modifier WORD inside one key cap (e.g. ⌘+"cmd", ⇧+"shift", ⌃+"ctrl", ⌥+"alt").
+ * The parser yields these lowercase tokens (`meta` is normalized to `cmd` on Mac,
+ * `ctrl` elsewhere), so we key on the resolved token.
+ */
+const MODIFIER_ICONS: Record<string, IconName> = {
+    cmd: "key-command",
+    meta: "key-command",
+    ctrl: "key-control",
+    alt: "key-option",
+    shift: "key-shift",
 };
 
 /**
@@ -193,14 +210,16 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
             {...props}
         >
             {keys.map((key, i) => {
-                const symbol = KEY_SYMBOLS[key.toLowerCase()];
+                const lower = key.toLowerCase();
+                const modIcon = MODIFIER_ICONS[lower];
+                const symbol = KEY_SYMBOLS[lower];
                 const display = symbol ?? key;
 
                 if (minimal) {
-                    // Minimal: just the symbol/text, no key cap styling
+                    // Minimal: glyph icon for modifiers, else the symbol/text — no cap styling.
                     return (
-                        <span key={i} className="text-body-sm font-normal">
-                            {display}
+                        <span key={i} className="inline-flex items-center text-body-sm font-normal">
+                            {modIcon ? <Icon icon={modIcon} size={14} aria-hidden className="!text-current" /> : display}
                         </span>
                     );
                 }
@@ -215,6 +234,9 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
                             // display: inline-flex; align-items: center; justify-content: center;
                             // vertical-align: middle; font-family: inherit;
                             "inline-flex items-center justify-center align-middle font-sans",
+                            // Modifier caps pair a platform glyph icon with the word (⌘ cmd, ⇧ shift,
+                            // ⌃ ctrl, ⌥ alt) — Blueprint puts ~4px between the icon and the label.
+                            modIcon && "gap-1",
                             // font-size: $pt-font-size-small = 12px
                             "text-body-sm",
                             // height: $pt-button-height-small = 24px; min-width: 24px; line-height: 24px
@@ -237,7 +259,16 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
                             "font-normal",
                         )}
                     >
-                        {display}
+                        {modIcon ? (
+                            <>
+                                {/* Inherit the cap's text color (gray-1 / gray-4) — Icon defaults
+                                    to text-foreground even at intent="none", so force currentColor. */}
+                                <Icon icon={modIcon} size={16} aria-hidden className="!text-current" />
+                                {key}
+                            </>
+                        ) : (
+                            display
+                        )}
                     </kbd>
                 );
             })}
@@ -262,8 +293,37 @@ export interface HotkeyConfig {
      * `globalGroupName` (default: `"Global"`).
      */
     group?: string;
-    /** Whether this is a global (app-level) hotkey. */
+    /**
+     * Whether this hotkey is bound globally (a `document`-level listener) rather
+     * than locally (only while a target element is focused). Global hotkeys appear
+     * in the generated dialog under `globalGroupName`; local hotkeys require
+     * spreading the `useHotkeys` `handleKeyDown`/`handleKeyUp` onto an element.
+     *
+     * @default false
+     */
     global?: boolean;
+    /**
+     * Callback invoked when the combo is pressed down. Receives the native
+     * `KeyboardEvent` (global hotkeys) or the synthetic event's `nativeEvent`
+     * (local hotkeys).
+     */
+    onKeyDown?: (e: KeyboardEvent) => void;
+    /** Callback invoked when the combo is released. */
+    onKeyUp?: (e: KeyboardEvent) => void;
+    /**
+     * Whether the hotkey should fire even when focus is inside a text input
+     * (`<input>`, `<textarea>`, or `contenteditable`). Defaults to `false` so
+     * typing in a field doesn't trigger app shortcuts.
+     *
+     * @default false
+     */
+    allowInInput?: boolean;
+    /** When `true`, the hotkey is registered for the dialog but never fires. @default false */
+    disabled?: boolean;
+    /** Call `event.preventDefault()` when the combo fires. @default false */
+    preventDefault?: boolean;
+    /** Call `event.stopPropagation()` when the combo fires. @default false */
+    stopPropagation?: boolean;
 }
 
 export interface HotkeysDialogProps {
@@ -426,3 +486,427 @@ export function HotkeysDialog({
 }
 
 HotkeysDialog.displayName = "HotkeysDialog";
+
+// ---------------------------------------------------------------------------
+// Hotkey engine — combo parsing & matching
+// ---------------------------------------------------------------------------
+//
+// Ported 1:1 from Blueprint v6.15 `hotkeyParser.ts`. A parsed combo is a
+// `{ modifiers, key }` pair: `modifiers` is a bitmask (so order/duplication
+// doesn't matter) and `key` is the single non-modifier action key, lowercased.
+// `getKeyCombo` derives the same shape from a live `KeyboardEvent`, so matching
+// is just `comboMatches`.
+
+/** Named modifier keys, per https://www.w3.org/TR/uievents-key/#keys-modifier */
+const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
+
+/** Bitmask values for each modifier, OR-ed together into a parsed combo's `modifiers`. */
+const MODIFIER_BIT_MASKS: Record<string, number> = {
+    alt: 1,
+    ctrl: 2,
+    meta: 4,
+    shift: 8,
+};
+
+/**
+ * Maps shifted symbol characters back to their unshifted physical key, so e.g.
+ * `"?"` parses to `shift + "/"`. Lets combos be written with the natural glyph.
+ */
+const SHIFT_KEYS: Record<string, string> = {
+    "~": "`",
+    _: "-",
+    "+": "=",
+    "{": "[",
+    "}": "]",
+    "|": "\\",
+    ":": ";",
+    '"': "'",
+    "<": ",",
+    ">": ".",
+    "?": "/",
+};
+
+/** A parsed key combo: a modifier bitmask plus the single action key. */
+export interface KeyCombo {
+    modifiers: number;
+    /** The action key, lowercased (e.g. `"a"`, `"enter"`, `"arrowup"`). `undefined` for modifier-only events. */
+    key?: string;
+}
+
+/** Two parsed combos match iff their modifier bitmask and action key are identical. */
+export function comboMatches(a: KeyCombo, b: KeyCombo): boolean {
+    return a.modifiers === b.modifiers && a.key === b.key;
+}
+
+/**
+ * Convert a combo string (e.g. `"mod+shift+n"`, `"?"`) into a `{ modifiers, key }`
+ * object. Modifiers accumulate into the bitmask; the last non-modifier token wins
+ * as the action key. Shifted symbols (`@`, `?`, …) add the shift modifier and map
+ * to their unshifted key.
+ */
+export function parseKeyCombo(combo: string): KeyCombo {
+    const pieces = combo.replace(/\s/g, "").toLowerCase().split("+");
+    let modifiers = 0;
+    let key: string | undefined;
+    for (let piece of pieces) {
+        if (piece === "") {
+            throw new Error(
+                `Failed to parse key combo "${combo}". Valid key combos look like "cmd + plus", "shift+p", or "!"`,
+            );
+        }
+        if (CONFIG_ALIASES[piece] !== undefined) {
+            piece = CONFIG_ALIASES[piece];
+        }
+        if (MODIFIER_BIT_MASKS[piece] !== undefined) {
+            modifiers += MODIFIER_BIT_MASKS[piece];
+        } else if (SHIFT_KEYS[piece] !== undefined) {
+            modifiers += MODIFIER_BIT_MASKS.shift;
+            key = SHIFT_KEYS[piece];
+        } else {
+            key = piece.toLowerCase();
+        }
+    }
+    return { modifiers, key };
+}
+
+const KEY_CODE_PREFIX = "Key";
+const DIGIT_CODE_PREFIX = "Digit";
+
+/** Derive a layout-independent base key from `event.code` for letters/digits/space/delete. */
+function maybeGetKeyFromEventCode(e: KeyboardEvent): string | undefined {
+    if (e.code == null) return undefined;
+    if (e.code.startsWith(KEY_CODE_PREFIX)) {
+        return e.code.substring(KEY_CODE_PREFIX.length).toLowerCase();
+    } else if (e.code.startsWith(DIGIT_CODE_PREFIX)) {
+        return e.code.substring(DIGIT_CODE_PREFIX.length).toLowerCase();
+    } else if (e.code === "Space" || e.code === "Delete") {
+        return e.code.toLowerCase();
+    }
+    return undefined;
+}
+
+/**
+ * On macOS, Alt produces composed characters (Alt+c → ç). Detect those so we can
+ * fall back to `event.code` and keep combos matching the physical key.
+ */
+function isAltModifiedCharacter(key: string | undefined): boolean {
+    if (key == null || key.length !== 1) return false;
+    const code = key.charCodeAt(0);
+    return code > 127 || code < 32;
+}
+
+/**
+ * Build a `KeyCombo` from a live `KeyboardEvent`. Mirrors Blueprint's nuanced
+ * key resolution: digits use `code` (Shift+1 → "1"), letters use `key` (respects
+ * layout), Alt-composed chars fall back to `code`, and shifted symbols map via
+ * `SHIFT_KEYS`.
+ */
+export function getKeyCombo(e: KeyboardEvent): KeyCombo {
+    let key: string | undefined;
+    if (MODIFIER_KEYS.has(e.key)) {
+        // modifier-only press — leave `key` undefined
+    } else {
+        const codeKey = maybeGetKeyFromEventCode(e);
+        if (e.code === "Space" || e.code === "Delete") {
+            key = codeKey;
+        } else if (e.altKey && isAltModifiedCharacter(e.key) && codeKey !== undefined) {
+            key = codeKey;
+        } else if (e.code?.startsWith(DIGIT_CODE_PREFIX) && codeKey !== undefined) {
+            key = codeKey;
+        } else {
+            key = e.key?.toLowerCase() ?? codeKey;
+        }
+    }
+
+    let modifiers = 0;
+    if (e.altKey) modifiers += MODIFIER_BIT_MASKS.alt;
+    if (e.ctrlKey) modifiers += MODIFIER_BIT_MASKS.ctrl;
+    if (e.metaKey) modifiers += MODIFIER_BIT_MASKS.meta;
+    if (e.shiftKey) {
+        modifiers += MODIFIER_BIT_MASKS.shift;
+        if (SHIFT_KEYS[e.key] !== undefined) {
+            key = SHIFT_KEYS[e.key];
+        }
+    }
+    return { modifiers, key };
+}
+
+/**
+ * Whether `elem` sits inside something that captures typing (a text `<input>`,
+ * `<textarea>`, or `contenteditable`). Used to suppress hotkeys while the user is
+ * typing, unless the hotkey opts in via `allowInInput`. Checkboxes/radios and
+ * read-only fields do NOT count as text inputs.
+ */
+function elementIsTextInput(elem: EventTarget | null): boolean {
+    const node = elem as Element | null;
+    if (node == null || typeof node.closest !== "function") return false;
+    const editable = node.closest("input, textarea, [contenteditable=true]");
+    if (editable == null) return false;
+    if (editable.tagName.toLowerCase() === "input") {
+        const inputType = (editable as HTMLInputElement).type;
+        if (inputType === "checkbox" || inputType === "radio") return false;
+    }
+    if ((editable as HTMLInputElement).readOnly) return false;
+    return true;
+}
+
+// ---------------------------------------------------------------------------
+// HotkeysProvider + context
+// ---------------------------------------------------------------------------
+
+interface HotkeysContextState {
+    /** Whether a `HotkeysProvider` is mounted above the consuming `useHotkeys`. */
+    hasProvider: boolean;
+    /** All registered hotkeys (global + local), used to populate the help dialog. */
+    hotkeys: HotkeyConfig[];
+    /** Whether the generated help dialog is open. */
+    isDialogOpen: boolean;
+}
+
+type HotkeysAction =
+    | { type: "ADD_HOTKEYS"; payload: HotkeyConfig[] }
+    | { type: "REMOVE_HOTKEYS"; payload: HotkeyConfig[] }
+    | { type: "OPEN_DIALOG" }
+    | { type: "CLOSE_DIALOG" };
+
+const initialHotkeysState: HotkeysContextState = { hasProvider: false, hotkeys: [], isDialogOpen: false };
+const noOpDispatch: React.Dispatch<HotkeysAction> = () => null;
+
+/**
+ * React context that registers/deregisters hotkeys as components mount, and tracks
+ * the help-dialog open state. Instantiate exactly one `HotkeysProvider` per app.
+ */
+export const HotkeysContext = createContext<[HotkeysContextState, React.Dispatch<HotkeysAction>]>([
+    initialHotkeysState,
+    noOpDispatch,
+]);
+
+/** Shallow-compares two hotkeys for dialog dedup, ignoring the callback identities. */
+function isSameHotkey(a: HotkeyConfig, b: HotkeyConfig): boolean {
+    return a.combo === b.combo && a.label === b.label && a.group === b.group && a.global === b.global;
+}
+
+function hotkeysReducer(state: HotkeysContextState, action: HotkeysAction): HotkeysContextState {
+    switch (action.type) {
+        case "ADD_HOTKEYS": {
+            // Only register combos not already present (dedup by everything but callbacks),
+            // so multiple components binding the same global combo show one dialog row.
+            const newUnique = action.payload.filter((a) => !state.hotkeys.some((b) => isSameHotkey(a, b)));
+            return { ...state, hotkeys: [...state.hotkeys, ...newUnique] };
+        }
+        case "REMOVE_HOTKEYS":
+            return { ...state, hotkeys: state.hotkeys.filter((key) => action.payload.indexOf(key) === -1) };
+        case "OPEN_DIALOG":
+            return { ...state, isDialogOpen: true };
+        case "CLOSE_DIALOG":
+            return { ...state, isDialogOpen: false };
+        default:
+            return state;
+    }
+}
+
+export interface HotkeysProviderProps {
+    children: React.ReactNode;
+    /**
+     * Pass the app's dark state so the generated help dialog inherits dark mode
+     * (matches the Dialog/Alert/Drawer pattern).
+     */
+    dark?: boolean;
+    /** Title for the generated help dialog. @default "Keyboard shortcuts" */
+    dialogTitle?: string;
+    /** Group name for global hotkeys with no explicit group. @default "Global" */
+    globalGroupName?: string;
+    /**
+     * Provide an existing context value to share registration across nested
+     * providers. When set, this provider does not render its own dialog.
+     */
+    value?: [HotkeysContextState, React.Dispatch<HotkeysAction>];
+}
+
+/**
+ * Hotkeys context provider, required for `useHotkeys` to populate the help dialog
+ * and for `?` to open it. Wrap your app once near the root.
+ *
+ * @example
+ * ```tsx
+ * <HotkeysProvider dark={dark}>
+ *   <App />
+ * </HotkeysProvider>
+ * ```
+ */
+export function HotkeysProvider({
+    children,
+    dark = false,
+    dialogTitle = "Keyboard shortcuts",
+    globalGroupName = "Global",
+    value,
+}: HotkeysProviderProps) {
+    const hasExistingContext = value != null;
+    const fallbackReducer = useReducer(hotkeysReducer, { ...initialHotkeysState, hasProvider: true });
+    const [state, dispatch] = value ?? fallbackReducer;
+    const contextValue = useMemo<[HotkeysContextState, React.Dispatch<HotkeysAction>]>(
+        () => [state, dispatch],
+        [state, dispatch],
+    );
+    const handleDialogClose = useCallback(() => dispatch({ type: "CLOSE_DIALOG" }), [dispatch]);
+
+    return (
+        <HotkeysContext.Provider value={contextValue}>
+            {children}
+            {hasExistingContext ? undefined : (
+                <HotkeysDialog
+                    open={state.isDialogOpen}
+                    onOpenChange={(open) => !open && handleDialogClose()}
+                    dark={dark}
+                    title={dialogTitle}
+                    hotkeys={state.hotkeys}
+                    globalGroupName={globalGroupName}
+                />
+            )}
+        </HotkeysContext.Provider>
+    );
+}
+
+HotkeysProvider.displayName = "HotkeysProvider";
+
+// ---------------------------------------------------------------------------
+// useHotkeys hook
+// ---------------------------------------------------------------------------
+
+export interface UseHotkeysOptions {
+    /**
+     * The document on which to bind global listeners. Defaults to `window.document`.
+     * Override for iframes/testing.
+     */
+    document?: Document;
+    /**
+     * Combo that opens the generated help dialog, or `false` to disable it.
+     * @default "?"
+     */
+    showDialogKeyCombo?: string | false;
+}
+
+export interface UseHotkeysReturnValue {
+    /** Spread onto a focusable element to enable that element's **local** hotkeys. */
+    handleKeyDown: React.KeyboardEventHandler<HTMLElement>;
+    /** Spread onto a focusable element to enable that element's **local** hotkeys. */
+    handleKeyUp: React.KeyboardEventHandler<HTMLElement>;
+}
+
+const HOTKEYS_PROVIDER_NOT_FOUND =
+    "[analyst-ui] useHotkeys was used outside of a HotkeysProvider. Hotkeys will still fire, but won't appear in the help dialog and `?` won't open it. Wrap your app in <HotkeysProvider>.";
+
+/**
+ * Register global and local keyboard shortcuts for a component.
+ *
+ * Global hotkeys (`global: true`) bind a `document`-level listener and fire from
+ * anywhere; local hotkeys fire only while an element you've spread the returned
+ * `handleKeyDown`/`handleKeyUp` onto (or a descendant) has focus. Combos are parsed
+ * with platform-aware `mod` handling, callbacks dispatch on match, and typing in a
+ * text input is ignored unless a hotkey sets `allowInInput`. With a `HotkeysProvider`
+ * mounted, registered hotkeys populate the help dialog and `?` opens it.
+ *
+ * @example
+ * ```tsx
+ * const { handleKeyDown, handleKeyUp } = useHotkeys([
+ *   { combo: "mod+s", label: "Save", global: true, preventDefault: true, onKeyDown: save },
+ *   { combo: "r", label: "Refresh", group: "Panel", onKeyDown: refresh },
+ * ]);
+ * return <div tabIndex={0} onKeyDown={handleKeyDown} onKeyUp={handleKeyUp}>…</div>;
+ * ```
+ */
+export function useHotkeys(keys: readonly HotkeyConfig[], options: UseHotkeysOptions = {}): UseHotkeysReturnValue {
+    const { document: docOption, showDialogKeyCombo = "?" } = options;
+    const doc = docOption ?? (typeof window === "undefined" ? undefined : window.document);
+
+    const localKeys = useMemo(
+        () => keys.filter((k) => !k.global).map((k) => ({ combo: parseKeyCombo(k.combo), config: k })),
+        [keys],
+    );
+    const globalKeys = useMemo(
+        () => keys.filter((k) => k.global).map((k) => ({ combo: parseKeyCombo(k.combo), config: k })),
+        [keys],
+    );
+
+    const [state, dispatch] = useContext(HotkeysContext);
+
+    useEffect(() => {
+        if (!state.hasProvider) {
+            // eslint-disable-next-line no-console
+            console.warn(HOTKEYS_PROVIDER_NOT_FOUND);
+        }
+    }, [state.hasProvider]);
+
+    // Register all combos with the provider so they appear in the help dialog.
+    useEffect(() => {
+        const payload = [...globalKeys.map((k) => k.config), ...localKeys.map((k) => k.config)];
+        dispatch({ type: "ADD_HOTKEYS", payload });
+        return () => dispatch({ type: "REMOVE_HOTKEYS", payload });
+    }, [dispatch, globalKeys, localKeys]);
+
+    const invokeNamedCallbackIfComboRecognized = useCallback(
+        (global: boolean, combo: KeyCombo, callbackName: "onKeyDown" | "onKeyUp", e: KeyboardEvent) => {
+            const isTextInput = elementIsTextInput(e.target);
+            for (const key of global ? globalKeys : localKeys) {
+                const {
+                    allowInInput = false,
+                    disabled = false,
+                    preventDefault = false,
+                    stopPropagation = false,
+                } = key.config;
+                const shouldIgnore = (isTextInput && !allowInInput) || disabled;
+                if (!shouldIgnore && comboMatches(key.combo, combo)) {
+                    if (preventDefault) e.preventDefault();
+                    if (stopPropagation) e.stopPropagation();
+                    key.config[callbackName]?.(e);
+                }
+            }
+        },
+        [globalKeys, localKeys],
+    );
+
+    const handleGlobalKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            const combo = getKeyCombo(e);
+            // Special case: `?` (when not typing) opens the help dialog.
+            if (showDialogKeyCombo !== false) {
+                const isTextInput = elementIsTextInput(e.target);
+                if (!isTextInput && comboMatches(parseKeyCombo(showDialogKeyCombo), combo)) {
+                    dispatch({ type: "OPEN_DIALOG" });
+                    return;
+                }
+            }
+            invokeNamedCallbackIfComboRecognized(true, combo, "onKeyDown", e);
+        },
+        [dispatch, invokeNamedCallbackIfComboRecognized, showDialogKeyCombo],
+    );
+
+    const handleGlobalKeyUp = useCallback(
+        (e: KeyboardEvent) => invokeNamedCallbackIfComboRecognized(true, getKeyCombo(e), "onKeyUp", e),
+        [invokeNamedCallbackIfComboRecognized],
+    );
+
+    const handleLocalKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLElement>) =>
+            invokeNamedCallbackIfComboRecognized(false, getKeyCombo(e.nativeEvent), "onKeyDown", e.nativeEvent),
+        [invokeNamedCallbackIfComboRecognized],
+    );
+
+    const handleLocalKeyUp = useCallback(
+        (e: React.KeyboardEvent<HTMLElement>) =>
+            invokeNamedCallbackIfComboRecognized(false, getKeyCombo(e.nativeEvent), "onKeyUp", e.nativeEvent),
+        [invokeNamedCallbackIfComboRecognized],
+    );
+
+    useEffect(() => {
+        if (doc == null) return;
+        doc.addEventListener("keydown", handleGlobalKeyDown);
+        doc.addEventListener("keyup", handleGlobalKeyUp);
+        return () => {
+            doc.removeEventListener("keydown", handleGlobalKeyDown);
+            doc.removeEventListener("keyup", handleGlobalKeyUp);
+        };
+    }, [doc, handleGlobalKeyDown, handleGlobalKeyUp]);
+
+    return { handleKeyDown: handleLocalKeyDown, handleKeyUp: handleLocalKeyUp };
+}

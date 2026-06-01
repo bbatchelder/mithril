@@ -19,6 +19,15 @@
  * offsets computed via Intl.DateTimeFormat for the given `date`. This avoids the date-fns-tz
  * dependency. Offsets are date-sensitive (DST is accounted for).
  *
+ * ## Design decision — cleaner labels (intentional deviation from Blueprint)
+ * Per this project's "fresh, modern API" goal, the item labels are deliberately the plain
+ * place name ("Calcutta", "Sydney") rather than Blueprint's verbose composite strings
+ * ("India - Kolkata", "Melbourne, Sydney"). This is the ONE place TimezoneSelect intentionally
+ * diverges from pixel-fidelity: the minimal-list menu renders ~23px narrower than Blueprint's
+ * (and the trigger ~6px narrower) because our labels are shorter. That width delta is ACCEPTED,
+ * not a bug — it is the visible cost of the cleaner labels, and we keep the labels. Do not
+ * "fix" the width by reintroducing Blueprint's verbose labels.
+ *
  * ## Portal + dark-mode
  * Delegates to Select → Popover, which wraps portaled content in a div.dark.
  * Pass `dark={dark}` (from DarkContext) so portaled items render in dark theme.
@@ -33,6 +42,7 @@ import { Select } from "./select";
 import { MenuItem } from "./menu";
 import { Button } from "./button";
 import { Icon } from "./icon";
+import { caretDown } from "./icons";
 import type { SelectProps } from "./select";
 
 /* ============================================================
@@ -391,28 +401,43 @@ function buildTimezoneItems(date: Date): TimezoneItem[] {
  * Matches Blueprint's MINIMAL_TIMEZONE_ITEMS.
  * ============================================================ */
 
+// Exactly Blueprint 6.15's MINIMAL_TIMEZONE_ITEMS (timezoneItems.ts → minimalTimezonesWithoutOffset),
+// in the same order. Three entries use the older IANA aliases that our allItems data carries:
+// Asia/Calcutta (≙ Asia/Kolkata), Asia/Katmandu (≙ Asia/Kathmandu), Asia/Rangoon (≙ Asia/Yangon).
 const MINIMAL_IANA_CODES = [
     "Etc/UTC",
+    "Pacific/Pago_Pago",
     "Pacific/Honolulu",
+    "Pacific/Marquesas",
     "America/Anchorage",
     "America/Los_Angeles",
     "America/Denver",
-    "America/Chicago",
+    "America/Mexico_City",
     "America/New_York",
-    "America/Halifax",
+    "America/Puerto_Rico",
+    "America/St_Johns",
     "America/Argentina/Buenos_Aires",
-    "Atlantic/Azores",
-    "Europe/London",
+    "America/Sao_Paulo",
+    "Atlantic/Cape_Verde",
     "Europe/Paris",
+    "Africa/Cairo",
     "Europe/Moscow",
+    "Asia/Tehran",
     "Asia/Dubai",
     "Asia/Karachi",
     "Asia/Calcutta",
-    "Asia/Bangkok",
-    "Asia/Shanghai",
+    "Asia/Katmandu",
+    "Asia/Dhaka",
+    "Asia/Rangoon",
+    "Asia/Jakarta",
+    "Asia/Manila",
     "Asia/Tokyo",
+    "Australia/Brisbane",
+    "Australia/Adelaide",
     "Australia/Sydney",
+    "Pacific/Nauru",
     "Pacific/Auckland",
+    "Pacific/Kiritimati",
 ];
 
 /* ============================================================
@@ -601,7 +626,11 @@ export function TimezoneSelect({
 
     // Initial (empty-query) items — Blueprint's "minimal" subset + optional local timezone
     const initialItems = useMemo(() => {
-        const minimalItems = allItems.filter((tz) => MINIMAL_IANA_CODES.includes(tz.ianaCode));
+        // Map over MINIMAL_IANA_CODES (not filter allItems) so the order matches Blueprint's
+        // MINIMAL_TIMEZONE_ITEMS exactly, not allItems' geographic order.
+        const minimalItems = MINIMAL_IANA_CODES.map((code) =>
+            allItems.find((tz) => tz.ianaCode === code),
+        ).filter((tz): tz is TimezoneItem => tz != null);
         if (!showLocalTimezone) return minimalItems;
         // Detect local timezone
         let localIana: string | undefined;
@@ -645,7 +674,7 @@ export function TimezoneSelect({
     // The trigger button (default, unless custom children are provided)
     const triggerButton = children ?? (
         <Button
-            endIcon={<Icon icon="caret-down" size={16} />}
+            endIcon={<Icon icon={caretDown} size={16} />}
             disabled={disabled}
             fill={fill}
             {...buttonProps}
