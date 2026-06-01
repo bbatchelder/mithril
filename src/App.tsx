@@ -4934,6 +4934,15 @@ const DATA_TABLE_COLUMNS: DataTableColumn<DataTablePerson>[] = [
     { id: "location", header: "Location", accessor: "location", width: 120 },
 ];
 
+const DATA_TABLE_ROLES = ["Engineer", "Designer", "Manager", "Analyst"];
+const DATA_TABLE_CITIES = ["London", "Seattle", "Austin", "Lagos", "Prague", "Osaka"];
+const DATA_TABLE_MANY: DataTablePerson[] = Array.from({ length: 1000 }, (_, i) => ({
+    name: `Person ${i + 1}`,
+    age: 20 + (i % 50),
+    role: DATA_TABLE_ROLES[i % DATA_TABLE_ROLES.length],
+    location: DATA_TABLE_CITIES[i % DATA_TABLE_CITIES.length],
+}));
+
 function DataTableGallery() {
     return (
         <div className="flex flex-col gap-6 text-foreground">
@@ -4942,6 +4951,15 @@ function DataTableGallery() {
                     <DataTable<DataTablePerson>
                         data={DATA_TABLE_ROWS}
                         columns={DATA_TABLE_COLUMNS}
+                    />
+                </div>
+            </Section>
+            <Section title="Virtualized (1,000 rows · fixed height · scroll to test windowing)">
+                <div data-compare="data-table-virtual" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_MANY}
+                        columns={DATA_TABLE_COLUMNS}
+                        height={300}
                     />
                 </div>
             </Section>

@@ -6,12 +6,18 @@ import { axe } from "@/test/axe";
 import { DataTable, type DataTableColumn } from "../data-table";
 
 /**
- * DataTable Loop 1 — the static, non-virtualized skeleton. Visual fidelity (cell
- * borders, header/gutter styling) is covered by the comparison harness against
- * Blueprint's <Table2>; here we assert the engine wiring + DOM contract: grid roles,
- * header/gutter/cell rendering, accessor + custom-cell output, and the numbered gutter.
- * (Row virtualization, selection, resize, editing land in later loops.)
+ * DataTable engine + DOM contract: grid roles, header/gutter/cell rendering, accessor +
+ * custom-cell output, the numbered gutter, and (Loop 2) row virtualization. Visual
+ * fidelity (cell borders, header/gutter styling) is covered by the comparison harness
+ * against Blueprint's <Table2>.
+ *
+ * jsdom has no layout, so `@tanstack/react-virtual`'s ResizeObserver never measures the
+ * viewport. The component seeds the virtualizer's `initialRect` from the `height` prop
+ * (and from the full content height when `height` is omitted), so the right window
+ * renders deterministically: small/auto-height grids render fully, and a tall dataset
+ * with a fixed `height` renders only a windowed subset (asserted below).
  */
+const VIEWPORT_H = 200;
 
 interface Person {
     name: string;
@@ -105,6 +111,36 @@ describe("DataTable — alignment + height", () => {
         renderTable();
         const cell = screen.getByRole("gridcell", { name: "Alice" });
         expect(cell.className).toContain("text-[12px]");
+    });
+});
+
+describe("DataTable — virtualization (Loop 2)", () => {
+    const bigData: Person[] = Array.from({ length: 500 }, (_, i) => ({
+        name: `Person ${i}`,
+        age: 20 + (i % 50),
+        role: i % 2 ? "Engineer" : "Designer",
+    }));
+
+    it("renders only a windowed subset of rows for a tall dataset", () => {
+        render(<DataTable<Person> data={bigData} columns={COLUMNS} rowHeight={20} height={VIEWPORT_H} />);
+        const rendered = screen.getAllByRole("row");
+        // 200px viewport / 20px rows ≈ 10 visible + overscan — far fewer than 500.
+        expect(rendered.length).toBeGreaterThan(0);
+        expect(rendered.length).toBeLessThan(bigData.length / 2);
+    });
+
+    it("sizes the body spacer to the full virtual height (count × rowHeight)", () => {
+        render(<DataTable<Person> data={bigData} columns={COLUMNS} rowHeight={20} height={VIEWPORT_H} />);
+        const rowgroups = screen
+            .getAllByRole("rowgroup")
+            .filter((g) => g.style.height !== "");
+        expect(rowgroups[0]).toHaveStyle({ height: `${bigData.length * 20}px` });
+    });
+
+    it("keeps the first windowed row at index 0 (gutter starts at 1)", () => {
+        render(<DataTable<Person> data={bigData} columns={COLUMNS} rowHeight={20} height={VIEWPORT_H} />);
+        const rowHeaders = screen.getAllByRole("rowheader");
+        expect(rowHeaders[0]).toHaveTextContent("1");
     });
 });
 

@@ -354,7 +354,8 @@
                 }
             ],
             "dependencies": [
-                "@tanstack/react-table"
+                "@tanstack/react-table",
+                "@tanstack/react-virtual"
             ],
             "registryDependencies": [
                 "utils",

@@ -96,7 +96,8 @@ this correctly — use it as the reference pattern.
 > `~/.claude/plans/snuggly-wibbling-clover.md`.
 > - [x] **Loop 1** — engine wiring + static grid skeleton (handoff 0083): sticky header, numbered gutter,
 >   ruled cells, Blueprint `Table2` token fidelity (crop SSIM 0.957 light / 0.936 dark).
-> - [ ] **Loop 2** — row virtualization + sticky header + scroll sync
+> - [x] **Loop 2** — row virtualization + sticky header + scroll sync (handoff 0084): `@tanstack/react-virtual`
+>   windowing, single-scroll-container axis sync, `initialRect`-seeded viewport. Column virtualization deferred.
 > - [ ] **Loop 3** — selection (row + cell + focused cell)
 > - [ ] **Loop 4** — column resize + reorder
 > - [ ] **Loop 5** — editable cells

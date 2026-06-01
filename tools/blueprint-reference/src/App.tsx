@@ -5250,8 +5250,18 @@ const DATA_TABLE_ROWS = [
     { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
 ];
 
+const DATA_TABLE_ROLES = ["Engineer", "Designer", "Manager", "Analyst"];
+const DATA_TABLE_CITIES = ["London", "Seattle", "Austin", "Lagos", "Prague", "Osaka"];
+const DATA_TABLE_MANY = Array.from({ length: 1000 }, (_, i) => ({
+    name: `Person ${i + 1}`,
+    age: 20 + (i % 50),
+    role: DATA_TABLE_ROLES[i % DATA_TABLE_ROLES.length],
+    location: DATA_TABLE_CITIES[i % DATA_TABLE_CITIES.length],
+}));
+
 function DataTableGallery() {
     const rows = DATA_TABLE_ROWS;
+    const many = DATA_TABLE_MANY;
     return (
         <div className="flex flex-col gap-6">
             <BpSection title="Basic grid (sticky header · numbered gutter · ruled cells)">
@@ -5264,6 +5274,19 @@ function DataTableGallery() {
                         />
                         <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
                         <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Virtualized (1,000 rows · fixed height · scroll to test windowing)">
+                <div data-compare="data-table-virtual" style={{ width: 460, height: 300 }}>
+                    <BpTable2 numRows={many.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{many[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{many[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{many[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{many[r].location}</BpCell>} />
                     </BpTable2>
                 </div>
             </BpSection>

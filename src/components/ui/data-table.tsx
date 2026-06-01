@@ -4,7 +4,7 @@ import {
     type ColumnDef,
     type Table,
 } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -189,8 +189,13 @@ export function DataTable<TRow>({
     const gutterW = numberedRows ? gutterWidth(data.length) : 0;
     const totalWidth = table.getTotalSize() + gutterW;
 
+    // The scroll container is the virtualization viewport (Loop 2): the row virtualizer
+    // reads its scroll position. A fixed `height` bounds it so only visible rows render.
+    const scrollRef = useRef<HTMLDivElement>(null);
+
     return (
         <div
+            ref={scrollRef}
             role="grid"
             aria-rowcount={data.length}
             aria-colcount={columns.length}
@@ -214,9 +219,11 @@ export function DataTable<TRow>({
                 />
                 <DataTableBody
                     table={table}
+                    scrollRef={scrollRef}
                     numberedRows={numberedRows}
                     gutterWidth={gutterW}
                     rowHeight={rowHeight}
+                    height={height}
                 />
             </div>
         </div>
