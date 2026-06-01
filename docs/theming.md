@@ -74,8 +74,9 @@ light-mode semantic tokens (declared on `:root`) re-resolve against your seeds:
 ### Example: the bundled "purple" theme
 
 `tokens.css` ships one example, `[data-theme="purple"]`, which re-seeds the
-primary intent to Blueprint's indigo ramp and gives the neutral ramp a subtle
-indigo hue-shift. The gallery toggles it (the tint button in the sidebar) or via
+primary intent to a vivid violet (`rgb(91, 8, 178)`, with hover/active/disabled
+tiers derived from Blueprint's blue-ramp OKLCH steps) and gives the neutral ramp
+a subtle violet hue-shift. The gallery toggles it (the tint button in the sidebar) or via
 `?palette=purple` (add `&theme=dark` for the dark variant). It's the proof that a
 single seed override re-tints all four light/dark quadrants. Status intents are
 left semantic by choice — uncomment the `--color-success/-warning/-danger` lines

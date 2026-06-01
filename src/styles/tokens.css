@@ -540,22 +540,24 @@
  * from the P2.5 discussion) is planned future work; this is the static proof.
  * ========================================================================== */
 [data-theme="purple"] {
-    --color-primary: #7961db; /* indigo-3 */
-    --color-primary-hover: #634dbf; /* indigo-2 */
-    --color-primary-active: #5642a6; /* indigo-1 */
-    --color-primary-disabled: #9881f3; /* indigo-4 */
+    /* Vivid violet accent — rest = rgb(91,8,178); hover/active/disabled mirror
+     * Blueprint's blue-ramp OKLCH steps applied to that base (faithful stepping). */
+    --color-primary: #5b08b2; /* rgb(91, 8, 178) */
+    --color-primary-hover: #470092; /* rest l-0.074 c-0.017 */
+    --color-primary-active: #340073; /* rest l-0.143 c-0.036 */
+    --color-primary-disabled: #7339d1; /* rest l+0.095 c-0.004 */
     /* --color-success / --color-warning / --color-danger: override here to re-tint all four. */
 }
 
 @supports (color: oklch(from white l c h)) {
-    /* Subtle indigo-tinted neutrals (hue-shifted ramp). Gated because it derives
-     * from the default ramp; non-supporting engines keep the neutral grays. */
+    /* Subtle violet-tinted neutrals (hue-shifted to the accent's hue ≈ 295). Gated
+     * because it derives from the default ramp; non-supporting engines keep grays. */
     [data-theme="purple"] {
-        --color-light-gray-4: oklch(from #edeff2 l calc(c + 0.006) 288);
-        --color-light-gray-5: oklch(from #f6f7f9 l calc(c + 0.005) 288);
-        --color-dark-gray-1: oklch(from #1c2127 l calc(c + 0.008) 288);
-        --color-dark-gray-2: oklch(from #252a31 l calc(c + 0.008) 288);
-        --color-dark-gray-3: oklch(from #2f343c l calc(c + 0.008) 288);
+        --color-light-gray-4: oklch(from #edeff2 l calc(c + 0.006) 295);
+        --color-light-gray-5: oklch(from #f6f7f9 l calc(c + 0.005) 295);
+        --color-dark-gray-1: oklch(from #1c2127 l calc(c + 0.008) 295);
+        --color-dark-gray-2: oklch(from #252a31 l calc(c + 0.008) 295);
+        --color-dark-gray-3: oklch(from #2f343c l calc(c + 0.008) 295);
     }
 }
 
