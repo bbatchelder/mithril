@@ -237,8 +237,17 @@ See **P0.3** (cross-listed) — resolved.
   checkbox/html-select all `N match · 0 differ` both themes).
 - **Themeable:** seeds = the `@theme` intent vars (all four intents) + the gray ramp. A theme overrides
   **only seeds** (apply `data-theme` on `<html>`); both light AND dark variants re-derive automatically
-  because mode (light/dark) and theme (seed set) are orthogonal. Ships one example, `[data-theme="purple"]`
-  (indigo accent + hue-shifted neutrals), wired into the gallery (sidebar tint button / `?palette=purple`).
+  because mode (light/dark) and theme (seed set) are orthogonal. Ships one example, `[data-theme="datex"]`
+  (vivid violet primary + mint/amber/red brand status intents; re-tints intents only — neutrals left at the
+  default grays), wired into the gallery (sidebar tint button / `?palette=datex`).
+- **Library-wide component sweep:** every component now routes its intent colors through the seed/intent
+  tokens (canonical `--intent-*-text` for icon/text, `bg-primary`/`bg-{intent}` for fills, `bg-{intent}/N`
+  for tints) instead of palette literals, so the whole library re-tints with the theme. Verified
+  `compare.sh`-clean in both themes across Button, Icon, Spinner, ProgressBar, Tag, Callout, Menu, Toast,
+  FormGroup, EditableText, Link, DatePicker, DateRangePicker, Tree, Tabs, NumericInput, Checkbox, Radio,
+  Switch, Slider, DataTable (selection/focus overlays), MultistepDialog. Neutral/"none" grays intentionally
+  stay on the palette. (Two distinct intent-text tokens: canonical `--intent-*-text` = tier-2/tier-5 for
+  typography/icon/callout; `--intent-*-minimal-text` = color-mix dark for button minimal/outlined.)
 - **Future:** full runtime theming (a `ThemeProvider`/API + multi-theme gallery switcher — option #3) is
   noted as planned future work in `docs/theming.md`.
 - **Done when:** changing a seed re-tints the theme. ✅ See `docs/theming.md`.
