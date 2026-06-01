@@ -18,6 +18,23 @@ The legacy SCSS/BEM machinery is left behind entirely.
 >
 > Ported tokens derive from Blueprint (Apache-2.0). See [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE) for attribution.
 
+## Preview
+
+The component gallery — light and dark themes (`pnpm dev`, or the [live demo](https://bbatchelder.github.io/mithril/)):
+
+![mithril component gallery — light theme](./docs/assets/gallery-light.png)
+![mithril component gallery — dark theme](./docs/assets/gallery-dark.png)
+
+### Demo apps
+
+Three full applications built entirely with mithril (in the gallery under the **Demos** tab) — proof the
+components compose into real product UIs:
+
+| [SOC Console](https://bbatchelder.github.io/mithril/#demo-soc) | [Project Board](https://bbatchelder.github.io/mithril/#demo-board) | [Mission Control](https://bbatchelder.github.io/mithril/#demo-mission) |
+| :---: | :---: | :---: |
+| ![SOC Console demo](./docs/assets/demo-soc.png) | ![Project Board demo](./docs/assets/demo-board.png) | ![Mission Control demo](./docs/assets/demo-mission.png) |
+| Security-alert triage console | Kanban project board | Live drone-swarm telemetry + MapLibre map |
+
 ## Status
 
 Every component on the [build roadmap](./docs/ROADMAP.md) is implemented — **~56 components** across
