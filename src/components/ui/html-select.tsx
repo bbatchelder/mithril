@@ -2,8 +2,17 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { caretDown, doubleCaretVertical, type IconGlyph } from "./icons";
 
 export type HTMLSelectIconName = "double-caret-vertical" | "caret-down";
+
+// The two glyphs this control can show, imported as objects so they tree-shake
+// (and render with no `registerIcons` call). The public `iconName` prop stays a
+// readable string union; this maps it to the glyph.
+const ICON_BY_NAME: Record<HTMLSelectIconName, IconGlyph> = {
+    "double-caret-vertical": doubleCaretVertical,
+    "caret-down": caretDown,
+};
 
 export interface OptionProps {
     /** Option label (defaults to value if omitted). */
@@ -185,7 +194,7 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
              * Icon color = $pt-icon-color (dark-gray-1 light / gray-4 dark).
              */}
             <Icon
-                icon={iconName}
+                icon={ICON_BY_NAME[iconName]}
                 size={16}
                 className={cn(
                     "pointer-events-none absolute",

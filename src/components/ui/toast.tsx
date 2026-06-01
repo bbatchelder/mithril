@@ -62,6 +62,7 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
 import { Icon, type IconName } from "./icon";
+import { smallCross } from "./icons";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -263,7 +264,7 @@ function ToastContent({
                                 hasIntent && intentCls?.iconColor,
                             )}
                         >
-                            <Icon icon="small-cross" />
+                            <Icon icon={smallCross} />
                         </button>
                     </RadixToast.Close>
                 )}

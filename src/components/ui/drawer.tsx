@@ -67,6 +67,7 @@ import * as RadixDialog from "@radix-ui/react-dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
 /** Common drawer sizes. */
 export const DrawerSize = {
@@ -263,7 +264,7 @@ export function Drawer({
                                             size="medium"
                                             className="shrink-0"
                                             aria-label="Close"
-                                            icon={<Icon icon="small-cross" />}
+                                            icon={<Icon icon={smallCross} />}
                                         />
                                     </RadixDialog.Close>
                                 )}

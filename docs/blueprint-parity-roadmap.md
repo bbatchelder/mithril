@@ -139,8 +139,19 @@ See **P0.3** (cross-listed) — resolved.
 - **Done when:** a fresh project can install any component via the documented command; CI guards
   registry freshness.
 
-### P2.2 — Fix icon tree-shaking
+### P2.2 — Fix icon tree-shaking ✅ done (handoff 0081)
 
+- **Resolved (handoff 0081):** `tools/gen-icons.mjs` now emits `icons/index.ts` with **one
+  `export const <camelName>: IconGlyph` per glyph** (706 named exports) — so a bundler ships only the
+  glyphs you import. `Icon` accepts `IconName | IconGlyph`: a **glyph object** (`<Icon icon={add} />`,
+  imported from `./icons`) renders directly and tree-shakes; a **name string** (`<Icon icon="add" />`)
+  resolves through a small **registry** (`icons/registry.ts`), populated via `registerIcons(ICON_GLYPHS)`
+  from `icons/all.ts` (the "I want them all" convenience) or a selective subset. The full `ICON_GLYPHS` map
+  moved to `all.ts` and is never reachable from `icon.tsx`. The ~20 components with structural/default icons
+  were converted to glyph-object imports, so they render standalone (no registration) and tree-shake their
+  own glyphs; the gallery + test setup call `registerIcons(ICON_GLYPHS)`. **Measured:** importing `Icon` +
+  3 glyph objects bundles **~1.9 KB gzip** vs **~187 KB** for the full map. Fidelity unchanged (icon +
+  callout harness clean, both themes; 240 tests green).
 - **Problem:** All 706 glyphs live in one `ICON_GLYPHS` `Record`, synchronously indexed — importing
   `Icon` drags in **~195 KB gzip** with zero tree-shaking. Blueprint ships per-icon ES modules + async
   split-by-size loading.

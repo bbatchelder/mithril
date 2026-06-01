@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { DatePicker } from "./date-picker";
 import type { TimePrecision } from "./time-picker";
 import { Icon } from "./icon";
+import { calendar } from "./icons";
 import { InputGroup } from "./input-group";
 import { Popover } from "./popover";
 
@@ -399,7 +400,7 @@ export function DateInput({
                 "transition-colors duration-100",
             )}
         >
-            <Icon icon="calendar" size={16} aria-hidden />
+            <Icon icon={calendar} size={16} aria-hidden />
         </button>
     );
 

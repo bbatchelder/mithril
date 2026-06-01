@@ -2,27 +2,34 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
-import { ICON_GLYPHS, type IconName } from "./icons";
+import type { IconGlyph, IconName } from "./icons";
+import { getRegisteredGlyph } from "./icons/registry";
 
-export type { IconName };
+export type { IconGlyph, IconName };
 
 export type IconIntent = Intent;
 
 /**
- * An icon slot prop: either an icon-name string (autocompleted from the Blueprint
- * set) or a custom element. Mirrors Blueprint's `IconName | MaybeElement`.
+ * An icon slot prop: an icon-name string (autocompleted from the Blueprint set), a
+ * glyph object (`import { add } from ".../icons"` — the tree-shaking form), or a
+ * custom element. Mirrors Blueprint's `IconName | MaybeElement`.
  *
- * The union is `IconName | React.ReactElement`, NOT `... | React.ReactNode`:
- * `ReactNode` already includes `string`, so unioning it would collapse the whole
- * type back to `ReactNode` and kill `IconName` autocomplete. `ReactElement` excludes
- * `string`, keeping name suggestions while still accepting any element. `false`/`null`
- * are allowed so `cond && <Icon/>` and explicit suppression type-check.
+ * The union is built from `IconName | IconGlyph | React.ReactElement`, NOT
+ * `... | React.ReactNode`: `ReactNode` already includes `string`, so unioning it
+ * would collapse the whole type back to `ReactNode` and kill `IconName` autocomplete.
+ * `ReactElement` excludes `string`, keeping name suggestions while still accepting any
+ * element. `false`/`null` are allowed so `cond && <Icon/>` and explicit suppression
+ * type-check.
  */
-export type IconProp = IconName | React.ReactElement | false | null;
+export type IconProp = IconName | IconGlyph | React.ReactElement | false | null;
 
 export interface IconProps extends React.HTMLAttributes<HTMLSpanElement> {
-    /** Glyph name (from the vendored Blueprint subset). */
-    icon: IconName;
+    /**
+     * The glyph to render — either an icon-name string (resolved through the
+     * registry; see `registerIcons`) or a glyph object imported from `./icons`
+     * (`import { add } from ".../icons"`), which tree-shakes to just that glyph.
+     */
+    icon: IconName | IconGlyph;
     /**
      * Pixel size of the icon. Sizes ≥ 20 use the 20-grid paths and a 0 0 20 20
      * viewBox; sizes < 20 use the 16-grid paths and a 0 0 16 16 viewBox —
@@ -71,10 +78,25 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
     const isLarge = size >= 20;
     const gridSize = isLarge ? 20 : 16;
     const viewBox = `0 0 ${gridSize} ${gridSize}`;
-    const paths = ICON_GLYPHS[icon][gridSize];
 
-    // Unique id for aria-labelledby when title is provided
-    const titleId = title ? `icon-title-${icon}-${size}` : undefined;
+    // A glyph object renders directly (the tree-shaking form). A string name is
+    // resolved through the registry, which a consumer populates via `registerIcons`
+    // (either `ICON_GLYPHS` wholesale, or a selective subset). An unregistered name
+    // resolves to `undefined` — warn in dev and render an empty (sized) span rather
+    // than crash, so a missing registration is visible but non-fatal.
+    const glyph = typeof icon === "string" ? getRegisteredGlyph(icon) : icon;
+    if (!glyph && import.meta.env?.DEV) {
+        console.warn(
+            `<Icon icon="${icon}" />: glyph not registered. Import it from "./icons" and ` +
+                `pass the object (\`icon={${icon}}\`), or call registerIcons(...) to enable the string form.`,
+        );
+    }
+    const paths = glyph ? glyph[gridSize] : [];
+
+    // Unique id for aria-labelledby when title is provided. Object glyphs have no
+    // name, so fall back to a stable token.
+    const iconKey = typeof icon === "string" ? icon : "glyph";
+    const titleId = title ? `icon-title-${iconKey}-${size}` : undefined;
 
     // Intent → Tailwind color class applied to the SPAN wrapper (not the SVG).
     // SVG uses `fill: currentcolor` and inherits. This mirrors Blueprint's
@@ -120,7 +142,7 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
             )}
         >
             <svg
-                data-icon={icon}
+                data-icon={typeof icon === "string" ? icon : undefined}
                 viewBox={viewBox}
                 width={size}
                 height={size}
@@ -141,16 +163,30 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
 /**
  * Resolve an icon-slot prop to a renderable node.
  *
- * Lets every icon-accepting component take a bare icon name (`icon="add"`) without
- * the caller importing `<Icon>`: a string is rendered as `<Icon>`, anything else
- * (an element, or `false`/`null` for "no icon") is returned as-is. Hosts pass
- * `iconProps` to control the string case's size/color (e.g. `{ className: "!text-current" }`
- * so the glyph inherits a colored button's text color instead of Icon's default
- * `text-foreground`).
+ * Lets every icon-accepting component take a bare icon name (`icon="add"`) or an
+ * imported glyph object (`icon={add}`) without the caller importing `<Icon>`: a
+ * string or glyph object is rendered as `<Icon>`, anything else (an element, or
+ * `false`/`null` for "no icon") is returned as-is. Hosts pass `iconProps` to control
+ * the rendered case's size/color (e.g. `{ className: "!text-current" }` so the glyph
+ * inherits a colored button's text color instead of Icon's default `text-foreground`).
  */
 export function resolveIcon(
     icon: IconProp | undefined,
     iconProps?: Omit<IconProps, "icon">,
 ): React.ReactNode {
-    return typeof icon === "string" ? <Icon icon={icon} {...iconProps} /> : icon;
+    if (typeof icon === "string" || isIconGlyph(icon)) {
+        return <Icon icon={icon} {...iconProps} />;
+    }
+    return icon;
+}
+
+/**
+ * Narrow an icon-slot value to a glyph object. Glyphs carry the `16`/`20` grid path
+ * arrays; a `React.ReactElement` (the other object case) does not — distinguishing
+ * them keeps the prop union (`IconName | IconGlyph | ReactElement`) unambiguous.
+ * Exported for hosts (like Alert) that render the icon slot themselves rather than
+ * via `resolveIcon`.
+ */
+export function isIconGlyph(icon: IconProp | undefined): icon is IconGlyph {
+    return typeof icon === "object" && icon !== null && "16" in icon && "20" in icon;
 }

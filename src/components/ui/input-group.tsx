@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
-import { Icon, type IconName } from "./icon";
+import { Icon, type IconGlyph, type IconName } from "./icon";
 
 export type InputGroupIntent = Intent;
 export type InputGroupSize = "small" | "medium" | "large";
@@ -146,10 +146,11 @@ export interface InputGroupProps
     /** Controls whether the input fills its container width. @default false */
     fill?: boolean;
     /**
-     * Icon name (Blueprint IconName) rendered on the left side of the input.
-     * Mutually exclusive with `leftElement`.
+     * Icon rendered on the left side of the input — an icon-name string (resolved
+     * through the registry) or an imported glyph object (`leftIcon={search}`, which
+     * tree-shakes). Mutually exclusive with `leftElement`.
      */
-    leftIcon?: IconName;
+    leftIcon?: IconName | IconGlyph;
     /**
      * Arbitrary ReactNode rendered in the left slot (e.g. a button or spinner).
      * Mutually exclusive with `leftIcon`. Takes precedence if both are supplied.

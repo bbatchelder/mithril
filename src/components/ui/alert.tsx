@@ -53,7 +53,7 @@ import { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
 import { Button, type ButtonIntent } from "./button";
-import { Icon, type IconIntent, type IconProp } from "./icon";
+import { Icon, isIconGlyph, type IconIntent, type IconProp } from "./icon";
 
 export type AlertIntent = Intent;
 
@@ -250,7 +250,7 @@ export function Alert({
                                     itself so the measured node has the correct computed fontSize AND
                                     color (intent-colored text on the same span). */}
                                 {hasIcon && (
-                                    typeof icon === "string" ? (
+                                    typeof icon === "string" || isIconGlyph(icon) ? (
                                         <Icon
                                             data-compare="alert-icon"
                                             icon={icon}

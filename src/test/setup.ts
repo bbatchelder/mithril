@@ -5,6 +5,12 @@ import "@testing-library/jest-dom/vitest";
 import "./axe";
 import { cleanup, configure } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
+import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
+
+// The dynamic `<… icon="name" />` string form resolves glyphs through the registry
+// (glyphs only tree-shake when imported as objects). Register the full set once for
+// the test suite so components rendered with icon-name strings show their glyphs.
+registerIcons(ICON_GLYPHS);
 
 // findBy*/waitFor default to a 1000ms timeout. Opening a Radix Popover (Floating-UI
 // positioning + portal) can exceed that when the 11 test files run in parallel forks

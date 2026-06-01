@@ -37,6 +37,7 @@
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { smallMinus, smallTick } from "./icons";
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "type"> {
     /** Visible label rendered next to the indicator. */
@@ -233,7 +234,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
             >
                 {/* Tick icon — shown when checked (and not indeterminate) */}
                 <Icon
-                    icon="small-tick"
+                    icon={smallTick}
                     size={iconSize}
                     aria-hidden="true"
                     className={cn(
@@ -247,7 +248,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                 />
                 {/* Dash icon — shown when indeterminate */}
                 <Icon
-                    icon="small-minus"
+                    icon={smallMinus}
                     size={iconSize}
                     aria-hidden="true"
                     className={cn(

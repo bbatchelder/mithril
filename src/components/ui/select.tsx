@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { Popover } from "./popover";
 import { Menu } from "./menu";
 import { InputGroup } from "./input-group";
+import { search } from "./icons";
 
 /* ============================================================
  * Types
@@ -570,7 +571,7 @@ export function Select<T>({
         >
             {filterable && (
                 <InputGroup
-                    leftIcon="search"
+                    leftIcon={search}
                     placeholder={placeholder}
                     value={ql.query}
                     onChange={ql.handleQueryChange}

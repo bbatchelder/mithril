@@ -63,6 +63,13 @@ import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
 
 import { DarkContext } from "@/lib/dark-context";
+import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
+
+// The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
+// string form that resolves through the registry. Register the full glyph set once
+// here so every name renders. (Consumers tree-shake instead by importing glyph
+// objects — `import { cog } from ".../icons"` — or registering a selective subset.)
+registerIcons(ICON_GLYPHS);
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
 const INTENTS: ButtonIntent[] = ["none", "primary", "success", "warning", "danger"];

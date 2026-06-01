@@ -42,6 +42,7 @@ import { Select } from "./select";
 import { MenuItem } from "./menu";
 import { Button } from "./button";
 import { Icon } from "./icon";
+import { caretDown } from "./icons";
 import type { SelectProps } from "./select";
 
 /* ============================================================
@@ -673,7 +674,7 @@ export function TimezoneSelect({
     // The trigger button (default, unless custom children are provided)
     const triggerButton = children ?? (
         <Button
-            endIcon={<Icon icon="caret-down" size={16} />}
+            endIcon={<Icon icon={caretDown} size={16} />}
             disabled={disabled}
             fill={fill}
             {...buttonProps}

@@ -39,6 +39,7 @@ import { useQueryList } from "./select";
 import type { UseQueryListOptions, ItemRendererProps } from "./select";
 import { InputGroup } from "./input-group";
 import { Menu } from "./menu";
+import { search } from "./icons";
 
 /** The subset of MenuItem props Omnibar injects onto each rendered option. */
 type OmnibarOptionAriaProps = {
@@ -304,7 +305,7 @@ export function Omnibar<T>({
                     defaults because cn() places our className last. */}
                 <InputGroup
                     data-compare="omnibar-input"
-                    leftIcon="search"
+                    leftIcon={search}
                     placeholder="Search..."
                     size="large"
                     value={ql.query}

@@ -209,8 +209,10 @@ Being upfront (full detail + the fix plan are in the [appraisal](./docs/comparis
   engine).
 - **Missing capabilities.** No data grid (Blueprint's `Table2` has no equivalent — `HTMLTable` is styling
   only).
-- **Icons don't tree-shake.** All 706 glyphs are one static map; importing `Icon` pulls them all (~195 KB
-  gzip) unless you trim the map by hand.
+- **Icon string form needs registration.** Importing glyph objects tree-shakes (`import { add } from
+  ".../icons"; <Icon icon={add} />` ships just that glyph). The dynamic name form (`<Icon icon="add" />`)
+  resolves through a registry — call `registerIcons(ICON_GLYPHS)` from `icons/all.ts` once (pulls all
+  ~195 KB) or register a selective subset.
 - **Tailwind v4 required** and **tokens are frozen** to Blueprint v6.15 (see above).
 
 ## Contributing

@@ -109,11 +109,18 @@ for (const file of files) {
 
     for (const spec of specifiers) {
         // internal cross-component import: "./menu" or "@/components/ui/menu".
-        // `./icons` is the icon glyph map, shipped as a file inside the icon item
-        // (not its own registry item), so it is never a registry dependency.
+        // The glyph modules (`./icons`, and the deeper `./icons/registry`/`./icons/all`
+        // which don't match this bare-name regex) ship as files inside the `icon`
+        // item, so importing a glyph from "./icons" is a dependency on `icon` — except
+        // from icon.tsx itself, which owns those files.
         const internal = spec.match(/^(?:\.\/|@\/components\/ui\/)([a-z-]+)$/);
         if (internal) {
-            if (internal[1] !== "icons") registryDeps.add(internal[1]);
+            const dep = internal[1];
+            if (dep === "icons") {
+                if (id !== "icon") registryDeps.add("icon");
+            } else {
+                registryDeps.add(dep);
+            }
             continue;
         }
         if (spec === "@/lib/utils") {
@@ -136,16 +143,20 @@ for (const file of files) {
     // Every component renders against the design tokens.
     registryDeps.add("tokens");
 
-    // Multi-file components: icon ships the generated glyph map alongside it.
+    // Multi-file components: icon ships the generated glyph modules + registry
+    // alongside it (per-glyph exports in index.ts, the ICON_GLYPHS map in all.ts,
+    // and the registerIcons/getRegisteredGlyph helpers in registry.ts).
     const itemFiles = [
         { path: `src/components/ui/${file}`, type: "registry:ui", target: `components/ui/${file}` },
     ];
     if (id === "icon") {
-        itemFiles.push({
-            path: "src/components/ui/icons/index.ts",
-            type: "registry:ui",
-            target: "components/ui/icons/index.ts",
-        });
+        for (const f of ["index.ts", "all.ts", "registry.ts"]) {
+            itemFiles.push({
+                path: `src/components/ui/icons/${f}`,
+                type: "registry:ui",
+                target: `components/ui/icons/${f}`,
+            });
+        }
     }
 
     const item = {

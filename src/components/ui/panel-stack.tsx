@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Icon } from "./icon";
+import { chevronLeft } from "./icons";
 
 /**
  * PanelStack — pixel-faithful reimplementation of Blueprint's `.bp6-panel-stack2`.
@@ -329,7 +330,7 @@ function PanelView({ panel, previousPanel, showHeader, isActive, onOpen, onClose
                                 // chevron-left icon; margin: 0 2px around icon
                                 icon={
                                     <Icon
-                                        icon="chevron-left"
+                                        icon={chevronLeft}
                                         size={16}
                                         // Blueprint reduces margin around icon in header-back: margin: 0 ($pt-spacing * 0.5) = 0 2px
                                         className="mx-[2px]"

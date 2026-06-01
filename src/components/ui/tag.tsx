@@ -3,6 +3,7 @@ import { forwardRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
 import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
 export type TagIntent = Intent;
 export type TagSize = "medium" | "large";
@@ -284,7 +285,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
                     )}
                 >
                     <Icon
-                        icon="small-cross"
+                        icon={smallCross}
                         size={size === "large" ? 20 : 16}
                         className="text-current"
                     />

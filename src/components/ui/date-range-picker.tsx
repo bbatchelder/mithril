@@ -39,6 +39,7 @@ import type { DateRange, MonthCaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronLeft, chevronRight } from "./icons";
 import { HTMLSelect } from "./html-select";
 
 // Caption HTMLSelect styling — see DatePicker's CAPTION_SELECT_CLS for the rationale.
@@ -136,7 +137,7 @@ function NavButton({
             )}
         >
             <Icon
-                icon={direction === "prev" ? "chevron-left" : "chevron-right"}
+                icon={direction === "prev" ? chevronLeft : chevronRight}
                 size={16}
                 aria-hidden
             />

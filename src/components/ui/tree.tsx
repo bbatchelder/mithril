@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Collapse } from "./collapse";
 import { Icon, type IconName } from "./icon";
+import { chevronRight } from "./icons";
 
 /**
  * Tree — pixel-faithful reimplementation of Blueprint's `.bp6-tree`.
@@ -375,7 +376,7 @@ function TreeNodeItem({
                         }}
                     >
                         <Icon
-                            icon="chevron-right"
+                            icon={chevronRight}
                             size={16}
                             aria-hidden
                         />

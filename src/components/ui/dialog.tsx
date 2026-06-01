@@ -75,6 +75,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Icon, resolveIcon, type IconProp } from "./icon";
+import { smallCross } from "./icons";
 
 export interface DialogProps {
     /** Controlled open state. */
@@ -236,7 +237,7 @@ export function Dialog({
                                                 size="medium"
                                                 className="shrink-0"
                                                 aria-label="Close"
-                                                icon={<Icon icon="small-cross" />}
+                                                icon={<Icon icon={smallCross} />}
                                             />
                                         </RadixDialog.Close>
                                     )}

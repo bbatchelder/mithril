@@ -19,6 +19,7 @@ import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronDown, chevronUp } from "./icons";
 import { HTMLSelect } from "./html-select";
 
 // ---------------------------------------------------------------------------
@@ -175,7 +176,7 @@ function ArrowButton({
                 disabled ? "cursor-not-allowed text-foreground-disabled" : "cursor-pointer hover:text-foreground",
             )}
         >
-            <Icon icon={direction === "up" ? "chevron-up" : "chevron-down"} size={16} aria-hidden />
+            <Icon icon={direction === "up" ? chevronUp : chevronDown} size={16} aria-hidden />
         </span>
     );
 }

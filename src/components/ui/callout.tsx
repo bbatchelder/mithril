@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import type { Intent } from "@/lib/types";
 import { resolveIcon, type IconProp } from "./icon";
-import type { IconName } from "./icons";
+import { error, infoSign, tick, warningSign, type IconGlyph } from "./icons";
 
 export type CalloutIntent = Intent;
 
@@ -15,12 +15,12 @@ export type CalloutIntent = Intent;
 //   danger   → error
 //   none     → no icon (even if intent=none, no default icon)
 // To suppress the default icon explicitly, pass icon={null}.
-const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconName | null> = {
+const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconGlyph | null> = {
     none: null,
-    primary: "info-sign",
-    success: "tick",
-    warning: "warning-sign",
-    danger: "error",
+    primary: infoSign,
+    success: tick,
+    warning: warningSign,
+    danger: error,
 };
 
 // ── Intent color classes ─────────────────────────────────────────────────────

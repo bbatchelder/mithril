@@ -40,6 +40,7 @@ import type { Modifiers, MonthCaptionProps } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronLeft, chevronRight } from "./icons";
 import { HTMLSelect } from "./html-select";
 import { TimePicker, type TimePrecision } from "./time-picker";
 
@@ -143,7 +144,7 @@ function NavButton({
             )}
         >
             <Icon
-                icon={direction === "prev" ? "chevron-left" : "chevron-right"}
+                icon={direction === "prev" ? chevronLeft : chevronRight}
                 size={16}
                 aria-hidden
             />

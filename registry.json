@@ -621,6 +621,16 @@
                     "path": "src/components/ui/icons/index.ts",
                     "type": "registry:ui",
                     "target": "components/ui/icons/index.ts"
+                },
+                {
+                    "path": "src/components/ui/icons/all.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/icons/all.ts"
+                },
+                {
+                    "path": "src/components/ui/icons/registry.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/icons/registry.ts"
                 }
             ],
             "registryDependencies": [
@@ -802,6 +812,7 @@
                 }
             ],
             "registryDependencies": [
+                "icon",
                 "input-group",
                 "menu",
                 "select",
@@ -940,6 +951,7 @@
                 }
             ],
             "registryDependencies": [
+                "icon",
                 "input-group",
                 "menu",
                 "popover",

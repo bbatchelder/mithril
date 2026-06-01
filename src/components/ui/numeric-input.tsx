@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Icon } from "./icon";
+import { chevronDown, chevronUp } from "./icons";
 import { InputGroup, type InputGroupIntent, type InputGroupSize } from "./input-group";
 
 /**
@@ -287,7 +288,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(1, e);
             }}
         >
-            <Icon icon="chevron-up" size={12} className="!text-current" aria-hidden />
+            <Icon icon={chevronUp} size={12} className="!text-current" aria-hidden />
         </button>
     );
 
@@ -303,7 +304,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
                 step(-1, e);
             }}
         >
-            <Icon icon="chevron-down" size={12} className="!text-current" aria-hidden />
+            <Icon icon={chevronDown} size={12} className="!text-current" aria-hidden />
         </button>
     );
 

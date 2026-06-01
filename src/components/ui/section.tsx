@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Card, type CardElevation } from "./card";
 import { Collapse, type CollapseProps } from "./collapse";
 import { Icon } from "./icon";
+import { chevronDown, chevronUp } from "./icons";
 import { Text } from "./text";
 
 /**
@@ -271,7 +272,7 @@ export const Section = forwardRef<HTMLDivElement, SectionProps>(function Section
                                 }}
                                 className="inline-flex justify-center align-middle text-foreground-muted"
                             >
-                                <Icon icon={isCollapsed ? "chevron-down" : "chevron-up"} />
+                                <Icon icon={isCollapsed ? chevronDown : chevronUp} />
                             </span>
                         )}
                     </div>
