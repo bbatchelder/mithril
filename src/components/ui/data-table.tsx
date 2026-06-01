@@ -4,12 +4,26 @@ import {
     type ColumnDef,
     type Table,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { DataTableBody } from "./data-table/body";
 import { DataTableHeader } from "./data-table/header";
+import {
+    cellsEqual,
+    regionListsEqual,
+    selectionReducer,
+    type CellCoord,
+    type SelectionAction,
+    type SelectionRegion,
+    type SelectionState,
+} from "./data-table/selection";
+
+export type { CellCoord, SelectionRegion } from "./data-table/selection";
+
+/** How the grid responds to selection gestures. `"multi"` is deferred (Loop 7). */
+export type DataTableSelectionMode = "none" | "single";
 
 /**
  * DataTable — a virtualized, Blueprint-`Table2`-faithful data grid built on a
@@ -106,6 +120,25 @@ export interface DataTableProps<TRow> {
      * grid grows to fit its rows.
      */
     height?: number;
+    /**
+     * Selection behavior. `"single"` (default) allows one region at a time — click a cell,
+     * gutter (row band), or header (column band); shift-click or drag extends it.
+     * `"none"` disables selection. `"multi"` is deferred (Loop 7).
+     * @default "single"
+     */
+    selectionMode?: DataTableSelectionMode;
+    /** Controlled selection regions. Pair with `onSelectionChange`. */
+    selection?: SelectionRegion[];
+    /** Initial selection regions when uncontrolled. @default [] */
+    defaultSelection?: SelectionRegion[];
+    /** Called when the selection changes (click/shift-click/drag). */
+    onSelectionChange?: (regions: SelectionRegion[]) => void;
+    /** Controlled focused cell (2px outline). Pair with `onFocusedCellChange`. */
+    focusedCell?: CellCoord | null;
+    /** Initial focused cell when uncontrolled. @default null */
+    defaultFocusedCell?: CellCoord | null;
+    /** Called when the focused cell changes. */
+    onFocusedCellChange?: (cell: CellCoord | null) => void;
     /** Extra class names on the scroll container. */
     className?: string;
 }
@@ -152,6 +185,28 @@ function toColumnDef<TRow>(col: DataTableColumn<TRow>): ColumnDef<TRow> {
     };
 }
 
+/** Stable empty regions default (avoids a fresh array identity each render). */
+const NO_REGIONS: SelectionRegion[] = [];
+
+/** Minimal controlled-or-uncontrolled state hook (no external dep). */
+function useControllableState<T>(
+    controlled: T | undefined,
+    defaultValue: T,
+    onChange?: (value: T) => void,
+): [T, (value: T) => void] {
+    const [internal, setInternal] = useState(defaultValue);
+    const isControlled = controlled !== undefined;
+    const value = isControlled ? (controlled as T) : internal;
+    const set = useCallback(
+        (next: T) => {
+            if (!isControlled) setInternal(next);
+            onChange?.(next);
+        },
+        [isControlled, onChange],
+    );
+    return [value, set];
+}
+
 /**
  * A virtualized, Blueprint-faithful data grid.
  *
@@ -174,6 +229,13 @@ export function DataTable<TRow>({
     numberedRows = true,
     rowHeight = 20,
     height,
+    selectionMode = "single",
+    selection,
+    defaultSelection,
+    onSelectionChange,
+    focusedCell: focusedCellProp,
+    defaultFocusedCell,
+    onFocusedCellChange,
     className,
 }: DataTableProps<TRow>) {
     const columnDefs = useMemo(() => columns.map(toColumnDef), [columns]);
@@ -203,6 +265,93 @@ export function DataTable<TRow>({
     // re-render that connects the element. See handoff 0085.
     const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
 
+    // ── Selection (Loop 3) ───────────────────────────────────────────────────
+    // Controllable regions + focused cell; the drag/shift anchor is internal-only.
+    const [regions, setRegions] = useControllableState(
+        selection,
+        defaultSelection ?? NO_REGIONS,
+        onSelectionChange,
+    );
+    const [focusedCell, setFocusedCell] = useControllableState(
+        focusedCellProp,
+        defaultFocusedCell ?? null,
+        onFocusedCellChange,
+    );
+    const anchorRef = useRef<CellCoord | null>(null);
+    /** Which gesture is mid-drag, so pointer-enter only extends a matching target. */
+    const dragKindRef = useRef<null | "cell" | "rows" | "columns">(null);
+
+    // Run the pure reducer over the derived state, then push results to the
+    // controllable setters (skipping no-op updates so controlled `onChange` stays quiet).
+    const dispatch = useCallback(
+        (action: SelectionAction) => {
+            const current: SelectionState = { regions, focusedCell, anchor: anchorRef.current };
+            const next = selectionReducer(current, action);
+            anchorRef.current = next.anchor;
+            if (!regionListsEqual(next.regions, regions)) setRegions(next.regions);
+            if (!cellsEqual(next.focusedCell, focusedCell)) setFocusedCell(next.focusedCell);
+        },
+        [regions, focusedCell, setRegions, setFocusedCell],
+    );
+
+    // A drag ends on the next mouseup anywhere (release outside the grid still ends it).
+    useEffect(() => {
+        const onUp = () => {
+            dragKindRef.current = null;
+        };
+        window.addEventListener("mouseup", onUp);
+        return () => window.removeEventListener("mouseup", onUp);
+    }, []);
+
+    const selectable = selectionMode !== "none";
+
+    const handleCellMouseDown = useCallback(
+        (row: number, col: number, shiftKey: boolean) => {
+            dragKindRef.current = "cell";
+            dispatch({ type: "cell", row, col, extend: shiftKey });
+        },
+        [dispatch],
+    );
+    const handleCellMouseEnter = useCallback(
+        (row: number, col: number) => {
+            if (dragKindRef.current === "cell") dispatch({ type: "extendTo", row, col });
+        },
+        [dispatch],
+    );
+    const handleGutterMouseDown = useCallback(
+        (row: number, shiftKey: boolean) => {
+            dragKindRef.current = "rows";
+            dispatch({ type: "rows", row, extend: shiftKey });
+        },
+        [dispatch],
+    );
+    const handleGutterMouseEnter = useCallback(
+        (row: number) => {
+            if (dragKindRef.current === "rows") dispatch({ type: "extendTo", row, col: 0 });
+        },
+        [dispatch],
+    );
+    const handleHeaderMouseDown = useCallback(
+        (col: number, shiftKey: boolean) => {
+            dragKindRef.current = "columns";
+            dispatch({ type: "columns", col, extend: shiftKey });
+        },
+        [dispatch],
+    );
+    const handleHeaderMouseEnter = useCallback(
+        (col: number) => {
+            if (dragKindRef.current === "columns") dispatch({ type: "extendTo", row: 0, col });
+        },
+        [dispatch],
+    );
+    const handleSelectAll = useCallback(() => {
+        dragKindRef.current = null;
+        const whole: SelectionRegion = { rows: null, cols: null };
+        anchorRef.current = { row: 0, col: 0 };
+        if (!regionListsEqual([whole], regions)) setRegions([whole]);
+        if (!cellsEqual({ row: 0, col: 0 }, focusedCell)) setFocusedCell({ row: 0, col: 0 });
+    }, [regions, focusedCell, setRegions, setFocusedCell]);
+
     return (
         <div
             ref={setScrollEl}
@@ -226,6 +375,10 @@ export function DataTable<TRow>({
                     numberedRows={numberedRows}
                     gutterWidth={gutterW}
                     headerHeight={COLUMN_HEADER_HEIGHT}
+                    regions={regions}
+                    onHeaderMouseDown={selectable ? handleHeaderMouseDown : undefined}
+                    onHeaderMouseEnter={selectable ? handleHeaderMouseEnter : undefined}
+                    onSelectAll={selectable ? handleSelectAll : undefined}
                 />
                 <DataTableBody
                     table={table}
@@ -234,6 +387,12 @@ export function DataTable<TRow>({
                     gutterWidth={gutterW}
                     rowHeight={rowHeight}
                     height={height}
+                    regions={regions}
+                    focusedCell={focusedCell}
+                    onCellMouseDown={selectable ? handleCellMouseDown : undefined}
+                    onCellMouseEnter={selectable ? handleCellMouseEnter : undefined}
+                    onGutterMouseDown={selectable ? handleGutterMouseDown : undefined}
+                    onGutterMouseEnter={selectable ? handleGutterMouseEnter : undefined}
                 />
             </div>
         </div>

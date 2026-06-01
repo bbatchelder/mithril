@@ -98,7 +98,9 @@ this correctly — use it as the reference pattern.
 >   ruled cells, Blueprint `Table2` token fidelity (crop SSIM 0.957 light / 0.936 dark).
 > - [x] **Loop 2** — row virtualization + sticky header + scroll sync (handoff 0084): `@tanstack/react-virtual`
 >   windowing, single-scroll-container axis sync, `initialRect`-seeded viewport. Column virtualization deferred.
-> - [ ] **Loop 3** — selection (row + cell + focused cell)
+> - [x] **Loop 3** — selection (row + cell + focused cell) (handoff 0088): own region reducer
+>   (`selection.ts`), translucent-blue region overlays + 2px focused outline, click/shift-click/drag
+>   handlers, header/gutter band selection + selected tint, controlled+uncontrolled `selection`/`focusedCell`.
 > - [ ] **Loop 4** — column resize + reorder
 > - [ ] **Loop 5** — editable cells
 > - [ ] **Loop 6** — keyboard navigation + clipboard copy

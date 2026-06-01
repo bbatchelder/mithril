@@ -4908,8 +4908,11 @@ function PortalGallery() {
  * DataTable showcase — the virtualized, Blueprint-Table2-faithful grid.
  *
  * Compare keys (must match the Blueprint reference gallery):
- *   data-table-basic  — the whole grid (header + numbered gutter + ruled cells), cropped
- *                        and pixel-diffed against Blueprint's <Table2>.
+ *   data-table-basic      — the whole grid (header + numbered gutter + ruled cells), cropped
+ *                            and pixel-diffed against Blueprint's <Table2>.
+ *   data-table-virtual    — 1,000-row virtualized grid (windowing, sticky header).
+ *   data-table-selection  — a controlled cell-range selection + focused cell (Loop 3),
+ *                            diffed against Blueprint's selectedRegions + focusedCell.
  */
 interface DataTablePerson {
     name: string;
@@ -4960,6 +4963,16 @@ function DataTableGallery() {
                         data={DATA_TABLE_MANY}
                         columns={DATA_TABLE_COLUMNS}
                         height={300}
+                    />
+                </div>
+            </Section>
+            <Section title="Selection (cell range + focused cell)">
+                <div data-compare="data-table-selection" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        selection={[{ rows: [1, 2], cols: [1, 2] }]}
+                        focusedCell={{ row: 1, col: 1 }}
                     />
                 </div>
             </Section>

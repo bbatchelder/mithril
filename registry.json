@@ -351,6 +351,11 @@
                     "path": "src/components/ui/data-table/header.tsx",
                     "type": "registry:ui",
                     "target": "components/ui/data-table/header.tsx"
+                },
+                {
+                    "path": "src/components/ui/data-table/selection.ts",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/selection.ts"
                 }
             ],
             "dependencies": [

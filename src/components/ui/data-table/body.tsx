@@ -1,10 +1,20 @@
 import { flexRender, type Table } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 
 import type { DataTableColumnMeta } from "../data-table";
 import { GutterCell, alignClass } from "./gutter";
+import {
+    cellRegion,
+    isCellSelected,
+    isRowSelected,
+    regionRect,
+    type CellCoord,
+    type GridGeometry,
+    type SelectionRegion,
+} from "./selection";
 
 /**
  * The grid body. Blueprint `.bp6-table-cell`:
@@ -23,6 +33,12 @@ import { GutterCell, alignClass } from "./gutter";
  * `translateY(round(start))` (offsets rounded to integers to avoid border-seam flicker).
  * The scroll viewport is the `role="grid"` container (a fixed `height` bounds it); the
  * sticky header/gutter live in the same scroll element, so horizontal scroll syncs for free.
+ *
+ * Loop 3: **selection overlays.** Each region is an absolutely-positioned translucent-blue
+ * `<div>` (fill + 1px border); the focused cell is a separate 2px-outline `<div>`. Both render
+ * **after** the rows with `z-10`, so the (translucent) fill sits over the transparent cells
+ * (grid lines show through, matching Blueprint) while the sticky header (`z-30`) stays above.
+ * Region rects never reach the gutter (x ≥ gutterWidth), so the gutter numbers stay crisp.
  */
 export interface DataTableBodyProps<TRow> {
     table: Table<TRow>;
@@ -33,6 +49,18 @@ export interface DataTableBodyProps<TRow> {
     rowHeight: number;
     /** Fixed grid height, if any — seeds the virtualizer's initial viewport. */
     height?: number;
+    /** Active selection regions (Loop 3). */
+    regions: SelectionRegion[];
+    /** The focused cell, painted with a 2px outline (Loop 3). */
+    focusedCell: CellCoord | null;
+    /** Pointer-down on a data cell — `(row, col, shiftKey)`. Begins a click/drag selection. */
+    onCellMouseDown?: (row: number, col: number, shiftKey: boolean) => void;
+    /** Pointer enters a data cell mid-drag — `(row, col)`. Extends the active region. */
+    onCellMouseEnter?: (row: number, col: number) => void;
+    /** Pointer-down on a gutter cell — `(row, shiftKey)`. Begins a row-band selection. */
+    onGutterMouseDown?: (row: number, shiftKey: boolean) => void;
+    /** Pointer enters a gutter cell mid-drag — `(row)`. Extends the active row band. */
+    onGutterMouseEnter?: (row: number) => void;
 }
 
 export function DataTableBody<TRow>({
@@ -42,8 +70,15 @@ export function DataTableBody<TRow>({
     gutterWidth,
     rowHeight,
     height,
+    regions,
+    focusedCell,
+    onCellMouseDown,
+    onCellMouseEnter,
+    onGutterMouseDown,
+    onGutterMouseEnter,
 }: DataTableBodyProps<TRow>) {
     const rows = table.getRowModel().rows;
+    const leafColumns = table.getVisibleLeafColumns();
 
     const virtualizer = useVirtualizer({
         count: rows.length,
@@ -56,6 +91,16 @@ export function DataTableBody<TRow>({
         // height). The observer corrects this once the element is measured.
         initialRect: { width: 0, height: height ?? rows.length * rowHeight },
     });
+
+    // Static geometry for turning regions into pixel rects. `colX` is the cumulative
+    // left edge of each data column; `colX[0]` is the gutter width (first column's edge).
+    const geo: GridGeometry = useMemo(() => {
+        const colX: number[] = [gutterWidth];
+        for (const col of leafColumns) colX.push(colX[colX.length - 1] + col.getSize());
+        return { colX, rowHeight, rowCount: rows.length, colCount: leafColumns.length };
+        // getSize() changes are captured via the table's column sizing state, which
+        // re-renders this component; depend on the derived widths string to be safe.
+    }, [gutterWidth, rowHeight, rows.length, leafColumns]);
 
     return (
         <div
@@ -77,15 +122,33 @@ export function DataTableBody<TRow>({
                         }}
                     >
                         {numberedRows && (
-                            <GutterCell index={row.index} width={gutterWidth} height={rowHeight} />
+                            <GutterCell
+                                index={row.index}
+                                width={gutterWidth}
+                                height={rowHeight}
+                                selected={isRowSelected(regions, virtualRow.index)}
+                                onMouseDown={onGutterMouseDown}
+                                onMouseEnter={onGutterMouseEnter}
+                            />
                         )}
-                        {row.getVisibleCells().map((cell) => {
+                        {row.getVisibleCells().map((cell, colIndex) => {
                             const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined;
                             const align = meta?.align ?? "left";
                             return (
                                 <div
                                     role="gridcell"
                                     key={cell.id}
+                                    aria-selected={isCellSelected(regions, virtualRow.index, colIndex)}
+                                    onMouseDown={
+                                        onCellMouseDown
+                                            ? (e) => onCellMouseDown(virtualRow.index, colIndex, e.shiftKey)
+                                            : undefined
+                                    }
+                                    onMouseEnter={
+                                        onCellMouseEnter
+                                            ? () => onCellMouseEnter(virtualRow.index, colIndex)
+                                            : undefined
+                                    }
                                     className={cn(
                                         "box-border shrink-0 overflow-hidden text-ellipsis whitespace-nowrap px-2",
                                         "text-[12px] text-foreground",
@@ -107,6 +170,34 @@ export function DataTableBody<TRow>({
                     </div>
                 );
             })}
+
+            {/* Selection region overlays — translucent fill + 1px border, over the cells. */}
+            {regions.map((region, i) => {
+                const r = regionRect(region, geo);
+                return (
+                    <div
+                        key={i}
+                        aria-hidden
+                        className={cn(
+                            "pointer-events-none absolute z-10 box-border border border-[#2d72d2] dark:border-[#4c90f0]",
+                            "bg-[rgba(45,114,210,0.1)] dark:bg-[rgba(76,144,240,0.1)]",
+                        )}
+                        style={{ left: r.x, top: r.y, width: r.width, height: r.height }}
+                    />
+                );
+            })}
+
+            {/* Focused-cell outline — a 2px border above the region fill (Blueprint #2d72d2). */}
+            {focusedCell && (
+                <div
+                    aria-hidden
+                    className="pointer-events-none absolute z-10 box-border border-2 border-[#2d72d2]"
+                    style={(() => {
+                        const r = regionRect(cellRegion(focusedCell.row, focusedCell.col), geo);
+                        return { left: r.x, top: r.y, width: r.width, height: r.height };
+                    })()}
+                />
+            )}
         </div>
     );
 }

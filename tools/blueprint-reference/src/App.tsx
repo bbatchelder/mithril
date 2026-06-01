@@ -5290,6 +5290,26 @@ function DataTableGallery() {
                     </BpTable2>
                 </div>
             </BpSection>
+            <BpSection title="Selection (cell range + focused cell)">
+                <div data-compare="data-table-selection" style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        selectedRegions={[{ rows: [1, 2], cols: [1, 2] }]}
+                        enableFocusedCell={true}
+                        focusedCell={{ row: 1, col: 1, focusSelectionEnd: false }}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
         </div>
     );
 }

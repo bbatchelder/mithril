@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { axe } from "@/test/axe";
@@ -179,6 +179,60 @@ describe("DataTable — virtualization (Loop 2)", () => {
         } finally {
             HTMLElement.prototype.addEventListener = orig;
         }
+    });
+});
+
+describe("DataTable — selection (Loop 3)", () => {
+    it("controlled selection marks the covered cells aria-selected", () => {
+        renderTable({ selection: [{ rows: [1, 2], cols: [1, 2] }], focusedCell: { row: 1, col: 1 } });
+        expect(screen.getByText("29")).toHaveAttribute("aria-selected", "true"); // Bob age (1,1)
+        expect(screen.getByText("MANAGER")).toHaveAttribute("aria-selected", "true"); // Carol role (2,2)
+        expect(screen.getByText("Alice")).toHaveAttribute("aria-selected", "false"); // (0,0)
+    });
+
+    it("clicking a cell selects it (uncontrolled)", () => {
+        renderTable();
+        const cell = screen.getByText("Bob");
+        fireEvent.mouseDown(cell);
+        expect(cell).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("Alice")).toHaveAttribute("aria-selected", "false");
+    });
+
+    it("clicking the gutter selects the whole row", () => {
+        renderTable();
+        const rowHeaders = screen.getAllByRole("rowheader");
+        fireEvent.mouseDown(rowHeaders[1]); // Bob's row
+        expect(rowHeaders[1]).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("Bob")).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("29")).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("DESIGNER")).toHaveAttribute("aria-selected", "true");
+    });
+
+    it("clicking a header selects the whole column", () => {
+        renderTable();
+        const headers = screen.getAllByRole("columnheader");
+        fireEvent.mouseDown(headers[1]); // Age column
+        expect(headers[1]).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("34")).toHaveAttribute("aria-selected", "true"); // Alice age
+        expect(screen.getByText("29")).toHaveAttribute("aria-selected", "true"); // Bob age
+        expect(screen.getByText("Bob")).toHaveAttribute("aria-selected", "false"); // name column
+    });
+
+    it("shift-click extends a cell range from the first click", () => {
+        renderTable();
+        fireEvent.mouseDown(screen.getByText("Bob")); // (1,0)
+        fireEvent.mouseDown(screen.getByText("MANAGER"), { shiftKey: true }); // (2,2)
+        // The 1..2 × 0..2 block is now selected.
+        expect(screen.getByText("Bob")).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("41")).toHaveAttribute("aria-selected", "true");
+        expect(screen.getByText("Alice")).toHaveAttribute("aria-selected", "false"); // row 0 excluded
+    });
+
+    it("selectionMode=none ignores clicks", () => {
+        renderTable({ selectionMode: "none" });
+        const cell = screen.getByText("Bob");
+        fireEvent.mouseDown(cell);
+        expect(cell).toHaveAttribute("aria-selected", "false");
     });
 });
 
