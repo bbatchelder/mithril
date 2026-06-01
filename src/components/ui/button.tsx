@@ -41,33 +41,36 @@ const SOLID: Record<ButtonIntent, string> = {
         "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active data-[active=true]:bg-primary-active",
     success:
         "bg-success text-success-foreground hover:bg-success-hover active:bg-success-active data-[active=true]:bg-success-active",
-    // Warning solid is a Blueprint special case: light amber (orange-5) fill + black text.
+    // Warning solid is a Blueprint special case: lightened amber fill + dark text.
+    // Uses the warning seed tiers (rest = lightened-warning token ≈ orange-5,
+    // hover = warning-disabled = orange-4, active = warning rest = orange-3) so it re-tints.
     warning:
-        "bg-orange-5 text-warning-foreground hover:bg-orange-4 active:bg-orange-3 data-[active=true]:bg-orange-3",
+        "bg-warning-solid-bg text-warning-foreground hover:bg-warning-disabled active:bg-warning data-[active=true]:bg-warning",
     danger: "bg-danger text-danger-foreground hover:bg-danger-hover active:bg-danger-active data-[active=true]:bg-danger-active",
 };
 
-// Outlined/minimal intent text uses theme-aware `--intent-*-text` tokens (palette -2
-// in light, Blueprint's color-mix-with-white shade in dark). Outlined borders are that
-// same color at 60% alpha — Blueprint's `color-mix(in oklch, text 60%, transparent)`.
+// Outlined/minimal intent text uses theme-aware `--intent-*-minimal-text` tokens
+// (intent hover/-2 in light, Blueprint's color-mix-with-white shade in dark). Borders
+// are that same color at 60% alpha. Hover/active tints derive from the intent seed
+// (rest = tier-3; dark hover = tier-4 = the *disabled* seed) so they re-tint with the theme.
 const OUTLINED: Record<ButtonIntent, string> = {
     none: "border-border-strong text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "border-intent-primary-text/60 text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
+        "border-intent-primary-minimal-text/60 text-intent-primary-minimal-text hover:bg-primary/10 active:bg-primary/20 data-[active=true]:bg-primary/20 dark:hover:bg-primary-disabled/15",
     success:
-        "border-intent-success-text/60 text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
+        "border-intent-success-minimal-text/60 text-intent-success-minimal-text hover:bg-success/10 active:bg-success/20 data-[active=true]:bg-success/20 dark:hover:bg-success-disabled/15",
     warning:
-        "border-intent-warning-text/60 text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
-    danger: "border-intent-danger-text/60 text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
+        "border-intent-warning-minimal-text/60 text-intent-warning-minimal-text hover:bg-warning/10 active:bg-warning/20 data-[active=true]:bg-warning/20 dark:hover:bg-warning-disabled/15",
+    danger: "border-intent-danger-minimal-text/60 text-intent-danger-minimal-text hover:bg-danger/10 active:bg-danger/20 data-[active=true]:bg-danger/20 dark:hover:bg-danger-disabled/15",
 };
 
 const MINIMAL: Record<ButtonIntent, string> = {
     none: "text-foreground dark:text-white dark:[&_svg]:fill-white hover:bg-interactive-hover active:bg-interactive-active data-[active=true]:bg-interactive-active",
     primary:
-        "text-intent-primary-text hover:bg-blue-3/10 active:bg-blue-3/20 data-[active=true]:bg-blue-3/20 dark:hover:bg-blue-4/15",
-    success: "text-intent-success-text hover:bg-green-3/10 active:bg-green-3/20 data-[active=true]:bg-green-3/20 dark:hover:bg-green-4/15",
-    warning: "text-intent-warning-text hover:bg-orange-3/10 active:bg-orange-3/20 data-[active=true]:bg-orange-3/20 dark:hover:bg-orange-4/15",
-    danger: "text-intent-danger-text hover:bg-red-3/10 active:bg-red-3/20 data-[active=true]:bg-red-3/20 dark:hover:bg-red-4/15",
+        "text-intent-primary-minimal-text hover:bg-primary/10 active:bg-primary/20 data-[active=true]:bg-primary/20 dark:hover:bg-primary-disabled/15",
+    success: "text-intent-success-minimal-text hover:bg-success/10 active:bg-success/20 data-[active=true]:bg-success/20 dark:hover:bg-success-disabled/15",
+    warning: "text-intent-warning-minimal-text hover:bg-warning/10 active:bg-warning/20 data-[active=true]:bg-warning/20 dark:hover:bg-warning-disabled/15",
+    danger: "text-intent-danger-minimal-text hover:bg-danger/10 active:bg-danger/20 data-[active=true]:bg-danger/20 dark:hover:bg-danger-disabled/15",
 };
 
 const VARIANT_MAP = { solid: SOLID, outlined: OUTLINED, minimal: MINIMAL } as const;

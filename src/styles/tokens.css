@@ -286,17 +286,29 @@
     --input-focus-warning: inset 0 0 0 1px rgba(200, 118, 25, 0.752), 0 0 0 1px rgba(200, 118, 25, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
     --input-focus-danger:  inset 0 0 0 1px rgba(205, 66, 70, 0.752), 0 0 0 1px rgba(205, 66, 70, 0.752), inset 0 1px 1px rgba(17, 20, 24, 0.2);
 
-    /* Minimal/outlined intent text — Blueprint uses the intent *hover* shade in
-     * light. Pure seed ref (= intent hover seed), so it re-tints automatically. */
+    /* Canonical intent text/icon color (Blueprint $pt-intent-text-colors) — used by
+     * Icon, Callout, typography. Light = intent *hover* shade (tier-2); dark = tier-5
+     * (set below). Pure seed ref in light, so it re-tints automatically. */
     --intent-primary-text: var(--color-primary-hover);
     --intent-success-text: var(--color-success-hover);
     --intent-warning-text: var(--color-warning-hover);
     --intent-danger-text: var(--color-danger-hover);
 
+    /* Button minimal/outlined intent text (Blueprint $button-minimal-intent-text-colors)
+     * — same tier-2 in light, but a color-mix lighten in dark (≠ canonical tier-5). */
+    --intent-primary-minimal-text: var(--color-primary-hover);
+    --intent-success-minimal-text: var(--color-success-hover);
+    --intent-warning-minimal-text: var(--color-warning-hover);
+    --intent-danger-minimal-text: var(--color-danger-hover);
+
     /* Tag solid warning bg/text — Blueprint lifts warning-rest by oklch l+0.19 for bg,
      * and lightens warning-foreground by oklch l+0.05 for text (derived below). */
     --tag-solid-warning-bg: rgb(255, 178, 97);
     --tag-solid-warning-text: rgb(28, 31, 36);
+
+    /* Button solid warning fill — Blueprint uses palette orange-5 (≈ warning tier-5,
+     * a hair different from the tag's l+0.19 lift). Derived from the warning seed below. */
+    --warning-solid-bg: rgb(251, 179, 96); /* orange-5 */
 
     /* Tag minimal-none background — Blueprint uses oklch(from gray-1 calc(l+0.16) c h / 0.15)
      * which is theme-invariant (gray-1 doesn't change). Computed ≈ rgba(141,154,174,0.15). */
@@ -396,11 +408,18 @@
     --input-focus-warning: inset 0 0 0 1px rgba(236, 154, 60, 0.752), 0 0 0 1px rgba(236, 154, 60, 0.752);
     --input-focus-danger:  inset 0 0 0 1px rgba(231, 106, 110, 0.752), 0 0 0 1px rgba(231, 106, 110, 0.752);
 
-    /* Dark minimal/outlined intent text — Blueprint: color-mix(intent-rest, white). Derived below. */
-    --intent-primary-text: rgb(149, 184, 235);
-    --intent-success-text: rgb(143, 189, 158);
-    --intent-warning-text: rgb(229, 183, 144);
-    --intent-danger-text: rgb(236, 159, 155);
+    /* Canonical dark intent text/icon — Blueprint $pt-dark-intent-text-colors = tier-5
+     * (blue5/green5/orange5/red5). Derived from the rest seed below. */
+    --intent-primary-text: rgb(138, 187, 255); /* blue-5 */
+    --intent-success-text: rgb(114, 202, 155); /* green-5 */
+    --intent-warning-text: rgb(251, 179, 96); /* orange-5 */
+    --intent-danger-text: rgb(250, 153, 156); /* red-5 */
+
+    /* Button minimal/outlined dark intent text — color-mix(intent-rest, white). Derived below. */
+    --intent-primary-minimal-text: rgb(149, 184, 235);
+    --intent-success-minimal-text: rgb(143, 189, 158);
+    --intent-warning-minimal-text: rgb(229, 183, 144);
+    --intent-danger-minimal-text: rgb(236, 159, 155);
 
     /* Tag solid warning: same warning-based formula as light. Derived below. */
     --tag-solid-warning-bg: rgb(255, 178, 97);
@@ -481,6 +500,7 @@
         --input-focus-danger:  inset 0 0 0 1px oklch(from var(--color-danger) l c h / 0.752),  0 0 0 1px oklch(from var(--color-danger) l c h / 0.752),  inset 0 1px 1px rgba(17, 20, 24, 0.2);
         --tag-solid-warning-bg: oklch(from var(--color-warning) calc(l + 0.19) c h);
         --tag-solid-warning-text: oklch(from var(--color-warning-foreground) calc(l + 0.05) c h);
+        --warning-solid-bg: oklch(from var(--color-warning) calc(l + 0.177) calc(c - 0.010) calc(h + 6.26));
         --card-shadow-selected:
             0 0 0 3px oklch(from var(--color-primary) calc(l + 0.095) calc(c - 0.004) h / 0.2),
             0 0 0 1px oklch(from var(--color-primary) calc(l + 0.095) calc(c - 0.004) h);
@@ -499,10 +519,17 @@
         --ring: oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93) / 0.752);
         --selection: oklch(from var(--color-primary) calc(l + 0.219) calc(c - 0.047) calc(h - 6.7) / 0.6);
 
-        --intent-primary-text: color-mix(in oklch, var(--color-primary) 51%, white);
-        --intent-success-text: color-mix(in oklch, var(--color-success) 54%, white);
-        --intent-warning-text: color-mix(in oklch, var(--color-warning) 53%, white);
-        --intent-danger-text: color-mix(in oklch, var(--color-danger) 53%, white);
+        /* canonical intent text/icon = tier-5 (intent-rest lightened, per-family offsets) */
+        --intent-primary-text: oklch(from var(--color-primary) calc(l + 0.224) calc(c - 0.053) calc(h - 0.93));
+        --intent-success-text: oklch(from var(--color-success) calc(l + 0.223) calc(c - 0.011) calc(h + 3.83));
+        --intent-warning-text: oklch(from var(--color-warning) calc(l + 0.177) calc(c - 0.010) calc(h + 6.26));
+        --intent-danger-text:  oklch(from var(--color-danger)  calc(l + 0.205) calc(c - 0.059) calc(h - 4.86));
+
+        /* button minimal/outlined intent text = color-mix lighten */
+        --intent-primary-minimal-text: color-mix(in oklch, var(--color-primary) 51%, white);
+        --intent-success-minimal-text: color-mix(in oklch, var(--color-success) 54%, white);
+        --intent-warning-minimal-text: color-mix(in oklch, var(--color-warning) 53%, white);
+        --intent-danger-minimal-text: color-mix(in oklch, var(--color-danger) 53%, white);
 
         --tag-minimal-primary-text: oklch(from var(--color-primary) calc(l + 0.211) calc(c - 0.044) calc(h - 5.28));
         --tag-minimal-success-text: oklch(from var(--color-success) calc(l + 0.251) calc(c - 0.030) calc(h + 0.04));
@@ -609,8 +636,14 @@
     --color-intent-warning-text: var(--intent-warning-text);
     --color-intent-danger-text: var(--intent-danger-text);
 
+    --color-intent-primary-minimal-text: var(--intent-primary-minimal-text);
+    --color-intent-success-minimal-text: var(--intent-success-minimal-text);
+    --color-intent-warning-minimal-text: var(--intent-warning-minimal-text);
+    --color-intent-danger-minimal-text: var(--intent-danger-minimal-text);
+
     --color-tag-solid-warning-bg: var(--tag-solid-warning-bg);
     --color-tag-solid-warning-text: var(--tag-solid-warning-text);
+    --color-warning-solid-bg: var(--warning-solid-bg);
     --color-tag-minimal-bg: var(--tag-minimal-bg);
     --color-tag-minimal-none-text: var(--tag-minimal-none-text);
     --color-tag-minimal-primary-text: var(--tag-minimal-primary-text);

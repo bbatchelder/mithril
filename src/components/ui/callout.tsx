@@ -32,40 +32,39 @@ const DEFAULT_INTENT_ICONS: Record<CalloutIntent, IconGlyph | null> = {
 // Non-minimal bg: rgba(intentColor, 0.1) light / rgba(intentColor, 0.2) dark.
 // Blueprint maps intent color as: primary→blue3, success→green3, warning→orange3, danger→red3.
 
+// Theme-aware: text/icon use the canonical intent-text token (--intent-*-text =
+// tier-2 light / tier-5 dark); bg uses the intent rest seed at 10%/20% alpha. All
+// re-tint when a theme overrides the intent seeds.
 const CALLOUT_INTENT: Record<CalloutIntent, { text: string; bg: string }> = {
     none: { text: "", bg: "" },
     primary: {
-        // light: blue-2 (#215db0) / dark: blue-5 (#8abbff=rgb(138,187,255))
-        text: "text-blue-2 dark:text-blue-5",
-        bg: "bg-blue-3/10 dark:bg-blue-3/20",
+        text: "text-intent-primary-text",
+        bg: "bg-primary/10 dark:bg-primary/20",
     },
     success: {
-        // light: green-2 (#1c6e42) / dark: green-5 (#72ca9b=rgb(114,202,155))
-        text: "text-green-2 dark:text-green-5",
-        bg: "bg-green-3/10 dark:bg-green-3/20",
+        text: "text-intent-success-text",
+        bg: "bg-success/10 dark:bg-success/20",
     },
     warning: {
-        // light: orange-2 (#935610) / dark: orange-5 (#fbb360=rgb(251,179,96))
-        text: "text-orange-2 dark:text-orange-5",
-        bg: "bg-orange-3/10 dark:bg-orange-3/20",
+        text: "text-intent-warning-text",
+        bg: "bg-warning/10 dark:bg-warning/20",
     },
     danger: {
-        // light: red-2 (#ac2f33) / dark: red-5 (#fa999c=rgb(250,153,156))
-        text: "text-red-2 dark:text-red-5",
-        bg: "bg-red-3/10 dark:bg-red-3/20",
+        text: "text-intent-danger-text",
+        bg: "bg-danger/10 dark:bg-danger/20",
     },
 };
 
 // ── Icon color classes ───────────────────────────────────────────────────────
 // No intent: $pt-icon-color = gray-1 (light) / $pt-dark-icon-color = gray-4 (dark)
 //   = foreground-muted token
-// With intent: same as text color (palette tier -2 light / tier -5 dark)
+// With intent: same as text color (canonical intent-text token).
 const ICON_COLOR: Record<CalloutIntent, string> = {
     none: "text-foreground-muted",
-    primary: "text-blue-2 dark:text-blue-5",
-    success: "text-green-2 dark:text-green-5",
-    warning: "text-orange-2 dark:text-orange-5",
-    danger: "text-red-2 dark:text-red-5",
+    primary: "text-intent-primary-text",
+    success: "text-intent-success-text",
+    warning: "text-intent-warning-text",
+    danger: "text-intent-danger-text",
 };
 
 export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {

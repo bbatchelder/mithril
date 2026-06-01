@@ -85,6 +85,25 @@ four light/dark quadrants. (Note: the mint success is light enough that its soli
 fill switches to dark foreground text for AA contrast — set via
 `--color-success-foreground`.)
 
+## Components must consume seeds, not palette literals
+
+For a component to follow the theme, its intent colors must route through the
+**seed / semantic tokens** — not the fixed palette. Use:
+
+- `bg-primary` / `text-success` / `border-danger` … (intent rest/hover/active/disabled seeds)
+- `text-intent-{intent}-text` — canonical intent text/icon (tier-2 light / tier-5 dark);
+  used by Icon, Callout, typography.
+- `text-intent-{intent}-minimal-text` — button minimal/outlined intent text (color-mix dark).
+- `bg-{intent}/10`, `stroke-[var(--color-{intent})]` … for tinted/SVG fills.
+
+Do **not** hardcode `bg-blue-3`, `text-green-2`, `stroke-[#2d72d2]`, etc. — those point
+at the fixed palette and won't re-tint. (Spinner/ProgressBar use
+`stroke-[var(--color-primary)]` arbitrary classes — always emitted, and the seed vars
+stay alive via other utilities.) Verified theme-aware: Button, Icon, Spinner,
+ProgressBar, Tag, Callout. Other components may still carry palette literals; converting
+them is mechanical (swap the literal for the matching seed/intent token) and gated by
+`tools/compare.sh` staying clean in the default theme.
+
 ## How derivation works (P2.5)
 
 Derivations mirror Blueprint's DTCG `com.blueprint.derive` extensions

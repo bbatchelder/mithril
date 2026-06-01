@@ -122,17 +122,18 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(function
     // a11y: aria-valuenow only when determinate, rounded to nearest integer per Blueprint.
     const ariaValueNow = percent != null ? Math.round(percent) : undefined;
 
-    // Meter background-color classes — intent overrides the default gray.
-    // All classes are literal strings to satisfy Tailwind v4 tree-shaking rules.
+    // Meter background-color classes — intent overrides the default gray. Arbitrary
+    // values reference the intent *rest* seed var (Blueprint $pt-intent-colors) so the
+    // meter re-tints with the theme. Always-emitted; seed vars kept alive elsewhere.
     const meterBgClass =
         intent === "primary"
-            ? "bg-[#2d72d2]"
+            ? "bg-[var(--color-primary)]"
             : intent === "success"
-              ? "bg-[#238551]"
+              ? "bg-[var(--color-success)]"
               : intent === "warning"
-                ? "bg-[#c87619]"
+                ? "bg-[var(--color-warning)]"
                 : intent === "danger"
-                  ? "bg-[#cd4246]"
+                  ? "bg-[var(--color-danger)]"
                   : // "none" — default: rgba(gray1,0.8) light, gray3 dark
                     "bg-[rgba(95,107,124,0.8)] dark:bg-[#8f99a8]";
 

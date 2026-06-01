@@ -113,12 +113,14 @@ export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
     //   color (dark-gray-1 in light, light-gray-5 in dark). Without this, dark mode
     //   icons would inherit `body { color: var(--foreground) }` which resolves from
     //   `:root` (light) — same fix as Card's `text-foreground` class.
+    // Intent colors = Blueprint's $pt-intent-text-colors (tier-2 light / tier-5 dark),
+    // routed through the canonical --intent-*-text tokens so they re-tint with the theme.
     const intentColor: Record<IconIntent, string> = {
         none: "text-foreground",
-        primary: "text-blue-2 dark:text-blue-5",
-        success: "text-green-2 dark:text-green-5",
-        warning: "text-orange-2 dark:text-orange-5",
-        danger: "text-red-2 dark:text-red-5",
+        primary: "text-intent-primary-text",
+        success: "text-intent-success-text",
+        warning: "text-intent-warning-text",
+        danger: "text-intent-danger-text",
     };
 
     return (

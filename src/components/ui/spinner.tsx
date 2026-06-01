@@ -173,18 +173,19 @@ export const Spinner = forwardRef<HTMLElement, SpinnerProps>(function Spinner(
     // a11y: aria-valuenow only when determinate.
     const ariaValueNow = isDeterminate ? value * 100 : undefined;
 
-    // Head stroke classes — intent overrides the default gray.
-    // All classes are literal strings (no runtime var() refs) to satisfy Tailwind v4
-    // tree-shaking rules. Arbitrary-value classes are always emitted.
+    // Head stroke classes — intent overrides the default gray. Arbitrary-value
+    // classes referencing the intent *rest* seed var (Blueprint $pt-intent-colors)
+    // so they re-tint with the theme. Arbitrary-value classes are always emitted,
+    // and the seed vars are kept alive by other utilities (bg-primary, etc.).
     const headStrokeClass =
         intent === "primary"
-            ? "stroke-[#2d72d2]"
+            ? "stroke-[var(--color-primary)]"
             : intent === "success"
-              ? "stroke-[#238551]"
+              ? "stroke-[var(--color-success)]"
               : intent === "warning"
-                ? "stroke-[#c87619]"
+                ? "stroke-[var(--color-warning)]"
                 : intent === "danger"
-                  ? "stroke-[#cd4246]"
+                  ? "stroke-[var(--color-danger)]"
                   : // "none" — default: gray1@80% light, gray3 dark
                     "stroke-[rgba(95,107,124,0.8)] dark:stroke-[#8f99a8]";
 
