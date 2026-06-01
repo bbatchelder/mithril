@@ -15,7 +15,7 @@ import {
     cellsEqual,
     columnsRegion,
     regionListsEqual,
-    regionToTSV,
+    regionsToTSV,
     selectionReducer,
     type CellCoord,
     type SelectionAction,
@@ -26,8 +26,13 @@ import type { EditCommitMove } from "./data-table/editable-cell";
 
 export type { CellCoord, SelectionRegion } from "./data-table/selection";
 
-/** How the grid responds to selection gestures. `"multi"` is deferred (Loop 7). */
-export type DataTableSelectionMode = "none" | "single";
+/**
+ * How the grid responds to selection gestures.
+ * - `"single"` — one region at a time; click/shift-click/drag.
+ * - `"multi"` — Cmd/Ctrl-click adds further regions (Loop 7); clipboard copy serializes all.
+ * - `"none"` — selection (and keyboard nav / clipboard) disabled.
+ */
+export type DataTableSelectionMode = "none" | "single" | "multi";
 
 /**
  * DataTable — a virtualized, Blueprint-`Table2`-faithful data grid built on a
@@ -126,8 +131,9 @@ export interface DataTableProps<TRow> {
     height?: number;
     /**
      * Selection behavior. `"single"` (default) allows one region at a time — click a cell,
-     * gutter (row band), or header (column band); shift-click or drag extends it.
-     * `"none"` disables selection. `"multi"` is deferred (Loop 7).
+     * gutter (row band), or header (column band); shift-click or drag extends it. `"multi"`
+     * additionally lets **Cmd/Ctrl-click** add further regions (clipboard copy then serializes
+     * all of them). `"none"` disables selection (and keyboard nav / clipboard).
      * @default "single"
      */
     /**
@@ -168,6 +174,14 @@ export interface DataTableProps<TRow> {
      * such a cell to edit. The grid does not mutate `data` — apply the change in this callback.
      */
     onCellEdit?: (edit: DataTableCellEdit) => void;
+    /**
+     * Render the grid in a **loading** state (Loop 7): every body cell, column header, and
+     * gutter cell shows a Blueprint-spec skeleton bar (animated glow) instead of its value.
+     * The header/gutter chrome and column sizes are preserved, so the grid keeps its shape
+     * while data streams in. Selection/edit affordances are suppressed while loading.
+     * @default false
+     */
+    loading?: boolean;
     /** Extra class names on the scroll container. */
     className?: string;
 }
@@ -289,6 +303,7 @@ export function DataTable<TRow>({
     defaultFocusedCell,
     onFocusedCellChange,
     onCellEdit,
+    loading = false,
     className,
 }: DataTableProps<TRow>) {
     const columnDefs = useMemo(
@@ -390,13 +405,16 @@ export function DataTable<TRow>({
     }, []);
 
     const selectable = selectionMode !== "none";
+    const multi = selectionMode === "multi";
 
+    // In multi-mode, Cmd/Ctrl-click adds a fresh region (the reducer's `additive` flag);
+    // Shift-extend still grows the active region, so when both are held shift wins.
     const handleCellMouseDown = useCallback(
-        (row: number, col: number, shiftKey: boolean) => {
+        (row: number, col: number, shiftKey: boolean, additive: boolean) => {
             dragKindRef.current = "cell";
-            dispatch({ type: "cell", row, col, extend: shiftKey });
+            dispatch({ type: "cell", row, col, extend: shiftKey, additive: multi && additive });
         },
-        [dispatch],
+        [dispatch, multi],
     );
     const handleCellMouseEnter = useCallback(
         (row: number, col: number) => {
@@ -405,11 +423,11 @@ export function DataTable<TRow>({
         [dispatch],
     );
     const handleGutterMouseDown = useCallback(
-        (row: number, shiftKey: boolean) => {
+        (row: number, shiftKey: boolean, additive: boolean) => {
             dragKindRef.current = "rows";
-            dispatch({ type: "rows", row, extend: shiftKey });
+            dispatch({ type: "rows", row, extend: shiftKey, additive: multi && additive });
         },
-        [dispatch],
+        [dispatch, multi],
     );
     const handleGutterMouseEnter = useCallback(
         (row: number) => {
@@ -418,11 +436,11 @@ export function DataTable<TRow>({
         [dispatch],
     );
     const handleHeaderMouseDown = useCallback(
-        (col: number, shiftKey: boolean) => {
+        (col: number, shiftKey: boolean, additive: boolean) => {
             dragKindRef.current = "columns";
-            dispatch({ type: "columns", col, extend: shiftKey });
+            dispatch({ type: "columns", col, extend: shiftKey, additive: multi && additive });
         },
-        [dispatch],
+        [dispatch, multi],
     );
     const handleHeaderMouseEnter = useCallback(
         (col: number) => {
@@ -485,40 +503,21 @@ export function DataTable<TRow>({
     );
 
     /**
-     * Move the focused cell by (dRow, dCol). `extend` (Shift) grows the active region from
-     * the anchor to the new cell; otherwise it collapses to a single-cell selection at the
-     * new cell. `wrap` lets Tab/Enter roll over a row/column edge into the next line.
+     * Land the focused cell on an **absolute** clamped `(r, c)`. `extend` (Shift) grows the
+     * active region from the anchor to that cell; otherwise the selection collapses to a single
+     * cell and the anchor moves there. Keyboard nav always yields a single region (multi-region
+     * is a pointer-only gesture), so the focused cell is unambiguous. Scrolls the row into view.
      */
-    const moveFocus = useCallback(
-        (dRow: number, dCol: number, extend: boolean, wrap?: "horizontal" | "vertical") => {
+    const applyFocus = useCallback(
+        (r: number, c: number, extend: boolean) => {
             const rowCount = data.length;
             const colCount = table.getVisibleLeafColumns().length;
             if (rowCount === 0 || colCount === 0) return;
-
-            // First keystroke with no focus yet anchors at the top-left cell.
-            if (!focusedCell) {
-                anchorRef.current = { row: 0, col: 0 };
-                setRegions([cellRegion(0, 0)]);
-                setFocusedCell({ row: 0, col: 0 });
-                scrollRowIntoView(0);
-                return;
-            }
-
-            let r = focusedCell.row + dRow;
-            let c = focusedCell.col + dCol;
-            if (wrap === "horizontal") {
-                if (c >= colCount) (c = 0), (r += 1);
-                else if (c < 0) (c = colCount - 1), (r -= 1);
-            } else if (wrap === "vertical") {
-                if (r >= rowCount) (r = 0), (c += 1);
-                else if (r < 0) (r = rowCount - 1), (c -= 1);
-            }
             r = Math.max(0, Math.min(rowCount - 1, r));
             c = Math.max(0, Math.min(colCount - 1, c));
-
             const next = { row: r, col: c };
             if (extend) {
-                const a = anchorRef.current ?? focusedCell;
+                const a = anchorRef.current ?? focusedCell ?? next;
                 const region: SelectionRegion = {
                     rows: [Math.min(a.row, r), Math.max(a.row, r)],
                     cols: [Math.min(a.col, c), Math.max(a.col, c)],
@@ -535,13 +534,85 @@ export function DataTable<TRow>({
         [data.length, table, focusedCell, regions, setRegions, setFocusedCell, scrollRowIntoView],
     );
 
-    /** Copy the active selection region to the clipboard as TSV (Cmd/Ctrl-C). */
+    /**
+     * Move the focused cell by (dRow, dCol). `extend` (Shift) grows the active region; `wrap`
+     * lets Tab/Enter roll over a row/column edge into the next line. The first keystroke with no
+     * focus yet anchors at the top-left cell (it does not apply the delta), matching Blueprint.
+     */
+    const moveFocus = useCallback(
+        (dRow: number, dCol: number, extend: boolean, wrap?: "horizontal" | "vertical") => {
+            const rowCount = data.length;
+            const colCount = table.getVisibleLeafColumns().length;
+            if (rowCount === 0 || colCount === 0) return;
+
+            if (!focusedCell) {
+                applyFocus(0, 0, false);
+                return;
+            }
+
+            let r = focusedCell.row + dRow;
+            let c = focusedCell.col + dCol;
+            if (wrap === "horizontal") {
+                if (c >= colCount) (c = 0), (r += 1);
+                else if (c < 0) (c = colCount - 1), (r -= 1);
+            } else if (wrap === "vertical") {
+                if (r >= rowCount) (r = 0), (c += 1);
+                else if (r < 0) (r = rowCount - 1), (c -= 1);
+            }
+            applyFocus(r, c, extend);
+        },
+        [data.length, table, focusedCell, applyFocus],
+    );
+
+    /** Rows that fit in one viewport page (for PageUp/PageDown); at least 1. */
+    const pageRows = useCallback(() => {
+        const view = (scrollEl?.clientHeight ?? 0) - COLUMN_HEADER_HEIGHT;
+        return Math.max(1, Math.floor(view / rowHeight));
+    }, [scrollEl, rowHeight]);
+
+    /**
+     * Home/End/PageUp/PageDown (Loop 7 polish). Home → first column of the row; End → last
+     * column; with Cmd/Ctrl they jump to the grid's top-left / bottom-right corner. Page keys
+     * move by a viewport of rows. All respect Shift to extend from the anchor.
+     */
+    const moveToExtent = useCallback(
+        (kind: "home" | "end" | "pageUp" | "pageDown", extend: boolean, toGridCorner: boolean) => {
+            const rowCount = data.length;
+            const colCount = table.getVisibleLeafColumns().length;
+            if (rowCount === 0 || colCount === 0) return;
+            if (!focusedCell) {
+                applyFocus(0, 0, false);
+                return;
+            }
+            const { row, col } = focusedCell;
+            switch (kind) {
+                case "home":
+                    applyFocus(toGridCorner ? 0 : row, 0, extend);
+                    break;
+                case "end":
+                    applyFocus(toGridCorner ? rowCount - 1 : row, colCount - 1, extend);
+                    break;
+                case "pageUp":
+                    applyFocus(row - pageRows(), col, extend);
+                    break;
+                case "pageDown":
+                    applyFocus(row + pageRows(), col, extend);
+                    break;
+            }
+        },
+        [data.length, table, focusedCell, applyFocus, pageRows],
+    );
+
+    /**
+     * Copy the selection to the clipboard as TSV (Cmd/Ctrl-C). In single-mode that's the one
+     * region; in multi-mode every region is serialized (blank-line-separated — see
+     * `regionsToTSV`).
+     */
     const copySelection = useCallback(() => {
         if (regions.length === 0) return;
-        const region = regions[regions.length - 1];
         const cols = table.getVisibleLeafColumns();
         const modelRows = table.getRowModel().rows;
-        const tsv = regionToTSV(region, data.length, cols.length, (r, c) => {
+        const tsv = regionsToTSV(regions, data.length, cols.length, (r, c) => {
             const col = cols[c];
             return col ? modelRows[r]?.getValue(col.id) : undefined;
         });
@@ -609,6 +680,22 @@ export function DataTable<TRow>({
                     e.preventDefault();
                     moveFocus(0, e.shiftKey ? -1 : 1, false, "horizontal");
                     break;
+                case "Home":
+                    e.preventDefault();
+                    moveToExtent("home", e.shiftKey, e.metaKey || e.ctrlKey);
+                    break;
+                case "End":
+                    e.preventDefault();
+                    moveToExtent("end", e.shiftKey, e.metaKey || e.ctrlKey);
+                    break;
+                case "PageUp":
+                    e.preventDefault();
+                    moveToExtent("pageUp", e.shiftKey, false);
+                    break;
+                case "PageDown":
+                    e.preventDefault();
+                    moveToExtent("pageDown", e.shiftKey, false);
+                    break;
                 case "Enter":
                     e.preventDefault();
                     if (focusedCell && isColEditable(focusedCell.col)) setEditingCell(focusedCell);
@@ -629,7 +716,7 @@ export function DataTable<TRow>({
                     break;
             }
         },
-        [editingCell, focusedCell, isColEditable, moveFocus, copySelection],
+        [editingCell, focusedCell, isColEditable, moveFocus, moveToExtent, copySelection],
     );
 
     // ── Column reorder (Loop 4b) ──────────────────────────────────────────────
@@ -734,6 +821,7 @@ export function DataTable<TRow>({
                     gutterWidth={gutterW}
                     headerHeight={COLUMN_HEADER_HEIGHT}
                     regions={regions}
+                    loading={loading}
                     onHeaderMouseDown={selectable ? handleHeaderMouseDown : undefined}
                     onHeaderMouseEnter={selectable ? handleHeaderMouseEnter : undefined}
                     onSelectAll={selectable ? handleSelectAll : undefined}
@@ -749,6 +837,7 @@ export function DataTable<TRow>({
                     height={height}
                     regions={regions}
                     focusedCell={focusedCell}
+                    loading={loading}
                     editingCell={editingCell}
                     onCellDoubleClick={handleCellDoubleClick}
                     onCellEditCommit={handleCellEditCommit}

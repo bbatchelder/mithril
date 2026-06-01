@@ -219,6 +219,22 @@ export function regionToTSV(
     return lines.join("\n");
 }
 
+/**
+ * Serialize a list of selection regions to TSV (Loop 7, multi-region copy). Each region is
+ * serialized independently via {@link regionToTSV} and the blocks are joined by a **blank
+ * line**. A single-region list (the only case in `selectionMode="single"`) yields exactly the
+ * same string as `regionToTSV` on that region — no separators — so single-mode copy is
+ * unchanged. Spreadsheets paste each block as contiguous rows; the blank line marks the seam.
+ */
+export function regionsToTSV(
+    regions: SelectionRegion[],
+    rowCount: number,
+    colCount: number,
+    getValue: (row: number, col: number) => unknown,
+): string {
+    return regions.map((r) => regionToTSV(r, rowCount, colCount, getValue)).join("\n\n");
+}
+
 // ── Pixel geometry ──────────────────────────────────────────────────────────
 
 /** Static geometry the body needs to turn a region into a pixel rect. */

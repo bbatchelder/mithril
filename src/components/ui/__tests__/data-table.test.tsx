@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { axe } from "@/test/axe";
 
 import { DataTable, type DataTableColumn } from "../data-table";
-import { regionToTSV } from "../data-table/selection";
+import { regionsToTSV, regionToTSV } from "../data-table/selection";
 
 /**
  * DataTable engine + DOM contract: grid roles, header/gutter/cell rendering, accessor +
@@ -618,6 +618,153 @@ describe("regionToTSV (Loop 6)", () => {
     });
     it("renders null/undefined values as empty fields", () => {
         expect(regionToTSV({ rows: [0, 0], cols: [0, 1] }, 1, 2, () => null)).toBe("\t");
+    });
+});
+
+describe("regionsToTSV (Loop 7 — multi-region copy)", () => {
+    const val = (r: number, c: number) => `r${r}c${c}`;
+    it("a single-region list matches regionToTSV exactly (no separators)", () => {
+        const region = { rows: [0, 1] as [number, number], cols: [0, 0] as [number, number] };
+        expect(regionsToTSV([region], 3, 3, val)).toBe(regionToTSV(region, 3, 3, val));
+    });
+    it("joins multiple region blocks with a blank line", () => {
+        expect(
+            regionsToTSV(
+                [
+                    { rows: [0, 0], cols: [0, 0] },
+                    { rows: [2, 2], cols: [1, 2] },
+                ],
+                3,
+                3,
+                val,
+            ),
+        ).toBe("r0c0\n\nr2c1\tr2c2");
+    });
+});
+
+describe("DataTable — loading (Loop 7)", () => {
+    const EDITABLE: DataTableColumn<Person>[] = [
+        { id: "name", header: "Name", accessor: "name", editable: true },
+        { id: "age", header: "Age", accessor: "age", align: "right" },
+    ];
+
+    it("replaces cell + header values with skeletons while loading", () => {
+        renderTable({ loading: true });
+        // Cells still exist (shape preserved) but their values are gone (skeleton bars).
+        expect(screen.getAllByRole("gridcell")).toHaveLength(ROWS.length * COLUMNS.length);
+        expect(screen.queryByText("Alice")).toBeNull();
+        expect(screen.queryByText("Name")).toBeNull();
+        expect(screen.getAllByRole("columnheader")).toHaveLength(COLUMNS.length);
+    });
+
+    it("shows values again when not loading (default)", () => {
+        renderTable();
+        expect(screen.getByText("Alice")).toBeInTheDocument();
+        expect(screen.getByText("Name")).toBeInTheDocument();
+    });
+
+    it("does not start editing on double-click while loading", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={EDITABLE} numberedRows={false} loading />,
+        );
+        // The value is a skeleton, so target the cell by position.
+        fireEvent.doubleClick(screen.getAllByRole("gridcell")[0]);
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+    });
+});
+
+describe("DataTable — multi-region selection (Loop 7)", () => {
+    const selectedTexts = () =>
+        screen
+            .getAllByRole("gridcell")
+            .filter((c) => c.getAttribute("aria-selected") === "true")
+            .map((c) => c.textContent);
+    const click = (text: string, opts?: { metaKey?: boolean }) => {
+        fireEvent.mouseDown(screen.getByRole("gridcell", { name: text }), opts);
+        fireEvent.mouseUp(document);
+    };
+
+    it("Cmd/Ctrl-click adds a second region in multi mode", () => {
+        renderTable({ selectionMode: "multi" });
+        click("Alice"); // region A = {0,0}
+        click("29", { metaKey: true }); // additive region B = {1,1}
+        expect(selectedTexts()).toEqual(["Alice", "29"]);
+    });
+
+    it("Cmd/Ctrl-click REPLACES (does not add) in single mode", () => {
+        renderTable({ selectionMode: "single" });
+        click("Alice");
+        click("29", { metaKey: true });
+        expect(selectedTexts()).toEqual(["29"]);
+    });
+
+    it("Cmd/Ctrl-C copies every region, blank-line separated", () => {
+        const writeText = vi.fn(() => Promise.resolve());
+        const orig = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+        Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+        try {
+            renderTable({ selectionMode: "multi" });
+            click("Alice"); // {0,0}
+            click("29", { metaKey: true }); // {1,1}
+            fireEvent.keyDown(screen.getByRole("grid"), { key: "c", ctrlKey: true });
+            expect(writeText.mock.calls[0][0]).toBe("Alice\n\n29");
+        } finally {
+            if (orig) Object.defineProperty(navigator, "clipboard", orig);
+            else delete (navigator as { clipboard?: unknown }).clipboard;
+        }
+    });
+});
+
+describe("DataTable — keyboard extents (Loop 7)", () => {
+    const selectedTexts = () =>
+        screen
+            .getAllByRole("gridcell")
+            .filter((c) => c.getAttribute("aria-selected") === "true")
+            .map((c) => c.textContent);
+    const focusCell = (text: string) => {
+        fireEvent.mouseDown(screen.getByRole("gridcell", { name: text }));
+        fireEvent.mouseUp(document);
+    };
+
+    it("End/Home jump to the row's last/first column", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // {0,0}
+        fireEvent.keyDown(grid, { key: "End" });
+        expect(selectedTexts()).toEqual(["ENGINEER"]); // {0,2}
+        fireEvent.keyDown(grid, { key: "Home" });
+        expect(selectedTexts()).toEqual(["Alice"]); // {0,0}
+    });
+
+    it("Cmd/Ctrl-End / -Home jump to the grid's bottom-right / top-left corner", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("34"); // {0,1}
+        fireEvent.keyDown(grid, { key: "End", ctrlKey: true });
+        expect(selectedTexts()).toEqual(["MANAGER"]); // {2,2} (Carol's upper-cased role)
+        fireEvent.keyDown(grid, { key: "Home", ctrlKey: true });
+        expect(selectedTexts()).toEqual(["Alice"]); // {0,0}
+    });
+
+    it("Shift+End extends from the anchor to the row end", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // anchor {0,0}
+        fireEvent.keyDown(grid, { key: "End", shiftKey: true });
+        expect(selectedTexts()).toEqual(["Alice", "34", "ENGINEER"]); // row 0, cols 0-2
+    });
+
+    it("PageDown / PageUp move by a viewport of rows", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        // pageRows = floor((clientHeight - 30px header) / 20px row); jsdom reports 0, so stub a
+        // 70px viewport → 2 rows per page (distinct from a single-row arrow move).
+        Object.defineProperty(grid, "clientHeight", { configurable: true, value: 70 });
+        focusCell("Alice"); // {0,0}
+        fireEvent.keyDown(grid, { key: "PageDown" });
+        expect(selectedTexts()).toEqual(["Carol"]); // moved 2 rows → {2,0}
+        fireEvent.keyDown(grid, { key: "PageUp" });
+        expect(selectedTexts()).toEqual(["Alice"]); // back up 2 rows → {0,0}
     });
 });
 

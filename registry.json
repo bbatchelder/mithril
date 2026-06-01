@@ -369,6 +369,7 @@
             ],
             "registryDependencies": [
                 "icon",
+                "skeleton",
                 "utils",
                 "tokens"
             ]

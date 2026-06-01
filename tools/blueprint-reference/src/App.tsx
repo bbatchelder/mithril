@@ -1,7 +1,7 @@
 import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, MultistepDialog, DialogStep, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
-import { Cell as BpCell, Column as BpColumn, EditableCell2 as BpEditableCell2, Table2 as BpTable2 } from "@blueprintjs/table";
+import { Cell as BpCell, Column as BpColumn, EditableCell2 as BpEditableCell2, Table2 as BpTable2, TableLoadingOption } from "@blueprintjs/table";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -5318,6 +5318,54 @@ function DataTableGallery() {
             <BpSection title="Editable cells (double-click Name or Role · Enter commits · Esc reverts)">
                 <div data-compare="data-table-editable" style={{ width: 460, height: 150 }}>
                     <EditableDataTableReference />
+                </div>
+            </BpSection>
+            {/* Visual-only (no data-compare): Blueprint randomizes loading-bar widths
+                (`LoadableContent variableLength`, Math.random 25-75%), so no exact diff. */}
+            <BpSection title="Loading (Blueprint variable-width skeleton — random per render)">
+                <div style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        loadingOptions={[
+                            TableLoadingOption.CELLS,
+                            TableLoadingOption.COLUMN_HEADERS,
+                            TableLoadingOption.ROW_HEADERS,
+                        ]}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
+                </div>
+            </BpSection>
+            <BpSection title="Multiple selection (Cmd/Ctrl-click adds a region · two regions shown)">
+                <div data-compare="data-table-multi" style={{ width: 460, height: 150 }}>
+                    <BpTable2
+                        numRows={rows.length}
+                        columnWidths={[160, 60, 120, 120]}
+                        enableRowResizing={false}
+                        enableMultipleSelection
+                        selectedRegions={[
+                            { rows: [0, 0], cols: [0, 0] },
+                            { rows: [2, 3], cols: [2, 3] },
+                        ]}
+                        enableFocusedCell={true}
+                        focusedCell={{ row: 2, col: 2, focusSelectionEnd: false }}
+                    >
+                        <BpColumn name="Name" cellRenderer={(r) => <BpCell>{rows[r].name}</BpCell>} />
+                        <BpColumn
+                            name="Age"
+                            cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+                        />
+                        <BpColumn name="Role" cellRenderer={(r) => <BpCell>{rows[r].role}</BpCell>} />
+                        <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+                    </BpTable2>
                 </div>
             </BpSection>
         </div>

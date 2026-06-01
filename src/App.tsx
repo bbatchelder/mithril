@@ -4984,6 +4984,33 @@ function DataTableGallery() {
                     <EditableDataTableSpecimen />
                 </div>
             </Section>
+            {/* Loading is VISUAL-ONLY (no data-compare): Blueprint's loading bars are
+                Math.random()-driven 25-75% widths (its `LoadableContent` `variableLength`),
+                so an exact diff is impossible by design. analyst uses deterministic full-width
+                bars; the Skeleton primitive's own fidelity is gated by skeleton-box/-line. */}
+            <Section title="Loading (deterministic full-width skeleton cells · headers · gutter)">
+                <div style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        loading
+                    />
+                </div>
+            </Section>
+            <Section title="Multiple selection (Cmd/Ctrl-click adds a region · two regions shown)">
+                <div data-compare="data-table-multi" style={{ width: 460 }}>
+                    <DataTable<DataTablePerson>
+                        data={DATA_TABLE_ROWS}
+                        columns={DATA_TABLE_COLUMNS}
+                        selectionMode="multi"
+                        selection={[
+                            { rows: [0, 0], cols: [0, 0] },
+                            { rows: [2, 3], cols: [2, 3] },
+                        ]}
+                        focusedCell={{ row: 2, col: 2 }}
+                    />
+                </div>
+            </Section>
             <Section title="No gutter">
                 <div style={{ width: 460 }}>
                     <DataTable<DataTablePerson>
@@ -4993,7 +5020,47 @@ function DataTableGallery() {
                     />
                 </div>
             </Section>
+            <DataTableUsage />
         </div>
+    );
+}
+
+/**
+ * Usage reference for the DataTable public API (Loop 7 docs). Not a compare specimen —
+ * a quick-start the gallery shows beneath the live grids.
+ */
+function DataTableUsage() {
+    return (
+        <Section title="Usage">
+            <pre className="overflow-auto rounded-bp bg-[#f6f7f9] p-4 text-[12px] leading-5 text-foreground dark:bg-[#2f343c]">
+                {`import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+
+interface Person { name: string; age: number; role: string }
+
+const columns: DataTableColumn<Person>[] = [
+  { id: "name", header: "Name", accessor: "name", width: 160, editable: true },
+  { id: "age",  header: "Age",  accessor: "age",  width: 60, align: "right" },
+  // function accessor + custom cell renderer:
+  { id: "role", header: "Role", accessor: (r) => r.role,
+    cell: ({ value }) => <strong>{String(value)}</strong> },
+];
+
+<DataTable
+  data={people}
+  columns={columns}
+  height={360}                 // fixed height ⇒ virtualized scroll (omit ⇒ grow to fit)
+  enableColumnResizing         // drag a header's right edge
+  enableColumnReordering       // select a column, then drag its handle
+  selectionMode="multi"        // "single" (default) | "multi" (Cmd/Ctrl-click) | "none"
+  loading={isFetching}         // skeleton cells while data streams in
+  onCellEdit={({ row, columnId, value }) => save(row, columnId, value)}
+/>
+
+// Keyboard: arrows move · Shift+arrows extend · Tab/Enter advance (wrap) ·
+// Home/End row ends (Cmd/Ctrl ⇒ grid corners) · PageUp/PageDown · Cmd/Ctrl-C copies TSV ·
+// Enter/F2 edits an editable cell · double-click edits.`}
+            </pre>
+        </Section>
     );
 }
 

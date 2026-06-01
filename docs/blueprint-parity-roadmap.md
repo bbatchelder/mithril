@@ -89,7 +89,7 @@ this correctly — use it as the reference pattern.
 > These are the components/capabilities Blueprint has and analyst lacks. Without them, Blueprint stays
 > the answer for any app that needs them.
 
-### P1.1 — Data grid (the big one) 🚧 in progress (7-loop phase)
+### P1.1 — Data grid (the big one) ✅ done (7-loop phase)
 
 > Composing **TanStack Table v8 + TanStack Virtual v3** under analyst's API + tokens. Modern `columns`
 > array + `data` API (not Blueprint's `<Column>` children). Loop plan:
@@ -117,7 +117,12 @@ this correctly — use it as the reference pattern.
 >   edges, Enter/Shift-Enter move vertically, Enter/F2 start an edit on editable cells (the
 >   commit then advances down/right), and Cmd/Ctrl-C copies the selection as TSV. Row
 >   scroll-into-view keeps the focused cell visible in the virtualized grid.
-> - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs
+> - [x] **Loop 7** — loading/skeleton + multi-region + polish + docs (handoff 0093): `loading`
+>   prop → Blueprint-spec skeleton bars in cells (4px) / headers (8px) / gutter, reusing the
+>   `Skeleton` primitive; `selectionMode="multi"` (Cmd/Ctrl-click adds a region, copy serializes
+>   all via `regionsToTSV`); Home/End (Cmd/Ctrl ⇒ grid corners) + PageUp/PageDown nav; a gallery
+>   usage section. Loading bars are deterministic full-width — Blueprint randomizes its widths
+>   (`LoadableContent variableLength`, 25-75%), so loading is visual-only, not a keyed diff.
 
 - **Problem:** No equivalent to Blueprint's **Table2** (~13k LOC: virtualized rows/cols, selection,
   resize, reorder, editable cells, clipboard). `html-table` is CSS-only.

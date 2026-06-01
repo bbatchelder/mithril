@@ -4,6 +4,8 @@ import { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 import type { DataTableColumnMeta } from "../data-table";
 import { EditableCell, type EditCommitMove } from "./editable-cell";
 import { GutterCell, alignClass } from "./gutter";
@@ -54,6 +56,8 @@ export interface DataTableBodyProps<TRow> {
     regions: SelectionRegion[];
     /** The focused cell, painted with a 2px outline (Loop 3). */
     focusedCell: CellCoord | null;
+    /** Render skeleton bars in every cell + gutter instead of values (Loop 7). */
+    loading?: boolean;
     /** The cell currently in edit mode (Loop 5), or null. */
     editingCell?: CellCoord | null;
     /** Double-click on an editable data cell — `(row, col)`. Begins editing. */
@@ -62,12 +66,18 @@ export interface DataTableBodyProps<TRow> {
     onCellEditCommit?: (row: number, col: number, value: string, move?: EditCommitMove) => void;
     /** Cancel an edit (Esc) — revert without committing. */
     onCellEditCancel?: () => void;
-    /** Pointer-down on a data cell — `(row, col, shiftKey)`. Begins a click/drag selection. */
-    onCellMouseDown?: (row: number, col: number, shiftKey: boolean) => void;
+    /**
+     * Pointer-down on a data cell — `(row, col, shiftKey, additive)`. Begins a click/drag
+     * selection; `additive` (Cmd/Ctrl) adds a region in `selectionMode="multi"`.
+     */
+    onCellMouseDown?: (row: number, col: number, shiftKey: boolean, additive: boolean) => void;
     /** Pointer enters a data cell mid-drag — `(row, col)`. Extends the active region. */
     onCellMouseEnter?: (row: number, col: number) => void;
-    /** Pointer-down on a gutter cell — `(row, shiftKey)`. Begins a row-band selection. */
-    onGutterMouseDown?: (row: number, shiftKey: boolean) => void;
+    /**
+     * Pointer-down on a gutter cell — `(row, shiftKey, additive)`. Begins a row-band selection;
+     * `additive` (Cmd/Ctrl) adds a region in `selectionMode="multi"`.
+     */
+    onGutterMouseDown?: (row: number, shiftKey: boolean, additive: boolean) => void;
     /** Pointer enters a gutter cell mid-drag — `(row)`. Extends the active row band. */
     onGutterMouseEnter?: (row: number) => void;
 }
@@ -81,6 +91,7 @@ export function DataTableBody<TRow>({
     height,
     regions,
     focusedCell,
+    loading = false,
     editingCell,
     onCellDoubleClick,
     onCellEditCommit,
@@ -153,6 +164,7 @@ export function DataTableBody<TRow>({
                                 width={gutterWidth}
                                 height={rowHeight}
                                 selected={isRowSelected(regions, virtualRow.index)}
+                                loading={loading}
                                 onMouseDown={onGutterMouseDown}
                                 onMouseEnter={onGutterMouseEnter}
                             />
@@ -172,7 +184,13 @@ export function DataTableBody<TRow>({
                                     aria-selected={isCellSelected(regions, virtualRow.index, colIndex)}
                                     onMouseDown={
                                         onCellMouseDown
-                                            ? (e) => onCellMouseDown(virtualRow.index, colIndex, e.shiftKey)
+                                            ? (e) =>
+                                                  onCellMouseDown(
+                                                      virtualRow.index,
+                                                      colIndex,
+                                                      e.shiftKey,
+                                                      e.metaKey || e.ctrlKey,
+                                                  )
                                             : undefined
                                     }
                                     onMouseEnter={
@@ -181,7 +199,7 @@ export function DataTableBody<TRow>({
                                             : undefined
                                     }
                                     onDoubleClick={
-                                        editable && onCellDoubleClick
+                                        editable && !loading && onCellDoubleClick
                                             ? () => onCellDoubleClick(virtualRow.index, colIndex)
                                             : undefined
                                     }
@@ -191,6 +209,9 @@ export function DataTableBody<TRow>({
                                         "text-[12px] text-foreground",
                                         "shadow-[inset_0_-1px_0_rgba(17,20,24,0.15),inset_-1px_0_0_rgba(17,20,24,0.15)]",
                                         "dark:shadow-[inset_0_-1px_0_rgba(17,20,24,0.4),inset_-1px_0_0_rgba(17,20,24,0.4)]",
+                                        // Loading: Blueprint `.bp6-table-cell.bp6-loading` — flex column,
+                                        // justify-center, transparent text; centers the 4px skeleton bar.
+                                        loading && "flex flex-col justify-center text-transparent",
                                         // Blueprint `.bp6-table-selection-enabled .bp6-table-cell` → the
                                         // `cell` ("+") crosshair cursor when the grid is selectable.
                                         onCellMouseDown && "cursor-cell",
@@ -203,7 +224,10 @@ export function DataTableBody<TRow>({
                                         lineHeight: `${rowHeight}px`,
                                     }}
                                 >
-                                    {isEditing ? (
+                                    {loading ? (
+                                        // Blueprint body skeleton: a 4px bar (`.bp6-loading .bp6-skeleton`).
+                                        <Skeleton className="h-1 w-full" />
+                                    ) : isEditing ? (
                                         <EditableCell
                                             value={String(cell.getValue() ?? "")}
                                             align={align}

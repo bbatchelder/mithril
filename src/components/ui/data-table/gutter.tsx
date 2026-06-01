@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
 import type { DataTableColumnAlign } from "../data-table";
 
 /**
@@ -49,6 +51,7 @@ export function GutterCell({
     width,
     height,
     selected = false,
+    loading = false,
     onMouseDown,
     onMouseEnter,
 }: {
@@ -57,8 +60,10 @@ export function GutterCell({
     height: number;
     /** Whether this row is part of a row-band selection (Blueprint blue tint). */
     selected?: boolean;
-    /** Pointer-down — `(row, shiftKey)`. Begins a row-band click/drag selection. */
-    onMouseDown?: (row: number, shiftKey: boolean) => void;
+    /** Render a skeleton bar instead of the row number (Loop 7). */
+    loading?: boolean;
+    /** Pointer-down — `(row, shiftKey, additive)`. Begins a row-band click/drag selection. */
+    onMouseDown?: (row: number, shiftKey: boolean, additive: boolean) => void;
     /** Pointer enters mid-drag — `(row)`. Extends the active row band. */
     onMouseEnter?: (row: number) => void;
 }) {
@@ -66,13 +71,18 @@ export function GutterCell({
         <div
             role="rowheader"
             aria-selected={selected}
-            onMouseDown={onMouseDown ? (e) => onMouseDown(index, e.shiftKey) : undefined}
+            onMouseDown={
+                onMouseDown ? (e) => onMouseDown(index, e.shiftKey, e.metaKey || e.ctrlKey) : undefined
+            }
             onMouseEnter={onMouseEnter ? () => onMouseEnter(index) : undefined}
             className={cn(
                 "sticky left-0 z-20 shrink-0 select-none bg-background px-1 text-right dark:bg-[#383e47]",
                 "text-[12px] text-foreground-muted",
                 "shadow-[inset_0_-1px_0_rgba(17,20,24,0.15),1px_0_0_rgba(17,20,24,0.15)]",
                 "dark:shadow-[inset_0_-1px_0_rgba(17,20,24,0.4),1px_0_0_rgba(17,20,24,0.4)]",
+                // Loading: center a thin skeleton bar (Blueprint `.bp6-loading` row name —
+                // flex column, justify-center, transparent text).
+                loading && "flex flex-col justify-center text-transparent",
                 // Blue 10% tint layered as a background-*image* gradient so it sits OVER the
                 // gray bg-color (matching Blueprint's `header-selected::before` overlay),
                 // rather than replacing it.
@@ -80,7 +90,7 @@ export function GutterCell({
             )}
             style={{ width, minWidth: width, height, lineHeight: `${height}px` }}
         >
-            {index + 1}
+            {loading ? <Skeleton className="h-1 w-full" /> : index + 1}
         </div>
     );
 }

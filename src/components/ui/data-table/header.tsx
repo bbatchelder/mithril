@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import { Icon } from "@/components/ui/icon";
 import { dragHandleVertical } from "@/components/ui/icons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { CornerCell } from "./gutter";
 import { isColumnSelected, type SelectionRegion } from "./selection";
@@ -28,8 +29,13 @@ export interface DataTableHeaderProps<TRow> {
     headerHeight: number;
     /** Active selection regions — used to tint fully-selected column headers. */
     regions: SelectionRegion[];
-    /** Pointer-down on a column header — `(col, shiftKey)`. Begins a column-band selection. */
-    onHeaderMouseDown?: (col: number, shiftKey: boolean) => void;
+    /** Render skeleton bars in every column header instead of the names (Loop 7). */
+    loading?: boolean;
+    /**
+     * Pointer-down on a column header — `(col, shiftKey, additive)`. Begins a column-band
+     * selection; `additive` (Cmd/Ctrl) adds a new region in `selectionMode="multi"`.
+     */
+    onHeaderMouseDown?: (col: number, shiftKey: boolean, additive: boolean) => void;
     /** Pointer enters a header mid-drag — `(col)`. Extends the active column band. */
     onHeaderMouseEnter?: (col: number) => void;
     /** Corner click — selects the whole table. */
@@ -50,13 +56,14 @@ export function DataTableHeader<TRow>({
     gutterWidth,
     headerHeight,
     regions,
+    loading = false,
     onHeaderMouseDown,
     onHeaderMouseEnter,
     onSelectAll,
     reorderable,
     onReorderStart,
 }: DataTableHeaderProps<TRow>) {
-    const showHandle = reorderable && onReorderStart != null;
+    const showHandle = reorderable && onReorderStart != null && !loading;
     return (
         <div role="rowgroup" className="sticky top-0 z-30 bg-background dark:bg-[#383e47]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -74,7 +81,12 @@ export function DataTableHeader<TRow>({
                                 aria-selected={selected}
                                 onMouseDown={
                                     onHeaderMouseDown
-                                        ? (e) => onHeaderMouseDown(colIndex, e.shiftKey)
+                                        ? (e) =>
+                                              onHeaderMouseDown(
+                                                  colIndex,
+                                                  e.shiftKey,
+                                                  e.metaKey || e.ctrlKey,
+                                              )
                                         : undefined
                                 }
                                 onMouseEnter={
@@ -82,6 +94,8 @@ export function DataTableHeader<TRow>({
                                 }
                                 className={cn(
                                     "relative box-border flex shrink-0 items-center overflow-hidden",
+                                    // Loading: hide the name, leave room for the centered skeleton.
+                                    loading && "text-transparent",
                                     // Text padding: 8px each side; with a reorder handle the name's
                                     // left padding becomes 22px (Blueprint `.bp6-table-has-reorder-handle`
                                     // overrides the base 8px), making room for the 22px handle zone.
@@ -124,14 +138,18 @@ export function DataTableHeader<TRow>({
                                         <Icon icon={dragHandleVertical} size={16} className="!text-current" />
                                     </div>
                                 )}
-                                {header.isPlaceholder
-                                    ? null
-                                    : flexRender(header.column.columnDef.header, header.getContext())}
+                                {loading ? (
+                                    // Blueprint `.bp6-table-header.bp6-loading` — an 8px skeleton bar
+                                    // with 8px padding, filling the header name slot.
+                                    <Skeleton className="h-2 w-full" />
+                                ) : header.isPlaceholder ? null : (
+                                    flexRender(header.column.columnDef.header, header.getContext())
+                                )}
                                 {/* Resize handle (Loop 4) — Blueprint `.bp6-table-resize-handle`:
                                     a 4px ew-resize hit-target on the right edge, hidden until
                                     hover/drag, with a 3px #2d72d2 line. `stopPropagation` keeps a
                                     handle grab from also triggering column selection. */}
-                                {header.column.getCanResize() && (
+                                {header.column.getCanResize() && !loading && (
                                     <div
                                         data-resize-handle
                                         aria-hidden
