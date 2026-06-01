@@ -256,7 +256,7 @@ describe("DataTable — column resize (Loop 4)", () => {
         fireEvent.mouseMove(document, { clientX: 220 });
         // Mid-drag: the full-height blue guide line is shown at the projected edge, and the
         // ew-resize cursor overlay is mounted; the real column widths stay frozen (onEnd).
-        const guide = container.querySelector(".inset-y-0.bg-\\[\\#2d72d2\\]");
+        const guide = container.querySelector(".inset-y-0.bg-primary");
         expect(guide).not.toBeNull();
         expect(guide).toHaveStyle({ left: "247px" }); // gutter 30 + new width 220 − 3px guide
         expect(container.querySelector(".fixed.cursor-ew-resize")).not.toBeNull();

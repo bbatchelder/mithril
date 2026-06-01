@@ -31,8 +31,8 @@ describe("AnchorButton — element & styling", () => {
             </AnchorButton>,
         );
         const el = screen.getByRole("button", { name: "Styled" });
-        // outlined => transparent + bordered; large => h-10; primary outlined => intent text token.
-        expect(el).toHaveClass("bg-transparent", "border", "h-10", "text-intent-primary-text");
+        // outlined => transparent + bordered; large => h-10; primary outlined => minimal intent text token.
+        expect(el).toHaveClass("bg-transparent", "border", "h-10", "text-intent-primary-minimal-text");
     });
 
     it("forwards its ref to the anchor element", () => {
