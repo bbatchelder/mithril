@@ -95,8 +95,8 @@ rest of the library (Text, etc.).
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 tools/compare.sh divider both              # re-verify Divider (auto-starts servers if down)
 ```

@@ -72,7 +72,7 @@ example theme `[data-theme="datex"]` wired into the gallery, and wrote `docs/the
 ## How to resume
 
 ```bash
-pnpm dev                                  # :5173 (analyst), tap-managed
+pnpm dev                                  # :5173 (mithril), tap-managed
 cd tools/blueprint-reference && pnpm dev  # :5174 (reference)
 # default-theme fidelity (must stay clean):
 tools/compare.sh button both > /tmp/c.log 2>&1; grep -E 'match · [0-9]+ differ' /tmp/c.log

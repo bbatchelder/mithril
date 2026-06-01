@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Pixel + computed-style comparison harness: analyst-ui vs. Blueprint reference.
+# Pixel + computed-style comparison harness: mithril vs. Blueprint reference.
 #
 # Usage:  tools/compare.sh <component> [light|dark|both]
 #   <component>   component id present in BOTH gallery registries (e.g. "button")
@@ -9,12 +9,12 @@
 # Drives two headless agent-browser sessions to the two dev servers, each opened
 # in isolated single-component mode (?component=<id>&theme=<theme>), and writes to
 # tools/comparison/screenshots/:
-#   <component>.<theme>.analyst.png     full-page screenshot (analyst-ui  :5173)
+#   <component>.<theme>.mithril.png     full-page screenshot (mithril  :5173)
 #   <component>.<theme>.blueprint.png   full-page screenshot (Blueprint   :5174)
 #   <component>.<theme>.diff.png        full-page pixel-diff image (auto-aligned)
 #   <component>.<theme>.<key>.spec.png  per-specimen diff crop (only for flagged keys)
-#   <component>.<theme>.{analyst,blueprint}.styles.json
-#   <component>.<theme>.{analyst,blueprint}.rects.json
+#   <component>.<theme>.{mithril,blueprint}.styles.json
+#   <component>.<theme>.{mithril,blueprint}.rects.json
 # then prints, per theme:
 #   1. a computed-style diff for every paired [data-compare] specimen,
 #   2. a PER-SPECIMEN visual diff — each [data-compare]/[data-vcompare] element cropped
@@ -66,7 +66,7 @@ ensure_server() {
     # Detach stdin from /dev/null too (not just stdout/stderr → file): otherwise the
     # spawned vite/esbuild can keep this script's stdout pipe open and a `| tail`
     # caller deadlocks (see header note). Full redirection makes piping safe.
-    (cd "$dir" && nohup pnpm dev >"/tmp/analyst-compare-$name.log" 2>&1 </dev/null &)
+    (cd "$dir" && nohup pnpm dev >"/tmp/mithril-compare-$name.log" 2>&1 </dev/null &)
     for _ in $(seq 1 60); do
         if curl -sf -o /dev/null --max-time 1 "http://localhost:$port"; then
             echo "✓ $name up on :$port"
@@ -74,11 +74,11 @@ ensure_server() {
         fi
         sleep 0.5
     done
-    echo "✗ $name failed to come up on :$port — see /tmp/analyst-compare-$name.log" >&2
+    echo "✗ $name failed to come up on :$port — see /tmp/mithril-compare-$name.log" >&2
     exit 1
 }
 
-ensure_server "$AUI_PORT" analyst "$ROOT"
+ensure_server "$AUI_PORT" mithril "$ROOT"
 ensure_server "$BP_PORT" blueprint "$ROOT/tools/blueprint-reference"
 
 # Computed-style capture expression (color-normalized; see capture-styles.js).
@@ -109,24 +109,24 @@ capture() {
 for theme in "${THEMES[@]}"; do
     echo
     echo "── $COMPONENT · $theme ─────────────────────────────────"
-    capture analyst "$AUI_PORT" "$theme" "aui"
+    capture mithril "$AUI_PORT" "$theme" "aui"
     capture blueprint "$BP_PORT" "$theme" "bp"
-    echo "  screenshots: $COMPONENT.$theme.{analyst,blueprint}.png"
+    echo "  screenshots: $COMPONENT.$theme.{mithril,blueprint}.png"
     node "$ROOT/tools/comparison/diff-styles.mjs" \
-        "$OUT/$COMPONENT.$theme.analyst.styles.json" \
+        "$OUT/$COMPONENT.$theme.mithril.styles.json" \
         "$OUT/$COMPONENT.$theme.blueprint.styles.json" \
         "$COMPONENT · $theme"
     echo
     node "$ROOT/tools/comparison/diff-specimens.mjs" \
-        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.mithril.png" \
         "$OUT/$COMPONENT.$theme.blueprint.png" \
-        "$OUT/$COMPONENT.$theme.analyst.rects.json" \
+        "$OUT/$COMPONENT.$theme.mithril.rects.json" \
         "$OUT/$COMPONENT.$theme.blueprint.rects.json" \
         "$OUT/$COMPONENT.$theme" \
         "$COMPONENT · $theme"
     echo
     node "$ROOT/tools/comparison/diff-pixels.mjs" \
-        "$OUT/$COMPONENT.$theme.analyst.png" \
+        "$OUT/$COMPONENT.$theme.mithril.png" \
         "$OUT/$COMPONENT.$theme.blueprint.png" \
         "$OUT/$COMPONENT.$theme.diff.png" \
         "$COMPONENT · $theme"

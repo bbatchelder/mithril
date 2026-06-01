@@ -34,7 +34,7 @@ Registered in both galleries with 8 paired `data-compare` specimens (1 track + 7
 
 ### `meterProps` pass-through for `data-compare` tagging
 The meter is an internal `<div>`. Since our component exposes it via `meterProps` (same pattern
-as Spinner's `trackProps`/`headProps`), the analyst gallery can tag it directly. The track itself
+as Spinner's `trackProps`/`headProps`), the mithril gallery can tag it directly. The track itself
 is the outer div, which accepts `data-compare` via normal HTML attributes on `<ProgressBar>`.
 
 ### `TaggedProgressBar` in Blueprint reference (useRef + useEffect)
@@ -113,8 +113,8 @@ literal value rather than the variable).
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
-pnpm dev                                   # analyst-ui → http://localhost:5173
+cd /Users/bbatchelder/Code/mithril
+pnpm dev                                   # mithril → http://localhost:5173
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference → http://localhost:5174
 tools/compare.sh progress-bar both        # re-verify ProgressBar (auto-starts servers if down)
 tools/compare.sh spinner both             # regression: spinner should still be 9/9 exact

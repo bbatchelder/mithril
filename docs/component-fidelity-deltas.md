@@ -43,10 +43,10 @@ harness no longer reports them as `differ`/`flagged` — but each waiver is valu
 | `hotkeys`,`multi-select`,`tag-input` | tag/key `marginRight 0/4px` | spacing is done via container `gap`, not per-child margin — same pixels. |
 | `date-picker`,`date-input`,`date-range-picker` | nav `padding`/`minWidth`, field `paddingRight` | nav pins a fixed `30×30` via `w/h + p-0` vs Blueprint `min-width + padding`; identical box. |
 | `date-*` | day `color` `246,247,249` vs `255,255,255` | near-white vs pure-white — imperceptible. |
-| `time-picker`,`tag-input` | input `fontSize 14/13.333px` | `13.333px` is the UA default — Blueprint left `font-size` unset; analyst sets the intended 14px token (truer to design intent). |
+| `time-picker`,`tag-input` | input `fontSize 14/13.333px` | `13.333px` is the UA default — Blueprint left `font-size` unset; mithril sets the intended 14px token (truer to design intent). |
 | `tag-input` | ghost dark `color` | empty input; only `::placeholder` is visible. |
 
-### The non-computed-style flags (visual-SSIM `⚠` and `only in analyst:`)
+### The non-computed-style flags (visual-SSIM `⚠` and `only in mithril:`)
 
 `compare.sh` also prints two non-gate signals. Checked both on 2026-05-31; **neither surfaces a real
 fidelity problem:**
@@ -55,9 +55,9 @@ fidelity problem:**
   Two causes, both benign: (a) the `[data-compare]` key lands on a **different-sized DOM node** in
   the two galleries (`multi-select-tag` 45px vs 70px), so the harness crops mismatched regions and
   SSIM is meaningless; (b) a **few-px text shift** from the accepted gap-vs-margin spacing — SSIM
-  punishes misaligned high-contrast glyphs harshly. Eyeballed the full `*.analyst.png` /
+  punishes misaligned high-contrast glyphs harshly. Eyeballed the full `*.mithril.png` /
   `*.blueprint.png` for multi-select and hotkeys: **renders are pixel-identical.** Guide, not a gate.
-- **`only in analyst:` specimens** (e.g. hotkeys → `dialog-*`, multi-select → `popover-content`,
+- **`only in mithril:` specimens** (e.g. hotkeys → `dialog-*`, multi-select → `popover-content`,
   date-input → `date-picker-*`/`popover-*`, date-picker → `time-picker-*`). These are unpaired keys
   the Blueprint reference gallery doesn't tag, so they're uncompared *here* — but each is the **same
   sub-component already verified clean under its own id** (`dialog`, `popover`, `date-picker`,
@@ -94,8 +94,8 @@ many components probably share a fix rather than each needing bespoke work:
 
 | Property | occurrences | likely root cause |
 |----------|-------------|-------------------|
-| `boxShadow` | 18 | floating-panel/elevation shadow definition (overlays: popover, tooltip, dialog, drawer, alert, toast, omnibar). analyst uses `rgba(0,0,0,…)` where Blueprint uses `rgba(20,20,20,…)`; dark-mode shadow layer order also differs. |
-| `minWidth` | 12 | portal panel: analyst `0px` vs Blueprint `auto`. |
+| `boxShadow` | 18 | floating-panel/elevation shadow definition (overlays: popover, tooltip, dialog, drawer, alert, toast, omnibar). mithril uses `rgba(0,0,0,…)` where Blueprint uses `rgba(20,20,20,…)`; dark-mode shadow layer order also differs. |
+| `minWidth` | 12 | portal panel: mithril `0px` vs Blueprint `auto`. |
 | `color` | 8 | muted/secondary text tokens (ties to the documented `--foreground-muted` AA deltas). |
 | `marginRight` / `paddingRight` / `paddingLeft` | 12 | per-component spacing (date-* inputs, segmented-control, tag-input). |
 | `height` | 4 | popover arrow box-sizing (11px vs 30px — the documented `radix-arrow-box-sizing` delta). |
@@ -114,7 +114,7 @@ components at once. The rest are isolated per-component spacing/size nits.
 ```
 ● alert-panel
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
 ```
 
@@ -123,7 +123,7 @@ components at once. The rest are isolated per-component spacing/size nits.
 ```
 ● alert-panel
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
 ```
 
@@ -136,7 +136,7 @@ components at once. The rest are isolated per-component spacing/size nits.
 ```
 ● card-list-item
     borderBottomColor
-      analyst  rgba(0, 0, 0, 0.102)
+      mithril  rgba(0, 0, 0, 0.102)
       blueprnt rgba(20, 20, 20, 0.102)
 ```
 
@@ -149,9 +149,9 @@ components at once. The rest are isolated per-component spacing/size nits.
 ```
 ● date-input-field
     paddingRight
-      analyst  8px
+      mithril  8px
       blueprnt 0px
-only in analyst:  date-picker-nav, date-picker-weekday, popover-arrow, popover-content
+only in mithril:  date-picker-nav, date-picker-weekday, popover-arrow, popover-content
 ```
 
 **dark:**
@@ -159,13 +159,13 @@ only in analyst:  date-picker-nav, date-picker-weekday, popover-arrow, popover-c
 ```
 ● date-input-day
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(255, 255, 255)
 ● date-input-field
     paddingRight
-      analyst  8px
+      mithril  8px
       blueprnt 0px
-only in analyst:  date-picker-nav, date-picker-weekday, popover-arrow, popover-content
+only in mithril:  date-picker-nav, date-picker-weekday, popover-arrow, popover-content
 ```
 
 - [x] reviewed — see **Resolution (2026-05-31)** at top of file.
@@ -177,15 +177,15 @@ only in analyst:  date-picker-nav, date-picker-weekday, popover-arrow, popover-c
 ```
 ● date-picker-nav
     paddingLeft
-      analyst  0px
+      mithril  0px
       blueprnt 8px
     paddingRight
-      analyst  0px
+      mithril  0px
       blueprnt 8px
     minWidth
-      analyst  auto
+      mithril  auto
       blueprnt 30px
-only in analyst:  time-picker-divider, time-picker-input
+only in mithril:  time-picker-divider, time-picker-input
 ```
 
 **dark:**
@@ -193,22 +193,22 @@ only in analyst:  time-picker-divider, time-picker-input
 ```
 ● date-picker-day
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(255, 255, 255)
 ● date-picker-nav
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(255, 255, 255)
     paddingLeft
-      analyst  0px
+      mithril  0px
       blueprnt 8px
     paddingRight
-      analyst  0px
+      mithril  0px
       blueprnt 8px
     minWidth
-      analyst  auto
+      mithril  auto
       blueprnt 30px
-only in analyst:  time-picker-divider, time-picker-input
+only in mithril:  time-picker-divider, time-picker-input
 ```
 
 - [x] reviewed — see **Resolution (2026-05-31)** at top of file.
@@ -218,7 +218,7 @@ only in analyst:  time-picker-divider, time-picker-input
 **light:**
 
 ```
-only in analyst:  drp-nav-next, drp-nav-prev
+only in mithril:  drp-nav-next, drp-nav-prev
 ```
 
 **dark:**
@@ -226,9 +226,9 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● drp-day
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(255, 255, 255)
-only in analyst:  drp-nav-next, drp-nav-prev
+only in mithril:  drp-nav-next, drp-nav-prev
 ```
 
 - [x] reviewed — see **Resolution (2026-05-31)** at top of file.
@@ -240,7 +240,7 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● dialog-panel
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
 ```
 
@@ -249,7 +249,7 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● dialog-panel
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
 ```
 
@@ -262,7 +262,7 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● drawer-panel
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
 ```
 
@@ -271,11 +271,11 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● drawer-header
     boxShadow
-      analyst  rgba(0, 0, 0, 0.4) 0px 1px 0px 0px
+      mithril  rgba(0, 0, 0, 0.4) 0px 1px 0px 0px
       blueprnt rgba(17, 20, 25, 0.4) 0px 1px 0px 0px
 ● drawer-panel
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
 ```
 
@@ -288,9 +288,9 @@ only in analyst:  drp-nav-next, drp-nav-prev
 ```
 ● hotkey-key
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
-only in analyst:  dialog-body, dialog-close, dialog-header, dialog-panel
+only in mithril:  dialog-body, dialog-close, dialog-header, dialog-panel
 ```
 
 **dark:**
@@ -298,9 +298,9 @@ only in analyst:  dialog-body, dialog-close, dialog-header, dialog-panel
 ```
 ● hotkey-key
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
-only in analyst:  dialog-body, dialog-close, dialog-header, dialog-panel
+only in mithril:  dialog-body, dialog-close, dialog-header, dialog-panel
 ```
 
 - [x] reviewed — see **Resolution (2026-05-31)** at top of file.
@@ -312,9 +312,9 @@ only in analyst:  dialog-body, dialog-close, dialog-header, dialog-panel
 ```
 ● multi-select-tag
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
-only in analyst:  popover-content
+only in mithril:  popover-content
 ```
 
 **dark:**
@@ -322,9 +322,9 @@ only in analyst:  popover-content
 ```
 ● multi-select-tag
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
-only in analyst:  popover-content
+only in mithril:  popover-content
 ```
 
 - [x] reviewed — see **Resolution (2026-05-31)** at top of file.
@@ -336,7 +336,7 @@ only in analyst:  popover-content
 ```
 ● navbar
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 1px 3px 0px, rgba(0, 0, 0, 0.102) 0px 1px 2px -1px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 1px 3px 0px, rgba(0, 0, 0, 0.102) 0px 1px 2px -1px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 1px 3px 0px, rgba(0, 0, 0, 0.102) 0px 1px 2px -1px
 ```
 
@@ -345,7 +345,7 @@ only in analyst:  popover-content
 ```
 ● navbar
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.2) 0px 1px 10px 0px, rgba(0, 0, 0, 0.2) 0px 1px 10px -1px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.2) 0px 1px 10px 0px, rgba(0, 0, 0, 0.2) 0px 1px 10px -1px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.2) 0px 1px 10px 0px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.2) 0px 1px 10px -1px
 ```
 
@@ -358,7 +358,7 @@ only in analyst:  popover-content
 ```
 ● omnibar-panel
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.302) 0px 25px 50px -12px
 ```
 
@@ -371,14 +371,14 @@ only in analyst:  popover-content
 ```
 ● popover-arrow
     height
-      analyst  11px
+      mithril  11px
       blueprnt 30px
 ● popover-content
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
     minWidth
-      analyst  0px
+      mithril  0px
       blueprnt auto
 ```
 
@@ -387,14 +387,14 @@ only in analyst:  popover-content
 ```
 ● popover-arrow
     height
-      analyst  11px
+      mithril  11px
       blueprnt 30px
 ● popover-content
     boxShadow
-      analyst  rgb(94, 95, 97) 0px 0px 0px 1px, rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgb(94, 95, 97) 0px 0px 0px 1px, rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgb(94, 96, 100) 0px 0px 0px 1px, rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
     minWidth
-      analyst  0px
+      mithril  0px
       blueprnt auto
 ```
 
@@ -407,7 +407,7 @@ only in analyst:  popover-content
 ```
 ● sc-default
     minWidth
-      analyst  auto
+      mithril  auto
       blueprnt 0px
 ```
 
@@ -416,11 +416,11 @@ only in analyst:  popover-content
 ```
 ● sc-default
     minWidth
-      analyst  auto
+      mithril  auto
       blueprnt 0px
 ● sc-unselected-segment
     color
-      analyst  rgb(255, 255, 255)
+      mithril  rgb(255, 255, 255)
       blueprnt rgb(171, 179, 191)
 ```
 
@@ -433,7 +433,7 @@ only in analyst:  popover-content
 ```
 ● slider-handle-label
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
 ```
 
@@ -442,14 +442,14 @@ only in analyst:  popover-content
 ```
 ● slider-handle
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(165, 170, 179)
     boxShadow
-      analyst  rgba(255, 255, 255, 0.102) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.2) 0px 1px 2px 0px
+      mithril  rgba(255, 255, 255, 0.102) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.2) 0px 1px 2px 0px
       blueprnt rgba(255, 255, 255, 0.102) 0px 0px 0px 1px inset, rgba(15, 20, 25, 0.2) 0px 1px 2px 0px
 ● slider-handle-label
     boxShadow
-      analyst  rgba(0, 0, 0, 0.4) 0px 2px 4px 0px, rgba(0, 0, 0, 0.4) 0px 8px 24px 0px
+      mithril  rgba(0, 0, 0, 0.4) 0px 2px 4px 0px, rgba(0, 0, 0, 0.4) 0px 8px 24px 0px
       blueprnt rgba(17, 20, 25, 0.4) 0px 2px 4px 0px, rgba(17, 20, 25, 0.4) 0px 8px 24px 0px
 ```
 
@@ -462,14 +462,14 @@ only in analyst:  popover-content
 ```
 ● tag-input-ghost
     color
-      analyst  rgb(28, 33, 39)
+      mithril  rgb(28, 33, 39)
       blueprnt rgb(0, 0, 0)
     fontSize
-      analyst  14px
+      mithril  14px
       blueprnt 13.3333px
 ● tag-input-tag
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
 ```
 
@@ -478,14 +478,14 @@ only in analyst:  popover-content
 ```
 ● tag-input-ghost
     color
-      analyst  rgb(246, 247, 249)
+      mithril  rgb(246, 247, 249)
       blueprnt rgb(165, 170, 179)
     fontSize
-      analyst  14px
+      mithril  14px
       blueprnt 13.3333px
 ● tag-input-tag
     marginRight
-      analyst  0px
+      mithril  0px
       blueprnt 4px
 ```
 
@@ -498,7 +498,7 @@ only in analyst:  popover-content
 ```
 ● time-picker-input
     fontSize
-      analyst  14px
+      mithril  14px
       blueprnt 13.3333px
 ```
 
@@ -507,7 +507,7 @@ only in analyst:  popover-content
 ```
 ● time-picker-input
     fontSize
-      analyst  14px
+      mithril  14px
       blueprnt 13.3333px
 ```
 
@@ -520,11 +520,11 @@ only in analyst:  popover-content
 ```
 ● toast-card
     minWidth
-      analyst  300px
+      mithril  300px
       blueprnt min(300px, 100%)
 ● toast-intent-danger
     minWidth
-      analyst  300px
+      mithril  300px
       blueprnt min(300px, 100%)
 ```
 
@@ -533,17 +533,17 @@ only in analyst:  popover-content
 ```
 ● toast-card
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
     minWidth
-      analyst  300px
+      mithril  300px
       blueprnt min(300px, 100%)
 ● toast-intent-danger
     boxShadow
-      analyst  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
+      mithril  rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset
       blueprnt rgba(255, 255, 255, 0.2) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.302) 0px 20px 25px -5px, rgba(255, 255, 255, 0.302) 0px 0px 0.5px 0px inset, rgba(255, 255, 255, 0.078) 0px 0.5px 0px 0px inset, rgba(0, 0, 0, 0.302) 0px 10px 30px -5px
     minWidth
-      analyst  300px
+      mithril  300px
       blueprnt min(300px, 100%)
 ```
 
@@ -556,14 +556,14 @@ only in analyst:  popover-content
 ```
 ● tooltip-arrow
     height
-      analyst  8px
+      mithril  8px
       blueprnt 22px
 ● tooltip-content
     boxShadow
-      analyst  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
+      mithril  rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
       blueprnt rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, rgba(0, 0, 0, 0.102) 0px 20px 25px -5px, rgba(0, 0, 0, 0.102) 0px 10px 15px -3px
     minWidth
-      analyst  0px
+      mithril  0px
       blueprnt auto
 ```
 
@@ -572,11 +572,11 @@ only in analyst:  popover-content
 ```
 ● tooltip-arrow
     height
-      analyst  8px
+      mithril  8px
       blueprnt 22px
 ● tooltip-content
     minWidth
-      analyst  0px
+      mithril  0px
       blueprnt auto
 ```
 

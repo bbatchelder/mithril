@@ -36,10 +36,10 @@ export type DataTableSelectionMode = "none" | "single" | "multi";
 
 /**
  * DataTable — a virtualized, Blueprint-`Table2`-faithful data grid built on a
- * headless engine (TanStack Table) dressed in analyst-ui's tokens.
+ * headless engine (TanStack Table) dressed in mithril's tokens.
  *
  * Unlike Blueprint's column-children API (`<Table2><Column cellRenderer/></Table2>`),
- * analyst-ui takes a **modern flat `columns` array + `data`** — the native shape of
+ * mithril takes a **modern flat `columns` array + `data`** — the native shape of
  * the engine we wrap, and the idiom of TanStack / AG Grid / MUI DataGrid. Custom
  * renderers, editability, and selection all compose as column-def fields / table state.
  *
@@ -53,7 +53,7 @@ export type DataTableSelectionMode = "none" | "single" | "multi";
  *                              font-size:12px; padding:0 4px; text-align:right; min-width:30px; line-height:20px
  *                              box-shadow: inset 0 -1px 0 <border>, 1px 0 0 <border> (bottom+right)
  *   <border> = rgba(17,20,24,0.15) light · rgba(17,20,24,0.4) dark
- *   cell text = #1c2127 light · #f6f7f9 dark  (== analyst `--foreground`)
+ *   cell text = #1c2127 light · #f6f7f9 dark  (== mithril `--foreground`)
  *
  * This loop (P1.1 / Loop 1) ships the **static, non-virtualized skeleton**: the engine
  * wiring, the public API, the sticky header, the numbered row-header gutter, and the
@@ -208,7 +208,7 @@ function gutterWidth(rowCount: number): number {
     return Math.max(GUTTER_MIN_WIDTH, 8 + digits * 8); // ~8px/digit + 8px padding
 }
 
-/** Map an analyst `DataTableColumn` to a TanStack `ColumnDef`. */
+/** Map an mithril `DataTableColumn` to a TanStack `ColumnDef`. */
 function toColumnDef<TRow>(col: DataTableColumn<TRow>, defaultResizing: boolean): ColumnDef<TRow> {
     const accessorFn =
         typeof col.accessor === "function"
@@ -803,7 +803,7 @@ export function DataTable<TRow>({
                 "outline-none",
                 // Scroll container + outer frame. Blueprint's `.bp6-table-container` draws
                 // its 1px frame with `box-shadow: 0 0 0 1px` (no layout impact) over a
-                // light-gray-5 surface (== analyst `--background`); dark uses #383e47.
+                // light-gray-5 surface (== mithril `--background`); dark uses #383e47.
                 // `select-none`: Blueprint's `.bp6-table-quadrant-scroll-container` disables
                 // text selection so a click-drag selects cells, not text (always on).
                 "relative select-none overflow-auto bg-background text-foreground dark:bg-[#383e47]",

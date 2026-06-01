@@ -44,8 +44,8 @@ endIcon). It consumes `ButtonGroupContext` so it inherits `variant`/`size` defau
   both themes; per-specimen **17 ok · 1 flagged crop region**; full-page SSIM ~0.99.
 - **Accepted sub-perceptual deltas (documented, both inherited from Button, not AnchorButton defects):**
   1. **Disabled muting approach** — the *only* computed-style differ is `anchorbtn-disabled`'s `color`
-     (analyst `#fff` vs Blueprint `rgba(255,255,255,0.6)`) and `backgroundColor` (analyst full primary
-     vs Blueprint `rgba(...,0.5)`). analyst mutes a disabled control with whole-element **`opacity-50`**
+     (mithril `#fff` vs Blueprint `rgba(255,255,255,0.6)`) and `backgroundColor` (mithril full primary
+     vs Blueprint `rgba(...,0.5)`). mithril mutes a disabled control with whole-element **`opacity-50`**
      (Button's own approach), Blueprint mutes via **per-channel alpha**. The harness reads `color`/`bg`
      literally so it flags it, but visually it's near-identical — the disabled crop SSIM is **0.946**
      (up from 0.68 before the muting was added; `boxShadow` now matches `none`). Closing this exactly
@@ -103,7 +103,7 @@ endIcon). It consumes `ButtonGroupContext` so it inherits `variant`/`size` defau
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 pnpm test                              # 227 pass (9 in anchor-button.test.tsx)
 pnpm build                             # green
 tools/compare.sh anchor-button both    # 17 match · 1 differ (disabled opacity-vs-alpha; documented) both themes

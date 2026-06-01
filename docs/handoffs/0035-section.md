@@ -139,7 +139,7 @@ Both light and dark themes: **5 match · 0 differ** — a perfect computed-style
   `border-b` classes.
 
 - **data-compare strategy**: Used `useEffect` in both galleries to tag internal DOM nodes post-mount.
-  Analyst-ui gallery: `querySelector("h6 + div")` for subtitle; `firstElementChild` for header.
+  Mithril-ui gallery: `querySelector("h6 + div")` for subtitle; `firstElementChild` for header.
   Blueprint-reference gallery: standard Blueprint class names (`.bp6-section-header`, `.bp6-section-header-title`, etc.).
 
 - **SectionCard compact prop**: Blueprint's `compact` modifier is on the Section (parent), which cascades

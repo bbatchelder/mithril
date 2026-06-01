@@ -74,7 +74,7 @@ Props: `label?`, `labelFor?`, `labelInfo?`, `subLabel?`, `helperText?`, `intent?
 
 - **Blueprint's Label from @blueprintjs/core is from html.js, not forms** — `Label` exported from `@blueprintjs/core` is `htmlElement("label", "bp6-label")` — a styled forwardRef label, NOT a dedicated forms component. FormGroup renders its own internal label. The standalone Label in our system corresponds to both.
 
-- **No fg-label-disabled-info on blueprint side** — Initially added `data-compare="fg-label-disabled-info"` to blueprint reference but not analyst-ui, causing a "only in blueprint" diff. Fixed by removing it from the reference (disabled label info doesn't need its own specimen since `fg-disabled` covers the disabled color case via the helper text).
+- **No fg-label-disabled-info on blueprint side** — Initially added `data-compare="fg-label-disabled-info"` to blueprint reference but not mithril, causing a "only in blueprint" diff. Fixed by removing it from the reference (disabled label info doesn't need its own specimen since `fg-disabled` covers the disabled color case via the helper text).
 
 ## compare.sh results
 

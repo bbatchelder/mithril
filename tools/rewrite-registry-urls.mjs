@@ -8,7 +8,7 @@
 // So here we rewrite every internal bare-name dep to a full URL pointing back at the
 // same hosted location. Full-URL deps make BOTH install methods work:
 //   • direct URL    → `shadcn add <BASE>/r/button.json`        (no setup)
-//   • namespaced    → `shadcn add @analyst-ui/button`          (one components.json entry)
+//   • namespaced    → `shadcn add @mithril/button`          (one components.json entry)
 // because the namespaced item, once fetched, still resolves its deps by URL.
 //
 // We also copy the source `registry.json` manifest to `dist/r/registry.json` for
@@ -25,7 +25,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "dist", "r");
 
 // The GitHub Pages project site (see vite.config.ts `base`). Trailing slash trimmed.
-const BASE_URL = (process.env.REGISTRY_BASE_URL ?? "https://bbatchelder.github.io/analyst-ui").replace(/\/+$/, "");
+const BASE_URL = (process.env.REGISTRY_BASE_URL ?? "https://bbatchelder.github.io/mithril").replace(/\/+$/, "");
 
 if (!existsSync(OUT_DIR)) {
     console.error(

@@ -79,7 +79,7 @@ Key API differences from Blueprint (by design):
 
 ## Dual-gallery harness approach
 
-**Analyst gallery (`src/App.tsx`):**
+**Mithril gallery (`src/App.tsx`):**
 - Container div with `containerRef` for tagging trigger via `useEffect`
 - First `button` inside containerRef → `tz-trigger`
 - `[data-compare="select-menu"]` (last found) → re-tagged `tz-menu`
@@ -106,10 +106,10 @@ difference (visual appearance of items is identical; content/order is an API-lev
 
 ## Accepted deltas
 
-| Delta | Theme | Element | Analyst | Blueprint | Justification |
+| Delta | Theme | Element | Mithril | Blueprint | Justification |
 |---|---|---|---|---|---|
-| dark text color | dark | `tz-trigger` | `rgb(246,247,249)` | `rgb(255,255,255)` | Established project-wide accepted delta: analyst dark foreground is slightly darker (#f6f7f9 vs white). See `docs/memory/dark-foreground-decision.md`. |
-| dark bg color | dark | `tz-trigger` | `rgb(47,52,60)` | `rgb(48,55,64)` | Established project-wide delta: analyst `dark-gray-3` vs Blueprint `dark-gray-3` sub-perceptual difference. |
+| dark text color | dark | `tz-trigger` | `rgb(246,247,249)` | `rgb(255,255,255)` | Established project-wide accepted delta: mithril dark foreground is slightly darker (#f6f7f9 vs white). See `docs/memory/dark-foreground-decision.md`. |
+| dark bg color | dark | `tz-trigger` | `rgb(47,52,60)` | `rgb(48,55,64)` | Established project-wide delta: mithril `dark-gray-3` vs Blueprint `dark-gray-3` sub-perceptual difference. |
 
 ## compare.sh results
 
@@ -125,7 +125,7 @@ timezone-select · dark:   3 match · 1 differ  (accepted: dark foreground + bg 
 - `tz-item-offset` — MATCH both. "EDT" label: muted text color.
 
 **Orphan keys:**
-- `popover-content` — only in analyst (Popover component hardcodes this on the panel). Blueprint doesn't tag popover panels. Harmless.
+- `popover-content` — only in mithril (Popover component hardcodes this on the panel). Blueprint doesn't tag popover panels. Harmless.
 
 **Select regression (unchanged from 0056 handoff):**
 ```

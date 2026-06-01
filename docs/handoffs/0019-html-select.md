@@ -48,7 +48,7 @@ Children: raw `<option>` elements (appended after options shorthand).
 ### `data-compare` placed on `<select>` via forwardRef
 
 Blueprint's comparison specimen is `select` inside `.bp6-html-select`. Since the component
-forwards ref to `<select>`, the analyst gallery uses `ref={(el) => el?.setAttribute("data-compare", "key")}`.
+forwards ref to `<select>`, the mithril gallery uses `ref={(el) => el?.setAttribute("data-compare", "key")}`.
 Blueprint reference gallery uses `useRef` + `useEffect` to stamp the ref since Blueprint's
 `HTMLSelect` doesn't accept data-* directly on the outer div. Both sides attach to the `<select>`.
 
@@ -95,7 +95,7 @@ html-select · dark:   1 match · 4 differ
 
 All 4 dark diffs are pre-existing accepted deltas that exist identically in `btn-solid-none` dark:
 
-| Property | analyst | blueprint | Δ/ch | Reason |
+| Property | mithril | blueprint | Δ/ch | Reason |
 |----------|---------|-----------|------|--------|
 | `color` | `rgb(246, 247, 249)` | `rgb(255, 255, 255)` | 6–9 | Documented dark foreground decision: our #f6f7f9 vs Blueprint's #ffffff (Memory file) |
 | `backgroundColor` | `rgb(47, 52, 60)` | `rgb(48, 55, 64)` | 1–4 | Blueprint uses color-mix(gray1 40%, black) ≈ #30374; our static dark-gray-3 = #2f343c |

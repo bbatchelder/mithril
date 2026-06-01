@@ -61,7 +61,7 @@ This is **Loop 6 of 7.** Remaining: 7 loading/skeleton + multi-region + polish +
   TSV (spied `navigator.clipboard.writeText`); plus 4 pure `regionToTSV` cases.
 - **Visual** `compare.sh data-table both` — **unchanged** vs Loop 5 (0.993/0.977 basic + editable,
   0.974/0.951 selection, 0.641/0.644 virtual). `tabIndex`/`outline-none` don't touch the resting crop.
-- **Live (analyst gallery):** ArrowDown→ArrowRight from Alice selects Bob's age (`{1,1}`); Shift+ArrowUp
+- **Live (mithril gallery):** ArrowDown→ArrowRight from Alice selects Bob's age (`{1,1}`); Shift+ArrowUp
   extends to the two age cells; Ctrl+C copied `"34\n29"`; in the 1,000-row grid, holding ArrowDown
   drove the focus to "Person 17" and scrolled the viewport to `scrollTop 70` — exactly the computed
   scroll-into-view value for row 16 (`30 + 16·20 + 20 − 300`).
@@ -95,7 +95,7 @@ This is **Loop 6 of 7.** Remaining: 7 loading/skeleton + multi-region + polish +
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 CI=true pnpm install
 CI=true pnpm build && CI=true pnpm test         # green / 325

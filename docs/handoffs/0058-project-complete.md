@@ -1,12 +1,12 @@
 # 0058 — Project complete 🎉
 
 - **Date:** 2026-05-26
-- **Status:** **The full analyst-ui roadmap is COMPLETE.** All 6 phases (54 components) built to Blueprint
+- **Status:** **The full mithril roadmap is COMPLETE.** All 6 phases (54 components) built to Blueprint
   v6.15 fidelity, verified in both light and dark themes, and merged to `main`.
 
 ## What this is
 
-analyst-ui — a from-scratch, pixel-faithful reimplementation of Palantir Blueprint v6.15's design
+mithril — a from-scratch, pixel-faithful reimplementation of Palantir Blueprint v6.15's design
 language with a fresh, modern API (React 19 · TypeScript · Vite · Tailwind v4 CSS-first `@theme` ·
 Radix primitives · CVA; shadcn-style component ownership). Blueprint was the **design spec only** — not
 a fork. Every component was verified against a live `@blueprintjs/core`/`select`/`datetime` v6.15 gallery
@@ -29,7 +29,7 @@ Per-component handoffs: `docs/handoffs/0004`–`0057`.
 
 ## Dependencies added
 
-- Analyst (`package.json`): `@radix-ui/react-{dialog,popover,tooltip,toast,context-menu,slider,slot}`,
+- Mithril (`package.json`): `@radix-ui/react-{dialog,popover,tooltip,toast,context-menu,slider,slot}`,
   Floating UI (via Radix), `class-variance-authority`, `react-day-picker` (calendar engine), `clsx`/`tailwind-merge`.
 - Reference gallery only (`tools/blueprint-reference/`): `@blueprintjs/core`, `@blueprintjs/select`,
   `@blueprintjs/datetime`, `react-transition-group` — used solely as the comparison spec.
@@ -46,13 +46,13 @@ Per-component handoffs: `docs/handoffs/0004`–`0057`.
 - **`useQueryList<T>`** (in `select.tsx`) — the filtering/active-item/keyboard engine reused by
   Select/Suggest/MultiSelect/Omnibar/TimezoneSelect.
 - **Compact react-day-picker calendars**: no `w-full` on the grid, `inline-block` root, 30px day cells.
-- **Verification discipline**: a green "N match" is hollow if core sub-elements show `only in analyst`
+- **Verification discipline**: a green "N match" is hollow if core sub-elements show `only in mithril`
   (unpaired) — internals are tagged on both sides and every component was eyeballed in both themes.
 
 ## Accepted sub-perceptual deltas (project-wide, documented)
 
 - Dark none-intent `--foreground` `#f6f7f9` (rgb 246,247,249) vs Blueprint's pure white — an intentional
-  design decision (kept analyst's slightly-softer dark text).
+  design decision (kept mithril's slightly-softer dark text).
 - Shadow/divider base color: pure black `rgb(0,0,0)` vs Blueprint's near-black `~rgb(17,20,24)/(20,20,20)`
   at low alpha — sub-perceptual.
 - Dark default-button bg `rgb(47,52,60)` vs `rgb(48,55,64)` (≤4/channel).

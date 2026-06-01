@@ -2,7 +2,7 @@
 
 - **Date:** 2026-05-29
 - **Focus:** The recurring dark-mode `backgroundColor` flag on default ("none") controls —
-  analyst rendered `dark-gray-3` (#2f343c = rgb 47,52,60) where Blueprint's oklch-derived
+  mithril rendered `dark-gray-3` (#2f343c = rgb 47,52,60) where Blueprint's oklch-derived
   default-control surface resolves to **rgb(48,55,64) = #303740**. Imperceptible (≤4/channel)
   but flagged on button / numeric-input / html-select / file-input every dark run.
 - **Branch / commit:** `public-readiness` @ `32c6fd7` going in.
@@ -12,11 +12,11 @@
 The dark "known-intentional delta" on these components was actually **two** things the harness
 reported on the same elements:
 
-1. **Delta #1 — foreground text/icon color:** analyst `#f6f7f9` (light-gray-5) vs Blueprint
+1. **Delta #1 — foreground text/icon color:** mithril `#f6f7f9` (light-gray-5) vs Blueprint
    near-white `#ffffff`. A deliberate aesthetic choice (see [[dark-foreground-decision]]) — **kept**.
-2. **Delta #2 — control background:** analyst flat `dark-gray-3` (#2f343c) vs Blueprint's
+2. **Delta #2 — control background:** mithril flat `dark-gray-3` (#2f343c) vs Blueprint's
    oklch-derived `--bp-surface-background-color-default-rest` → **rgb(48,55,64)**. Not a decision,
-   just analyst using the flat palette value where Blueprint derives a hair lighter. **This loop closes it.**
+   just mithril using the flat palette value where Blueprint derives a hair lighter. **This loop closes it.**
 
 ## Why dark-gray-3 needed surgical treatment
 

@@ -479,7 +479,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                     }}
                     classNames={{
                         // CRITICAL: inline-block on root prevents flex-stretch (compact fix)
-                        root: "rdp-analyst-range inline-block",
+                        root: "rdp-mithril-range inline-block",
                         months: "flex flex-row gap-4",
                         month: "flex flex-col mx-1",
                         month_caption: "",

@@ -13,10 +13,10 @@ The registry now builds into the deployed output and is installable two ways, bo
 
 ```bash
 # 1. Direct URL — zero consumer config:
-npx shadcn@latest add https://bbatchelder.github.io/analyst-ui/r/button.json
+npx shadcn@latest add https://bbatchelder.github.io/mithril/r/button.json
 
 # 2. Namespaced — one components.json `registries` entry, then short names:
-npx shadcn@latest add @analyst-ui/button
+npx shadcn@latest add @mithril/button
 ```
 
 Both pull the full transitive closure (e.g. `select` → popover + menu + input-group + icon + types +
@@ -31,11 +31,11 @@ can't resolve against our host. So the pipeline is:
 1. **`shadcn build registry.json --output dist/r`** (official CLI, pinned **4.9.0** via `pnpm dlx`) — emits
    one `<name>.json` per item with `files[].content` inlined.
 2. **`tools/rewrite-registry-urls.mjs`** (new, dependency-free) — rewrites every internal bare-name dep
-   → `https://bbatchelder.github.io/analyst-ui/r/<name>.json`, and copies the source `registry.json` to
+   → `https://bbatchelder.github.io/mithril/r/<name>.json`, and copies the source `registry.json` to
    `dist/r/registry.json` for discoverability. Base URL overridable via `REGISTRY_BASE_URL` (used for local
    testing against `http://localhost:PORT`).
 
-**Why full-URL deps (not the `@analyst-ui` namespace) inside the items:** URL deps make *both* install
+**Why full-URL deps (not the `@mithril` namespace) inside the items:** URL deps make *both* install
 methods work. The direct-URL install resolves them with no config; the namespaced install fetches the same
 item (whose deps are still URLs) and resolves those too. Namespaced deps would have *required* config even
 for the URL install. (`registries` namespace is purely a consumer-side `{name}`→URL convenience.)
@@ -65,7 +65,7 @@ for the URL install. (`registries` namespace is purely a consumer-side `{name}`�
   (`button` → icon/spinner/types/utils/tokens; `select` → input-group/menu/popover/utils/tokens).
 - **End-to-end install** into a fresh scratch project (local server, `REGISTRY_BASE_URL=http://localhost:8077`):
   - Direct URL: `shadcn add …/r/select.json` → 9 files (full transitive closure).
-  - Namespace: `shadcn add @analyst-ui/button` → created spinner + button, **skipped** the 5 shared deps
+  - Namespace: `shadcn add @mithril/button` → created spinner + button, **skipped** the 5 shared deps
     already present (dedup works across methods).
 - `dist/` is gitignored — no build artifacts committed.
 
@@ -77,7 +77,7 @@ for the URL install. (`registries` namespace is purely a consumer-side `{name}`�
   `pnpm dlx shadcn@4.9.0` invocation** (they have network). If `pnpm dlx` ever flakes, switch the script to
   `npx -y shadcn@4.9.0` (equivalent) or vendor `shadcn` as a devDep once the pnpm store is reconciled.
 - **First deploy:** merging `public-readiness` → main triggers `deploy.yml`, which will publish `/r` for the
-  first time. Worth a manual `shadcn add https://bbatchelder.github.io/analyst-ui/r/button.json` against the
+  first time. Worth a manual `shadcn add https://bbatchelder.github.io/mithril/r/button.json` against the
   live URL to confirm Pages serves the JSON with the right content-type (Pages serves `.json` fine; just
   confirm).
 - Pages must be enabled for the repo (it already is — the gallery deploys today).
@@ -95,12 +95,12 @@ Phase C P2.1 ✅ · P2.3 ✅ · P2.4 ✅. Remaining release-readiness items, rou
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm build && pnpm test          # green / 240
 pnpm build:registry              # needs network (pnpm dlx shadcn@4.9.0) → emits dist/r
 # Then to sanity-check an install after deploy:
-#   npx shadcn@latest add https://bbatchelder.github.io/analyst-ui/r/button.json   (into a scratch project)
+#   npx shadcn@latest add https://bbatchelder.github.io/mithril/r/button.json   (into a scratch project)
 ```
 
 - New files: `tools/rewrite-registry-urls.mjs`, `.github/workflows/ci.yml`,

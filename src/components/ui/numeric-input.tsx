@@ -31,8 +31,8 @@ import { InputGroup, type InputGroupIntent, type InputGroupSize } from "./input-
  * (same solid intent colors as Button). This is applied via the intent prop.
  *
  * Dark theme known-intentional deltas (same as Button component):
- *   - color: analyst rgb(246,247,249) vs blueprint rgb(255,255,255) — dark foreground decision
- *   - backgroundColor: analyst rgb(47,52,60) vs blueprint rgb(48,55,64) — color-mix vs static value
+ *   - color: mithril rgb(246,247,249) vs blueprint rgb(255,255,255) — dark foreground decision
+ *   - backgroundColor: mithril rgb(47,52,60) vs blueprint rgb(48,55,64) — color-mix vs static value
  *
  * @see https://blueprintjs.com/docs/#core/components/numeric-input
  */

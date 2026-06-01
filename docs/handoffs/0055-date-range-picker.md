@@ -83,7 +83,7 @@ Key differences from Blueprint's implementation (by design):
 
 ## Dual-gallery harness approach
 
-**Analyst gallery (`src/App.tsx`):**
+**Mithril gallery (`src/App.tsx`):**
 - Fixed range: `DRP_START = Jan 8, 2026`, `DRP_END = Jan 20, 2026`
 - The component auto-initializes to January 2026 (left) from the start date; February 2026 (right) is the contiguous next month
 - `data-compare` keys stamped directly in the custom `DayButton` component based on day number
@@ -102,13 +102,13 @@ Key differences from Blueprint's implementation (by design):
 
 ## Accepted deltas
 
-- **`drp-day` dark color: analyst `rgb(246,247,249)` vs Blueprint `rgb(255,255,255)`.**
-  Known dark foreground delta from project memory — analyst uses `#f6f7f9` (light-gray-5) as
+- **`drp-day` dark color: mithril `rgb(246,247,249)` vs Blueprint `rgb(255,255,255)`.**
+  Known dark foreground delta from project memory — mithril uses `#f6f7f9` (light-gray-5) as
   dark text color; Blueprint reference renders pure white. **KNOWN ACCEPTED DELTA.**
 
 ## Orphan keys (harmless)
 
-- **`only in analyst: drp-nav-next, drp-nav-prev`** — the `NavButton` components in the custom
+- **`only in mithril: drp-nav-next, drp-nav-prev`** — the `NavButton` components in the custom
   `DateRangePickerCaption` are tagged with `data-compare="drp-nav-prev"` and `data-compare="drp-nav-next"`.
   The Blueprint reference gallery doesn't tag its nav buttons. These appear as orphans but do NOT
   affect the match/differ counts. **ORPHAN KEYS — HARMLESS.**

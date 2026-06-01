@@ -46,7 +46,7 @@ Built `src/components/ui/checkbox.tsx` with clean modern API supporting `checked
 
 - **Box-shadow alpha color must match Blueprint's `$black`** — Blueprint's `rgba($black, 0.2) = rgba(#111418, 0.2) = rgba(17,20,24,0.2)`. The harness color tolerance is ±3/channel. Using `rgba(0,0,0,0.2)` (pure black) would differ by 17 in the R channel and fail. Always use the exact Blueprint `$black` value.
 
-- **Canvas rounding of `rgba(255,255,255,0.1)`** — In dark theme, the checked shadow is `rgba(255,255,255,0.1)`. Canvas renders this as `rgba(255,255,255,0.102)` (float rounding) on the analyst side and similarly on Blueprint. Both are within the ±0.06 alpha tolerance.
+- **Canvas rounding of `rgba(255,255,255,0.1)`** — In dark theme, the checked shadow is `rgba(255,255,255,0.1)`. Canvas renders this as `rgba(255,255,255,0.102)` (float rounding) on the mithril side and similarly on Blueprint. Both are within the ±0.06 alpha tolerance.
 
 ## Next steps
 

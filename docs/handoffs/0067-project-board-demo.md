@@ -1,6 +1,6 @@
 # Handoff: Project Board (kanban) demo app
 
-> Branch: `demo-apps` · Worktree: `../analyst-ui-demo-apps`
+> Branch: `demo-apps` · Worktree: `../mithril-demo-apps`
 > Continues the **example demo applications** stream started in `0066-soc-demo-app.md`.
 
 ## TL;DR — current state

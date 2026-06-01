@@ -20,7 +20,7 @@ Removed `lucide-react` entirely: the `Button` loading spinner now uses our own `
     Blueprint's own generated path files, so the port can't introduce a visual regression.
   - `tools/compare.sh button both` → clean except the three **pre-existing, documented** dark deltas
     (the `#f6f7f9` foreground decision + ≤4/channel default-bg). Loading-spinner specimen eyeballed in the
-    `button.light.analyst.png` screenshot: white spinner head centered on the primary fill (matches
+    `button.light.mithril.png` screenshot: white spinner head centered on the primary fill (matches
     Blueprint's `.bp6-button-spinner .bp6-spinner-head { stroke: $text-color }`).
   - `pnpm build` + `pnpm typecheck` green.
 - **Not yet done:** not committed/pushed; no PR opened (left to the user).

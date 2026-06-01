@@ -82,7 +82,7 @@ This is **Loop 3 of the 7-loop P1.1 phase.** Remaining: 4 resize/reorder, 5 edit
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm install
 pnpm build && pnpm test                       # green / 297

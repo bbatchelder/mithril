@@ -91,7 +91,7 @@ All four use `forwardRef` and forward all HTML div attributes.
 
 ## Accepted deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | navbar | boxShadow | `rgba(0, 0, 0, 0.102) 0px 0px 0px 1px, ...` | `rgba(20, 20, 20, 0.102) 0px 0px 0px 1px, ...` | First shadow layer: pure black (#000000) vs near-black (#141414). Our `--elevation-1` uses `rgba(0,0,0,0.1)`; Blueprint computed output uses `rgba(20,20,20,0.1)`. Sub-perceptual — 10% opacity, both essentially black. Same delta in all Card elevations. |
 | Dark | navbar | boxShadow | Same layers, different order: `-1px` layer is 3rd vs 5th | Blueprint orders the `-1px` layer last | Shadow layers have same values; CSS rendering order differs between how Blueprint SCSS vs our CSS token concatenates elevation + highlight layers. Sub-perceptual, same as prior components. |

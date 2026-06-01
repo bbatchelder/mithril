@@ -54,7 +54,7 @@ Blueprint v6.15 does NOT solve this — their portaled dialog ignores `.bp6-dark
 ### How the harness reaches portaled content
 `document.querySelectorAll("[data-compare]")` searches the ENTIRE document including `document.body` descendants. Since Radix Portal renders to `document.body`, portaled elements with `data-compare` attributes ARE reachable. No special handling needed — just ensure the dialog is OPEN at screenshot time.
 
-**Analyst-ui side**: Use `defaultOpen={true}` on Dialog.
+**Mithril-ui side**: Use `defaultOpen={true}` on Dialog.
 
 **Blueprint reference side**: Use `isOpen={true}` + `containerRef` to get a ref to `.bp6-dialog-container`, then use `useEffect` + `querySelector` to setAttribute `data-compare` on inner nodes after mount.
 
@@ -175,7 +175,7 @@ Radix Dialog.Portal accepts a `container` prop but we don't use it — we wrap t
 
 3. **Blueprint reference side**: Use `containerRef` (or equivalent) + `useEffect` + `querySelector` to setAttribute `data-compare` on inner portaled nodes after mount.
 
-4. **Blueprint's portals don't go dark** — their portaled components always render in light mode even with `.bp6-dark` on the app root. All dark diffs between analyst (correctly dark) and blueprint (incorrectly light) in portaled components are KNOWN-INTENTIONAL.
+4. **Blueprint's portals don't go dark** — their portaled components always render in light mode even with `.bp6-dark` on the app root. All dark diffs between mithril (correctly dark) and blueprint (incorrectly light) in portaled components are KNOWN-INTENTIONAL.
 
 5. **The harness reaches portaled content automatically** — `document.querySelectorAll("[data-compare]")` finds all elements in `document.body` including Radix portals.
 
@@ -187,7 +187,7 @@ If `title` is `null`/`undefined`, no header is rendered (no icon, no close butto
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | dialog-panel | boxShadow (first layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | Token uses pure black; Blueprint uses `$black=#111418`. Sub-perceptual. |
 | Dark | dialog-panel | backgroundColor | `rgb(28,33,39)` | `rgb(246,247,249)` | Blueprint's portal bug: portaled dialog ignores `.bp6-dark`. Ours is correct. |
@@ -234,7 +234,7 @@ dialog · dark:   1 match · 4 differ  — all 4 KNOWN-INTENTIONAL portal+dark-m
 The worker's "all dark diffs are Blueprint's portal limitation, ours is correct" conclusion was **wrong** and masked a real bug. Corrected during review:
 
 1. **Blueprint DOES support dark portals** via the `portalClassName` prop (`OverlayProps.portalClassName`). The reference gallery now passes `portalClassName={Classes.DARK}` when `?theme=dark`, so Blueprint's portaled dialog renders dark — giving a **valid** dark comparison. **All future overlay reference galleries must do the same.**
-2. Once the reference rendered dark, it revealed the analyst dialog had **dark text on dark bg** in dark mode — the panel didn't set `text-foreground`, so it inherited `<body>`'s LIGHT `--foreground` (the documented Card gotcha). **Fix: added `text-foreground` to the panel.** Every portaled surface must set its own `text-foreground`.
+2. Once the reference rendered dark, it revealed the mithril dialog had **dark text on dark bg** in dark mode — the panel didn't set `text-foreground`, so it inherited `<body>`'s LIGHT `--foreground` (the documented Card gotcha). **Fix: added `text-foreground` to the panel.** Every portaled surface must set its own `text-foreground`.
 3. The dialog used `shadow-elevation-3`, which lacks Blueprint's dark white inset edge-highlights and uses a pure-black base. **Fix: switched to `shadow-card-3`** (Card already tuned that token with the correct base + dark insets). **Use `shadow-card-N` for overlay panels, not `shadow-elevation-N`.**
 
 **Remaining accepted deltas (real, sub-perceptual):** light panel shadow first-layer base `rgb(0,0,0)` vs `rgb(20,20,20)` @0.1α (≈2/ch effective); dark panel shadow = identical layers in different string order (visually identical, harness string-compares); `dialog-close` color = the intentional dark-foreground decision (#f6f7f9 vs white).

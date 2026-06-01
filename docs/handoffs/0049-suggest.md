@@ -129,7 +129,7 @@ const [selected, setSelected] = useState<string | null>(null);
 
 ## Accepted deltas
 
-- **`only in analyst: popover-content`**: Radix's portaled popover wrapper element has
+- **`only in mithril: popover-content`**: Radix's portaled popover wrapper element has
   `data-compare="popover-content"` from the Popover component's own `data-compare`. It has no
   Blueprint counterpart and is simply ignored by the diff.
 

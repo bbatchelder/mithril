@@ -1,4 +1,4 @@
-# analyst-ui
+# mithril
 
 A modern, **pixel-faithful** reimplementation of [Palantir Blueprint](https://github.com/palantir/blueprint)'s
 design language — rebuilt from scratch on a contemporary foundation, then distributed shadcn-style so you
@@ -14,7 +14,7 @@ Blueprint is treated as a **design spec, not a code source**. We port its visual
 elevation, typography, motion — precisely, then re-implement every component with a clean, modern API.
 The legacy SCSS/BEM machinery is left behind entirely.
 
-> 🔗 **Live demo:** https://bbatchelder.github.io/analyst-ui/
+> 🔗 **Live demo:** https://bbatchelder.github.io/mithril/
 >
 > Ported tokens derive from Blueprint (Apache-2.0). See [`LICENSE`](./LICENSE) and [`NOTICE`](./NOTICE) for attribution.
 
@@ -31,13 +31,13 @@ be straight about that than oversell — so before adopting, read the honest com
 
 ### Honest comparison vs. Blueprint
 
-- **[analyst-ui vs. Blueprint — an honest appraisal](./docs/comparison-vs-blueprint.md)** — an
+- **[mithril vs. Blueprint — an honest appraisal](./docs/comparison-vs-blueprint.md)** — an
   evidence-backed look at where each library wins, its limitations, and a decision guide for *which to
   pick for your project*.
 - **[Roadmap to a hands-down recommendation](./docs/blueprint-parity-roadmap.md)** — the prioritized plan
   to close every gap (accessibility, tests, completeness, distribution).
 
-In one line: analyst-ui wins the **authoring experience** (cleaner API, ~16.6 KB CSS, lean deps, owned
+In one line: mithril wins the **authoring experience** (cleaner API, ~16.6 KB CSS, lean deps, owned
 source, React 19); Blueprint still wins on **engineering maturity** (out-of-the-box accessibility,
 breadth — incl. a data grid — and a real test suite). Choose accordingly.
 
@@ -69,7 +69,7 @@ any component with a URL hash (e.g. `#button`).
 Beyond the per-component gallery, the **Demos** toggle in the sidebar shows full example applications that
 compose the owned components into realistic product UIs (deep-link with `#demo-<id>`):
 
-- **SOC Console** (`#demo-soc`) — a security-operations analyst console: alert queue table, investigation
+- **SOC Console** (`#demo-soc`) — a security-operations mithril console: alert queue table, investigation
   drawer with tabs, filters, and toasts.
 - **Project Board** (`#demo-board`) — a kanban board with drag-and-drop between columns, label/assignee
   filtering, a new-task dialog, and an inline-editable task detail panel.
@@ -84,7 +84,7 @@ Each demo lives under `src/demos/<slug>/` and is registered in `src/demos/regist
 
 ## Using the components
 
-analyst-ui follows the shadcn model: you copy the source into your own project and own it from then on.
+mithril follows the shadcn model: you copy the source into your own project and own it from then on.
 
 > **Prerequisite:** the components are styled with Tailwind v4 utility classes and are inert without it —
 > your project must be on **Tailwind v4**. This is a deliberate trade (see the
@@ -93,28 +93,28 @@ analyst-ui follows the shadcn model: you copy the source into your own project a
 
 ### Install via the shadcn registry (recommended)
 
-The registry is hosted at **`https://bbatchelder.github.io/analyst-ui/r/`** — one entry per component,
+The registry is hosted at **`https://bbatchelder.github.io/mithril/r/`** — one entry per component,
 with its npm `dependencies` and cross-component `registryDependencies` (e.g. `Select` pulls in `Popover`,
 `Menu`, and `InputGroup`; everything pulls in the design tokens + `cn`) resolved automatically. Two ways
 to install — both fetch transitive dependencies for you:
 
 ```bash
 # 1. Direct URL — zero config:
-npx shadcn@latest add https://bbatchelder.github.io/analyst-ui/r/button.json
+npx shadcn@latest add https://bbatchelder.github.io/mithril/r/button.json
 ```
 
 ```jsonc
 // 2. Namespaced — add this once to your components.json…
 {
   "registries": {
-    "@analyst-ui": "https://bbatchelder.github.io/analyst-ui/r/{name}.json"
+    "@mithril": "https://bbatchelder.github.io/mithril/r/{name}.json"
   }
 }
 ```
 
 ```bash
 # …then install by short name (and tab-complete the rest):
-npx shadcn@latest add @analyst-ui/button @analyst-ui/select
+npx shadcn@latest add @mithril/button @mithril/select
 ```
 
 > The components are styled with Tailwind v4 — make sure `@import "tailwindcss";` is in your CSS before

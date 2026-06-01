@@ -18,7 +18,7 @@ established by Dialog and Alert. Registered in both galleries under `id="drawer"
 
 ## Portal + dark-mode rules applied (all 4)
 
-1. **Analyst portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
+1. **Mithril portal children wrapped in `<div className={dark?'dark':''} style={{pointerEvents:'none'}}>`**
    — implemented directly in drawer.tsx (same as dialog.tsx and alert.tsx). Passes `dark` from DarkContext
    in DrawerGallery.
 
@@ -133,23 +133,23 @@ Drawer doesn't export a separate DrawerBody component). This correctly maps to o
 
 ## Gotchas / things to know
 
-### drawer-close "only in analyst" note
-The harness reports `only in analyst: drawer-close` — this means `data-compare="drawer-close"` exists
+### drawer-close "only in mithril" note
+The harness reports `only in mithril: drawer-close` — this means `data-compare="drawer-close"` exists
 on our close button but not on Blueprint's (we don't tag it in the reference gallery because Blueprint's
 close button is deep inside the portaled DOM with no easy selector). The harness doesn't diff it — it
 just notes the key exists only on one side. This is fine and expected.
 
 ### Blueprint dark drawer uses elevation-3 shadow, not elevation-4
-Per `$pt-dark-dialog-box-shadow = $pt-dark-elevation-shadow-3`. Analyst uses card-4 which is elevation-4
+Per `$pt-dark-dialog-box-shadow = $pt-dark-elevation-shadow-3`. Mithril uses card-4 which is elevation-4
 dark. The layers differ but both are sub-perceptual; screenshots confirm visual match.
 
 ### Header dark divider base color sub-perceptual delta
-`rgba(0,0,0,0.4)` (analyst, pure black) vs `rgba(17,20,25,0.4)` (Blueprint, $black=#111418). Same
+`rgba(0,0,0,0.4)` (mithril, pure black) vs `rgba(17,20,25,0.4)` (Blueprint, $black=#111418). Same
 pattern as dialog/alert dividers. At 40% opacity the difference is invisible.
 
 ## Accepted Deltas
 
-| Theme | Specimen | Property | Analyst | Blueprint | Why |
+| Theme | Specimen | Property | Mithril | Blueprint | Why |
 |---|---|---|---|---|---|
 | Light | drawer-panel | boxShadow (1st layer) | `rgba(0,0,0,0.102)` | `rgba(20,20,20,0.102)` | Token uses pure black; Blueprint uses `$black=#111418`. Sub-perceptual. |
 | Dark | drawer-header | boxShadow | `rgba(0,0,0,0.4) 0px 1px 0px` | `rgba(17,20,25,0.4) 0px 1px 0px` | Same base-color delta. Sub-perceptual. |

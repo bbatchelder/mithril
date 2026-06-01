@@ -83,7 +83,7 @@ optional action button. Supports vertical (default) and horizontal layouts, thre
 | Root `height` + `width` | `100%` | `.bp6-non-ideal-state { height: 100%; width: 100% }` |
 | Root `color` (light) | `#5f6b7c` (gray-1) | `$pt-text-color-muted = $gray1` |
 | Root `color` (dark) | `#abb3bf` (gray-4) | `$pt-dark-text-color-muted = $gray4` |
-| Gap between children | `20px` | `$pt-spacing * 5 = 4px × 5` (via margin-bottom in Blueprint; CSS gap in analyst) |
+| Gap between children | `20px` | `$pt-spacing * 5 = 4px × 5` (via margin-bottom in Blueprint; CSS gap in mithril) |
 | Child `max-width` | `400px` | `$pt-spacing * 100 = 400px` |
 | Visual color | `#8f99a8` (gray-3) | `.bp6-non-ideal-state-visual { color: $gray3 }` |
 | Horizontal layout | `flex-direction: row; text-align: left` | `.bp6-non-ideal-state-horizontal` |
@@ -114,7 +114,7 @@ optional action button. Supports vertical (default) and horizontal layouts, thre
   We do the same: if description is a string/number, we wrap it in a `<div>`.
 - **CVA for layout variants**: Vertical vs horizontal are the only variant. Simple `cva` with the
   `layout` variant handles both.
-- **Icon pitfall — vendored subset**: The analyst-ui `Icon` component only supports icon names from the
+- **Icon pitfall — vendored subset**: The mithril `Icon` component only supports icon names from the
   vendored `ICON_GLYPHS` subset. Icon name `"folder-open"` is valid in Blueprint but not vendored;
   the gallery uses `"folder-close"` instead. Blueprint's `NonIdealState` accepts any Blueprint `IconName`.
 - **Blueprint's NonIdealState doesn't forward htmlProps**: In the Blueprint reference gallery, we wrap
@@ -126,7 +126,7 @@ optional action button. Supports vertical (default) and horizontal layouts, thre
 None. Both themes: 2 match · 0 differ.
 
 Minor visual observations (not diffed by harness, accepted):
-- `folder-close` glyph differs slightly between analyst's vendored paths and Blueprint's — this is the same
+- `folder-close` glyph differs slightly between mithril's vendored paths and Blueprint's — this is the same
   icon name, just slightly different path data in the vendored subset vs Blueprint's full icon package.
   Visual appearance is equivalent (both render a closed folder).
 - Blueprint's `NonIdealState` visual section renders `fontSize + lineHeight` as inline styles on the wrapper

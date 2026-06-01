@@ -27,7 +27,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /**
  * Blueprint reference for Button. The `data-compare="<key>"` keys MUST match the
- * analyst-ui gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
+ * mithril gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
  */
 function ButtonGallery() {
     return (
@@ -82,7 +82,7 @@ function ButtonGallery() {
 }
 
 /**
- * Blueprint reference for ButtonGroup. `data-compare` keys MUST match analyst-ui's
+ * Blueprint reference for ButtonGroup. `data-compare` keys MUST match mithril's
  * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
  */
 function ButtonGroupGallery() {
@@ -148,7 +148,7 @@ function ButtonGroupGallery() {
 }
 
 /**
- * Blueprint reference for Card. `data-compare` keys MUST match analyst-ui's gallery.
+ * Blueprint reference for Card. `data-compare` keys MUST match mithril's gallery.
  * Compared cards use a fixed box so the diff targets card chrome, not content height.
  * Blueprint shows the selection ring only on an interactive + selected card.
  */
@@ -184,7 +184,7 @@ function CardGallery() {
 }
 
 /**
- * Blueprint reference for AnchorButton. `data-compare` keys MUST match analyst-ui's
+ * Blueprint reference for AnchorButton. `data-compare` keys MUST match mithril's
  * gallery (src/App.tsx) one-for-one — the harness pairs specimens by key.
  */
 function AnchorButtonGallery() {
@@ -229,7 +229,7 @@ function AnchorButtonGallery() {
 const ICON_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for Icon. `data-compare` keys MUST match analyst-ui's gallery.
+ * Blueprint reference for Icon. `data-compare` keys MUST match mithril's gallery.
  * Blueprint's Icon wraps a <span> + <svg>; intent sets fill color via CSS class.
  */
 function IconGallery() {
@@ -282,12 +282,12 @@ function IconGallery() {
 
 /**
  * Blueprint reference for Text. Uses Blueprint's canonical typography classes.
- * `data-compare` keys MUST match analyst-ui's TextGallery one-for-one.
+ * `data-compare` keys MUST match mithril's TextGallery one-for-one.
  *
  * Blueprint body/muted/disabled/large/small: class-based (no Text component needed).
  * Blueprint headings: h1–h6 with .bp6-heading class.
  * Blueprint ellipsize: <Text ellipsize> component.
- * Content and widths must be identical to analyst-ui side.
+ * Content and widths must be identical to mithril side.
  */
 function TextGallery() {
     return (
@@ -351,8 +351,8 @@ function TextGallery() {
 }
 
 /**
- * Blueprint reference for Divider. `data-compare` keys MUST match analyst-ui's DividerGallery.
- * Container layout (flexDirection, height, width) MUST be identical to the analyst side.
+ * Blueprint reference for Divider. `data-compare` keys MUST match mithril's DividerGallery.
+ * Container layout (flexDirection, height, width) MUST be identical to the mithril side.
  * Blueprint's bp6-divider: border-bottom + border-right 1px solid rgba(black,0.15);
  * margin: 10px; dark: rgba(white,0.2). compact: margin 0.
  */
@@ -397,7 +397,7 @@ function DividerGallery() {
  * The harness runs after networkidle, so the attributes will be present.
  *
  * Value=0.5 on all compared specimens (50% arc → dashoffset=140). Keys must match
- * analyst-ui's SpinnerGallery exactly.
+ * mithril's SpinnerGallery exactly.
  */
 const BP_SPINNER_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
 
@@ -491,8 +491,8 @@ function SpinnerGallery() {
  * meter (.bp6-progress-meter) after mount. The harness runs after networkidle.
  *
  * Value=0.6 on intent specimens, 0.5/0.25/0.75 on default specimens.
- * All are wrapped in 200px containers to match analyst-ui side exactly.
- * Keys must match analyst-ui's ProgressBarGallery exactly.
+ * All are wrapped in 200px containers to match mithril side exactly.
+ * Keys must match mithril's ProgressBarGallery exactly.
  */
 const BP_PB_INTENTS: Intent[] = ["primary", "success", "warning", "danger"];
 
@@ -584,7 +584,7 @@ function ProgressBarGallery() {
  * For the keyed diff specimens, we use animation:none inline so the background
  * is frozen at the start color (rgba(211,216,222,0.2)) — deterministically comparable.
  *
- * Keys match analyst-ui's SkeletonGallery exactly:
+ * Keys match mithril's SkeletonGallery exactly:
  *   skeleton-box  — 120×16px (h-4/w-[120px])
  *   skeleton-line — 200×12px (h-3/w-[200px])
  *
@@ -642,7 +642,7 @@ function SkeletonGallery() {
 const TAG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for Tag. `data-compare` keys MUST match analyst-ui's TagGallery.
+ * Blueprint reference for Tag. `data-compare` keys MUST match mithril's TagGallery.
  *
  * Blueprint's Tag doesn't forward data-* to the outer span, so we use useRef+useEffect
  * to set data-compare on the .bp6-tag element after mount — same pattern as TaggedSpinner.
@@ -751,9 +751,9 @@ function TagGallery() {
 const CALLOUT_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for Callout. `data-compare` keys MUST match analyst-ui's CalloutGallery.
+ * Blueprint reference for Callout. `data-compare` keys MUST match mithril's CalloutGallery.
  * Blueprint's Callout spreads htmlProps on the outer div, so data-compare is forwarded directly.
- * All keyed specimens use a fixed width of 320px identical to the analyst-ui side.
+ * All keyed specimens use a fixed width of 320px identical to the mithril side.
  *
  * The harness diffs: backgroundColor, color, paddingTop, paddingBottom, paddingLeft,
  * paddingRight, borderRadius, fontSize, lineHeight.
@@ -820,12 +820,12 @@ function CalloutGallery() {
 const IG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for InputGroup. `data-compare` keys MUST match analyst-ui's InputGroupGallery.
+ * Blueprint reference for InputGroup. `data-compare` keys MUST match mithril's InputGroupGallery.
  * Blueprint's InputGroup wraps an <input> inside a div; data-compare must go on the <input>
  * (the .bp6-input element). Blueprint does not directly forward arbitrary props to the inner input,
  * so we use a ref + useEffect approach to add the data-compare attribute after mount.
  *
- * Fixed width of 200px on all specimens (identical to analyst-ui side).
+ * Fixed width of 200px on all specimens (identical to mithril side).
  */
 
 /** Helper: attaches data-compare to the first .bp6-input inside a wrapper ref. */
@@ -918,11 +918,11 @@ function InputGroupGallery() {
 const TA_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for TextArea. `data-compare` keys MUST match analyst-ui's TextAreaGallery.
+ * Blueprint reference for TextArea. `data-compare` keys MUST match mithril's TextAreaGallery.
  * Blueprint's TextArea renders a `<textarea class="bp6-input bp6-text-area">` directly,
  * so we can place data-compare directly on the component (it forwards to the textarea element).
  *
- * Fixed width of 240px and rows=3 on all specimens (identical to analyst-ui side).
+ * Fixed width of 240px and rows=3 on all specimens (identical to mithril side).
  */
 function TextAreaGallery() {
     const w: React.CSSProperties = { width: 240 };
@@ -967,7 +967,7 @@ function TextAreaGallery() {
 }
 
 /**
- * Blueprint reference for Checkbox. `data-compare` keys MUST match analyst-ui's CheckboxGallery.
+ * Blueprint reference for Checkbox. `data-compare` keys MUST match mithril's CheckboxGallery.
  * Blueprint's Checkbox renders `.bp6-control-indicator` inside the label. We use a ref +
  * querySelector to set data-compare on the indicator span (same pattern as TaggedSpinner/Tag).
  *
@@ -1000,7 +1000,7 @@ function CheckboxGallery() {
             </Section>
 
             {/* Whole-control specimens — data-compare on an inline-block wrapper so the
-                per-specimen crop covers box + label (mirrors analyst-ui's CheckboxGallery). */}
+                per-specimen crop covers box + label (mirrors mithril's CheckboxGallery). */}
             <Section title="Whole control (box + label)">
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 12 }}>
                     <span data-vcompare="cb-control-unchecked" style={{ display: "inline-block" }}>
@@ -1045,7 +1045,7 @@ function CheckboxGallery() {
  * (same pattern as TaggedCheckbox).
  *
  * The harness diffs: width, height, borderRadius, backgroundColor, boxShadow of the indicator.
- * Keys MUST match analyst-ui's RadioGallery exactly.
+ * Keys MUST match mithril's RadioGallery exactly.
  */
 function TaggedRadio({
     dataCompare,
@@ -1121,7 +1121,7 @@ function RadioGallery() {
  * (same pattern as TaggedCheckbox / TaggedRadio).
  *
  * The harness diffs: backgroundColor, borderRadius, height, minWidth, boxShadow, color.
- * Keys MUST match analyst-ui's SwitchGallery exactly.
+ * Keys MUST match mithril's SwitchGallery exactly.
  */
 function TaggedSwitch({
     dataCompare,
@@ -1212,7 +1212,7 @@ function TaggedFormGroup({
 const FG_INTENTS: Intent[] = ["none", "primary", "success", "warning", "danger"];
 
 /**
- * Blueprint reference for FormGroup + Label. data-compare keys MUST match analyst-ui gallery.
+ * Blueprint reference for FormGroup + Label. data-compare keys MUST match mithril gallery.
  */
 function FormGroupGallery() {
     return (
@@ -1330,7 +1330,7 @@ function FormGroupGallery() {
 /**
  * Blueprint reference for ControlGroup. `data-compare` is on the group div directly
  * (Blueprint's ControlGroup accepts and forwards HTML div props, so data-compare goes
- * straight to the root .bp6-control-group div). Keys MUST match analyst-ui gallery.
+ * straight to the root .bp6-control-group div). Keys MUST match mithril gallery.
  *
  * Specimens:
  *   cg-horizontal — InputGroup + Button in a row
@@ -1393,7 +1393,7 @@ function ControlGroupGallery() {
  * element (the measured node inside .bp6-html-select). Blueprint's HTMLSelect
  * does NOT forward data-* to the inner select, so we use ref to stamp it.
  *
- * Specimens (keys must match analyst-ui gallery exactly):
+ * Specimens (keys must match mithril gallery exactly):
  *   hs-default  — default (30px, solid, double-caret-vertical)
  *   hs-large    — large (40px, solid)
  *   hs-minimal  — minimal (no bg/shadow at rest)
@@ -1449,7 +1449,7 @@ function HTMLSelectGallery() {
  * `.bp6-file-upload-input` span (the measured node — the visible text box).
  * Blueprint's FileInput doesn't accept data-* directly, so we use ref + querySelector.
  *
- * Specimens match analyst-ui FileInputGallery exactly (keys, text, size, fill, disabled):
+ * Specimens match mithril FileInputGallery exactly (keys, text, size, fill, disabled):
  *   fi-default       — default (30px, "Choose file...", placeholder color)
  *   fi-has-selection — hasSelection=true, text="report.pdf" (foreground color)
  *   fi-large         — large (40px box)
@@ -1513,7 +1513,7 @@ function FileInputGallery() {
  * (Blueprint's `.bp6-input` inside the numeric input). Blueprint's NumericInput is a class
  * component; we use a container div + querySelector to stamp data-compare on inner elements.
  *
- * Specimens match analyst-ui NumericInputGallery exactly (keys, value, min, max, stepSize,
+ * Specimens match mithril NumericInputGallery exactly (keys, value, min, max, stepSize,
  * buttonPosition, large, fill, disabled, intent):
  *   ni-default        — value=5, medium (30px field), right buttons
  *   ni-large          — value=5, large (40px field)
@@ -1656,7 +1656,7 @@ const SC_OPTIONS_3 = [
 ];
 
 /**
- * Blueprint reference for SegmentedControl. Keys MUST match analyst-ui's SegmentedControlGallery.
+ * Blueprint reference for SegmentedControl. Keys MUST match mithril's SegmentedControlGallery.
  *
  * Blueprint's SegmentedControl accepts data-* directly on the outer div (forwarded via htmlProps).
  * For inner buttons we use ref + useEffect to stamp data-compare via querySelector.
@@ -1778,7 +1778,7 @@ function SegmentedControlGallery() {
  * Blueprint's control card components DO forward data-* props to the root .bp6-card element,
  * so we can place data-compare directly on CheckboxCard/RadioCard/SwitchCard.
  *
- * Specimens (keys MUST match analyst-ui's ControlCardGallery exactly):
+ * Specimens (keys MUST match mithril's ControlCardGallery exactly):
  *   cc-checkbox          — CheckboxCard unchecked, left-aligned indicator
  *   cc-checkbox-checked  — CheckboxCard defaultChecked=true → selected ring
  *   cc-radio             — RadioCard unchecked, right-aligned indicator
@@ -1788,7 +1788,7 @@ function SegmentedControlGallery() {
  *   cc-align-right       — CheckboxCard alignIndicator="right"
  *
  * The harness diffs: backgroundColor, boxShadow (selected ring), borderRadius, padding, color.
- * Fixed width 240px on all specimens (identical to analyst-ui side).
+ * Fixed width 240px on all specimens (identical to mithril side).
  */
 function ControlCardGallery() {
     const cardStyle: React.CSSProperties = { width: 240 };
@@ -1883,7 +1883,7 @@ function ControlCardGallery() {
  * mount.
  *
  * Keys: alert-panel, alert-icon, alert-footer, alert-confirm, alert-cancel.
- * Must match analyst-ui AlertGallery exactly.
+ * Must match mithril AlertGallery exactly.
  *
  * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
  * dark (same fix as DialogGallery — see the ⚠️ ORCHESTRATOR REVIEW CORRECTION note in 0024).
@@ -1951,7 +1951,7 @@ function AlertGallery() {
  * after mount. The containerRef points to `.bp6-dialog-container`.
  *
  * Keys: dialog-panel, dialog-header, dialog-body, dialog-footer, dialog-close.
- * Must match analyst-ui DialogGallery exactly.
+ * Must match mithril DialogGallery exactly.
  */
 function DialogGallery() {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -2023,7 +2023,7 @@ function DialogGallery() {
  * set data-compare attributes on the inner elements (panel, header, body) after mount.
  *
  * Keys: drawer-panel, drawer-header, drawer-body.
- * Must match analyst-ui DrawerGallery exactly.
+ * Must match mithril DrawerGallery exactly.
  *
  * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal renders
  * dark (same fix as Dialog/AlertGallery — see orchestrator correction in 0024).
@@ -2038,7 +2038,7 @@ function DrawerGallery() {
             const header = panel?.querySelector(`.${Classes.DRAWER_HEADER}`);
             const body = panel?.querySelector(`.${Classes.DRAWER_BODY}`);
             // Blueprint's drawer close button reuses the dialog close-button class
-            // (drawer.tsx → className={Classes.DIALOG_CLOSE_BUTTON}). analyst's Drawer
+            // (drawer.tsx → className={Classes.DIALOG_CLOSE_BUTTON}). mithril's Drawer
             // tags its close button drawer-close, so pair it here for the harness.
             const close = panel?.querySelector(`.${Classes.DIALOG_CLOSE_BUTTON}`);
 
@@ -2088,10 +2088,10 @@ function DrawerGallery() {
  *
  * Blueprint portals to document.body; we querySelector + setAttribute the inner elements after
  * mount (same pattern as Dialog/Drawer references). Inherited Dialog keys (dialog-panel/-header/
- * -footer/-close) pair with the analyst MultistepDialog's composed Dialog; multistep-* keys pair
+ * -footer/-close) pair with the mithril MultistepDialog's composed Dialog; multistep-* keys pair
  * the panels/rail/active-step/circle/right-panel.
  *
- * Must match analyst-ui MultistepDialogGallery exactly.
+ * Must match mithril MultistepDialogGallery exactly.
  *
  * Dark mode: portalClassName={Classes.DARK} when ?theme=dark (same fix as Dialog/Drawer).
  */
@@ -2254,7 +2254,7 @@ function MultistepDialogGallery() {
 /**
  * Blueprint reference for Popover.
  *
- * Must match analyst-ui PopoverGallery exactly.
+ * Must match mithril PopoverGallery exactly.
  *
  * Blueprint Popover portals content to document.body. We use useEffect + querySelector to
  * set data-compare attributes on the inner elements (panel, arrow) after mount.
@@ -2308,7 +2308,7 @@ function PopoverGallery() {
 /**
  * Blueprint reference for Tooltip.
  *
- * Must match analyst-ui TooltipGallery exactly.
+ * Must match mithril TooltipGallery exactly.
  *
  * Blueprint Tooltip portals content to document.body. We use useEffect + querySelector to
  * set data-compare attributes on the inner elements (bubble, arrow) after mount.
@@ -2388,7 +2388,7 @@ function TooltipGallery() {
  * This is a valid approach: the harness keys off `data-compare` on the `.bp6-toast` element,
  * which is the measured node for bg, shadow, radius, min-width, padding, color.
  *
- * data-compare keys (must match analyst-ui ToastGallery):
+ * data-compare keys (must match mithril ToastGallery):
  *   toast-card          — the default (no-intent) toast card
  *   toast-intent-danger — the danger-intent toast card
  *
@@ -2472,12 +2472,12 @@ function ToastGallery() {
     );
 }
 
-/** Registry mirrors analyst-ui's. Add an entry per component as it's built. */
+/** Registry mirrors mithril's. Add an entry per component as it's built. */
 /**
  * Blueprint Menu reference gallery.
  *
- * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
- * data-compare keys must match analyst-ui exactly.
+ * Renders a Blueprint Menu with identical specimens to the mithril MenuGallery.
+ * data-compare keys must match mithril exactly.
  *
  * Blueprint's Menu renders as a <ul role="menu"> with class .bp6-menu.
  * MenuDivider with title renders as .bp6-menu-header.
@@ -2487,8 +2487,8 @@ function ToastGallery() {
 /**
  * Blueprint Menu reference gallery.
  *
- * Renders a Blueprint Menu with identical specimens to the analyst-ui MenuGallery.
- * data-compare keys must match analyst-ui exactly.
+ * Renders a Blueprint Menu with identical specimens to the mithril MenuGallery.
+ * data-compare keys must match mithril exactly.
  *
  * Notes:
  * - Blueprint's MenuItem spreads htmlProps onto the inner <a> element, so data-compare
@@ -2547,7 +2547,7 @@ function MenuGallery() {
                         data-compare="menu-item-active"
                     />
 
-                    {/* Item with a secondary label (analyst-ui dropped the no-op submenu caret) */}
+                    {/* Item with a secondary label (mithril dropped the no-op submenu caret) */}
                     <MenuItem
                         icon="cog"
                         text="Settings"
@@ -2688,13 +2688,13 @@ function ContextMenuGallery() {
 /**
  * Blueprint reference for Navbar.
  *
- * data-compare keys (must match analyst-ui NavbarGallery exactly):
+ * data-compare keys (must match mithril NavbarGallery exactly):
  *   navbar           — the Navbar bar itself (bg, shadow, height, padding)
  *   navbar-heading   — the NavbarHeading div (font-size, margin-right, color)
  *   navbar-divider   — the NavbarDivider (height, border-left, margin)
  *
  * Blueprint Alignment enum: Alignment.LEFT = "left", Alignment.RIGHT = "right".
- * Fixed width 680px container to match analyst-ui gallery specimen size.
+ * Fixed width 680px container to match mithril gallery specimen size.
  */
 function NavbarGallery() {
     return (
@@ -2734,7 +2734,7 @@ function NavbarGallery() {
 /**
  * Blueprint reference for Tabs.
  *
- * data-compare keys (must match analyst-ui TabsGallery exactly):
+ * data-compare keys (must match mithril TabsGallery exactly):
  *   tab-selected          — the selected tab title element (color, font)
  *   tab-default           — an unselected tab title
  *   tab-disabled          — a disabled tab title
@@ -2826,7 +2826,7 @@ function TabsGallery() {
 /**
  * Blueprint reference for Collapse.
  *
- * data-compare keys (must match analyst-ui CollapseGallery exactly):
+ * data-compare keys (must match mithril CollapseGallery exactly):
  *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
  *   collapse-body  — the .bp6-collapse-body inner element (transform)
  *
@@ -2885,7 +2885,7 @@ function CollapseGallery() {
 /**
  * Blueprint reference for Section.
  *
- * data-compare keys (must match analyst-ui SectionGallery exactly):
+ * data-compare keys (must match mithril SectionGallery exactly):
  *   section          — the outer .bp6-card container (bg, shadow, radius, border)
  *   section-header   — the .bp6-section-header div (border-bottom, min-height, padding)
  *   section-title    — the .bp6-section-header-title h6 (font, color)
@@ -2962,7 +2962,7 @@ function SectionGallery() {
 /**
  * Blueprint reference for CardList.
  *
- * data-compare keys (must match analyst-ui CardListGallery exactly):
+ * data-compare keys (must match mithril CardListGallery exactly):
  *   card-list        — the outer .bp6-card.bp6-card-list container (bg, radius, shadow)
  *   card-list-item   — a middle .bp6-card row (padding, divider, min-height)
  *
@@ -3030,7 +3030,7 @@ function CardListGallery() {
 /**
  * Blueprint reference for Breadcrumbs.
  *
- * data-compare keys (must match analyst-ui BreadcrumbsGallery exactly):
+ * data-compare keys (must match mithril BreadcrumbsGallery exactly):
  *   breadcrumb-link      — a non-current, non-disabled link crumb (the .bp6-breadcrumb anchor)
  *   breadcrumb-current   — the last/current crumb (.bp6-breadcrumb-current span)
  *   breadcrumbs-separator — a chevron-right separator icon (li::after pseudo — not directly taggable;
@@ -3106,15 +3106,15 @@ function BreadcrumbsGallery() {
 /**
  * Blueprint Tree reference gallery.
  *
- * data-compare keys (must match analyst-ui TreeGallery exactly):
+ * data-compare keys (must match mithril TreeGallery exactly):
  *   tree-node-content    — default node row div (.bp6-tree-node-content)
  *   tree-node-selected   — selected node row div (selected node's content)
  *   tree-node-caret      — caret span on an expandable node
  *   tree-node-caret-none — caret-none spacer span on a leaf node
  *   tree-node-icon       — icon span on a node that has an icon
  *
- * The specimen MUST be structurally identical to the analyst-ui TreeGallery:
- *   - "Documents" (expanded) → "Annual Report 2025" (doc icon, secondaryLabel), "Projects" (expanded) → "analyst-ui" (SELECTED), "blueprint-ref"
+ * The specimen MUST be structurally identical to the mithril TreeGallery:
+ *   - "Documents" (expanded) → "Annual Report 2025" (doc icon, secondaryLabel), "Projects" (expanded) → "mithril" (SELECTED), "blueprint-ref"
  *   - "Drafts" (collapsed, folder icon)
  *   - "Trash" (disabled, trash icon)
  */
@@ -3140,7 +3140,7 @@ function TreeGallery() {
                     childNodes: [
                         {
                             id: 4,
-                            label: "analyst-ui",
+                            label: "mithril",
                             isSelected: true,
                         },
                         {
@@ -3176,7 +3176,7 @@ function TreeGallery() {
         // 0: Documents (depth 0, has caret)
         // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel)
         // 2: Projects (depth 1, has caret + icon)
-        // 3: analyst-ui (depth 2, SELECTED)
+        // 3: mithril (depth 2, SELECTED)
         // 4: blueprint-ref (depth 2)
         // 5: Drafts (depth 0, has icon, collapsed)
         // 6: Trash (depth 0, disabled)
@@ -3240,13 +3240,13 @@ function clearSelected(nodes: BpTreeNodeInfo[]) {
 /**
  * Blueprint PanelStack reference gallery.
  *
- * Matches analyst-ui PanelStackGallery exactly:
+ * Matches mithril PanelStackGallery exactly:
  *   - Controlled stack of depth 2: [Root, Detail]
  *   - Fixed 320×240px container
  *   - data-compare keys on header, back button, title
  *
  * Blueprint's PanelStack uses CSSTransition internally but the rendered STATE
- * (back button + title) is identical to analyst-ui for diffing purposes.
+ * (back button + title) is identical to mithril for diffing purposes.
  */
 const BP_ROOT_PANEL: BpPanel<object> = {
     title: "Root",
@@ -3315,8 +3315,8 @@ function PanelStackGallery() {
 /**
  * Blueprint HTMLTable reference gallery.
  *
- * Mirrors analyst-ui HTMLTableGallery exactly — same rows, same columns, same variant order.
- * data-compare keys match analyst-ui for the computed-style diff harness.
+ * Mirrors mithril HTMLTableGallery exactly — same rows, same columns, same variant order.
+ * data-compare keys match mithril for the computed-style diff harness.
  *
  * data-compare keys:
  *   html-table-header  — a <th> in the header row
@@ -3430,7 +3430,7 @@ function HTMLTableGallery() {
 /**
  * Blueprint EditableText reference gallery.
  *
- * Mirrors analyst-ui EditableTextGallery exactly — same specimens, same data-compare keys.
+ * Mirrors mithril EditableTextGallery exactly — same specimens, same data-compare keys.
  *
  * Blueprint's EditableText does not forward data-* to its root div, so we use the
  * `elementRef` prop to get the root element ref and set `data-compare` imperatively.
@@ -3528,7 +3528,7 @@ function EditableTextGallery() {
 /**
  * Blueprint EntityTitle reference gallery.
  *
- * Mirrors analyst-ui EntityTitleGallery exactly — same specimens, same data-compare keys.
+ * Mirrors mithril EntityTitleGallery exactly — same specimens, same data-compare keys.
  * Uses Blueprint's H1–H6 heading components for size variants.
  *
  * Blueprint's EntityTitle is typed as React.FC so ref forwarding isn't exposed in its types.
@@ -3646,7 +3646,7 @@ function EntityTitleGallery() {
 /**
  * Blueprint NonIdealState reference gallery.
  *
- * Mirrors analyst-ui NonIdealStateGallery exactly — same specimens, same data-compare keys,
+ * Mirrors mithril NonIdealStateGallery exactly — same specimens, same data-compare keys,
  * same container widths/heights.
  *
  * Blueprint's NonIdealState renders:
@@ -3657,13 +3657,13 @@ function EntityTitleGallery() {
  *       div (description)
  *     {action} (direct child)
  *
- * data-compare keys (must match analyst-ui NonIdealStateGallery exactly):
+ * data-compare keys (must match mithril NonIdealStateGallery exactly):
  *   non-ideal-state-full    — the root div of the full-state specimen
  *   non-ideal-state-minimal — the root div of the minimal specimen
  *
  * We use a wrapper div + useEffect to set data-compare on the .bp6-non-ideal-state root
  * (Blueprint's NonIdealState doesn't forward arbitrary props in v6).
- * A fixed 400px-wide, fixed-height container matches the analyst-ui gallery so
+ * A fixed 400px-wide, fixed-height container matches the mithril gallery so
  * centering and max-width dimensions compare cleanly.
  */
 function BpNonIdealStateWithCompare({
@@ -3775,10 +3775,10 @@ function NonIdealStateGallery() {
 /**
  * Blueprint Link reference gallery.
  *
- * Mirrors analyst-ui LinkGallery exactly — same specimens, same data-compare keys.
+ * Mirrors mithril LinkGallery exactly — same specimens, same data-compare keys.
  * Uses Blueprint's Link component directly (BpLink) which applies .bp6-link styles.
  *
- * data-compare keys (must match analyst-ui LinkGallery exactly):
+ * data-compare keys (must match mithril LinkGallery exactly):
  *   link-default   — primary color, always underlined
  *   link-hover     — primary color, hover underline
  *   link-none      — primary color, no underline
@@ -3835,7 +3835,7 @@ function LinkGallery() {
 /**
  * Blueprint Slider reference gallery.
  *
- * Mirrors analyst-ui SliderGallery exactly — same specimens, same data-compare keys.
+ * Mirrors mithril SliderGallery exactly — same specimens, same data-compare keys.
  * Uses Blueprint's Slider component directly (BpSlider).
  *
  * Blueprint does not expose data-* forwarding on Slider, so we use a wrapper div +
@@ -3846,7 +3846,7 @@ function LinkGallery() {
  *   .bp6-slider-axis .bp6-slider-label:first-child → slider-axis-label
  *   .bp6-slider-handle .bp6-slider-label           → slider-handle-label
  *
- * data-compare keys (must match analyst-ui SliderGallery exactly):
+ * data-compare keys (must match mithril SliderGallery exactly):
  *   slider-default      — primary intent, value=5, labelStepSize=5
  *   slider-success      — success intent, value=6, labelStepSize=5
  *   slider-disabled     — disabled, value=3, labelStepSize=5
@@ -3956,7 +3956,7 @@ function SliderGallery() {
  * Dark mode: pass portalClassName={Classes.DARK} when ?theme=dark so Blueprint's portal
  * renders dark — same pattern as DialogGallery.
  *
- * data-compare keys must match analyst-ui's HotkeysGallery exactly:
+ * data-compare keys must match mithril's HotkeysGallery exactly:
  *   hotkey-key        — first kbd key cap (tagged via useEffect on the portaled DOM)
  *   hotkey-combo      — first .bp6-key-combo span
  *   hotkey-row        — first .bp6-hotkey row
@@ -4027,8 +4027,8 @@ function HotkeysGallery() {
 /**
  * Blueprint reference for TagInput.
  *
- * Uses Blueprint's TagInput component with identical values/placeholder to analyst-ui.
- * data-compare keys must match analyst-ui TagInputGallery exactly:
+ * Uses Blueprint's TagInput component with identical values/placeholder to mithril.
+ * data-compare keys must match mithril TagInputGallery exactly:
  *   tag-input-container  — the main .bp6-tag-input container box
  *   tag-input-tag        — the first Tag chip inside the container
  *   tag-input-ghost      — the ghost input (.bp6-input-ghost)
@@ -4121,7 +4121,7 @@ function TagInputGallery() {
     );
 }
 
-// ─── Select items (same list as analyst-ui SelectGallery) ──────────────────
+// ─── Select items (same list as mithril SelectGallery) ──────────────────
 const SELECT_ITEMS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape"];
 const SELECT_SELECTED = "Cherry";
 
@@ -4135,7 +4135,7 @@ const SELECT_SELECTED = "Cherry";
  * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
  * so Blueprint's portaled menu renders in dark mode (matching our portal dark-mode fix).
  *
- * data-compare keys (MUST match analyst-ui SelectGallery):
+ * data-compare keys (MUST match mithril SelectGallery):
  *   select-trigger       — the trigger Button element
  *   select-filter        — the filter InputGroup's <input> element (portaled)
  *   select-menu          — the menu <ul> element inside the popover (portaled)
@@ -4271,7 +4271,7 @@ function SelectGallery() {
     );
 }
 
-// ─── Suggest items (same list as analyst-ui SuggestGallery) ──────────────────
+// ─── Suggest items (same list as mithril SuggestGallery) ──────────────────
 const SUGGEST_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
 const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
 
@@ -4285,7 +4285,7 @@ const SUGGEST_SELECTED = SELECT_SELECTED; // "Cherry"
  * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
  * so Blueprint's portaled menu renders in dark mode.
  *
- * data-compare keys (MUST match analyst-ui SuggestGallery):
+ * data-compare keys (MUST match mithril SuggestGallery):
  *   suggest-input        — the InputGroup's <input> element (trigger + filter)
  *   suggest-menu         — the menu <ul> element inside the popover (portaled)
  *   suggest-item         — Apple (index 0, non-active, non-selected)
@@ -4399,7 +4399,7 @@ function SuggestGallery() {
     );
 }
 
-// ─── MultiSelect items (same list as analyst-ui MultiSelectGallery) ─────────
+// ─── MultiSelect items (same list as mithril MultiSelectGallery) ─────────
 const MULTI_SELECT_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
 const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
 
@@ -4412,7 +4412,7 @@ const MULTI_SELECT_SELECTED = ["Banana", "Cherry"];
  * Dark mode: pass popoverProps={{ portalClassName: Classes.DARK }} when theme=dark
  * so Blueprint's portaled menu renders in dark mode.
  *
- * data-compare keys (MUST match analyst-ui MultiSelectGallery):
+ * data-compare keys (MUST match mithril MultiSelectGallery):
  *   multi-select-container  — the TagInput-like trigger container
  *   multi-select-tag        — the first Tag chip (Banana)
  *   multi-select-menu       — the menu <ul> element inside the popover (portaled)
@@ -4548,7 +4548,7 @@ const OMNIBAR_ITEMS = SELECT_ITEMS; // ["Apple", "Banana", "Cherry", ...]
  * Dark mode: pass overlayProps={{ portalClassName: Classes.DARK }} when theme=dark
  * so Blueprint's portaled Omnibar panel renders in dark mode.
  *
- * data-compare keys (MUST match analyst-ui OmnibarGallery):
+ * data-compare keys (MUST match mithril OmnibarGallery):
  *   omnibar-panel        — the elevated panel div (portaled)
  *   omnibar-input        — the search <input> element
  *   omnibar-menu         — the menu <ul> element
@@ -4633,8 +4633,8 @@ function OmnibarGallery() {
 
 // ---------------------------------------------------------------------------
 // TimePicker reference gallery
-// Fixed value: 14:30 (same as analyst-ui gallery) for stable static diff.
-// data-compare keys (MUST match analyst-ui TimePickerGallery):
+// Fixed value: 14:30 (same as mithril gallery) for stable static diff.
+// data-compare keys (MUST match mithril TimePickerGallery):
 //   time-picker-input   → the hour <input> element (first specimen)
 //   time-picker-divider → the colon divider span (first specimen)
 //   time-picker-arrow   → the first up-arrow button (arrows specimen)
@@ -4720,7 +4720,7 @@ function TimePickerGallery() {
 // Blueprint DatePicker uses "initialMonth" to set the displayed month.
 // We set value=FIXED_DATE so the selected state is fixed.
 //
-// data-compare keys (MUST match analyst-ui DatePickerGallery):
+// data-compare keys (MUST match mithril DatePickerGallery):
 //   date-picker-nav           → the previous-month nav button
 //   date-picker-weekday       → a weekday header cell (first "Su" cell)
 //   date-picker-day           → a regular (non-selected, non-outside) day cell
@@ -4818,7 +4818,7 @@ function DatePickerGallery() {
 // DateInput reference gallery
 // Blueprint DateInput with fixed date 2026-01-15, popover open.
 //
-// data-compare keys (MUST match analyst-ui DateInputGallery):
+// data-compare keys (MUST match mithril DateInputGallery):
 //   date-input-field        → the InputGroup <input> element
 //   date-input-day          → a regular (non-selected, non-outside) day cell (Jan 4)
 //   date-input-day-selected → the selected day cell (Jan 15, 2026)
@@ -4924,7 +4924,7 @@ function DateInputGallery() {
 // Blueprint DateRangePicker with fixed range Jan 8 – Jan 20, 2026.
 // Left calendar: January 2026. Right calendar: February 2026 (contiguous).
 //
-// data-compare keys (MUST match analyst-ui DateRangePickerGallery):
+// data-compare keys (MUST match mithril DateRangePickerGallery):
 //   drp-day         → a regular (non-range) day — Jan 4
 //   drp-day-range   → an in-range (between) day — Jan 10
 //   drp-day-endpoint → start (Jan 8) or end (Jan 20)
@@ -5039,7 +5039,7 @@ function DateRangePickerGallery() {
 // Blueprint DateRangeInput with fixed range Jan 8 – Jan 20, 2026.
 // Popover forced open via popoverProps={{ isOpen: true }}.
 //
-// data-compare keys (MUST match analyst-ui DateRangeInputGallery):
+// data-compare keys (MUST match mithril DateRangeInputGallery):
 //   dri-start         → the start <input> element
 //   dri-end           → the end <input> element
 //   dri-day-endpoint  → a filled endpoint day in the open DateRangePicker
@@ -5139,7 +5139,7 @@ function DateRangeInputGallery() {
 // ─── TimezoneSelect reference gallery ───────────────────────────────────────
 // Blueprint TimezoneSelect with popover forced open for comparison.
 //
-// data-compare keys (MUST match analyst-ui TimezoneSelectGallery):
+// data-compare keys (MUST match mithril TimezoneSelectGallery):
 //   tz-trigger     — the trigger button
 //   tz-menu        — the menu <ul> inside the popover (portaled)
 //   tz-item        — a non-active MenuItem (New York — position 6 in minimal list)
@@ -5147,7 +5147,7 @@ function DateRangeInputGallery() {
 //
 // Blueprint's TimezoneSelect initial list (empty query) uses MINIMAL_TIMEZONE_ITEMS.
 // The order matches: UTC(0), Honolulu(1), Anchorage(2), LA(3), Denver(4), Chicago(5), NewYork(6).
-// We tag index 6 to match our analyst gallery's tz-item (New York).
+// We tag index 6 to match our mithril gallery's tz-item (New York).
 // ---------------------------------------------------------------------------
 
 const TZ_SELECTED_BP = "America/Los_Angeles"; // "Los Angeles" — shown in trigger
@@ -5170,14 +5170,14 @@ function TimezoneSelectGallery() {
             menuUl.setAttribute("data-compare", "tz-menu");
 
             // NOTE: we deliberately do NOT tag .bp6-popover-content as "popover-content" here.
-            // Analyst's Popover auto-tags its transparent transition WRAPPER (shadow, no bg/radius),
+            // Mithril's Popover auto-tags its transparent transition WRAPPER (shadow, no bg/radius),
             // which sits at a different nesting level than Blueprint's styled .bp6-popover-content
             // panel — pairing them yields a false bg/shadow/radius diff. The harness's benign
-            // "only in analyst: popover-content" note is the honest signal.
+            // "only in mithril: popover-content" note is the honest signal.
 
             // tz-item: "Denver" — index 6 in Blueprint's MINIMAL_TIMEZONE_ITEMS.
             // Real order: 0=UTC, 1=Pago Pago, 2=Hawaii(Honolulu), 3=Marquesas, 4=Alaska(Anchorage),
-            //   5=LA, 6=Denver, 7=Mexico City, 8=New York … (analyst's minimal list now matches this order).
+            //   5=LA, 6=Denver, 7=Mexico City, 8=New York … (mithril's minimal list now matches this order).
             const itemLi = menuUl.children[6] as HTMLElement | undefined;
             if (itemLi) {
                 const anchor = itemLi.querySelector<HTMLElement>("a.bp6-menu-item, button.bp6-menu-item");
@@ -5239,7 +5239,7 @@ function TimezoneSelectGallery() {
 
 /**
  * Blueprint reference for DataTable (`<Table2>`). `data-compare` keys MUST match
- * analyst-ui's gallery so the harness can crop + diff the grids side-by-side.
+ * mithril's gallery so the harness can crop + diff the grids side-by-side.
  */
 const DATA_TABLE_ROWS = [
     { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
@@ -5470,7 +5470,7 @@ const ONLY = params.get("component");
 const INITIAL_DARK = params.get("theme") === "dark";
 
 /**
- * Sidebar category grouping — kept in lock-step with the analyst-ui gallery
+ * Sidebar category grouping — kept in lock-step with the mithril gallery
  * (src/App.tsx) so the two galleries navigate identically for side-by-side comparison.
  * Any id missing from every group falls into "Other" so nothing is dropped.
  */
@@ -5501,7 +5501,7 @@ const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
 /**
  * Components whose specimens render an overlay OPEN by default (for the harness). In the
  * sidebar view these are gated behind a Show/Hide toggle so navigating to them doesn't
- * trap the page behind a modal. Mirrors analyst-ui's OVERLAY_IDS.
+ * trap the page behind a modal. Mirrors mithril's OVERLAY_IDS.
  */
 const OVERLAY_IDS = new Set([
     "dialog", "alert", "drawer", "popover", "tooltip", "toast", "omnibar", "hotkeys",
@@ -5523,7 +5523,7 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
     );
 }
 
-/** Selected component is driven by the URL hash (`#button`) — shareable, matches analyst-ui. */
+/** Selected component is driven by the URL hash (`#button`) — shareable, matches mithril. */
 function useHash(): string {
     const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
     useEffect(() => {

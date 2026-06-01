@@ -104,7 +104,7 @@ in both themes and resolved an **axe `nested-interactive`** violation Blueprint 
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 pnpm test                                 # 240 pass (12 in multistep-dialog.test.tsx, +1 axe)
 pnpm build                                # green
 tools/compare.sh multistep-dialog both    # 9 match · 0 differ both themes

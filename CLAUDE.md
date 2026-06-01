@@ -1,4 +1,4 @@
-# analyst-ui — agent guide
+# mithril — agent guide
 
 > **Bootstrapping a session?** Read the most recent file in `docs/handoffs/` first — it captures
 > the current state and the next steps. Then skim this file for the durable rules below.
@@ -82,7 +82,7 @@ Work the roadmap top-down; the next component is always the first unchecked item
 ## Commands
 
 ```bash
-pnpm dev          # analyst-ui preview at :5173
+pnpm dev          # mithril preview at :5173
 pnpm build        # typecheck (tsc -b) + vite build
 pnpm typecheck
 cd tools/blueprint-reference && pnpm dev   # Blueprint reference at :5174

@@ -8,10 +8,10 @@
 
 ## What was actually wrong
 
-Measuring the live DOM in both galleries (analyst :5173 vs Blueprint reference :5174) showed the
+Measuring the live DOM in both galleries (mithril :5173 vs Blueprint reference :5174) showed the
 grid was already near-pixel-faithful **except the column headers**:
 
-| element | Blueprint | analyst (before) |
+| element | Blueprint | mithril (before) |
 | --- | --- | --- |
 | column header text (`.bp6-table-column-name-text`) | **14px**, line-height 30px | **12px** |
 | body cell | 12px / 20px / pad 0 8px / `#1c2127` | ✓ matches |
@@ -44,7 +44,7 @@ header (equivalent to Blueprint's line-height:30px fill).
 ## Remaining (NOT a style bug)
 
 - The `data-table-virtual` crop stays ~0.64 SSIM. That's **cumulative cross-engine text
-  antialiasing over 14 visible rows** (React-18/Blueprint vs React-19/analyst sub-pixel rendering),
+  antialiasing over 14 visible rows** (React-18/Blueprint vs React-19/mithril sub-pixel rendering),
   the same documented sub-perceptual delta as every text-heavy specimen — not a styling defect. The
   text is at identical positions (verified); the diff overlay just amplifies non-identical pixels.
 - The persistent computed-style gate item `minWidth: auto vs 0px` is the Section-parent wrapper

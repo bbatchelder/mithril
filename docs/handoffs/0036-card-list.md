@@ -89,7 +89,7 @@ set `data-selected` (the container styles them via descendant selectors).
 
 ## Accepted deltas
 
-- **Light `card-list-item` `borderBottomColor`**: analyst `rgba(0,0,0,0.102)` vs Blueprint
+- **Light `card-list-item` `borderBottomColor`**: mithril `rgba(0,0,0,0.102)` vs Blueprint
   `rgba(20,20,20,0.102)`. The same established sub-perceptual base-color delta seen on every divider/shadow
   (pure black vs Blueprint's near-black `#141414`) at ~0.1 alpha → ≈2/channel effective, imperceptible.
   Dark divider matches exactly. No other deltas.

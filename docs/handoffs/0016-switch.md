@@ -45,7 +45,7 @@ Built `src/components/ui/switch.tsx` exporting `Switch` with a clean modern API.
 
 - **pt-spacing = 4px, not 8px** — Blueprint's `$pt-spacing = 4px`. The switch indicator margin = `$pt-spacing * 0.5 = 2px`. The control indicator spacing = `$pt-spacing * 2 = 8px`. The task description mentioned "2px margin" for the knob — correct. Confirmed by checking Blueprint source.
 
-- **Dark disabled-checked text color trap** — First run had 1 delta: analyst emitted `rgba(255, 255, 255, 0.6)` for the dark disabled-checked track, but Blueprint emits `rgba(172, 178, 192, 0.6)` (= `rgba(gray4, 0.6)`). Fix: `dark:text-foreground-disabled` override on the `text-white/60` class.
+- **Dark disabled-checked text color trap** — First run had 1 delta: mithril emitted `rgba(255, 255, 255, 0.6)` for the dark disabled-checked track, but Blueprint emits `rgba(172, 178, 192, 0.6)` (= `rgba(gray4, 0.6)`). Fix: `dark:text-foreground-disabled` override on the `text-white/60` class.
 
 - **control-base.tsx NOT modified** — No regression risk for checkbox/radio from that path.
 

@@ -1,6 +1,6 @@
 # Handoff: Mission Control (Skylark) — live streaming demo app
 
-> Branch: `demo-apps` · Worktree: `../analyst-ui-demo-apps`
+> Branch: `demo-apps` · Worktree: `../mithril-demo-apps`
 > Continues the **example demo applications** stream (`0066-soc`, `0067-board`).
 
 ## TL;DR — current state

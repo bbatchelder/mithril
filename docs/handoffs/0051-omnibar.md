@@ -107,7 +107,7 @@ const [open, setOpen] = useState(false);
   `if (query.length === 0 && initialContent !== undefined) return initialContent` — with null,
   this returns null (no items) when query is empty. We pass `initialContent={undefined}` to the
   Blueprint reference gallery's `BpOmnibar` to bypass this and force items to show for comparison.
-  Our analyst-ui Omnibar shows items immediately without this workaround.
+  Our mithril Omnibar shows items immediately without this workaround.
 
 - **Inline styles for menu overrides**: Menu's Tailwind utility classes (`bg-white/dark:bg-dark-gray-3`,
   `rounded-bp`) are set before `className` in Tailwind's generated CSS. Due to CSS source order,

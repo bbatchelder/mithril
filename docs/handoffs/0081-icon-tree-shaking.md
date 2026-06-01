@@ -109,7 +109,7 @@ Phase C P2.1 ✅ · P2.2 ✅ · P2.3 ✅ · P2.4 ✅. Remaining, roughly in orde
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm build && pnpm test          # green / 240
 # tree-shaking is via glyph objects: import { add } from "@/components/ui/icons"; <Icon icon={add} />

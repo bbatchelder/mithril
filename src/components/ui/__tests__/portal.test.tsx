@@ -14,7 +14,7 @@ describe("Portal", () => {
         const content = document.body.querySelector('[data-testid="content"]');
         expect(content).not.toBeNull();
         // Mounted inside a portal container div, not the React root.
-        expect(content?.parentElement).toHaveClass("analyst-portal");
+        expect(content?.parentElement).toHaveClass("mithril-portal");
     });
 
     it("renders into a custom container", () => {
@@ -55,9 +55,9 @@ describe("Portal", () => {
                 <span data-testid="content" />
             </Portal>,
         );
-        expect(document.body.querySelector(".analyst-portal")).not.toBeNull();
+        expect(document.body.querySelector(".mithril-portal")).not.toBeNull();
         unmount();
-        expect(document.body.querySelector(".analyst-portal")).toBeNull();
+        expect(document.body.querySelector(".mithril-portal")).toBeNull();
     });
 
     it("uses container and className from PortalProvider context", () => {

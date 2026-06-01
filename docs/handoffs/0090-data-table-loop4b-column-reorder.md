@@ -80,13 +80,13 @@ read the diff crop, not just the standalone, at small scales.
   drop-slot math deterministic from `clientX`.)
 - **Visual** `compare.sh data-table both` — `basic` **0.986/0.977**, `selection` 0.967/0.951,
   `virtual` 0.642/0.644: **basic identical to the Loop 4 baseline** (handle + indent are pixel-exact
-  vs Blueprint), selection/virtual unchanged. The analyst gallery now shows the dotted handles on the
+  vs Blueprint), selection/virtual unchanged. The mithril gallery now shows the dotted handles on the
   Basic-grid headers, matching Blueprint's reference 1:1.
 - `registry.json` regenerated — `data-table.registryDependencies` now `["icon","utils","tokens"]`.
 
 ## Gotchas
 
-- **Reorder enabled on BOTH galleries' `basic` specimen only** (analyst `src/App.tsx` +
+- **Reorder enabled on BOTH galleries' `basic` specimen only** (mithril `src/App.tsx` +
   `tools/blueprint-reference/src/App.tsx`). `virtual`/`selection` keep it off on both sides so their
   crops stay matched. Enabling it on Blueprint is what surfaced the handle.
 - The drop guide centres a 3px line on the slot boundary (`left: guideX - 1`); the resize guide puts
@@ -107,7 +107,7 @@ type+Enter → callback; Esc → revert.
 ## How to resume
 
 ```bash
-cd /Users/bbatchelder/Code/analyst-ui
+cd /Users/bbatchelder/Code/mithril
 git switch public-readiness && git pull
 pnpm install
 pnpm build && pnpm test                       # green / 306

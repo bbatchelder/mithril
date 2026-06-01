@@ -95,20 +95,20 @@ precedence: `sizeProp ?? (large ? "large" : small ? "small" : "medium")`.
 
 ## Accepted Deltas
 
-### `sc-default` — `minWidth: auto` (analyst) vs `0px` (blueprint) — LIGHT AND DARK
+### `sc-default` — `minWidth: auto` (mithril) vs `0px` (blueprint) — LIGHT AND DARK
 
 **Nature:** Non-visual browser-computed artifact. Blueprint's SCSS does not set `min-width` on
 the segmented control div. The `0px` appears only on `sc-default`; Blueprint's own `sc-fill`,
-`sc-large`, and `sc-disabled` all compute `auto` — identical to analyst-ui. This is a transient
+`sc-large`, and `sc-disabled` all compute `auto` — identical to mithril. This is a transient
 browser-computed value for one specific rendered instance and has zero visual effect.
 
 **Decision:** Accepted as non-visual implementation noise. Adding `min-w-0` to the track would
 fix `sc-default` but break the other three specimens (they would then show `0px` vs Blueprint's
 `auto`), proving this is purely browser-computed artifact variation.
 
-### `sc-selected-segment` dark color — `rgb(246, 247, 249)` (analyst) vs `rgb(255, 255, 255)` (blueprint) — DARK ONLY
+### `sc-selected-segment` dark color — `rgb(246, 247, 249)` (mithril) vs `rgb(255, 255, 255)` (blueprint) — DARK ONLY
 
-**Nature:** Known-intentional design decision. Analyst-ui uses `#f6f7f9` (light-gray-5) as its
+**Nature:** Known-intentional design decision. Mithril-ui uses `#f6f7f9` (light-gray-5) as its
 dark foreground, while Blueprint uses near-white `#ffffff`. Documented in
 `memory/dark-foreground-decision.md` and present in every dark-theme none-intent button across
 all components. Fully acceptable and intentional.
