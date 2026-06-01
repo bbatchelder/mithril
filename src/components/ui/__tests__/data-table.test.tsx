@@ -1,5 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { axe } from "@/test/axe";
 
@@ -11,13 +11,26 @@ import { DataTable, type DataTableColumn } from "../data-table";
  * fidelity (cell borders, header/gutter styling) is covered by the comparison harness
  * against Blueprint's <Table2>.
  *
- * jsdom has no layout, so `@tanstack/react-virtual`'s ResizeObserver never measures the
- * viewport. The component seeds the virtualizer's `initialRect` from the `height` prop
- * (and from the full content height when `height` is omitted), so the right window
- * renders deterministically: small/auto-height grids render fully, and a tall dataset
- * with a fixed `height` renders only a windowed subset (asserted below).
+ * jsdom has no layout: `@tanstack/react-virtual` measures the scroll viewport via the
+ * element's `offsetHeight` (0 in jsdom), so we stub it to a fixed 200px-tall viewport.
+ * With a measurable viewport the virtualizer renders a realistic window — small datasets
+ * render fully, a tall dataset with a fixed `height` renders only a windowed subset
+ * (asserted below). (jsdom clamps `scrollTop` to 0, so scroll-driven *re*-windowing is
+ * verified in a real browser via the compare harness, not here — see handoff 0085.)
  */
 const VIEWPORT_H = 200;
+let origOffsetHeight: PropertyDescriptor | undefined;
+let origOffsetWidth: PropertyDescriptor | undefined;
+beforeAll(() => {
+    origOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
+    origOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => VIEWPORT_H });
+    Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get: () => 800 });
+});
+afterAll(() => {
+    if (origOffsetHeight) Object.defineProperty(HTMLElement.prototype, "offsetHeight", origOffsetHeight);
+    if (origOffsetWidth) Object.defineProperty(HTMLElement.prototype, "offsetWidth", origOffsetWidth);
+});
 
 interface Person {
     name: string;
@@ -141,6 +154,31 @@ describe("DataTable — virtualization (Loop 2)", () => {
         render(<DataTable<Person> data={bigData} columns={COLUMNS} rowHeight={20} height={VIEWPORT_H} />);
         const rowHeaders = screen.getAllByRole("rowheader");
         expect(rowHeaders[0]).toHaveTextContent("1");
+    });
+
+    it("connects the scroll viewport so the virtualizer subscribes to scroll", () => {
+        // Regression guard (handoff 0085): the scroll element is owned by the parent but
+        // the virtualizer runs in the child. With a plain useRef the child's effect fires
+        // before the parent ref attaches, leaving scrollElement null — the grid renders its
+        // initial window but never re-windows on scroll. A state-backed callback ref fixes
+        // it. jsdom can't scroll, but we can assert the virtualizer attached a scroll
+        // listener to the grid (which only happens once scrollElement is non-null).
+        const added: Element[] = [];
+        const orig = HTMLElement.prototype.addEventListener;
+        HTMLElement.prototype.addEventListener = function (this: Element, type: string, ...rest: unknown[]) {
+            if (type === "scroll") added.push(this);
+            // @ts-expect-error passthrough
+            return orig.call(this, type, ...rest);
+        };
+        try {
+            const { container } = render(
+                <DataTable<Person> data={bigData} columns={COLUMNS} rowHeight={20} height={VIEWPORT_H} />,
+            );
+            const grid = container.querySelector('[role="grid"]')!;
+            expect(added).toContain(grid);
+        } finally {
+            HTMLElement.prototype.addEventListener = orig;
+        }
     });
 });
 

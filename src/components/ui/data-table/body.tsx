@@ -20,7 +20,8 @@ import { GutterCell, alignClass } from "./gutter";
  */
 export interface DataTableBodyProps<TRow> {
     table: Table<TRow>;
-    scrollRef: React.RefObject<HTMLDivElement | null>;
+    /** The scroll-viewport element (state-backed so the virtualizer connects on mount). */
+    scrollEl: HTMLDivElement | null;
     numberedRows: boolean;
     gutterWidth: number;
     rowHeight: number;
@@ -30,7 +31,7 @@ export interface DataTableBodyProps<TRow> {
 
 export function DataTableBody<TRow>({
     table,
-    scrollRef,
+    scrollEl,
     numberedRows,
     gutterWidth,
     rowHeight,
@@ -40,7 +41,7 @@ export function DataTableBody<TRow>({
 
     const virtualizer = useVirtualizer({
         count: rows.length,
-        getScrollElement: () => scrollRef.current,
+        getScrollElement: () => scrollEl,
         estimateSize: () => rowHeight,
         overscan: 10,
         // Seed the initial viewport so the first paint renders the right window (no

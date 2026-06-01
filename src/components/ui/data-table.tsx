@@ -4,7 +4,7 @@ import {
     type ColumnDef,
     type Table,
 } from "@tanstack/react-table";
-import { useMemo, useRef } from "react";
+import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -191,11 +191,20 @@ export function DataTable<TRow>({
 
     // The scroll container is the virtualization viewport (Loop 2): the row virtualizer
     // reads its scroll position. A fixed `height` bounds it so only visible rows render.
-    const scrollRef = useRef<HTMLDivElement>(null);
+    //
+    // This is a **state-backed callback ref**, NOT useRef — deliberately. The virtualizer
+    // lives in the child <DataTableBody>, but the scroll element is rendered here in the
+    // parent. React's commit runs bottom-up, so the child's layout effect (where the
+    // virtualizer subscribes to scroll) fires BEFORE this parent's ref attaches — a plain
+    // useRef would still read null, the virtualizer would never attach a scroll listener,
+    // and the grid would render only its initial window and never re-window on scroll
+    // (until some unrelated re-render). Setting state when the node mounts forces the
+    // re-render that connects the element. See handoff 0085.
+    const [scrollEl, setScrollEl] = useState<HTMLDivElement | null>(null);
 
     return (
         <div
-            ref={scrollRef}
+            ref={setScrollEl}
             role="grid"
             aria-rowcount={data.length}
             aria-colcount={columns.length}
@@ -219,7 +228,7 @@ export function DataTable<TRow>({
                 />
                 <DataTableBody
                     table={table}
-                    scrollRef={scrollRef}
+                    scrollEl={scrollEl}
                     numberedRows={numberedRows}
                     gutterWidth={gutterW}
                     rowHeight={rowHeight}
