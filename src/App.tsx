@@ -61,6 +61,9 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
+import { ResizeSensor } from "@/components/ui/resize-sensor";
+import { OverflowList } from "@/components/ui/overflow-list";
+import { Portal } from "@/components/ui/portal";
 
 import { DarkContext } from "@/lib/dark-context";
 import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
@@ -4784,6 +4787,122 @@ function TimezoneSelectGallery() {
 }
 
 /** Registry of component showcases. Add an entry per component as it's built. */
+/**
+ * ResizeSensor showcase — a resizable box that reports its observed size. The box
+ * carries `data-compare` (its static styling is comparable; the live size text is
+ * behavioral and not a fidelity target).
+ */
+function ResizeSensorGallery() {
+    const [size, setSize] = useState({ width: 0, height: 0 });
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Reports its observed size (drag the corner)">
+                <ResizeSensor
+                    onResize={(entries) => {
+                        const r = entries[0].contentRect;
+                        setSize({ width: Math.round(r.width), height: Math.round(r.height) });
+                    }}
+                >
+                    <div
+                        data-compare="resize-sensor-box"
+                        className="overflow-auto rounded-md text-body text-foreground"
+                        style={{ width: 240, height: 96, padding: 12, border: "1px solid var(--border)", resize: "both" }}
+                    >
+                        Observed size: {size.width}×{size.height}px
+                    </div>
+                </ResizeSensor>
+            </Section>
+        </div>
+    );
+}
+
+/** Chip used by the OverflowList demo (natural width, doesn't shrink). */
+function OverflowChip({ children, accent }: { children: React.ReactNode; accent?: boolean }) {
+    return (
+        <span
+            className="text-body-sm"
+            style={{
+                padding: "2px 8px",
+                marginRight: 4,
+                borderRadius: 4,
+                whiteSpace: "nowrap",
+                background: accent ? "#2d72d2" : "var(--surface)",
+                color: accent ? "white" : "var(--foreground)",
+                border: accent ? undefined : "1px solid var(--border)",
+            }}
+        >
+            {children}
+        </span>
+    );
+}
+
+/**
+ * OverflowList showcase — a fixed-width container collapses items into a "+N" chip.
+ * The container carries `data-compare`; resize the window to see it recompute.
+ */
+function OverflowListGallery() {
+    const items = ["Home", "Reports", "Q3", "Financials", "Summary", "Appendix", "Notes", "Draft"];
+    const overflowRenderer = (overflow: string[]) =>
+        overflow.length > 0 ? <OverflowChip accent>+{overflow.length}</OverflowChip> : null;
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Collapse from start (overflow leads)">
+                <div data-compare="overflow-list-start" style={{ width: 280, border: "1px solid var(--border)", borderRadius: 6, padding: 8 }}>
+                    <OverflowList<string>
+                        items={items}
+                        collapseFrom="start"
+                        visibleItemRenderer={(item) => <OverflowChip key={item}>{item}</OverflowChip>}
+                        overflowRenderer={overflowRenderer}
+                    />
+                </div>
+            </Section>
+            <Section title="Collapse from end (overflow trails)">
+                <div data-compare="overflow-list-end" style={{ width: 280, border: "1px solid var(--border)", borderRadius: 6, padding: 8 }}>
+                    <OverflowList<string>
+                        items={items}
+                        collapseFrom="end"
+                        visibleItemRenderer={(item) => <OverflowChip key={item}>{item}</OverflowChip>}
+                        overflowRenderer={overflowRenderer}
+                    />
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+/** Portal showcase — render a fixed banner into document.body, escaping local stacking. */
+function PortalGallery() {
+    const [open, setOpen] = useState(false);
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Render into document.body">
+                <Button onClick={() => setOpen((o) => !o)}>
+                    {open ? "Remove" : "Render"} portaled banner
+                </Button>
+                {open && (
+                    <Portal>
+                        <div
+                            data-compare="portal-banner"
+                            style={{
+                                position: "fixed",
+                                bottom: 16,
+                                right: 16,
+                                padding: "8px 12px",
+                                borderRadius: 6,
+                                background: "#2d72d2",
+                                color: "white",
+                                zIndex: 50,
+                            }}
+                        >
+                            Portaled to document.body
+                        </div>
+                    </Portal>
+                )}
+            </Section>
+        </div>
+    );
+}
+
 const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[] = [
     { id: "button", title: "Button", render: () => <ButtonGallery /> },
     { id: "button-group", title: "ButtonGroup", render: () => <ButtonGroupGallery /> },
@@ -4844,6 +4963,9 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "date-range-picker", title: "DateRangePicker", render: () => <DateRangePickerGallery /> },
     { id: "date-range-input", title: "DateRangeInput", render: () => <DateRangeInputGallery /> },
     { id: "timezone-select", title: "TimezoneSelect", render: () => <TimezoneSelectGallery /> },
+    { id: "resize-sensor", title: "ResizeSensor", render: () => <ResizeSensorGallery /> },
+    { id: "overflow-list", title: "OverflowList", render: () => <OverflowListGallery /> },
+    { id: "portal", title: "Portal", render: () => <PortalGallery /> },
 ];
 
 const params = new URLSearchParams(window.location.search);
@@ -4889,6 +5011,7 @@ const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
     { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
     { label: "Date & time", ids: ["time-picker", "date-picker", "date-input", "date-range-picker", "date-range-input", "timezone-select"] },
+    { label: "Infrastructure", ids: ["resize-sensor", "overflow-list", "portal"] },
 ];
 
 type ComponentEntry = (typeof COMPONENTS)[number];

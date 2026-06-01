@@ -821,6 +821,24 @@
             ]
         },
         {
+            "name": "overflow-list",
+            "type": "registry:ui",
+            "title": "OverflowList",
+            "description": "OverflowList — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/overflow-list.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/overflow-list.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "resize-sensor",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "panel-stack",
             "type": "registry:ui",
             "title": "PanelStack",
@@ -860,6 +878,23 @@
             ]
         },
         {
+            "name": "portal",
+            "type": "registry:ui",
+            "title": "Portal",
+            "description": "Portal — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/portal.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/portal.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "progress-bar",
             "type": "registry:ui",
             "title": "ProgressBar",
@@ -891,6 +926,22 @@
             ],
             "registryDependencies": [
                 "utils",
+                "tokens"
+            ]
+        },
+        {
+            "name": "resize-sensor",
+            "type": "registry:ui",
+            "title": "ResizeSensor",
+            "description": "ResizeSensor — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/resize-sensor.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/resize-sensor.tsx"
+                }
+            ],
+            "registryDependencies": [
                 "tokens"
             ]
         },
