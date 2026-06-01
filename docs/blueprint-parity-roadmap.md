@@ -226,36 +226,41 @@ See **P0.3** (cross-listed) — resolved.
   Apply library-wide so the low-boilerplate `icon="floppy-disk"` form works consistently.
 - **Done when:** `<Button icon="add" />` works; all icon-accepting components share the convention.
 
-### P2.5 — Restore a derivable token pipeline (or document the freeze)
+### P2.5 — Restore a derivable token pipeline ✅ done (option a)
 
-- **Problem:** analyst bakes resolved sRGB literals (incl. one-off hex like `#303740`) and hand-patches
-  dark intent/tag shades; Blueprint derives them via `oklch(from <intent> …)` so the whole theme
-  re-derives from one variable.
-- **Action (choose one):**
-  - **(a) Derive at runtime:** express dark surfaces/intent-text as `oklch(from var(--intent) …)` /
-    `color-mix()` in `tokens.css`, so re-theming from one intent var works — *and* add the `@supports`
-    fallback (see P2.6).
-  - **(b) Derive at build:** add a small token-build step (Style-Dictionary-style) that *computes* the
-    literals from a single source so they can't drift and can re-target a new spec version.
-  - If neither is pursued, explicitly document "frozen to Blueprint v6.15" as an intentional limitation.
-- **Done when:** changing the primary intent var re-tints the theme (option a), or a documented build
-  regenerates all derived values (option b).
+- **Resolved:** chose **(a) derive at runtime.** Every seed-dependent semantic token in `tokens.css`
+  (intent text, tag shades, focus/ring, link, selection, input intent+focus shadows, selected-card ring,
+  surfaces, borders, ghost backgrounds, disabled text) is now an `oklch(from var(--seed) …)` /
+  `color-mix()` derivation. Offsets mirror Blueprint's DTCG `com.blueprint.derive` extensions and were
+  verified (OKLCH↔sRGB resolver) to reproduce the prior baked literals byte-for-byte, so the default
+  theme stays pixel-identical (`compare.sh` clean: button/tag/card/callout/input-group/numeric-input/
+  checkbox/html-select all `N match · 0 differ` both themes).
+- **Themeable:** seeds = the `@theme` intent vars (all four intents) + the gray ramp. A theme overrides
+  **only seeds** (apply `data-theme` on `<html>`); both light AND dark variants re-derive automatically
+  because mode (light/dark) and theme (seed set) are orthogonal. Ships one example, `[data-theme="purple"]`
+  (indigo accent + hue-shifted neutrals), wired into the gallery (sidebar tint button / `?palette=purple`).
+- **Future:** full runtime theming (a `ThemeProvider`/API + multi-theme gallery switcher — option #3) is
+  noted as planned future work in `docs/theming.md`.
+- **Done when:** changing a seed re-tints the theme. ✅ See `docs/theming.md`.
 
-### P2.6 — Add progressive-enhancement fallbacks
+### P2.6 — Add progressive-enhancement fallbacks ✅ done
 
-- **Problem:** ~15 raw `oklch()`/`color-mix()` usages with **no `@supports` fallback**; Blueprint
-  degrades gracefully on engines lacking relative-color/oklch.
-- **Action:** Wrap modern-color usages with `@supports` static-hex fallbacks (the hex values already
-  exist as the resolved literals).
-- **Done when:** the theme renders correctly on an engine without `oklch(from …)` support.
+- **Resolved:** every derived token is declared twice — a static sRGB-literal fallback in the base
+  `:root`/`.dark` block, then the live derivation inside `@supports (color: oklch(from white l c h))`.
+  Engines without relative-color keep the exact verified literals; supporting engines get the re-tintable
+  values. The `@supports` test gates the newest feature (relative color), so `color-mix(in oklch)` is
+  covered by the same guard.
+- **Done when:** the theme renders correctly without `oklch(from …)` support. ✅ (fallbacks = the literals
+  that shipped before this change).
 
-### P2.7 — Dark-mode selector & native-control parity
+### P2.7 — Dark-mode selector & native-control parity ✅ done
 
-- **Problem:** analyst wires only `.dark`; Blueprint supports class **and** `[data-*]` selectors and
-  sets `color-scheme: dark` so native scrollbars/controls theme.
-- **Action:** Add `color-scheme` to the dark scope; optionally support a data-attribute selector
-  alongside `.dark`.
-- **Done when:** native form controls/scrollbars follow dark mode; both selector styles work.
+- **Resolved:** `:root` sets `color-scheme: light`, the dark scope sets `color-scheme: dark` (native
+  scrollbars/controls/spinners follow the mode). Dark mode now activates via **either** `.dark` **or**
+  `[data-mode="dark"]` — the `@custom-variant dark` matches both, and the dark semantic block is keyed to
+  both selectors. Verified `[data-mode="dark"]` drives both the semantic tokens and the `dark:` utility
+  variant.
+- **Done when:** native controls follow dark mode and both selector styles work. ✅
 
 ### P2.8 — MenuItem submenus + Popover hover; controlled-input safety
 

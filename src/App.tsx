@@ -5156,6 +5156,8 @@ const params = new URLSearchParams(window.location.search);
 const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
+/** `?palette=purple` selects the example alternate theme (P2.5 themeability proof). */
+const INITIAL_PURPLE = params.get("palette") === "purple";
 
 /**
  * Components whose specimens render a portaled/floating overlay OPEN by default (for the
@@ -5229,24 +5231,39 @@ function Sidebar({
     onToggleDark,
     view,
     onViewChange,
+    purple,
+    onTogglePurple,
 }: {
     selectedId: string;
     dark: boolean;
     onToggleDark: () => void;
     view: "showcase" | "demos";
     onViewChange: (v: "showcase" | "demos") => void;
+    purple: boolean;
+    onTogglePurple: () => void;
 }) {
     return (
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
                 <span className="text-heading-sm font-semibold text-foreground">analyst-ui</span>
-                <Button
-                    size="small"
-                    variant="minimal"
-                    aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-                    icon={<Icon icon={dark ? "lightbulb" : "moon"} className="!text-current" />}
-                    onClick={onToggleDark}
-                />
+                <div className="flex items-center gap-1">
+                    <Button
+                        size="small"
+                        variant="minimal"
+                        intent={purple ? "primary" : "none"}
+                        aria-label={purple ? "Switch to default theme" : "Switch to purple theme"}
+                        aria-pressed={purple}
+                        icon={<Icon icon="tint" className="!text-current" />}
+                        onClick={onTogglePurple}
+                    />
+                    <Button
+                        size="small"
+                        variant="minimal"
+                        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+                        icon={<Icon icon={dark ? "lightbulb" : "moon"} className="!text-current" />}
+                        onClick={onToggleDark}
+                    />
+                </div>
             </div>
             <div className="border-b border-border px-3 py-2">
                 <SegmentedControl
@@ -5354,6 +5371,18 @@ type AppView = "showcase" | "demos";
 
 export default function App() {
     const [dark, setDark] = useState(INITIAL_DARK);
+    const [purple, setPurple] = useState(INITIAL_PURPLE);
+
+    // The theme (seed set) must be applied at the document root: light-mode semantic
+    // tokens are declared on `:root`, so their `var(--seed)` substitution resolves
+    // against the root's seeds. Setting `data-theme` on a descendant would leave those
+    // already-computed (default-seed) values inherited unchanged. Applying it on <html>
+    // also lets portaled content (rendered at <body>) inherit the theme automatically.
+    useEffect(() => {
+        const el = document.documentElement;
+        if (purple) el.setAttribute("data-theme", "purple");
+        else el.removeAttribute("data-theme");
+    }, [purple]);
     const [view, setView] = useState<AppView>(() =>
         decodeURIComponent(window.location.hash.replace(/^#/, "")).startsWith("demo-") ? "demos" : "showcase",
     );
@@ -5396,6 +5425,8 @@ export default function App() {
                         onToggleDark={() => setDark((d) => !d)}
                         view={view}
                         onViewChange={setView}
+                        purple={purple}
+                        onTogglePurple={() => setPurple((p) => !p)}
                     />
                     {view === "showcase" ? (
                         <main className="flex-1 overflow-x-hidden px-10 py-8">

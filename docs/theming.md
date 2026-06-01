@@ -1,0 +1,127 @@
+# Theming
+
+analyst-ui's tokens are **runtime-derivable**. Almost every semantic value
+(`--ring`, `--link`, intent text, tag shades, focus rings, selected-card ring,
+surfaces, borders) is expressed as a relative-color derivation from a small set
+of **seeds**. Change a seed and the whole theme re-tints — in both light and dark
+— with no rebuild.
+
+Two axes are orthogonal:
+
+| Axis | What it controls | How to set it |
+| --- | --- | --- |
+| **Theme** | the seed set (accent + neutrals) | `data-theme="…"` on `<html>` |
+| **Mode** | light vs dark variant | `.dark` **or** `[data-mode="dark"]` |
+
+Because mode and theme are independent, **every theme automatically has a light
+and a dark variant**. The dark variant re-derives from the same seeds the theme
+overrode.
+
+## The seeds
+
+Seeds live in the `@theme` block of `src/styles/tokens.css`.
+
+**Intent seeds** (all four are seed-driven — re-tint any of them):
+
+```
+--color-primary  / -hover / -active / -disabled / -foreground
+--color-success  / -hover / -active / -disabled / -foreground
+--color-warning  / -hover / -active / -disabled / -foreground
+--color-danger   / -hover / -active / -disabled / -foreground
+```
+
+Everything intent-derived flows from these: solid/outlined/minimal button colors,
+intent text, tag shades, focus rings, input intent/focus shadows, links,
+selection, and the selected-card ring.
+
+**Neutral seeds** — the gray ramp:
+
+```
+--color-dark-gray-1..5   --color-gray-1..5   --color-light-gray-1..5
+```
+
+Surfaces (`--background`, `--surface`, `--elevated`), borders, dividers,
+disabled text, and ghost/hover backgrounds derive from these.
+
+## Authoring a theme
+
+A theme overrides **only seeds**. Do **not** redeclare the semantic tokens — they
+re-resolve automatically. Apply the attribute at the document root so the
+light-mode semantic tokens (declared on `:root`) re-resolve against your seeds:
+
+```css
+[data-theme="ocean"] {
+    --color-primary: #147eb3;          /* cerulean-3 */
+    --color-primary-hover: #0f6894;    /* cerulean-2 */
+    --color-primary-active: #0c5174;   /* cerulean-1 */
+    --color-primary-disabled: #3fa6da; /* cerulean-4 */
+    /* override --color-success / -warning / -danger and the gray ramp too if desired */
+}
+```
+
+```html
+<html data-theme="ocean">          <!-- light -->
+<html data-theme="ocean" class="dark">   <!-- dark variant of the same theme -->
+```
+
+> **Placement matters.** `data-theme` must be on an element where the semantic
+> tokens are declared (i.e. `:root`/`<html>`). Setting it on a descendant only
+> changes the seeds for that subtree's *own* declarations — the inherited,
+> already-computed semantic values won't update. (Dark works on a subtree because
+> the `.dark` block redeclares the semantic tokens there.) For app-wide theming,
+> always use `<html>`.
+
+### Example: the bundled "purple" theme
+
+`tokens.css` ships one example, `[data-theme="purple"]`, which re-seeds the
+primary intent to Blueprint's indigo ramp and gives the neutral ramp a subtle
+indigo hue-shift. The gallery toggles it (the tint button in the sidebar) or via
+`?palette=purple` (add `&theme=dark` for the dark variant). It's the proof that a
+single seed override re-tints all four light/dark quadrants. Status intents are
+left semantic by choice — uncomment the `--color-success/-warning/-danger` lines
+to re-tint those too.
+
+## How derivation works (P2.5)
+
+Derivations mirror Blueprint's DTCG `com.blueprint.derive` extensions
+(`lightnessOffset/Scale`, `chromaOffset/Scale`, `hueOffset`, `alpha`), which map
+1:1 onto CSS relative color:
+
+```css
+--ring: oklch(from var(--color-primary-hover) l c h / 0.752);          /* alpha */
+--tag-solid-warning-bg: oklch(from var(--color-warning) calc(l + 0.19) c h); /* lightness offset */
+--intent-primary-text: color-mix(in oklch, var(--color-primary) 51%, white);  /* dark lighten */
+```
+
+Every offset was verified (`/tmp/oklch.py`-style sRGB↔OKLCH resolution) to
+reproduce the previously hand-baked literals byte-for-byte, so the **default
+theme is pixel-identical** to before — confirmed by `tools/compare.sh`.
+
+## Progressive enhancement (P2.6)
+
+Relative color (`oklch(from …)`) isn't in older Safari/Firefox. Every derived
+token is therefore declared **twice**:
+
+1. a **static fallback** (the resolved sRGB literal) in the base `:root` / `.dark`
+   block, then
+2. the **live derivation** inside
+   `@supports (color: oklch(from white l c h)) { … }`.
+
+Engines without relative-color support keep the exact verified literals (the
+default theme looks identical); engines with support get the re-tintable derived
+values. The `@supports` test gates the newest feature, so where it passes,
+`color-mix(in oklch, …)` is available too.
+
+## Native control parity (P2.7)
+
+`:root` sets `color-scheme: light` and the dark scope sets `color-scheme: dark`,
+so native scrollbars, form controls, and spinners follow the mode. Dark mode is
+selectable by **either** `.dark` **or** `[data-mode="dark"]` (the `dark:` Tailwind
+variant responds to both).
+
+## Roadmap
+
+Full runtime theming — a `ThemeProvider`/API with a gallery switcher and multiple
+shipped themes (option #3 from the P2.5 design discussion) — is planned future
+work. The current mechanism (seed override + static example) is the foundation it
+will build on.
