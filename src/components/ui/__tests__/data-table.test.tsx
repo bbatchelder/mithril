@@ -380,6 +380,90 @@ describe("DataTable — column reorder (Loop 4b)", () => {
     });
 });
 
+describe("DataTable — editable cells (Loop 5)", () => {
+    const EDITABLE_COLUMNS: DataTableColumn<Person>[] = [
+        { id: "name", header: "Name", accessor: "name", editable: true },
+        { id: "age", header: "Age", accessor: "age", align: "right" },
+        { id: "role", header: "Role", accessor: (r) => r.role, editable: true },
+    ];
+
+    it("double-clicking an editable cell opens an input seeded with the value", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={EDITABLE_COLUMNS} numberedRows={false} />,
+        );
+        // No editor at rest.
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+        const aliceCell = screen.getByRole("gridcell", { name: "Alice" });
+        fireEvent.doubleClick(aliceCell);
+        const input = container.querySelector<HTMLInputElement>("[data-editable-cell]");
+        expect(input).not.toBeNull();
+        expect(input!.value).toBe("Alice");
+    });
+
+    it("a non-editable cell does not open an editor on double-click", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={EDITABLE_COLUMNS} numberedRows={false} />,
+        );
+        fireEvent.doubleClick(screen.getByRole("gridcell", { name: "34" })); // Age — not editable
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+    });
+
+    it("typing + Enter commits the new value via onCellEdit and closes the editor", () => {
+        const edits: Array<{ row: number; col: number; columnId: string; value: string }> = [];
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={EDITABLE_COLUMNS}
+                numberedRows={false}
+                onCellEdit={(e) => edits.push(e)}
+            />,
+        );
+        fireEvent.doubleClick(screen.getByRole("gridcell", { name: "Bob" })); // row 1, col 0
+        const input = container.querySelector<HTMLInputElement>("[data-editable-cell]")!;
+        fireEvent.change(input, { target: { value: "Bobby" } });
+        fireEvent.keyDown(input, { key: "Enter" });
+        expect(edits).toEqual([{ row: 1, col: 0, columnId: "name", value: "Bobby" }]);
+        // Editor closed on commit.
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+    });
+
+    it("blur commits the current draft", () => {
+        const edits: Array<{ columnId: string; value: string }> = [];
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={EDITABLE_COLUMNS}
+                numberedRows={false}
+                onCellEdit={(e) => edits.push({ columnId: e.columnId, value: e.value })}
+            />,
+        );
+        fireEvent.doubleClick(screen.getByRole("gridcell", { name: "Engineer" })); // row 0, col 2 (role)
+        const input = container.querySelector<HTMLInputElement>("[data-editable-cell]")!;
+        fireEvent.change(input, { target: { value: "Lead" } });
+        fireEvent.blur(input);
+        expect(edits).toEqual([{ columnId: "role", value: "Lead" }]);
+    });
+
+    it("Escape reverts — no onCellEdit, editor closes, value unchanged", () => {
+        let called = false;
+        const { container } = render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={EDITABLE_COLUMNS}
+                numberedRows={false}
+                onCellEdit={() => (called = true)}
+            />,
+        );
+        fireEvent.doubleClick(screen.getByRole("gridcell", { name: "Alice" }));
+        const input = container.querySelector<HTMLInputElement>("[data-editable-cell]")!;
+        fireEvent.change(input, { target: { value: "Zzz" } });
+        fireEvent.keyDown(input, { key: "Escape" });
+        expect(called).toBe(false);
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+        expect(screen.getByRole("gridcell", { name: "Alice" })).toBeInTheDocument();
+    });
+});
+
 describe("DataTable — a11y", () => {
     it("has no axe violations", async () => {
         const { container } = renderTable();

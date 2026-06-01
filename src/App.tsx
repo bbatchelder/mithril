@@ -4979,6 +4979,11 @@ function DataTableGallery() {
                     />
                 </div>
             </Section>
+            <Section title="Editable cells (double-click Name or Role · Enter commits · Esc reverts)">
+                <div data-compare="data-table-editable" style={{ width: 460 }}>
+                    <EditableDataTableSpecimen />
+                </div>
+            </Section>
             <Section title="No gutter">
                 <div style={{ width: 460 }}>
                     <DataTable<DataTablePerson>
@@ -4989,6 +4994,27 @@ function DataTableGallery() {
                 </div>
             </Section>
         </div>
+    );
+}
+
+/** Editable-cells specimen (Loop 5): Name + Role columns commit edits into local state. */
+const DATA_TABLE_EDITABLE_COLUMNS: DataTableColumn<DataTablePerson>[] = [
+    { id: "name", header: "Name", accessor: "name", width: 160, editable: true },
+    { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+    { id: "role", header: "Role", accessor: "role", width: 120, editable: true },
+    { id: "location", header: "Location", accessor: "location", width: 120 },
+];
+
+function EditableDataTableSpecimen() {
+    const [rows, setRows] = useState(DATA_TABLE_ROWS);
+    return (
+        <DataTable<DataTablePerson>
+            data={rows}
+            columns={DATA_TABLE_EDITABLE_COLUMNS}
+            onCellEdit={({ row, columnId, value }) =>
+                setRows((prev) => prev.map((r, i) => (i === row ? { ...r, [columnId]: value } : r)))
+            }
+        />
     );
 }
 

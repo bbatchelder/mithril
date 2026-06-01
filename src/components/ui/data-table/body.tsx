@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 import type { DataTableColumnMeta } from "../data-table";
+import { EditableCell } from "./editable-cell";
 import { GutterCell, alignClass } from "./gutter";
 import {
     cellRegion,
@@ -53,6 +54,14 @@ export interface DataTableBodyProps<TRow> {
     regions: SelectionRegion[];
     /** The focused cell, painted with a 2px outline (Loop 3). */
     focusedCell: CellCoord | null;
+    /** The cell currently in edit mode (Loop 5), or null. */
+    editingCell?: CellCoord | null;
+    /** Double-click on an editable data cell — `(row, col)`. Begins editing. */
+    onCellDoubleClick?: (row: number, col: number) => void;
+    /** Commit an edit — `(row, col, value)`. Fired on Enter or blur in the editor. */
+    onCellEditCommit?: (row: number, col: number, value: string) => void;
+    /** Cancel an edit (Esc) — revert without committing. */
+    onCellEditCancel?: () => void;
     /** Pointer-down on a data cell — `(row, col, shiftKey)`. Begins a click/drag selection. */
     onCellMouseDown?: (row: number, col: number, shiftKey: boolean) => void;
     /** Pointer enters a data cell mid-drag — `(row, col)`. Extends the active region. */
@@ -72,6 +81,10 @@ export function DataTableBody<TRow>({
     height,
     regions,
     focusedCell,
+    editingCell,
+    onCellDoubleClick,
+    onCellEditCommit,
+    onCellEditCancel,
     onCellMouseDown,
     onCellMouseEnter,
     onGutterMouseDown,
@@ -140,6 +153,11 @@ export function DataTableBody<TRow>({
                         {row.getVisibleCells().map((cell, colIndex) => {
                             const meta = cell.column.columnDef.meta as DataTableColumnMeta | undefined;
                             const align = meta?.align ?? "left";
+                            const editable = meta?.editable ?? false;
+                            const isEditing =
+                                editable &&
+                                editingCell?.row === virtualRow.index &&
+                                editingCell?.col === colIndex;
                             return (
                                 <div
                                     role="gridcell"
@@ -155,8 +173,14 @@ export function DataTableBody<TRow>({
                                             ? () => onCellMouseEnter(virtualRow.index, colIndex)
                                             : undefined
                                     }
+                                    onDoubleClick={
+                                        editable && onCellDoubleClick
+                                            ? () => onCellDoubleClick(virtualRow.index, colIndex)
+                                            : undefined
+                                    }
                                     className={cn(
-                                        "box-border shrink-0 overflow-hidden text-ellipsis whitespace-nowrap px-2",
+                                        // `relative` so the absolutely-positioned editor fills this cell.
+                                        "relative box-border shrink-0 overflow-hidden text-ellipsis whitespace-nowrap px-2",
                                         "text-[12px] text-foreground",
                                         "shadow-[inset_0_-1px_0_rgba(17,20,24,0.15),inset_-1px_0_0_rgba(17,20,24,0.15)]",
                                         "dark:shadow-[inset_0_-1px_0_rgba(17,20,24,0.4),inset_-1px_0_0_rgba(17,20,24,0.4)]",
@@ -172,7 +196,18 @@ export function DataTableBody<TRow>({
                                         lineHeight: `${rowHeight}px`,
                                     }}
                                 >
-                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                    {isEditing ? (
+                                        <EditableCell
+                                            value={String(cell.getValue() ?? "")}
+                                            align={align}
+                                            onCommit={(v) =>
+                                                onCellEditCommit?.(virtualRow.index, colIndex, v)
+                                            }
+                                            onCancel={() => onCellEditCancel?.()}
+                                        />
+                                    ) : (
+                                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                                    )}
                                 </div>
                             );
                         })}

@@ -159,8 +159,26 @@ export interface DataTableProps<TRow> {
     defaultFocusedCell?: CellCoord | null;
     /** Called when the focused cell changes. */
     onFocusedCellChange?: (cell: CellCoord | null) => void;
+    /**
+     * Called when an editable cell's value is committed (Loop 5) — Enter or blur on the
+     * inline editor. Mark columns editable with the column's `editable` flag; double-click
+     * such a cell to edit. The grid does not mutate `data` — apply the change in this callback.
+     */
+    onCellEdit?: (edit: DataTableCellEdit) => void;
     /** Extra class names on the scroll container. */
     className?: string;
+}
+
+/** Payload for {@link DataTableProps.onCellEdit} — a committed inline cell edit. */
+export interface DataTableCellEdit {
+    /** Zero-based row index in `data`. */
+    row: number;
+    /** Zero-based visual column index. */
+    col: number;
+    /** The edited column's `id`. */
+    columnId: string;
+    /** The new (string) value the user entered. */
+    value: string;
 }
 
 // ── Token constants (Blueprint @blueprintjs/table v6.1.1) ──────────────────
@@ -267,6 +285,7 @@ export function DataTable<TRow>({
     focusedCell: focusedCellProp,
     defaultFocusedCell,
     onFocusedCellChange,
+    onCellEdit,
     className,
 }: DataTableProps<TRow>) {
     const columnDefs = useMemo(
@@ -416,6 +435,29 @@ export function DataTable<TRow>({
         if (!cellsEqual({ row: 0, col: 0 }, focusedCell)) setFocusedCell({ row: 0, col: 0 });
     }, [regions, focusedCell, setRegions, setFocusedCell]);
 
+    // ── Editable cells (Loop 5) ───────────────────────────────────────────────
+    // The grid owns which cell is editing; double-clicking an editable cell enters
+    // edit mode (and focuses it). Enter/blur commits via `onCellEdit`, Esc reverts.
+    const [editingCell, setEditingCell] = useState<CellCoord | null>(null);
+
+    const handleCellDoubleClick = useCallback(
+        (row: number, col: number) => {
+            setEditingCell({ row, col });
+            // Keep the focused-cell outline in step with the cell being edited.
+            if (!cellsEqual({ row, col }, focusedCell)) setFocusedCell({ row, col });
+        },
+        [focusedCell, setFocusedCell],
+    );
+    const handleCellEditCommit = useCallback(
+        (row: number, col: number, value: string) => {
+            setEditingCell(null);
+            const columnId = table.getVisibleLeafColumns()[col]?.id ?? "";
+            onCellEdit?.({ row, col, columnId, value });
+        },
+        [table, onCellEdit],
+    );
+    const handleCellEditCancel = useCallback(() => setEditingCell(null), []);
+
     // ── Column reorder (Loop 4b) ──────────────────────────────────────────────
     // The inner sizer — the positioned ancestor for both the resize and the reorder guide.
     // We also read its left edge to convert a pointer clientX into content-space x.
@@ -527,6 +569,10 @@ export function DataTable<TRow>({
                     height={height}
                     regions={regions}
                     focusedCell={focusedCell}
+                    editingCell={editingCell}
+                    onCellDoubleClick={handleCellDoubleClick}
+                    onCellEditCommit={handleCellEditCommit}
+                    onCellEditCancel={handleCellEditCancel}
                     onCellMouseDown={selectable ? handleCellMouseDown : undefined}
                     onCellMouseEnter={selectable ? handleCellMouseEnter : undefined}
                     onGutterMouseDown={selectable ? handleGutterMouseDown : undefined}

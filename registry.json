@@ -343,6 +343,11 @@
                     "target": "components/ui/data-table/body.tsx"
                 },
                 {
+                    "path": "src/components/ui/data-table/editable-cell.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/data-table/editable-cell.tsx"
+                },
+                {
                     "path": "src/components/ui/data-table/gutter.tsx",
                     "type": "registry:ui",
                     "target": "components/ui/data-table/gutter.tsx"

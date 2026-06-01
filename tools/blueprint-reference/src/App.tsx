@@ -1,7 +1,7 @@
 import { Alert, Alignment, AnchorButton, Breadcrumb as BpBreadcrumb, Breadcrumbs as BpBreadcrumbs, Button, ButtonGroup, Callout, Card, CardList as BpCardList, Checkbox, CheckboxCard, Classes, Collapse, ControlGroup, Dialog, DialogBody, DialogFooter, Divider, Drawer, DrawerSize, MultistepDialog, DialogStep, EditableText as BpEditableText, EntityTitle as BpEntityTitle, FileInput, FormGroup, H1, H2, H3, H4, H5, H6, Hotkey, Hotkeys, HTMLSelect, HTMLTable as BpHTMLTable, Icon, InputGroup, KeyComboTag, Label, Link as BpLink, Menu, MenuDivider, MenuItem, Navbar, NavbarDivider, NavbarGroup, NavbarHeading, NonIdealState as BpNonIdealState, NonIdealStateIconSize as BpNonIdealStateIconSize, NumericInput, PanelStack as BpPanelStack, type Panel as BpPanel, Popover, ProgressBar, Radio, RadioCard, RadioGroup, Section as BpSection, SectionCard as BpSectionCard, SegmentedControl, Slider as BpSlider, Spinner, SpinnerSize, Switch, SwitchCard, Tab, Tabs, Tag, TagInput as BpTagInput, Text, TextArea, Tooltip, Tree as BpTree, type ButtonVariant, type Intent, type TreeNodeInfo as BpTreeNodeInfo } from "@blueprintjs/core";
 import { MultiSelect as BpMultiSelect, Omnibar as BpOmnibar, Select as BpSelect, Suggest as BpSuggest } from "@blueprintjs/select";
 import { DateInput as BpDateInput, DatePicker as BpDatePicker, DateRangePicker as BpDateRangePicker, DateRangeInput as BpDateRangeInput, TimePicker as BpTimePicker, TimezoneSelect as BpTimezoneSelect } from "@blueprintjs/datetime";
-import { Cell as BpCell, Column as BpColumn, Table2 as BpTable2 } from "@blueprintjs/table";
+import { Cell as BpCell, Column as BpColumn, EditableCell2 as BpEditableCell2, Table2 as BpTable2 } from "@blueprintjs/table";
 import { useEffect, useRef, useState } from "react";
 
 const VARIANTS: ButtonVariant[] = ["solid", "outlined", "minimal"];
@@ -5315,7 +5315,40 @@ function DataTableGallery() {
                     </BpTable2>
                 </div>
             </BpSection>
+            <BpSection title="Editable cells (double-click Name or Role · Enter commits · Esc reverts)">
+                <div data-compare="data-table-editable" style={{ width: 460, height: 150 }}>
+                    <EditableDataTableReference />
+                </div>
+            </BpSection>
         </div>
+    );
+}
+
+/** Editable-cells reference (Loop 5): Name + Role use Blueprint's `EditableCell2`. */
+function EditableDataTableReference() {
+    const [rows, setRows] = useState(DATA_TABLE_ROWS);
+    const setCell = (key: "name" | "role", r: number, value: string) =>
+        setRows((prev) => prev.map((row, i) => (i === r ? { ...row, [key]: value } : row)));
+    return (
+        <BpTable2 numRows={rows.length} columnWidths={[160, 60, 120, 120]} enableRowResizing={false}>
+            <BpColumn
+                name="Name"
+                cellRenderer={(r) => (
+                    <BpEditableCell2 value={rows[r].name} onConfirm={(v) => setCell("name", r, v)} />
+                )}
+            />
+            <BpColumn
+                name="Age"
+                cellRenderer={(r) => <BpCell style={{ textAlign: "right" }}>{rows[r].age}</BpCell>}
+            />
+            <BpColumn
+                name="Role"
+                cellRenderer={(r) => (
+                    <BpEditableCell2 value={rows[r].role} onConfirm={(v) => setCell("role", r, v)} />
+                )}
+            />
+            <BpColumn name="Location" cellRenderer={(r) => <BpCell>{rows[r].location}</BpCell>} />
+        </BpTable2>
     );
 }
 

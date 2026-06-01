@@ -108,7 +108,10 @@ this correctly — use it as the reference pattern.
 >   handle (Blueprint `.bp6-table-reorder-handle-target`, 22px grab zone + 22px name indent),
 >   drag-to-reorder with a blue drop guide + grabbing cursor overlay, TanStack `columnOrder` state,
 >   `enableColumnReordering` + controllable `columnOrder`/`onColumnOrderChange`.
-> - [ ] **Loop 5** — editable cells
+> - [x] **Loop 5** — editable cells (handoff 0091): per-column `editable` flag; double-click an
+>   editable cell → borderless inline `EditableCell` seeded + auto-selected, **Enter/blur commits**
+>   (`onCellEdit`), **Esc reverts**. Editing ring = the `shadow-input-focus` token (== Blueprint
+>   `.bp6-editable-text-editing` box-shadow, both themes); the grid owns `editingCell` state.
 > - [ ] **Loop 6** — keyboard navigation + clipboard copy
 > - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs
 
