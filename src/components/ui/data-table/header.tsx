@@ -10,10 +10,10 @@ import { isColumnSelected, type SelectionRegion } from "./selection";
 
 /**
  * The sticky column-header row. Blueprint `.bp6-table-column-headers .bp6-table-header`:
- *   line-height 30px, min-height 30px, bottom border (0 1px 0 <border>).
+ *   line-height 30px, min-height 30px, bottom border (0 1px 0 <border>) + a 1px inset
+ *   right divider (inset -1px 0 0 <border>) between headers — both themes.
  *   Header **text** (`.bp6-table-column-name-text`) is the body default **14px** —
  *   NOT the 12px of body cells — at line-height 30px (vertically filling the header).
- *   (dark theme additionally draws a 1px right inset divider between headers.)
  *
  * Header text is always left-aligned — Blueprint column headers do not follow a
  * column's cell alignment (a right-aligned numeric column still has a left header).
@@ -88,7 +88,10 @@ export function DataTableHeader<TRow>({
                                     showHandle ? "pl-[22px] pr-2" : "px-2",
                                     "bg-background dark:bg-[#383e47]",
                                     "whitespace-nowrap text-[14px] font-normal text-foreground",
-                                    "shadow-[0_1px_0_rgba(17,20,24,0.15)]",
+                                    // Blueprint `.bp6-table-column-headers .bp6-table-header`: a bottom
+                                    // border (0 1px 0) AND an inset right divider (inset -1px 0 0) —
+                                    // the vertical separator between column headers, in BOTH themes.
+                                    "shadow-[0_1px_0_rgba(17,20,24,0.15),inset_-1px_0_0_rgba(17,20,24,0.15)]",
                                     "dark:shadow-[0_1px_0_rgba(17,20,24,0.4),inset_-1px_0_0_rgba(17,20,24,0.4)]",
                                     // Blue 10% tint as a background-image gradient (over the gray bg).
                                     selected &&
