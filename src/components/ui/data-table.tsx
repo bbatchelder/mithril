@@ -11,15 +11,18 @@ import { cn } from "@/lib/utils";
 import { DataTableBody } from "./data-table/body";
 import { DataTableHeader } from "./data-table/header";
 import {
+    cellRegion,
     cellsEqual,
     columnsRegion,
     regionListsEqual,
+    regionToTSV,
     selectionReducer,
     type CellCoord,
     type SelectionAction,
     type SelectionRegion,
     type SelectionState,
 } from "./data-table/selection";
+import type { EditCommitMove } from "./data-table/editable-cell";
 
 export type { CellCoord, SelectionRegion } from "./data-table/selection";
 
@@ -440,6 +443,16 @@ export function DataTable<TRow>({
     // edit mode (and focuses it). Enter/blur commits via `onCellEdit`, Esc reverts.
     const [editingCell, setEditingCell] = useState<CellCoord | null>(null);
 
+    const isColEditable = useCallback(
+        (col: number) => {
+            const def = table.getVisibleLeafColumns()[col]?.columnDef.meta as
+                | DataTableColumnMeta
+                | undefined;
+            return def?.editable ?? false;
+        },
+        [table],
+    );
+
     const handleCellDoubleClick = useCallback(
         (row: number, col: number) => {
             setEditingCell({ row, col });
@@ -448,15 +461,176 @@ export function DataTable<TRow>({
         },
         [focusedCell, setFocusedCell],
     );
+
+    // ── Keyboard navigation + clipboard (Loop 6) ──────────────────────────────
+    // The grid container (the scroll viewport) is focusable; arrows move the focused
+    // cell, Shift extends the region, Tab/Enter advance with wrap, Enter/F2 start an
+    // edit on an editable cell, and Cmd/Ctrl-C copies the selection as TSV.
+
+    /** Return focus to the grid (e.g. after an edit ends) so keyboard nav keeps working. */
+    const focusGrid = useCallback(() => scrollEl?.focus({ preventScroll: true }), [scrollEl]);
+
+    /** Scroll the viewport so data row `r` clears the sticky header and is fully visible. */
+    const scrollRowIntoView = useCallback(
+        (r: number) => {
+            const el = scrollEl;
+            if (!el) return;
+            const rowTop = COLUMN_HEADER_HEIGHT + r * rowHeight; // content-space top of the row
+            const viewTop = el.scrollTop + COLUMN_HEADER_HEIGHT; // first px not under the sticky header
+            const viewBottom = el.scrollTop + el.clientHeight;
+            if (rowTop < viewTop) el.scrollTop = rowTop - COLUMN_HEADER_HEIGHT;
+            else if (rowTop + rowHeight > viewBottom) el.scrollTop = rowTop + rowHeight - el.clientHeight;
+        },
+        [scrollEl, rowHeight],
+    );
+
+    /**
+     * Move the focused cell by (dRow, dCol). `extend` (Shift) grows the active region from
+     * the anchor to the new cell; otherwise it collapses to a single-cell selection at the
+     * new cell. `wrap` lets Tab/Enter roll over a row/column edge into the next line.
+     */
+    const moveFocus = useCallback(
+        (dRow: number, dCol: number, extend: boolean, wrap?: "horizontal" | "vertical") => {
+            const rowCount = data.length;
+            const colCount = table.getVisibleLeafColumns().length;
+            if (rowCount === 0 || colCount === 0) return;
+
+            // First keystroke with no focus yet anchors at the top-left cell.
+            if (!focusedCell) {
+                anchorRef.current = { row: 0, col: 0 };
+                setRegions([cellRegion(0, 0)]);
+                setFocusedCell({ row: 0, col: 0 });
+                scrollRowIntoView(0);
+                return;
+            }
+
+            let r = focusedCell.row + dRow;
+            let c = focusedCell.col + dCol;
+            if (wrap === "horizontal") {
+                if (c >= colCount) (c = 0), (r += 1);
+                else if (c < 0) (c = colCount - 1), (r -= 1);
+            } else if (wrap === "vertical") {
+                if (r >= rowCount) (r = 0), (c += 1);
+                else if (r < 0) (r = rowCount - 1), (c -= 1);
+            }
+            r = Math.max(0, Math.min(rowCount - 1, r));
+            c = Math.max(0, Math.min(colCount - 1, c));
+
+            const next = { row: r, col: c };
+            if (extend) {
+                const a = anchorRef.current ?? focusedCell;
+                const region: SelectionRegion = {
+                    rows: [Math.min(a.row, r), Math.max(a.row, r)],
+                    cols: [Math.min(a.col, c), Math.max(a.col, c)],
+                };
+                if (!regionListsEqual([region], regions)) setRegions([region]);
+            } else {
+                anchorRef.current = next;
+                const region = cellRegion(r, c);
+                if (!regionListsEqual([region], regions)) setRegions([region]);
+            }
+            if (!cellsEqual(next, focusedCell)) setFocusedCell(next);
+            scrollRowIntoView(r);
+        },
+        [data.length, table, focusedCell, regions, setRegions, setFocusedCell, scrollRowIntoView],
+    );
+
+    /** Copy the active selection region to the clipboard as TSV (Cmd/Ctrl-C). */
+    const copySelection = useCallback(() => {
+        if (regions.length === 0) return;
+        const region = regions[regions.length - 1];
+        const cols = table.getVisibleLeafColumns();
+        const modelRows = table.getRowModel().rows;
+        const tsv = regionToTSV(region, data.length, cols.length, (r, c) => {
+            const col = cols[c];
+            return col ? modelRows[r]?.getValue(col.id) : undefined;
+        });
+        // Async Clipboard API where available; a hidden-textarea fallback otherwise (older
+        // browsers / insecure contexts). Either way the copy is best-effort and non-throwing.
+        const nav = typeof navigator !== "undefined" ? navigator : undefined;
+        if (nav?.clipboard?.writeText) {
+            void nav.clipboard.writeText(tsv).catch(() => {});
+        } else if (typeof document !== "undefined") {
+            const ta = document.createElement("textarea");
+            ta.value = tsv;
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand("copy");
+            } catch {
+                /* no-op */
+            }
+            document.body.removeChild(ta);
+        }
+    }, [regions, table, data.length]);
+
     const handleCellEditCommit = useCallback(
-        (row: number, col: number, value: string) => {
+        (row: number, col: number, value: string, move?: EditCommitMove) => {
             setEditingCell(null);
             const columnId = table.getVisibleLeafColumns()[col]?.id ?? "";
             onCellEdit?.({ row, col, columnId, value });
+            // Return focus to the grid, then advance spreadsheet-style for a keyboard commit.
+            focusGrid();
+            if (move === "down") moveFocus(1, 0, false);
+            else if (move === "up") moveFocus(-1, 0, false);
+            else if (move === "right") moveFocus(0, 1, false, "horizontal");
+            else if (move === "left") moveFocus(0, -1, false, "horizontal");
         },
-        [table, onCellEdit],
+        [table, onCellEdit, focusGrid, moveFocus],
     );
-    const handleCellEditCancel = useCallback(() => setEditingCell(null), []);
+    const handleCellEditCancel = useCallback(() => {
+        setEditingCell(null);
+        focusGrid();
+    }, [focusGrid]);
+
+    const handleKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLDivElement>) => {
+            if (editingCell) return; // the editor owns its own keys
+            switch (e.key) {
+                case "ArrowUp":
+                    e.preventDefault();
+                    moveFocus(-1, 0, e.shiftKey);
+                    break;
+                case "ArrowDown":
+                    e.preventDefault();
+                    moveFocus(1, 0, e.shiftKey);
+                    break;
+                case "ArrowLeft":
+                    e.preventDefault();
+                    moveFocus(0, -1, e.shiftKey);
+                    break;
+                case "ArrowRight":
+                    e.preventDefault();
+                    moveFocus(0, 1, e.shiftKey);
+                    break;
+                case "Tab":
+                    e.preventDefault();
+                    moveFocus(0, e.shiftKey ? -1 : 1, false, "horizontal");
+                    break;
+                case "Enter":
+                    e.preventDefault();
+                    if (focusedCell && isColEditable(focusedCell.col)) setEditingCell(focusedCell);
+                    else moveFocus(e.shiftKey ? -1 : 1, 0, false, "vertical");
+                    break;
+                case "F2":
+                    if (focusedCell && isColEditable(focusedCell.col)) {
+                        e.preventDefault();
+                        setEditingCell(focusedCell);
+                    }
+                    break;
+                case "c":
+                case "C":
+                    if (e.metaKey || e.ctrlKey) {
+                        e.preventDefault();
+                        copySelection();
+                    }
+                    break;
+            }
+        },
+        [editingCell, focusedCell, isColEditable, moveFocus, copySelection],
+    );
 
     // ── Column reorder (Loop 4b) ──────────────────────────────────────────────
     // The inner sizer — the positioned ancestor for both the resize and the reorder guide.
@@ -533,7 +707,13 @@ export function DataTable<TRow>({
             role="grid"
             aria-rowcount={data.length}
             aria-colcount={columns.length}
+            // Focusable so the grid can receive keyboard nav (Loop 6). The focused *cell* shows
+            // the 2px outline, so the container itself suppresses its own focus ring (Blueprint
+            // does the same) — `outline-none` keeps the resting compare crop unchanged.
+            tabIndex={selectable ? 0 : undefined}
+            onKeyDown={selectable ? handleKeyDown : undefined}
             className={cn(
+                "outline-none",
                 // Scroll container + outer frame. Blueprint's `.bp6-table-container` draws
                 // its 1px frame with `box-shadow: 0 0 0 1px` (no layout impact) over a
                 // light-gray-5 surface (== analyst `--background`); dark uses #383e47.

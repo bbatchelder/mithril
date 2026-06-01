@@ -187,6 +187,38 @@ export function selectionReducer(state: SelectionState, action: SelectionAction)
     }
 }
 
+// ── Clipboard ─────────────────────────────────────────────────────────────────
+
+/**
+ * Serialize a selection region to **TSV** — tab-separated columns, newline-separated rows —
+ * the format Blueprint's `Table2` copies and that spreadsheets paste natively (Loop 6).
+ *
+ * `getValue(row, col)` returns the raw value for a data cell; `null`/`undefined` become an
+ * empty field. A `null` `rows` (column band) expands to every row `0..rowCount-1`; a `null`
+ * `cols` (row band) to every column `0..colCount-1`; both `null` (whole table) to everything.
+ */
+export function regionToTSV(
+    region: SelectionRegion,
+    rowCount: number,
+    colCount: number,
+    getValue: (row: number, col: number) => unknown,
+): string {
+    const r0 = region.rows ? region.rows[0] : 0;
+    const r1 = region.rows ? region.rows[1] : rowCount - 1;
+    const c0 = region.cols ? region.cols[0] : 0;
+    const c1 = region.cols ? region.cols[1] : colCount - 1;
+    const lines: string[] = [];
+    for (let r = r0; r <= r1; r++) {
+        const cells: string[] = [];
+        for (let c = c0; c <= c1; c++) {
+            const v = getValue(r, c);
+            cells.push(v == null ? "" : String(v));
+        }
+        lines.push(cells.join("\t"));
+    }
+    return lines.join("\n");
+}
+
 // ── Pixel geometry ──────────────────────────────────────────────────────────
 
 /** Static geometry the body needs to turn a region into a pixel rect. */

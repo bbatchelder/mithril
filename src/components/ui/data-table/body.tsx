@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 import type { DataTableColumnMeta } from "../data-table";
-import { EditableCell } from "./editable-cell";
+import { EditableCell, type EditCommitMove } from "./editable-cell";
 import { GutterCell, alignClass } from "./gutter";
 import {
     cellRegion,
@@ -58,8 +58,8 @@ export interface DataTableBodyProps<TRow> {
     editingCell?: CellCoord | null;
     /** Double-click on an editable data cell — `(row, col)`. Begins editing. */
     onCellDoubleClick?: (row: number, col: number) => void;
-    /** Commit an edit — `(row, col, value)`. Fired on Enter or blur in the editor. */
-    onCellEditCommit?: (row: number, col: number, value: string) => void;
+    /** Commit an edit — `(row, col, value, move?)`. Fired on Enter, Tab, or blur in the editor. */
+    onCellEditCommit?: (row: number, col: number, value: string, move?: EditCommitMove) => void;
     /** Cancel an edit (Esc) — revert without committing. */
     onCellEditCancel?: () => void;
     /** Pointer-down on a data cell — `(row, col, shiftKey)`. Begins a click/drag selection. */
@@ -207,8 +207,8 @@ export function DataTableBody<TRow>({
                                         <EditableCell
                                             value={String(cell.getValue() ?? "")}
                                             align={align}
-                                            onCommit={(v) =>
-                                                onCellEditCommit?.(virtualRow.index, colIndex, v)
+                                            onCommit={(v, move) =>
+                                                onCellEditCommit?.(virtualRow.index, colIndex, v, move)
                                             }
                                             onCancel={() => onCellEditCancel?.()}
                                         />

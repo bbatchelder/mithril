@@ -21,20 +21,31 @@ import { alignClass } from "./gutter";
  * Lifecycle: **Enter or blur commits** (`onCommit`), **Esc reverts** (`onCancel`). A
  * `done` latch makes the blur that follows an Enter/Esc a no-op, so a commit never
  * double-fires. `mousedown`/`keydown` are stopped from bubbling so the grid's
- * selection-drag and (future) keyboard-nav handlers don't react while editing.
+ * selection-drag and keyboard-nav handlers don't react while editing.
+ *
+ * Loop 6: a commit carries a **move direction** so the grid can advance the focused cell
+ * spreadsheet-style — Enter→down, Shift+Enter→up, Tab→right, Shift+Tab→left; a blur commits
+ * in place (no move).
  *
  * This is deliberately **not** built on `editable-text.tsx`: that component owns its
  * own edit-mode lifecycle (click-to-edit, confirm/cancel) which fights the grid's
  * focused-cell model. Here the grid owns "which cell is editing" and this is a thin,
  * always-editing input.
  */
+/** Direction to advance the focused cell after a keyboard commit. */
+export type EditCommitMove = "up" | "down" | "left" | "right";
+
 export interface EditableCellProps {
     /** The committed value to seed the editor with. */
     value: string;
     /** Column alignment, inherited so the editing text lines up with the resting text. */
     align?: DataTableColumnAlign;
-    /** Commit the edited value — fired on Enter or blur. */
-    onCommit: (value: string) => void;
+    /**
+     * Commit the edited value — fired on Enter, Tab, or blur. `move` is the direction to
+     * advance the focused cell afterwards (Enter→down, Shift+Enter→up, Tab→right,
+     * Shift+Tab→left); a blur commits in place with no `move`.
+     */
+    onCommit: (value: string, move?: EditCommitMove) => void;
     /** Discard the edit and revert — fired on Esc. */
     onCancel: () => void;
 }
@@ -54,10 +65,10 @@ export function EditableCell({ value, align = "left", onCommit, onCancel }: Edit
         }
     }, []);
 
-    const commit = () => {
+    const commit = (move?: EditCommitMove) => {
         if (doneRef.current) return;
         doneRef.current = true;
-        onCommit(draft);
+        onCommit(draft, move);
     };
     const cancel = () => {
         if (doneRef.current) return;
@@ -71,13 +82,16 @@ export function EditableCell({ value, align = "left", onCommit, onCancel }: Edit
             data-editable-cell
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
+            onBlur={() => commit()}
             onKeyDown={(e) => {
-                // Keep grid-level handlers (selection drag, future keyboard nav) out of it.
+                // Keep grid-level handlers (selection drag, keyboard nav) out of it.
                 e.stopPropagation();
                 if (e.key === "Enter") {
                     e.preventDefault();
-                    commit();
+                    commit(e.shiftKey ? "up" : "down");
+                } else if (e.key === "Tab") {
+                    e.preventDefault();
+                    commit(e.shiftKey ? "left" : "right");
                 } else if (e.key === "Escape") {
                     e.preventDefault();
                     cancel();

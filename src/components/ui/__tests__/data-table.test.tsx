@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { axe } from "@/test/axe";
 
 import { DataTable, type DataTableColumn } from "../data-table";
+import { regionToTSV } from "../data-table/selection";
 
 /**
  * DataTable engine + DOM contract: grid roles, header/gutter/cell rendering, accessor +
@@ -461,6 +462,162 @@ describe("DataTable — editable cells (Loop 5)", () => {
         expect(called).toBe(false);
         expect(container.querySelector("[data-editable-cell]")).toBeNull();
         expect(screen.getByRole("gridcell", { name: "Alice" })).toBeInTheDocument();
+    });
+});
+
+describe("DataTable — keyboard navigation + clipboard (Loop 6)", () => {
+    const EDITABLE_COLUMNS: DataTableColumn<Person>[] = [
+        { id: "name", header: "Name", accessor: "name", editable: true },
+        { id: "age", header: "Age", accessor: "age", align: "right" },
+        { id: "role", header: "Role", accessor: (r) => r.role, editable: true },
+    ];
+    const selectedTexts = () =>
+        screen
+            .getAllByRole("gridcell")
+            .filter((c) => c.getAttribute("aria-selected") === "true")
+            .map((c) => c.textContent);
+
+    function focusCell(text: string) {
+        fireEvent.mouseDown(screen.getByRole("gridcell", { name: text }));
+        fireEvent.mouseUp(document);
+    }
+
+    it("the grid is focusable when selectable, and not when selection is off", () => {
+        const { rerender } = render(<DataTable<Person> data={ROWS} columns={COLUMNS} />);
+        expect(screen.getByRole("grid")).toHaveAttribute("tabindex", "0");
+        rerender(<DataTable<Person> data={ROWS} columns={COLUMNS} selectionMode="none" />);
+        expect(screen.getByRole("grid")).not.toHaveAttribute("tabindex");
+    });
+
+    it("arrow keys move the focused single-cell selection", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // {0,0}
+        fireEvent.keyDown(grid, { key: "ArrowDown" });
+        expect(selectedTexts()).toEqual(["Bob"]); // {1,0}
+        fireEvent.keyDown(grid, { key: "ArrowRight" });
+        expect(selectedTexts()).toEqual(["29"]); // {1,1}
+        fireEvent.keyDown(grid, { key: "ArrowUp" });
+        expect(selectedTexts()).toEqual(["34"]); // {0,1}
+    });
+
+    it("arrow keys clamp at the grid edges", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // {0,0}
+        fireEvent.keyDown(grid, { key: "ArrowUp" }); // already at top row
+        fireEvent.keyDown(grid, { key: "ArrowLeft" }); // already at first col
+        expect(selectedTexts()).toEqual(["Alice"]);
+    });
+
+    it("Shift+Arrow extends the region from the anchor", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // anchor {0,0}
+        fireEvent.keyDown(grid, { key: "ArrowDown", shiftKey: true });
+        // region rows[0,1] × cols[0,0] → Alice + Bob selected.
+        expect(selectedTexts()).toEqual(["Alice", "Bob"]);
+        fireEvent.keyDown(grid, { key: "ArrowRight", shiftKey: true });
+        // region rows[0,1] × cols[0,1] → 4 cells.
+        expect(selectedTexts()).toEqual(["Alice", "34", "Bob", "29"]);
+    });
+
+    it("Tab wraps to the next row's first column at a row edge", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        focusCell("ENGINEER"); // {0,2} — last column of row 0
+        fireEvent.keyDown(grid, { key: "Tab" });
+        expect(selectedTexts()).toEqual(["Bob"]); // wrapped to {1,0}
+        fireEvent.keyDown(grid, { key: "Tab", shiftKey: true });
+        expect(selectedTexts()).toEqual(["ENGINEER"]); // back to {0,2}
+    });
+
+    it("the first keystroke with no focus anchors at the top-left cell", () => {
+        renderTable();
+        const grid = screen.getByRole("grid");
+        grid.focus();
+        fireEvent.keyDown(grid, { key: "ArrowDown" });
+        expect(selectedTexts()).toEqual(["Alice"]); // {0,0}, not {1,0}
+    });
+
+    it("Enter / F2 on an editable focused cell starts editing", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={EDITABLE_COLUMNS} numberedRows={false} />,
+        );
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // editable column
+        fireEvent.keyDown(grid, { key: "Enter" });
+        expect(container.querySelector("[data-editable-cell]")).not.toBeNull();
+        fireEvent.keyDown(screen.getByRole("grid"), { key: "Escape" }); // (no-op at grid level)
+    });
+
+    it("Enter on a NON-editable focused cell moves down instead of editing", () => {
+        const { container } = render(
+            <DataTable<Person> data={ROWS} columns={EDITABLE_COLUMNS} numberedRows={false} />,
+        );
+        const grid = screen.getByRole("grid");
+        focusCell("34"); // Age — not editable, {0,1}
+        fireEvent.keyDown(grid, { key: "Enter" });
+        expect(container.querySelector("[data-editable-cell]")).toBeNull();
+        expect(selectedTexts()).toEqual(["29"]); // moved down to {1,1}
+    });
+
+    it("committing an edit with Enter advances the focused cell downward", () => {
+        const edits: string[] = [];
+        render(
+            <DataTable<Person>
+                data={ROWS}
+                columns={EDITABLE_COLUMNS}
+                numberedRows={false}
+                onCellEdit={(e) => edits.push(e.value)}
+            />,
+        );
+        const grid = screen.getByRole("grid");
+        focusCell("Alice"); // {0,0}
+        fireEvent.keyDown(grid, { key: "Enter" }); // start editing
+        const input = screen.getByDisplayValue("Alice");
+        fireEvent.change(input, { target: { value: "Alicia" } });
+        fireEvent.keyDown(input, { key: "Enter" }); // commit + move down
+        expect(edits).toEqual(["Alicia"]);
+        expect(selectedTexts()).toEqual(["Bob"]); // focus advanced to {1,0}
+    });
+
+    it("Cmd/Ctrl-C copies the selected region as TSV", () => {
+        const writeText = vi.fn(() => Promise.resolve());
+        const orig = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+        Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+        try {
+            renderTable();
+            const grid = screen.getByRole("grid");
+            focusCell("Alice"); // {0,0}
+            fireEvent.keyDown(grid, { key: "ArrowDown", shiftKey: true }); // extend to {1,0}
+            fireEvent.keyDown(grid, { key: "ArrowRight", shiftKey: true }); // extend to {1,1}
+            fireEvent.keyDown(grid, { key: "c", ctrlKey: true });
+            expect(writeText).toHaveBeenCalledTimes(1);
+            // rows 0-1 × cols 0-1 → name/age grid, tab + newline separated.
+            expect(writeText.mock.calls[0][0]).toBe("Alice\t34\nBob\t29");
+        } finally {
+            if (orig) Object.defineProperty(navigator, "clipboard", orig);
+            else delete (navigator as { clipboard?: unknown }).clipboard;
+        }
+    });
+});
+
+describe("regionToTSV (Loop 6)", () => {
+    const val = (r: number, c: number) => `r${r}c${c}`;
+    it("serializes a cell range as tab + newline separated rows", () => {
+        expect(regionToTSV({ rows: [0, 1], cols: [1, 2] }, 3, 3, val)).toBe(
+            "r0c1\tr0c2\nr1c1\tr1c2",
+        );
+    });
+    it("expands a null rows range (column band) to every row", () => {
+        expect(regionToTSV({ rows: null, cols: [0, 0] }, 3, 3, val)).toBe("r0c0\nr1c0\nr2c0");
+    });
+    it("expands a null cols range (row band) to every column", () => {
+        expect(regionToTSV({ rows: [2, 2], cols: null }, 3, 3, val)).toBe("r2c0\tr2c1\tr2c2");
+    });
+    it("renders null/undefined values as empty fields", () => {
+        expect(regionToTSV({ rows: [0, 0], cols: [0, 1] }, 1, 2, () => null)).toBe("\t");
     });
 });
 

@@ -112,7 +112,11 @@ this correctly — use it as the reference pattern.
 >   editable cell → borderless inline `EditableCell` seeded + auto-selected, **Enter/blur commits**
 >   (`onCellEdit`), **Esc reverts**. Editing ring = the `shadow-input-focus` token (== Blueprint
 >   `.bp6-editable-text-editing` box-shadow, both themes); the grid owns `editingCell` state.
-> - [ ] **Loop 6** — keyboard navigation + clipboard copy
+> - [x] **Loop 6** — keyboard navigation + clipboard (handoff 0092): the grid is focusable;
+>   arrows move the focused cell (Shift extends from the anchor), Tab/Shift-Tab wrap on row
+>   edges, Enter/Shift-Enter move vertically, Enter/F2 start an edit on editable cells (the
+>   commit then advances down/right), and Cmd/Ctrl-C copies the selection as TSV. Row
+>   scroll-into-view keeps the focused cell visible in the virtualized grid.
 > - [ ] **Loop 7** — loading/skeleton + multi-region + polish + docs
 
 - **Problem:** No equivalent to Blueprint's **Table2** (~13k LOC: virtualized rows/cols, selection,
