@@ -2919,7 +2919,7 @@ function BreadcrumbsGallery() {
  *   0: Documents (depth 0, expanded, folder icon)
  *   1: Annual Report 2025 (depth 1, doc icon + secondaryLabel) → tree-node-content, tree-node-icon
  *   2: Projects (depth 1, expanded, folder icon)
- *   3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+ *   3: mithril (depth 2, SELECTED) → tree-node-selected
  *   4: blueprint-ref (depth 2)
  *   5: Drafts (depth 0, collapsed)
  *   6: Trash (depth 0, disabled)
@@ -2945,7 +2945,7 @@ const TREE_INITIAL: TreeNodeInfo[] = [
                 childNodes: [
                     {
                         id: 4,
-                        label: "analyst-ui",
+                        label: "mithril",
                         isSelected: true,
                     },
                     {
@@ -2975,12 +2975,12 @@ function TreeGallery() {
 
     useEffect(() => {
         if (!treeRef.current) return;
-        // analyst-ui Tree renders .bp6-tree-node-content divs for each node row.
+        // mithril Tree renders .bp6-tree-node-content divs for each node row.
         // DOM order matches Blueprint reference exactly (pre-order traversal).
         // 0: Documents (depth 0, expanded, has caret)
         // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel) → tree-node-content
         // 2: Projects (depth 1, expanded, has caret + icon)
-        // 3: analyst-ui (depth 2, SELECTED) → tree-node-selected
+        // 3: mithril (depth 2, SELECTED) → tree-node-selected
         // 4: blueprint-ref (depth 2, leaf)
         // 5: Drafts (depth 0, collapsed)
         // 6: Trash (depth 0, disabled)
@@ -4986,7 +4986,7 @@ function DataTableGallery() {
             </Section>
             {/* Loading is VISUAL-ONLY (no data-compare): Blueprint's loading bars are
                 Math.random()-driven 25-75% widths (its `LoadableContent` `variableLength`),
-                so an exact diff is impossible by design. analyst uses deterministic full-width
+                so an exact diff is impossible by design. mithril uses deterministic full-width
                 bars; the Skeleton primitive's own fidelity is gated by skeleton-box/-line. */}
             <Section title="Loading (deterministic full-width skeleton cells · headers · gutter)">
                 <div style={{ width: 460 }}>
@@ -5245,7 +5245,7 @@ function Sidebar({
     return (
         <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
             <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                <span className="text-heading-sm font-semibold text-foreground">analyst-ui</span>
+                <span className="text-heading-sm font-semibold text-foreground">mithril</span>
                 <div className="flex items-center gap-1">
                     <Button
                         size="small"

@@ -1,0 +1,128 @@
+# The experiment
+
+> mithril is a maintained component library now; this directory is the archived record of the
+> autonomous-agent experiment that *built* it. The library and its current guidance live at the repo
+> root ([`README.md`](../../README.md), [`CLAUDE.md`](../../CLAUDE.md)).
+>
+> In here:
+> - **This document** — the experiment narrative, and the agent guide (`CLAUDE.md`) that governed the loop, embedded below.
+> - [`ROADMAP.md`](./ROADMAP.md) — the fixed component build order the loop worked through (all boxes checked) + a "post-parity tail" of open items.
+> - [`handoffs/`](./handoffs) — the 99 session-to-session handoff docs that carried the work across context windows.
+
+mithril began as a test of how far a long-horizon **goal loop** — Claude Code driving Claude Opus 4.8 — could carry a single large, well-specified task with the human deliberately kept out of the code. That phase is complete; what follows is the record of how it ran.
+
+**The development model.** The division of labor was the whole point:
+
+- **Humans** describe what they want, brainstorm and plan with the agents, and make the **final architectural decisions** (architecture is brainstormed jointly; the human makes the call). Humans also do the final QA — but *only* on look, feel, and behavior.
+- **Agents** write the code, write the tests, run the harness, and self-correct against it.
+- **No human reads the implementation code.** Not the diffs, not the structure, not the idiom.
+
+That boundary is the experiment, and it's worth being exact about which guarantees exist and which were deliberately waived:
+
+- **Guarded (measured):** behavior and appearance. A 336-test Vitest + Testing Library suite (keyboard/ARIA/behavior across 33 files), axe-core smoke audits in both themes, and a computed-style **+** screenshot diff harness against Blueprint v6.15.
+- **Waived (by design):** human review of the code itself — its architecture, readability, internal quality. A human helped *decide* the architecture and signed off on how things look and behave; a human never audited *how the code is written*.
+
+**Why Blueprint, why pixel-faithful.** Fidelity was the **acceptance criterion**. "Make a good component library" can't fail a test; "match Blueprint v6.15's computed styles and rendered pixels" can. Choosing an objectively-verifiable target is what made the loop falsifiable: either the agents hit the measured target across 171 commits with no human reading the code, or they didn't. The comparison harness (`tools/compare.sh`) is the **reward function** that kept the loop honest.
+
+**The meta-experiment: running such a project at all.** Separate from "can agents build it" is "how do you *set up* a project like this" — the workflow, the guardrails, and especially **continuity across sessions**. A long task outlives any single context window, so each work session hands off to the next through a written record. That's what [`handoffs/`](./handoffs) is: not incidental build notes, but the artifact of how the session-to-session continuity problem was actually solved.
+
+---
+
+## The agent guide that ran the loop
+
+This is the `CLAUDE.md` that governed the autonomous build loop, reproduced verbatim as a historical
+artifact. **It is not current guidance** — the live agent guide is the repo-root [`CLAUDE.md`](../../CLAUDE.md).
+Paths are as they were during the experiment; note in particular that the handoffs and roadmap it
+references (`docs/handoffs/`, `docs/ROADMAP.md`) now live alongside this document, at
+[`./handoffs/`](./handoffs) and [`./ROADMAP.md`](./ROADMAP.md).
+
+<details>
+<summary><strong>mithril — agent guide (experiment era)</strong></summary>
+
+### What this project is
+
+A from-scratch, **pixel-faithful** reimplementation of Palantir Blueprint's design language with a
+**fresh, modern API**. It is *not* a fork of Blueprint's code — Blueprint is the design spec only.
+
+- **Stack:** React 19 · TypeScript · Vite · Tailwind v4 (CSS-first `@theme`) · Radix primitives · CVA
+- **Distribution:** shadcn-style — consumers *own* the component source (copied via the registry)
+- **Fidelity bar:** match Blueprint's visuals precisely; design clean modern APIs (not drop-in compatible)
+
+### Key locations
+
+- `src/styles/tokens.css` — the design foundation (palette, intents, surfaces, elevation, type, motion).
+  Ported 1:1 from Blueprint's DTCG tokens. This is the source of visual fidelity.
+- `src/components/ui/` — the owned components (built with CVA + Radix). No third-party icon dep: the
+  **full Blueprint icon set (706 glyphs) is generated** by `tools/gen-icons.mjs` (re-run to refresh) into
+  `src/components/ui/icons/` — `index.ts` holds **one `export const <camelName>: IconGlyph` per glyph**, so
+  a bundler ships only the glyphs you import (`import { add } from ".../icons"; <Icon icon={add} />` →
+  tree-shakes). The dynamic string form (`<Icon icon="add" />`) resolves through a **registry**
+  (`registry.ts`): call `registerIcons(ICON_GLYPHS)` from `icons/all.ts` for all glyphs, or a selective
+  subset. Components import their own structural glyphs as objects (so they render standalone, no
+  registration). `ICON_GLYPHS` lives in `all.ts` (never reachable from `icon.tsx`) and stays typed
+  `Record<IconName, IconGlyph>` (an explicit union, **never** `as const`) or it hits TS2590. Names that
+  camelCase to JS reserved words (`delete`→`deleteIcon`, also export/function/import/package/switch) get an
+  `Icon` suffix. See `docs/handoffs/0081` (and `0059` for the original single-map design).
+- `src/App.tsx` — preview/showcase app (`pnpm dev` → :5173).
+- `tools/blueprint-reference/` — isolated `@blueprintjs/core@6.15` gallery for side-by-side comparison
+  (`cd tools/blueprint-reference && pnpm dev` → :5174). React 18 there to satisfy Blueprint's peer dep.
+- `tools/compare.sh` + `tools/comparison/` — the comparison harness (see its README). Drives `agent-browser`
+  to screenshot **and** computed-style-diff a component against Blueprint in one command.
+- Blueprint source clone (the design spec) — clone `palantir/blueprint` (v6.15, Apache-2.0) locally and
+  set its path via the `BLUEPRINT_SRC` env var (defaults to `../blueprint`).
+  Authoritative tokens live at `packages/core/src/design-tokens/tokens/`.
+- `docs/handoffs/` — session handoff docs; newest bootstraps the next session.
+
+### The development loop (autonomous)
+
+The goal is to build out `docs/ROADMAP.md` **autonomously, without stopping between components.**
+Work the roadmap top-down; the next component is always the first unchecked item.
+
+- **Branch per phase.** Cut `phase-N-<slug>` (e.g. `phase-1-primitives`) from fresh `main`. All of a
+  phase's component commits land on that branch.
+- **One loop = one component.** Per loop: build → register in BOTH galleries → `tools/compare.sh <id> both`
+  → tick the box in `ROADMAP.md` → write the next numbered handoff (`docs/handoffs/000N-*.md`) →
+  **one commit, then push.** The commit bundles the component, gallery edits, token changes, the roadmap
+  tick, and the handoff.
+- **Phase complete** → open a PR → merge to `main` (merge commit) → sync `main`, delete the phase branch
+  → cut the next phase branch. Then continue.
+- **Definition of done (commit gate):** `pnpm build` green **and** `compare.sh` clean in both themes.
+  Aim for an exact computed-style match; if a small sub-perceptual delta remains after real effort, accept
+  it, **document it in the handoff**, and move on (e.g. the dark-`--foreground` call — see agent memory).
+- **Pause only on hard blockers.** Make all fidelity / technical / API calls yourself and document them.
+  Stop for the user only when genuinely stuck: build can't go green, the harness can't reach the component
+  after real effort, or a *dependency* component (e.g. Popover) fails and blocks everything downstream.
+- **Auto-install dependencies** as components need them (`pnpm add @radix-ui/...`, Floating UI,
+  `react-day-picker`, …) and list each new package in that loop's handoff.
+- **The harness is ours to extend.** If `compare.sh` / the galleries can't reach a component (e.g. portaled
+  Dialog content), adapt the harness rather than treating it as a blocker.
+- No unit tests — verification is visual via the harness. Add registry entries as components are built.
+  Keep saving durable, non-obvious learnings to agent memory.
+
+### Workflow rules
+
+- **Visual verification is required for components.** Build the component, render it in *both* galleries
+  (`src/App.tsx` and `tools/blueprint-reference/src/App.tsx`) — register it in each `COMPONENTS` array under
+  the same `id`, and tag key specimens with matching `data-compare` keys. Then run `tools/compare.sh <id>`
+  to screenshot **and** computed-style-diff against Blueprint (both themes) before calling a component done.
+  Prefer this over driving Chrome by hand.
+- **Write a handoff at the end of every loop** in `docs/handoffs/` (see `TEMPLATE.md`) — one per component,
+  numbered. The newest bootstraps the next session.
+- **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
+  (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), not runtime `var()` in inline styles — those get
+  dropped. Tokens declared in plain `:root {}` (e.g. `--elevation-0..4`) are always emitted.
+- Commit messages end with the Co-Authored-By trailer. Branch before committing if on the default branch.
+
+### Commands
+
+```bash
+pnpm dev          # mithril preview at :5173
+pnpm build        # typecheck (tsc -b) + vite build
+pnpm typecheck
+cd tools/blueprint-reference && pnpm dev   # Blueprint reference at :5174
+
+tools/compare.sh button            # screenshot + style-diff a component vs Blueprint (both themes)
+tools/compare.sh button dark       # ...one theme only (light|dark|both)
+```
+
+</details>

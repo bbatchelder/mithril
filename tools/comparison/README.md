@@ -1,6 +1,6 @@
 # Comparison harness
 
-Pixel **and** computed-style comparison of analyst-ui against the version-matched
+Pixel **and** computed-style comparison of mithril against the version-matched
 Blueprint reference — driven by the `agent-browser` CLI, no manual Chrome.
 
 ```bash
@@ -20,7 +20,7 @@ For each requested theme it drives two headless `agent-browser` sessions to the 
 dev servers, opened in **isolated single-component mode** so the screenshot is just
 the specimens with no header chrome:
 
-- analyst-ui  → `http://localhost:5173/?component=<id>&theme=<theme>`
+- mithril  → `http://localhost:5173/?component=<id>&theme=<theme>`
 - Blueprint   → `http://localhost:5174/?component=<id>&theme=<theme>`
 
 Both dev servers are auto-started if not already reachable (and left running).
@@ -29,12 +29,12 @@ It writes to `tools/comparison/screenshots/` (git-ignored):
 
 | file | what |
 | --- | --- |
-| `<id>.<theme>.analyst.png` | full-page screenshot of analyst-ui |
+| `<id>.<theme>.mithril.png` | full-page screenshot of mithril |
 | `<id>.<theme>.blueprint.png` | full-page screenshot of the Blueprint reference |
 | `<id>.<theme>.<key>.spec.png` | per-specimen diff crop (written only for flagged keys) |
 | `<id>.<theme>.diff.png` | full-page pixel-diff image (auto-aligned) |
-| `<id>.<theme>.{analyst,blueprint}.styles.json` | captured computed styles |
-| `<id>.<theme>.{analyst,blueprint}.rects.json` | captured specimen bounding rects |
+| `<id>.<theme>.{mithril,blueprint}.styles.json` | captured computed styles |
+| `<id>.<theme>.{mithril,blueprint}.rects.json` | captured specimen bounding rects |
 
 …then prints, per theme, **three** complementary diffs:
 
@@ -89,7 +89,7 @@ and tag matching specimens with identical keys on both sides.
 
 ## The color-normalization trick (important)
 
-analyst-ui emits colors as `rgb()`; Blueprint v6.15 emits `oklch()` / `oklab()` /
+mithril emits colors as `rgb()`; Blueprint v6.15 emits `oklch()` / `oklab()` /
 `color(srgb …)`. `getComputedStyle` and `canvas.fillStyle` now **preserve** the
 authored color space, so a naive string compare flags every color as different.
 
@@ -115,7 +115,7 @@ waiver only applies while the live values still match what's pinned:
 - **styles** — value-pinned `[ [analystVal, blueprintVal], … ]` per `specimen.cssProp`. Suppressed
   only while the live pair still matches (color-tolerant). Change the component and the value drifts
   → the waiver misses → it re-surfaces as a `differ` for re-review. New, unwaived props always flag.
-- **unpaired** — specimen keys expected `only in analyst` (each verified under its own component id,
+- **unpaired** — specimen keys expected `only in mithril` (each verified under its own component id,
   e.g. the hotkeys dialog is covered by `dialog`). A *new* unpaired key still flags.
 - **visual** — `expectSize: [aw,ah,bw,bh]` suppresses a known size mismatch only while the sizes
   still match (±3px); `ssimArtifact: true` suppresses a low-SSIM flag only while the specimen is

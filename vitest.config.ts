@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 // Test config kept separate from vite.config.ts so the Tailwind plugin (irrelevant
 // to behavior/ARIA unit tests) doesn't run for every test. Verification of *visuals*
 // stays with the comparison harness; Vitest covers keyboard/ARIA behavior the harness
-// cannot see. See docs/handoffs for the a11y-behavior-gaps work.
+// cannot see. See docs/experiment/handoffs for the a11y-behavior-gaps work.
 export default defineConfig({
     plugins: [react()],
     resolve: {

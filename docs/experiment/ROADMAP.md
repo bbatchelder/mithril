@@ -1,0 +1,143 @@
+# Component roadmap
+
+> **The build order is fixed.** Each session, find the first unchecked component below and build it.
+> No need to ask "what's next" — this list *is* the answer. Scope = the full Blueprint surface across
+> all three packages (`core`, `select`, `datetime`), ~54 fidelity targets.
+
+## The loop (autonomous — see CLAUDE.md "The development loop")
+
+**Branch per phase** (`phase-N-<slug>` off fresh `main`). For each unchecked item, in order:
+
+1. **Build** the component in `src/components/ui/<name>.tsx` with CVA (+ Radix where a primitive fits).
+   Match Blueprint v6.15 visuals; design a clean modern API (not drop-in compatible). Auto-install any
+   needed deps.
+2. **Register in BOTH galleries** — add to the `COMPONENTS` array in `src/App.tsx` *and*
+   `tools/blueprint-reference/src/App.tsx` under the **same `id`**, and tag key specimens with matching
+   `data-compare` keys.
+3. **Verify** — `pnpm build` green, then `tools/compare.sh <id> both` → confirm light + dark
+   (computed-style diff + screenshots). Aim for exact; accept + document small sub-perceptual deltas.
+4. **Check the box** here, **write the next numbered handoff** in `docs/experiment/handoffs/`, then **one commit + push.**
+
+**When a phase's last box is checked** → open a PR → merge to `main` (merge commit) → sync `main`, delete the
+phase branch → cut the next phase branch → keep going. **Pause only on hard blockers** (build can't go green,
+harness can't reach it after real effort, or a dependency component fails).
+
+Ordering is **dependency-first**: a component is only listed after everything it builds on. Entries marked
+*(infra)* are behavioral helpers, not standalone fidelity targets — build them inline when the first
+consumer needs them.
+
+Blueprint source (design spec, v6.15): a local clone of `palantir/blueprint`, referenced via `$BLUEPRINT_SRC` (defaults to `../blueprint`)
+- core: `packages/core/src/components/`
+- select: `packages/select/src/components/`
+- datetime: `packages/datetime/src/components/`
+
+---
+
+## Phase 0 — Foundation (done)
+
+- [x] Design tokens (`src/styles/tokens.css`)
+- [x] Comparison harness (`tools/compare.sh`)
+- [x] **Button** — `button/`
+- [x] **Card** — `card/`
+
+## Phase 1 — Primitives & simple display
+
+- [x] **Icon** — `icon/`. Foundational: SVG set + size/intent coloring. Many components accept icons as
+      `ReactNode`, so not a hard build-blocker, but most look incomplete without it.
+- [x] **Text** — `text/`
+- [x] **Divider** — `divider/`
+- [x] **Spinner** — `spinner/`
+- [x] **ProgressBar** — `progress-bar/`
+- [x] **Skeleton** — `skeleton/` (loading-state modifier)
+- [x] **Tag** — `tag/`
+- [x] **Callout** — `callout/` (uses Icon)
+
+## Phase 2 — Form controls
+
+- [x] **InputGroup** (text input) — `forms/inputGroup.tsx`. `--input-shadow` already tokenized. Intent
+      validation states, sizes matching button heights (24/30/40), measured focus ring. First form control.
+- [x] **TextArea** — `forms/textArea.tsx`
+- [x] **Checkbox** — `forms/controls.tsx`
+- [x] **Radio / RadioGroup** — `forms/controls.tsx`, `forms/radioGroup.tsx`
+- [x] **Switch** — `forms/controls.tsx`
+- [x] **Label + FormGroup** — `forms/label.tsx`, `forms/formGroup.tsx`
+- [x] **ControlGroup** — `forms/controlGroup.tsx`
+- [x] **HTMLSelect** — `html-select/`
+- [x] **FileInput** — `forms/fileInput.tsx`
+- [x] **NumericInput** — `forms/numericInput.tsx` (Input + Buttons)
+- [x] **SegmentedControl** — `segmented-control/`
+- [x] **ControlCard** — `control-card/` (Card + controls)
+
+## Phase 3 — Overlays & positioning
+
+- [x] **Dialog** — `dialog/` (+ Portal/Overlay *(infra)*). First Radix-portal component — work out how the
+      harness reaches portaled content; `@radix-ui/react-dialog`.
+- [x] **Alert** — `alert/` (Dialog-based)
+- [x] **Drawer** — `drawer/` (Overlay-based)
+- [x] **Popover** — `popover/` (positioning primitive; Radix Popover / Floating UI). Unlocks Tooltip,
+      Menu dropdowns, Select family, DateInput, ContextMenu, Breadcrumbs overflow.
+- [x] **Tooltip** — `tooltip/` (Popover-based)
+- [x] **Toast / Toaster** — `toast/`
+- [x] **Menu** (+ MenuItem, MenuDivider) — `menu/`
+- [x] **ContextMenu** — `context-menu/` (Popover + Menu)
+
+## Phase 4 — Navigation & structure
+
+- [x] **Navbar** — `navbar/`
+- [x] **Tabs** — `tabs/`
+- [x] **Collapse** — `collapse/`
+- [x] **Section** — `section/` (Card-based)
+- [x] **CardList** — `card-list/` (Card-based)
+- [x] **Breadcrumbs** — `breadcrumbs/` (+ OverflowList *(infra)*, Menu, Popover)
+- [x] **Tree** — `tree/` (Icon + Collapse)
+- [x] **PanelStack** — `panel-stack/`
+- [x] **HTMLTable** — `html-table/`
+- [x] **EditableText** — `editable-text/`
+- [x] **EntityTitle** — `entity-title/`
+- [x] **NonIdealState** — `non-ideal-state/` (Icon)
+- [x] **Link** — `link/`
+- [x] **Slider** — `slider/`
+- [x] **Hotkeys** — `hotkeys/` (Dialog-based)
+
+## Phase 5 — Composite selects (`@blueprintjs/select`)
+
+- [x] **TagInput** — `tag-input/` (Tag + input handling) + QueryList *(infra)*
+- [x] **Select** — `select/select/` (Popover + Menu + input)
+- [x] **Suggest** — `select/suggest/`
+- [x] **MultiSelect** — `select/multi-select/` (TagInput-based)
+- [x] **Omnibar** — `select/omnibar/`
+
+## Phase 6 — Date & time (`@blueprintjs/datetime`)
+
+- [x] **TimePicker** — `datetime/time-picker/`
+- [x] **DatePicker** — `datetime/date-picker/` (react-day-picker)
+- [x] **DateInput** — `datetime/date-input/` (DatePicker + Popover + Input)
+- [x] **DateRangePicker** — `datetime/date-range-picker/`
+- [x] **DateRangeInput** — `datetime/date-range-input/`
+- [x] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)
+
+---
+
+## Remaining work (post-parity tail)
+
+> Every component above is built, and the credibility gaps that once made Blueprint the decisive choice
+> are closed: a Vitest behavior/a11y suite (336 tests) + axe smokes, the hand-rolled-widget keyboard/ARIA
+> work, a `DataTable` grid (TanStack-backed), a `useHotkeys` engine, `MultistepDialog`/`ButtonGroup`/
+> `AnchorButton`, a served shadcn registry (+ CI drift guard), per-glyph icon tree-shaking, a shared
+> `Intent` type + unified icon-prop convention, and a runtime-derivable, themeable token pipeline with
+> `@supports` fallbacks. (Full history: [`docs/experiment/handoffs/`](./handoffs/).)
+>
+> What's genuinely still open, in rough priority order:
+
+- **Live screen-reader pass.** Verification is jsdom + axe-core only; do a real VoiceOver/NVDA sweep over
+  the gallery (incl. open overlays) to validate lived announcements.
+- **`MenuItem` submenus.** Declarative nested submenus are unbuilt (the no-op caret was removed, not
+  wired) — add them via Radix `*.Sub` for the ContextMenu path and a hosted model for standalone menus.
+- **Shared controlled-input helper.** Replace the per-component `internalChecked` + `useEffect`
+  mirroring with one `AsyncControllableInput`-equivalent to dodge the React controlled-input pitfall once.
+- **`DataTable` column virtualization** (only rows are windowed today) + frozen rows/columns, to narrow
+  the remaining depth gap vs Blueprint's `Table2`.
+- **Harness + style-gate hardening (P3):** run `tools/compare.sh` in CI; widen the computed-style gate
+  (it omits `fontFamily`/`lineHeight`/vertical padding/`borderStyle`); broaden the React peer range if
+  courting Blueprint's React 18 base; add per-component a11y status badges; write a Blueprint→mithril
+  prop-mapping migration note.

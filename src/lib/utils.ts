@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 /**
- * analyst-ui defines a custom type scale (`text-body*`, `text-heading*`) via
+ * mithril defines a custom type scale (`text-body*`, `text-heading*`) via
  * Tailwind's `--text-*` theme tokens. tailwind-merge doesn't know these names are
  * FONT SIZES, so by default it lumps e.g. `text-body-lg` and `text-primary-foreground`
  * into one `text-*` conflict group and silently drops the size — which is why large

@@ -34,7 +34,7 @@ jobs:
       - run: pnpm build
 
       # Emit the installable shadcn registry into dist/r so this same deploy serves it at
-      # https://bbatchelder.github.io/analyst-ui/r/<name>.json. Must run AFTER `pnpm build`
+      # https://bbatchelder.github.io/mithril/r/<name>.json. Must run AFTER `pnpm build`
       # (vite cleans dist/). See tools/rewrite-registry-urls.mjs.
       - run: pnpm build:registry
 

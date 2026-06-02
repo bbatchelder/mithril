@@ -232,7 +232,7 @@ export function OverflowList<T>(props: OverflowListProps<T>) {
             className: cn(
                 // Single non-wrapping flex row; children keep their natural width
                 // (shrink-0) so the trailing 1px spacer is what gets squeezed first.
-                "analyst-overflow-list flex flex-nowrap min-w-0 [&>*]:shrink-0",
+                "mithril-overflow-list flex flex-nowrap min-w-0 [&>*]:shrink-0",
                 className,
             ),
             style,
@@ -243,7 +243,7 @@ export function OverflowList<T>(props: OverflowListProps<T>) {
         <div
             key="__spacer__"
             aria-hidden
-            className="analyst-overflow-list-spacer"
+            className="mithril-overflow-list-spacer"
             // Inline flexShrink overrides the [&>*]:shrink-0 above so this is the one
             // element that can be squeezed below 1px — the overflow signal.
             style={{ width: 1, flexShrink: 1 }}

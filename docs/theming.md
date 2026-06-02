@@ -1,6 +1,6 @@
 # Theming
 
-analyst-ui's tokens are **runtime-derivable**. Almost every semantic value
+mithril's tokens are **runtime-derivable**. Almost every semantic value
 (`--ring`, `--link`, intent text, tag shades, focus rings, selected-card ring,
 surfaces, borders) is expressed as a relative-color derivation from a small set
 of **seeds**. Change a seed and the whole theme re-tints — in both light and dark

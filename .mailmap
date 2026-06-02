@@ -1,0 +1,5 @@
+# Canonical author/committer identity.
+# All of these commits share one email; this maps the display name to a
+# single consistent identity without rewriting history.
+# See: https://git-scm.com/docs/gitmailmap
+Bryan Batchelder <bbatchelder@gmail.com> <bbatchelder@gmail.com>

@@ -2,8 +2,8 @@
 // Per-specimen visual diff. Crops every paired [data-compare] specimen from each
 // full-page screenshot BY ITS OWN bounding rect, then compares the crops.
 //
-//   node diff-specimens.mjs <analyst.png> <blueprint.png> \
-//        <analyst.rects.json> <blueprint.rects.json> <out-prefix> [label]
+//   node diff-specimens.mjs <mithril.png> <blueprint.png> \
+//        <mithril.rects.json> <blueprint.rects.json> <out-prefix> [label]
 //
 // WHY this is the reliable gate (vs. diff-pixels.mjs full-page):
 //   The whole-page diff is dominated by benign gallery-spacing drift between the two
@@ -173,7 +173,7 @@ for (const key of keys) {
 }
 
 // --- report ---
-console.log(`${C.bold}specimen diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(per-[data-compare] crop · analyst vs blueprint)${C.reset}`);
+console.log(`${C.bold}specimen diff${label ? ` · ${label}` : ""}${C.reset}  ${C.dim}(per-[data-compare] crop · mithril vs blueprint)${C.reset}`);
 
 const diffed = rows.filter((r) => !r.note);
 const pad = (s, n) => String(s).padEnd(n);
@@ -192,7 +192,7 @@ for (const r of rows) {
     console.log(`  ${pad(r.key, 28)}${sizeCol}${sc}${pad(r.score.toFixed(3), 9)}${C.reset}${(r.ratio * 100).toFixed(2)}%${mark}`);
 }
 
-if (onlyA.length) console.log(`\n  ${C.dim}only in analyst:  ${onlyA.join(", ")}${C.reset}`);
+if (onlyA.length) console.log(`\n  ${C.dim}only in mithril:  ${onlyA.join(", ")}${C.reset}`);
 if (onlyB.length) console.log(`  ${C.dim}only in blueprint: ${onlyB.join(", ")}${C.reset}`);
 
 // "off" SSIM rows that aren't size-mismatched and weren't waived are guide-level noise
