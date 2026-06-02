@@ -16,7 +16,7 @@
    `data-compare` keys.
 3. **Verify** — `pnpm build` green, then `tools/compare.sh <id> both` → confirm light + dark
    (computed-style diff + screenshots). Aim for exact; accept + document small sub-perceptual deltas.
-4. **Check the box** here, **write the next numbered handoff** in `docs/handoffs/`, then **one commit + push.**
+4. **Check the box** here, **write the next numbered handoff** in `docs/experiment/handoffs/`, then **one commit + push.**
 
 **When a phase's last box is checked** → open a PR → merge to `main` (merge commit) → sync `main`, delete the
 phase branch → cut the next phase branch → keep going. **Pause only on hard blockers** (build can't go green,
@@ -125,8 +125,7 @@ Blueprint source (design spec, v6.15): a local clone of `palantir/blueprint`, re
 > work, a `DataTable` grid (TanStack-backed), a `useHotkeys` engine, `MultistepDialog`/`ButtonGroup`/
 > `AnchorButton`, a served shadcn registry (+ CI drift guard), per-glyph icon tree-shaking, a shared
 > `Intent` type + unified icon-prop convention, and a runtime-derivable, themeable token pipeline with
-> `@supports` fallbacks. (Full history: [`docs/handoffs/`](./handoffs/). Decision guidance:
-> [`comparison-vs-blueprint.md`](./comparison-vs-blueprint.md).)
+> `@supports` fallbacks. (Full history: [`docs/experiment/handoffs/`](./handoffs/).)
 >
 > What's genuinely still open, in rough priority order:
 
