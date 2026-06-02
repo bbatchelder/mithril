@@ -115,3 +115,30 @@ Blueprint source (design spec, v6.15): a local clone of `palantir/blueprint`, re
 - [x] **DateRangePicker** — `datetime/date-range-picker/`
 - [x] **DateRangeInput** — `datetime/date-range-input/`
 - [x] **TimezoneSelect** — `datetime/timezone-select/` (Select-based)
+
+---
+
+## Remaining work (post-parity tail)
+
+> Every component above is built, and the credibility gaps that once made Blueprint the decisive choice
+> are closed: a Vitest behavior/a11y suite (336 tests) + axe smokes, the hand-rolled-widget keyboard/ARIA
+> work, a `DataTable` grid (TanStack-backed), a `useHotkeys` engine, `MultistepDialog`/`ButtonGroup`/
+> `AnchorButton`, a served shadcn registry (+ CI drift guard), per-glyph icon tree-shaking, a shared
+> `Intent` type + unified icon-prop convention, and a runtime-derivable, themeable token pipeline with
+> `@supports` fallbacks. (Full history: [`docs/handoffs/`](./handoffs/). Decision guidance:
+> [`comparison-vs-blueprint.md`](./comparison-vs-blueprint.md).)
+>
+> What's genuinely still open, in rough priority order:
+
+- **Live screen-reader pass.** Verification is jsdom + axe-core only; do a real VoiceOver/NVDA sweep over
+  the gallery (incl. open overlays) to validate lived announcements.
+- **`MenuItem` submenus.** Declarative nested submenus are unbuilt (the no-op caret was removed, not
+  wired) — add them via Radix `*.Sub` for the ContextMenu path and a hosted model for standalone menus.
+- **Shared controlled-input helper.** Replace the per-component `internalChecked` + `useEffect`
+  mirroring with one `AsyncControllableInput`-equivalent to dodge the React controlled-input pitfall once.
+- **`DataTable` column virtualization** (only rows are windowed today) + frozen rows/columns, to narrow
+  the remaining depth gap vs Blueprint's `Table2`.
+- **Harness + style-gate hardening (P3):** run `tools/compare.sh` in CI; widen the computed-style gate
+  (it omits `fontFamily`/`lineHeight`/vertical padding/`borderStyle`); broaden the React peer range if
+  courting Blueprint's React 18 base; add per-component a11y status badges; write a Blueprint→mithril
+  prop-mapping migration note.

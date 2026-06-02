@@ -6,7 +6,8 @@ design language — rebuilt from scratch on a contemporary foundation, then dist
 
 - **React 19** + TypeScript
 - **Tailwind v4** (CSS-first `@theme`) + **CVA** for variants
-- **Radix UI** primitives under the overlay/positioning components (Dialog, Drawer, Alert, Popover, Tooltip, Toast, Slider, ContextMenu); the rest are hand-rolled on native elements
+- **Radix UI** primitives under the overlay/positioning and tablist components (Dialog, Drawer, Alert, Popover, Tooltip, Toast, Slider, Tabs, ContextMenu); the rest are hand-rolled on native elements
+- **TanStack Table** + **TanStack Virtual** under the `DataTable` grid (virtualized rows, selection, resize/reorder, editable cells)
 - **No runtime icon dependency** — the full Blueprint icon set (706 glyphs) is vendored
 - Distributed **shadcn-style**: you copy and **own** the component source, not pull in a black-box package
 
@@ -37,35 +38,38 @@ components compose into real product UIs:
 
 ## Status
 
-Every component on the [build roadmap](./docs/ROADMAP.md) is implemented — **~56 components** across
-`core`, `select`, and `datetime`, each diffed against Blueprint v6.15 with a computed-style **and**
-screenshot harness in both light and dark themes. See [`docs/handoffs/`](./docs/handoffs/) for the
-per-session build history.
+Every component on the [build roadmap](./docs/ROADMAP.md) is implemented — **~60 components** across
+`core`, `select`, and `datetime` (plus a virtualized `DataTable` grid), each diffed against Blueprint
+v6.15 with a computed-style **and** screenshot harness in both light and dark themes. See
+[`docs/handoffs/`](./docs/handoffs/) for the per-session build history.
 
-**Visual fidelity is the verified strength.** What it does *not* yet cover: behavior is not unit-tested
-(verification is visual only), and a few hand-rolled components have known keyboard/ARIA gaps. We'd rather
-be straight about that than oversell — so before adopting, read the honest comparison below.
+Beyond the visual harness, the library ships a **Vitest + Testing Library suite (300+ keyboard/ARIA
+behavior tests)** plus axe-core smoke audits over the gallery in both themes — so keyboard/ARIA behavior
+is guarded by tests, not just eyeballed. Tabs and ContextMenu are Radix-backed, the Select family carries
+the combobox WAI-ARIA pattern, Menu uses roving focus, and the suite covers `DataTable`, the `useHotkeys`
+engine, and `MultistepDialog`. See the honest comparison below for where mithril and Blueprint each win.
 
 ### Honest comparison vs. Blueprint
 
 - **[mithril vs. Blueprint — an honest appraisal](./docs/comparison-vs-blueprint.md)** — an
   evidence-backed look at where each library wins, its limitations, and a decision guide for *which to
   pick for your project*.
-- **[Roadmap to a hands-down recommendation](./docs/blueprint-parity-roadmap.md)** — the prioritized plan
-  to close every gap (accessibility, tests, completeness, distribution).
+- **[Remaining work](./docs/ROADMAP.md#remaining-work-post-parity-tail)** — the short tail still open
+  (live screen-reader pass, MenuItem submenus, DataTable column virtualization, CI/style-gate hardening).
 
 In one line: mithril wins the **authoring experience** (cleaner API, ~16.6 KB CSS, lean deps, owned
-source, React 19); Blueprint still wins on **engineering maturity** (out-of-the-box accessibility,
-breadth — incl. a data grid — and a real test suite). Choose accordingly.
+source, React 19) and now ships a test suite, accessible behavior, and a data grid of its own; Blueprint
+still wins on **engineering maturity** — years of production hardening, broader edge-case coverage, and
+npm-delivered bug/security fixes. Choose accordingly.
 
 ## Component catalog
 
 | Group | Components |
 | --- | --- |
-| **Buttons & display** | Button · Card · Icon · Text · Divider · Spinner · ProgressBar · Skeleton · Tag · Callout |
+| **Buttons & display** | Button · ButtonGroup · AnchorButton · Card · Icon · Text · Divider · Spinner · ProgressBar · Skeleton · Tag · Callout |
 | **Form controls** | InputGroup · TextArea · Checkbox · Radio / RadioGroup · Switch · Label + FormGroup · ControlGroup · HTMLSelect · FileInput · NumericInput · SegmentedControl · ControlCard |
-| **Overlays** | Dialog · Alert · Drawer · Popover · Tooltip · Toast · Menu · ContextMenu |
-| **Navigation & structure** | Navbar · Tabs · Collapse · Section · CardList · Breadcrumbs · Tree · PanelStack · HTMLTable · EditableText · EntityTitle · NonIdealState · Link · Slider · Hotkeys |
+| **Overlays** | Dialog · MultistepDialog · Alert · Drawer · Popover · Tooltip · Toast · Menu · ContextMenu |
+| **Navigation & structure** | Navbar · Tabs · Collapse · Section · CardList · Breadcrumbs · Tree · PanelStack · HTMLTable · DataTable · EditableText · EntityTitle · NonIdealState · Link · Slider · Hotkeys |
 | **Composite selects** | TagInput · Select · Suggest · MultiSelect · Omnibar |
 | **Date & time** | TimePicker · DatePicker · DateInput · DateRangePicker · DateRangeInput · TimezoneSelect |
 
@@ -169,17 +173,20 @@ shadcn + Tailwind v4 pattern:
 Palette, intents, type, radius, motion, and elevation shadows are ported **1:1** from Blueprint's DTCG token
 set and SCSS variables. Dark surface colors were verified against Blueprint's OKLCH-derived values.
 
-> Note: those OKLCH-derived dark values are currently **baked as resolved literals** (frozen to Blueprint
-> v6.15) rather than computed at runtime. Runtime re-derivable theming and `@supports` fallbacks for the
-> raw `oklch()`/`color-mix()` usages are on the [roadmap](./docs/blueprint-parity-roadmap.md) (P2.5–P2.6).
+> **Runtime-derivable & themeable.** Semantic tokens are now derived at runtime from a small **seed** set
+> (the four intent vars + the gray ramp) via CSS relative-color `oklch(from …)` / `color-mix()`, mirroring
+> Blueprint's DTCG `derive` offsets — so overriding a seed on `<html>` re-tints the whole theme in both
+> light and dark. Every derived value ships a static-literal `@supports` fallback for browsers without
+> relative-color support. A worked example theme (`[data-theme="datex"]`) is wired into the gallery; see
+> [`docs/theming.md`](./docs/theming.md).
 
 > **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
 > (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), not runtime `var()` in inline styles — those get dropped.
 
 ## Dark mode
 
-Class-based: put `.dark` on an ancestor (a `@custom-variant dark` is declared in the tokens). The semantic
-CSS variables swap automatically; components built on token utilities follow along.
+Class-based: put `.dark` (or `[data-mode="dark"]`) on an ancestor (a `@custom-variant dark` is declared in
+the tokens). The semantic CSS variables swap automatically; components built on token utilities follow along.
 
 ## Project structure
 
@@ -194,7 +201,7 @@ src/
 docs/
   ROADMAP.md                    the component checklist (build order)
   comparison-vs-blueprint.md    honest appraisal vs Blueprint (when to pick which)
-  blueprint-parity-roadmap.md   prioritized plan to close the gaps
+  theming.md                    the runtime-derivable, seed-based token system
   fidelity-audit-2026-05-27.md  the fidelity audit
   handoffs/                     per-session build history
 tools/
@@ -215,22 +222,29 @@ screenshots matched specimens, and reports a computed-style diff in both themes.
 
 ## Known limitations
 
-Being upfront (full detail + the fix plan are in the [appraisal](./docs/comparison-vs-blueprint.md) and
-[roadmap](./docs/blueprint-parity-roadmap.md)):
+Being upfront about where mithril stands today. Full detail + decision guidance live in the
+[appraisal](./docs/comparison-vs-blueprint.md) (the short remaining tail is tracked in
+[`docs/ROADMAP.md`](./docs/ROADMAP.md#remaining-work-post-parity-tail)):
 
-- **No test suite.** Verification is visual (fidelity harness) only — there are no unit/behavior tests, so
-  keyboard/ARIA regressions aren't guarded. Owning the source means you inherit this.
-- **Accessibility gaps in hand-rolled components.** Radix-backed overlays + native form controls are solid,
-  but **Tabs** (no keyboard nav), **Menu**, the **Select/Suggest/MultiSelect/Omnibar** family (no combobox
-  ARIA), and **ContextMenu** (no arrow-key/submenu nav) need work; **Hotkeys** is display-only (no binding
-  engine).
-- **Missing capabilities.** No data grid (Blueprint's `Table2` has no equivalent — `HTMLTable` is styling
-  only).
-- **Icon string form needs registration.** Importing glyph objects tree-shakes (`import { add } from
-  ".../icons"; <Icon icon={add} />` ships just that glyph). The dynamic name form (`<Icon icon="add" />`)
-  resolves through a registry — call `registerIcons(ICON_GLYPHS)` from `icons/all.ts` once (pulls all
-  ~195 KB) or register a selective subset.
-- **Tailwind v4 required** and **tokens are frozen** to Blueprint v6.15 (see above).
+- **Younger and single-author.** Blueprint has years of production hardening, broader edge-case coverage,
+  and `npm`-delivered bug/security fixes. mithril is new — and the shadcn ownership model means *you*
+  maintain the copied source, with no upstream pushing fixes to you.
+- **Test coverage is real but not exhaustive.** 300+ Vitest keyboard/ARIA/behavior tests + axe-core smokes
+  + the screenshot/computed-style harness guard the common paths — but they don't blanket every component
+  and branch the way Blueprint's mature suite does.
+- **A few Blueprint-parity contrast deltas.** Some muted/disabled tones (e.g. the file-input prompt, tree
+  muted labels) are ported **exactly** from Blueprint and so inherit its ~2.4:1 contrast — below WCAG AA.
+  This is a conscious fidelity choice; owning the source lets you darken the token/class if you need AA.
+- **Tailwind v4 required.** The components are inert without it — there's no framework-agnostic drop-in
+  CSS build. Deliberate trade (see the [appraisal](./docs/comparison-vs-blueprint.md)).
+- **Data grid is newer than Blueprint's.** `DataTable` (TanStack-backed: virtualization, selection,
+  resize/reorder, editable cells, keyboard/clipboard) covers the common ground, but Blueprint's `Table2`
+  is a far larger, more battle-tested grid.
+
+> **Note on the icon string form (by design, not a defect):** importing glyph objects tree-shakes
+> (`import { add } from ".../icons"; <Icon icon={add} />` ships just that glyph). The dynamic name form
+> (`<Icon icon="add" />`) resolves through a registry — call `registerIcons(ICON_GLYPHS)` from
+> `icons/all.ts` once (pulls all ~195 KB) or register a selective subset.
 
 ## Contributing
 
