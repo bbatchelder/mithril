@@ -117,7 +117,10 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(function
 ) {
     const isDeterminate = value != null;
     const percent = isDeterminate ? 100 * clamp(value, 0, 1) : undefined;
-    const width = percent != null ? `${percent}%` : undefined;
+    // Indeterminate (no value) → full-width meter, matching Blueprint's `.bp6-progress-meter`
+    // default of `width: 100%`. A literal string keeps this out of Tailwind's @theme tree-shaking.
+    // Without it the absolutely-positioned meter has no width and collapses to 0px (blank bar).
+    const width = percent != null ? `${percent}%` : "100%";
 
     // a11y: aria-valuenow only when determinate, rounded to nearest integer per Blueprint.
     const ariaValueNow = percent != null ? Math.round(percent) : undefined;

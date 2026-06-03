@@ -32,9 +32,10 @@ import { cn } from "@/lib/utils";
  *   - No external deps. Pure React + inline styles for the animated height.
  *   - When OPEN: height is "auto" and overflowY is "visible" so nested dropdowns aren't
  *     clipped — same as Blueprint's OPEN state.
- *   - The body has `aria-hidden="true"` when not visible → Blueprint SCSS sets
- *     `display: none` in that case, so children are not rendered in the accessibility
- *     tree when closed.
+ *   - The body has `aria-hidden="true"` when not visible, and is set `display: none`
+ *     inline in the same state, so `keepChildrenMounted` children are removed from both
+ *     the layout and the accessibility tree when fully closed. (Blueprint does the
+ *     `display: none` via SCSS keyed off `aria-hidden`; we inline it to stay dep-free.)
  *   - The transition property is set inline via CSS custom properties so it always
  *     reflects the `transitionDuration` prop. When height is "auto" transitions are
  *     suppressed (just like Blueprint — browsers can't transition to auto).
@@ -209,6 +210,12 @@ export function Collapse({
     };
 
     const bodyStyle: React.CSSProperties = {
+        // When fully closed, remove the body from layout so it contributes no height.
+        // Blueprint achieves this with `.bp6-collapse-body[aria-hidden="true"] { display: none }`
+        // in its SCSS; we do it inline to keep the component self-contained (no external CSS
+        // dependency). Without this, a `keepChildrenMounted` collapse leaves a phantom gap the
+        // size of its content after the close animation completes.
+        display: isVisible ? undefined : "none",
         transform: displayWithTransform ? "translateY(0)" : `translateY(-${heightWhenOpen}px)`,
         transition: isAutoHeight ? "none" : `transform ${transitionDuration}ms cubic-bezier(0.4, 1, 0.75, 0.9)`,
     };
