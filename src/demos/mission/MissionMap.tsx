@@ -26,6 +26,8 @@ interface MissionMapProps {
     selectedId: string | null;
     onSelect: (id: string | null) => void;
     autoFollow: boolean;
+    /** Rotate the map so the selected drone always faces up (its heading = "up"). */
+    matchOrientation: boolean;
     dark: boolean;
     className?: string;
 }
@@ -116,7 +118,7 @@ function makeArrowIcon(color: string): ImageData {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function MissionMap({ drones, selectedId, onSelect, autoFollow, dark, className }: MissionMapProps) {
+export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrientation, dark, className }: MissionMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MlMap | null>(null);
     const readyRef = useRef(false);
@@ -225,12 +227,27 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, dark, cla
             map.setFilter("drone-selected", ["==", ["get", "id"], selectedId ?? "__none__"]);
         }
 
-        // Auto-follow the selected drone.
-        if (autoFollow && selectedId) {
-            const sel = drones.find((d) => d.id === selectedId);
-            if (sel) map.easeTo({ center: sel.position, duration: 800 });
+        // Auto-follow and/or rotate the map to the selected drone. Both target the
+        // same camera, so fold them into one easeTo: center on follow, set the map
+        // bearing to the drone's heading on match-orientation (so it points "up").
+        const sel = selectedId ? drones.find((d) => d.id === selectedId) : null;
+        if (sel && (autoFollow || matchOrientation)) {
+            const camera: maplibregl.EaseToOptions = { duration: 800 };
+            if (autoFollow) camera.center = sel.position;
+            if (matchOrientation) camera.bearing = sel.heading;
+            map.easeTo(camera);
         }
-    }, [drones, selectedId, autoFollow]);
+    }, [drones, selectedId, autoFollow, matchOrientation]);
+
+    // ── Match-orientation toggled off → straighten the map back to north-up ──
+    const prevMatch = useRef(matchOrientation);
+    useEffect(() => {
+        const map = mapRef.current;
+        if (map && prevMatch.current && !matchOrientation) {
+            map.easeTo({ bearing: 0, duration: 600 });
+        }
+        prevMatch.current = matchOrientation;
+    }, [matchOrientation]);
 
     return <div ref={containerRef} className={className} />;
 }
