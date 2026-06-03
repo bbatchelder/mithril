@@ -80,6 +80,10 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
     // layout/width stable; `invisible` (visibility:hidden) would drop the name entirely.
     const hidden = loading ? "opacity-0" : undefined;
 
+    // Mirror Button: expose a real (non-"none") intent so a parent ControlGroup raises this
+    // anchor above its neighbors (z-index intent tier), matched via the `.bp6-button` marker.
+    const dataIntent = intent && intent !== "none" ? intent : undefined;
+
     // Resolve string icon names to <Icon> (with `!text-current` so the glyph inherits the
     // anchor's text color); a custom element / false / null passes through unchanged.
     const iconNode = resolveIcon(icon, { className: "!text-current" });
@@ -91,6 +95,7 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
             role="button"
             className={classes}
             data-active={active || undefined}
+            data-intent={dataIntent}
             aria-disabled={disabled || undefined}
             // Remove href when disabled so the anchor isn't a navigable/activatable link.
             href={disabled ? undefined : href}
