@@ -45,6 +45,7 @@ function MissionControlInner() {
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [autoFollow, setAutoFollow] = useState(false);
+    const [matchOrientation, setMatchOrientation] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [query, setQuery] = useState("");
 
@@ -98,6 +99,7 @@ function MissionControlInner() {
             togglePlay: () => stream.toggle(),
             setSpeed: (s: StreamSpeed) => stream.setSpeed(s),
             toggleFollow: () => setAutoFollow((v) => !v),
+            toggleMatch: () => setMatchOrientation((v) => !v),
             focusSearch: () => searchRef.current?.focus(),
             next: () => cycleSelection(1),
             prev: () => cycleSelection(-1),
@@ -122,6 +124,7 @@ function MissionControlInner() {
             { combo: "2", label: "Speed 2×", group: "Stream", global: true, onKeyDown: () => hotkeyActions.setSpeed(2) },
             { combo: "5", label: "Speed 5×", group: "Stream", global: true, onKeyDown: () => hotkeyActions.setSpeed(5) },
             { combo: "f", label: "Toggle map follow", group: "View", global: true, onKeyDown: hotkeyActions.toggleFollow },
+            { combo: "m", label: "Toggle match orientation", group: "View", global: true, onKeyDown: hotkeyActions.toggleMatch },
             { combo: "/", label: "Focus search", group: "View", global: true, preventDefault: true, onKeyDown: hotkeyActions.focusSearch },
             { combo: "j", label: "Select next drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.next },
             { combo: "k", label: "Select previous drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.prev },
@@ -189,10 +192,18 @@ function MissionControlInner() {
                         onValueChange={(v) => stream.setSpeed(Number(v) as StreamSpeed)}
                     />
                     <NavbarDivider />
-                    <label className="flex items-center gap-2 text-body-sm text-foreground-muted">
-                        <Switch checked={autoFollow} onChange={(e) => setAutoFollow(e.target.checked)} />
-                        Follow
-                    </label>
+                    <Switch
+                        inline
+                        checked={autoFollow}
+                        onChange={(e) => setAutoFollow(e.target.checked)}
+                        label={<span className="text-body-sm text-foreground-muted">Follow</span>}
+                    />
+                    <Switch
+                        inline
+                        checked={matchOrientation}
+                        onChange={(e) => setMatchOrientation(e.target.checked)}
+                        label={<span className="text-body-sm text-foreground-muted">Match orientation</span>}
+                    />
                     <NavbarDivider />
                     <HotkeysHelpButton dark={dark} />
                     <NavbarDivider />
@@ -254,6 +265,7 @@ function MissionControlInner() {
                             selectedId={selectedId}
                             onSelect={handleSelect}
                             autoFollow={autoFollow}
+                            matchOrientation={matchOrientation}
                             dark={dark}
                             className="h-full w-full"
                         />

@@ -41,6 +41,30 @@ These are **composed on Popover** and portal their listbox, so:
 (`CheckboxCard`, `RadioCard`, `SwitchCard`) for larger selectable tiles. `ControlGroup` lays out
 adjacent controls/inputs as a single attached row.
 
+### Use the built-in `label` prop — don't wrap the control in your own `<label>`
+
+`Checkbox`/`Radio`/`Switch` **are themselves a `<label>`** that lays out the indicator + caption
+with Blueprint's native alignment: the indicator is `align-middle` with a deliberate vertical
+nudge (e.g. the Switch track carries `-mt-[3px]`), and the whole thing defaults to `block mb-2`.
+Pass the caption via the **`label` prop**, not as a sibling text node in your own wrapper:
+
+```tsx
+// ✅ caption rides the control's own alignment
+<Switch inline checked={on} onChange={…}
+        label={<span className="text-body-sm text-foreground-muted">Follow</span>} />
+
+// ❌ outer flex label fights the control's internal -mt/mb → indicator sits above the text
+<label className="flex items-center gap-2 text-body-sm">
+  <Switch checked={on} onChange={…} /> Follow
+</label>
+```
+
+Nesting the control in an external `flex items-center` wrapper looks like it should center
+things, but it stacks *two* labels and the control's internal offset/margin throws the indicator
+off the text baseline. Reach for **`inline`** when placing these in a horizontal row (navbar,
+toolbar) — it swaps the default `block mb-2` for `inline-block` so adjacent toggles sit flush.
+Style the caption by passing styled content to `label` (the control sets the base text size).
+
 ## Accessibility note
 
 Several hand-rolled controls have documented keyboard/ARIA gaps vs a fully-accessible baseline
