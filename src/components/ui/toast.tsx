@@ -329,8 +329,13 @@ export function Toast({
                 "flex items-start",
                 // Blueprint: position relative (needed for stacking)
                 "relative",
-                // Blueprint: pointer-events:all (toasts are interactive even though container isn't)
-                "pointer-events-auto",
+                // Blueprint: pointer-events:all (toasts are interactive even though container isn't).
+                // `!important` is required: Radix Toast writes an inline `pointer-events: none`
+                // on the <li> whenever its region loses focus — which is exactly what happens when
+                // a *modal* Radix Dialog/Drawer opens (its FocusScope traps focus). Without the
+                // override, an open drawer makes every toast un-closable (real clicks fall through
+                // to the drawer beneath). The bang beats the inline none so toasts stay interactive.
+                "!pointer-events-auto",
                 // Blueprint: border-radius 4px ($pt-border-radius)
                 "rounded-bp",
                 // Blueprint: min-width min(300px,100%), max-width min(500px,100%)

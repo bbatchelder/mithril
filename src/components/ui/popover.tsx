@@ -175,6 +175,19 @@ export interface PopoverProps {
     canOutsideClickClose?: boolean;
 
     /**
+     * Forwarded to Radix `Popover.Content`'s `onInteractOutside` (covers both
+     * pointer-down-outside and focus-outside). Call `event.preventDefault()` to keep
+     * the popover open for a given interaction.
+     *
+     * The canonical use is the focus-driven `anchorOnly` combobox: focusing the anchor
+     * input opens the popover, but Radix treats that same pointer/focus on the anchor
+     * (which is NOT a Trigger) as an *outside* interaction and dismisses it one frame
+     * later. Guarding interactions that originate inside the anchor keeps the
+     * focus-driven open alive. See Suggest/MultiSelect.
+     */
+    onInteractOutside?: React.ComponentProps<typeof RadixPopover.Content>["onInteractOutside"];
+
+    /**
      * When true, the popover content width matches the trigger element width.
      * Uses Radix's CSS variable `--radix-popover-trigger-width` (set on the content element).
      * Blueprint: `matchTargetWidth` on Suggest — dropdown matches input width.
@@ -287,6 +300,7 @@ export function Popover({
     hasContentPadding = true,
     canEscapeKeyClose = true,
     canOutsideClickClose = true,
+    onInteractOutside,
     matchTargetWidth = false,
     dark = false,
     disabled = false,
@@ -444,6 +458,7 @@ export function Popover({
                         onPointerDownOutside={
                             canOutsideClickClose ? undefined : (e) => e.preventDefault()
                         }
+                        onInteractOutside={onInteractOutside}
                         // Hover mode: keep open while the pointer is over the panel; close on leave.
                         onPointerEnter={isHover ? clearCloseTimer : undefined}
                         onPointerLeave={isHover ? hoverCloseSoon : undefined}
@@ -549,3 +564,88 @@ export function Popover({
 }
 
 Popover.displayName = "Popover";
+
+/**
+ * MenuPopover — a <Popover> preset for menu content.
+ *
+ * A `<Menu>` brings its own 4px inset, so the Popover's default 20px text-content
+ * padding (`hasContentPadding`) doubles up and leaves a fat ring of whitespace
+ * around the menu. This is the single most common Popover composition mistake, so
+ * MenuPopover flips `hasContentPadding` to `false` by default. Everything else is
+ * plain Popover — pass `content={<Menu>…</Menu>}` and the trigger as children.
+ *
+ * @example
+ * ```tsx
+ * <MenuPopover
+ *   dark={dark}
+ *   side="bottom"
+ *   align="end"
+ *   content={
+ *     <Menu size="small">
+ *       <MenuItem icon="edit" text="Edit" onClick={…} />
+ *       <MenuItem icon="trash" text="Delete" intent="danger" onClick={…} />
+ *     </Menu>
+ *   }
+ * >
+ *   <Button variant="minimal" icon={<Icon icon="more" />} aria-label="Actions" />
+ * </MenuPopover>
+ * ```
+ *
+ * Override `hasContentPadding={true}` if you ever want the padded variant back.
+ *
+ * Choosing an item **closes the menu** (the expected menu behavior; a plain Popover
+ * stays open). MenuPopover drives its own open state for this — pass `open` /
+ * `onOpenChange` to control it yourself, exactly like Popover.
+ */
+export function MenuPopover({
+    hasContentPadding = false,
+    open,
+    defaultOpen,
+    onOpenChange,
+    content,
+    ...props
+}: PopoverProps) {
+    const isControlled = open !== undefined;
+    const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
+    const actualOpen = isControlled ? open : internalOpen;
+
+    const setOpen = useCallback(
+        (next: boolean) => {
+            if (!isControlled) setInternalOpen(next);
+            onOpenChange?.(next);
+        },
+        [isControlled, onOpenChange],
+    );
+
+    // Close the menu once an actionable item is chosen (mouse click or keyboard
+    // activation, which also dispatches a click). This runs in the BUBBLE phase, so
+    // the item's own onClick has already fired (the action runs, then we close — not
+    // the reverse, which would unmount the item before its handler ran). We also stop
+    // propagation here: the menu portals to <body>, but React events still bubble
+    // through the React *tree* to whatever rendered the trigger (e.g. a table row whose
+    // onClick opens a drawer) — a self-contained menu shouldn't leak its clicks upward.
+    const handleSelect = useCallback(
+        (e: React.MouseEvent) => {
+            const item = (e.target as Element).closest?.(
+                '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]',
+            );
+            if (item && item.getAttribute("aria-disabled") !== "true") {
+                e.stopPropagation();
+                setOpen(false);
+            }
+        },
+        [setOpen],
+    );
+
+    return (
+        <Popover
+            {...props}
+            hasContentPadding={hasContentPadding}
+            open={actualOpen}
+            onOpenChange={setOpen}
+            content={<div onClick={handleSelect}>{content}</div>}
+        />
+    );
+}
+
+MenuPopover.displayName = "MenuPopover";

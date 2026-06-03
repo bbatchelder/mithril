@@ -67,6 +67,36 @@
     animation: bp-popover-fade-out var(--duration-bp) var(--ease-bp);
 }
 
+/* Drawer slide + backdrop fade. Radix keeps the panel/overlay mounted on close
+ * (Presence detects the CSS animation), so both enter and exit animate. The panel
+ * slides in from its anchored edge; the backdrop fades. Duration 200ms
+ * (2 × $pt-transition-duration) with Blueprint's standard ease — matching the
+ * feel of Blueprint's own overlay transitions. Safe to animate `transform` on the
+ * Content: Dialog Content (unlike Popover) carries no positioning translate. */
+@keyframes bp-overlay-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bp-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+@keyframes bp-drawer-in-right   { from { transform: translateX(100%); }  to { transform: translateX(0); } }
+@keyframes bp-drawer-out-right  { from { transform: translateX(0); }     to { transform: translateX(100%); } }
+@keyframes bp-drawer-in-left    { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes bp-drawer-out-left   { from { transform: translateX(0); }     to { transform: translateX(-100%); } }
+@keyframes bp-drawer-in-top     { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes bp-drawer-out-top    { from { transform: translateY(0); }     to { transform: translateY(-100%); } }
+@keyframes bp-drawer-in-bottom  { from { transform: translateY(100%); }  to { transform: translateY(0); } }
+@keyframes bp-drawer-out-bottom { from { transform: translateY(0); }     to { transform: translateY(100%); } }
+
+.bp-drawer-overlay[data-state="open"]   { animation: bp-overlay-fade-in  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-overlay[data-state="closed"] { animation: bp-overlay-fade-out calc(var(--duration-bp) * 2) var(--ease-bp); }
+
+.bp-drawer-panel-right[data-state="open"]    { animation: bp-drawer-in-right   calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-right[data-state="closed"]  { animation: bp-drawer-out-right  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-left[data-state="open"]     { animation: bp-drawer-in-left    calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-left[data-state="closed"]   { animation: bp-drawer-out-left   calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-top[data-state="open"]      { animation: bp-drawer-in-top     calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-top[data-state="closed"]    { animation: bp-drawer-out-top    calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-bottom[data-state="open"]   { animation: bp-drawer-in-bottom  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-bottom[data-state="closed"] { animation: bp-drawer-out-bottom calc(var(--duration-bp) * 2) var(--ease-bp); }
+
 @layer base {
     * {
         border-color: var(--border);

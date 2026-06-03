@@ -177,39 +177,62 @@ export function Drawer({
         bottom: "bottom-0 left-0 right-0",
     };
 
+    // Slide-in/out animation keyed on the anchored edge (defined in globals.css).
+    // Radix toggles data-state on the panel and keeps it mounted on close until the
+    // CSS animation finishes, so both enter and exit animate.
+    const animationClasses: Record<string, string> = {
+        right: "bp-drawer-panel-right",
+        left: "bp-drawer-panel-left",
+        top: "bp-drawer-panel-top",
+        bottom: "bp-drawer-panel-bottom",
+    };
+
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
             <RadixDialog.Portal>
-                {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
-                    The portal renders at document.body (outside the app's .dark ancestor),
-                    so dark utilities wouldn't apply without this wrapper. */}
-                <div className={dark ? "dark" : ""} style={{ pointerEvents: "none" }}>
-                    {/* Backdrop/overlay — fixed, covers viewport.
-                        Blueprint: rgba($black, 0.7) = rgba(17, 20, 24, 0.7) */}
-                    <RadixDialog.Overlay
-                        className="fixed inset-0 bg-black/70 z-overlay pointer-events-auto"
-                    />
-                    {/* Drawer panel — fixed, anchored to the edge.
-                        No centering container needed (unlike Dialog which needs flex-center). */}
-                    <RadixDialog.Content
-                        data-compare="drawer-panel"
-                        className={cn(
+                {/* No wrapper div here. RadixDialog.Portal wraps EACH of its direct children in
+                    its own <Presence present={open}>; a plain wrapper would be that Presence child
+                    with no exit animation, so Radix unmounts it instantly on close — which kills
+                    the panel/overlay slide-out. Keeping Overlay and Content as the direct (animated)
+                    Presence children lets both enter AND exit animate.
+
+                    Dark-mode portal fix: the portal renders at document.body (outside the app's
+                    .dark ancestor), so the `dark` class goes directly on the Content. Its
+                    descendants (header/body/footer/consumer content) then have a `.dark` ancestor
+                    and their `dark:` utilities + var-backed tokens resolve as before. The Content's
+                    OWN two dark-dependent styles can't use the descendant `dark:` variant (it needs
+                    a `.dark` ancestor, not a class on the same element), so they use self-matching
+                    `[&.dark]:` instead. The overlay backdrop is theme-independent (bg-black/70). */}
+                {/* Backdrop/overlay — fixed, covers viewport.
+                    Blueprint: rgba($black, 0.7) = rgba(17, 20, 24, 0.7) */}
+                <RadixDialog.Overlay
+                    className="bp-drawer-overlay fixed inset-0 bg-black/70 z-overlay pointer-events-auto"
+                />
+                {/* Drawer panel — fixed, anchored to the edge.
+                    No centering container needed (unlike Dialog which needs flex-center). */}
+                <RadixDialog.Content
+                    data-compare="drawer-panel"
+                    className={cn(
+                            // Dark mode: class on the panel itself (see note above).
+                            dark && "dark",
                             // Panel base: flex column
                             "flex flex-col",
                             // Fixed positioning + edge anchoring
                             "fixed z-overlay pointer-events-auto",
                             positionClasses[position],
-                            // Blueprint: background white (light) / dark-gray3 (dark)
-                            // Light: $drawer-background-color = $white
-                            // Dark:  $dark-drawer-background-color = $dark-gray3 = #2f343c
-                            "bg-white dark:bg-dark-gray-3",
+                            // Slide animation per edge (data-state driven; see globals.css)
+                            animationClasses[position],
+                            // Blueprint: background white (light) / dark-gray3 (dark).
+                            // `[&.dark]:` matches the `dark` class on THIS element (the descendant
+                            // `dark:` variant can't, since it targets `.dark <descendant>`).
+                            "bg-white [&.dark]:bg-dark-gray-3",
                             // Set own text color: portal renders at body, must set text-foreground
                             // so dark mode resolves to the correct dark --foreground.
                             "text-foreground",
                             // Blueprint drawer uses elevation-4 in LIGHT but elevation-3 in DARK
-                            // (Blueprint quirk). overlay-N tokens carry the rgba(20,20,20) light
-                            // hairline ring + Blueprint's dark drop/highlight layer order.
-                            "shadow-overlay-4 dark:shadow-overlay-3",
+                            // (Blueprint quirk). overlay-N tokens already bake in the dark drop/
+                            // highlight via CSS vars; `[&.dark]:` only toggles the elevation level.
+                            "shadow-overlay-4 [&.dark]:shadow-overlay-3",
                             // Blueprint: no padding, no margin, no border-radius
                             "p-0 m-0",
                             // Blueprint: &:focus { outline: 0 }
@@ -271,8 +294,7 @@ export function Drawer({
                             </div>
                         )}
                         {children}
-                    </RadixDialog.Content>
-                </div>
+                </RadixDialog.Content>
             </RadixDialog.Portal>
         </RadixDialog.Root>
     );

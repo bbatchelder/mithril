@@ -48,9 +48,13 @@ the ongoing goal:
   Components import their own structural glyphs as objects so they render standalone. `ICON_GLYPHS` lives
   in `all.ts` and must stay typed `Record<IconName, IconGlyph>` (explicit union, **never** `as const`) or
   it hits TS2590.
-- `src/App.tsx` — the component gallery / showcase (`pnpm dev` → :5173). Groups every component by
-  category; light/dark toggle; deep-link by hash (`#button`). Demo apps live under `src/demos/` and are
-  registered in `src/demos/registry.ts`.
+- `src/App.tsx` — the app shell (`pnpm dev` → :5173). The root is a **landing app gallery**; hash-routed
+  into one of: the **Component Showcase** (`#showcase` / `#showcase/<id>`, its own component-nav sidebar,
+  components grouped by category) or a demo app (`#soc`, `#board`, `#mission`). There is **no persistent
+  global sidebar** — each app owns its full width and carries its own chrome (back-to-gallery + theme
+  chooser) via `<AppChromeControls>` from `src/lib/app-chrome.tsx`. Each app keeps its **own** palette +
+  light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
+  `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).
   Visual fidelity is verified via the harness, not unit tests.
 - `tools/compare.sh` + `tools/comparison/` — the comparison harness: screenshots **and** computed-style
@@ -61,6 +65,10 @@ the ongoing goal:
 - `docs/experiment/` — the archived experiment: its narrative, the agent guide that governed the loop,
   `handoffs/` (the session-to-session continuity record), and `ROADMAP.md` (the completed build checklist
   + a "post-parity tail" of open items). Archival, not how work is tracked now.
+- `.claude/skills/mithril/` — the repo-coupled **composition skill**: `SKILL.md` (mental model + index)
+  and `reference/` recipes (overlays, foundations, forms, data, dates). Teaches how to *compose* these
+  components correctly (the gotchas the types don't reveal). When you discover a new composition gotcha,
+  add it here — overlays is the worked exemplar; the others are seeded and meant to grow.
 
 ## Working model
 
@@ -97,9 +105,11 @@ From the README's roadmap — pursued in service of the author's own apps, not a
   Blueprint's desktop-only language).
 - **Charts & mapping.** Pull in and theme a charting library and a mapping library as first-class,
   on-system citizens (the *Mission Control* demo already exercises MapLibre).
-- **A coupled agent skill → a self-describing design system.** A repo-coupled agent skill is in
-  development that teaches agents how to compose these components correctly — making the repo
-  self-describing (source + composition instructions in one place).
+- **A coupled agent skill → a self-describing design system.** A repo-coupled agent skill now lives
+  at `.claude/skills/mithril/` and teaches agents how to compose these components correctly — making
+  the repo self-describing (source + composition instructions in one place). First cut: full scaffold
+  with a deep "overlays" slice; the forms/data/dates references are seeded and meant to grow as new
+  composition gotchas surface.
 
 ## Commands
 

@@ -241,6 +241,7 @@ export function Suggest<T>({
     const [isOpen, setIsOpen] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const menuRef = useRef<HTMLUListElement>(null);
+    const anchorRef = useRef<HTMLDivElement>(null);
 
     // Stable ids for the WAI-ARIA combobox wiring.
     const listboxId = useId();
@@ -397,16 +398,33 @@ export function Suggest<T>({
         }
     }, [resolvedOpen, ql.activeItem, ql.filteredItems]);
 
+    // The anchor input is a Radix *anchor*, not a Trigger, so Radix's dismissable layer
+    // treats the pointer/focus that just opened the popover as an "outside" interaction and
+    // closes it one frame later. Keep it open for interactions originating inside our anchor;
+    // genuine outside interactions still dismiss (and onBlur closes on focus leaving).
+    const handleInteractOutside = useCallback(
+        (e: Event & { detail?: { originalEvent?: Event } }) => {
+            const target = (e.detail?.originalEvent?.target ?? e.target) as Node | null;
+            if (target && anchorRef.current?.contains(target)) e.preventDefault();
+        },
+        [],
+    );
+
     // ── Popover content ──────────────────────────────────────────────────────
 
     const activeIndex = ql.activeItem != null ? ql.filteredItems.indexOf(ql.activeItem) : -1;
     const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
 
     const popoverContent = (
+        // Options aren't focusable, so a mousedown on one would blur the input and close the
+        // popover before the click selects (Radix focus-out dismiss + our onBlur close).
+        // preventDefault keeps focus on the input so the click lands and selection works —
+        // the standard combobox pattern. Keyboard nav is unaffected.
         <Menu
             ulRef={menuRef}
             id={listboxId}
             role="listbox"
+            onMouseDown={(e) => e.preventDefault()}
             data-compare="suggest-menu"
             className={cn(
                 "overflow-auto",
@@ -495,10 +513,13 @@ export function Suggest<T>({
             autoFocusContent={false}
             // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
             ariaLabel="Suggestions"
+            // Keep the focus-driven open alive against Radix's anchor-dismiss race.
+            onInteractOutside={handleInteractOutside}
             {...restPopoverProps}
         >
             {/* Anchor wrapper — Popover.Anchor wraps this as asChild (positioning only, no ARIA) */}
             <div
+                ref={anchorRef}
                 className={cn("inline-block", fill && "w-full")}
                 style={fill ? { width: "100%" } : undefined}
             >

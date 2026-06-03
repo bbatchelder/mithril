@@ -326,6 +326,19 @@ export function MultiSelect<T>({
         openPopover();
     }, [openPopover]);
 
+    // The container is a Radix *anchor*, not a Trigger, so Radix's dismissable layer
+    // treats the pointer/focus that just opened the popover as an "outside" interaction
+    // and closes it one frame later. Keep it open when the interaction originates inside
+    // our own container; genuine outside interactions still dismiss (and the container's
+    // onBlur closes when focus leaves entirely).
+    const handleInteractOutside = useCallback(
+        (e: Event & { detail?: { originalEvent?: Event } }) => {
+            const target = (e.detail?.originalEvent?.target ?? e.target) as Node | null;
+            if (target && containerRef.current?.contains(target)) e.preventDefault();
+        },
+        [],
+    );
+
     const handleInputChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             openPopover();
@@ -395,7 +408,15 @@ export function MultiSelect<T>({
     const activeDescendantId = resolvedOpen && activeIndex >= 0 ? optionId(activeIndex) : undefined;
 
     const popoverContent = (
-        <div onKeyDown={ql.handleKeyDown} className="p-1">
+        // Options aren't focusable, so a mousedown on one would blur the ghost input and
+        // close the popover before the click selects (Radix focus-out dismiss + our onBlur
+        // close). preventDefault keeps focus on the input so the click lands and selection
+        // works — the standard combobox pattern. Keyboard nav is unaffected.
+        <div
+            onKeyDown={ql.handleKeyDown}
+            onMouseDown={(e) => e.preventDefault()}
+            className="p-1"
+        >
             <Menu
                 ulRef={menuRef}
                 id={listboxId}
@@ -494,6 +515,8 @@ export function MultiSelect<T>({
             autoFocusContent={false}
             // Name the Radix dialog panel (axe aria-dialog-name); override via popoverProps.
             ariaLabel="Options"
+            // Keep the focus-driven open alive against Radix's anchor-dismiss race.
+            onInteractOutside={handleInteractOutside}
             {...restPopoverProps}
         >
             {/* Anchor: the TagInput-like container with chips + ghost input (positioning only, no ARIA) */}

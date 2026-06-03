@@ -7,16 +7,18 @@ import { InputGroup } from "@/components/ui/input-group";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
 import { NonIdealState } from "@/components/ui/non-ideal-state";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Select } from "@/components/ui/select";
 import { Tag } from "@/components/ui/tag";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useToaster } from "@/components/ui/toast";
 import { useDark } from "@/lib/dark-context";
+import { AppChromeControls } from "@/lib/app-chrome";
 
 import { AlertDetail } from "./AlertDetail";
 import { AlertTable, type RowAction } from "./AlertTable";
+import { NewIncidentDialog, type NewIncidentDraft } from "./NewIncidentDialog";
 import { StatBar, type Kpi } from "./StatBar";
 import {
     type Alert,
@@ -49,6 +51,9 @@ export function SocConsole() {
     // Drawer
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+
+    // New-incident wizard
+    const [newIncidentOpen, setNewIncidentOpen] = useState(false);
 
     const selected = useMemo(
         () => alerts.find((a) => a.id === selectedId) ?? null,
@@ -109,6 +114,49 @@ export function SocConsole() {
         setStatus(alert.id, "resolved");
         toaster.show({ intent: "success", icon: "tick-circle", message: `Incident ${alert.id} closed and resolved.` });
         setDrawerOpen(false);
+    };
+
+    const handleCreateIncident = (draft: NewIncidentDraft) => {
+        // Next sequential ALRT-#### id from the highest existing number.
+        const maxNum = alerts.reduce((max, a) => {
+            const n = Number.parseInt(a.id.replace(/\D/g, ""), 10);
+            return Number.isNaN(n) ? max : Math.max(max, n);
+        }, 0);
+        const id = `ALRT-${maxNum + 1}`;
+
+        const alert: Alert = {
+            id,
+            title: draft.title.trim(),
+            severity: draft.severity,
+            status: "new",
+            detector: draft.detector,
+            source: `${draft.detector} / Manual — Analyst-created incident`,
+            asset: draft.asset.trim(),
+            assetKind: draft.assetKind,
+            assignee: draft.assignee,
+            mitre: "—",
+            mitreName: "Unclassified",
+            sourceIp: draft.sourceIp.trim() || "—",
+            firstSeen: "Just now",
+            age: "just now",
+            description: draft.description.trim(),
+            timeline: [
+                {
+                    label: "Incident created",
+                    timestamp: "now",
+                    icon: "edit",
+                    detail: `Manually opened by Maya Okonkwo`,
+                },
+            ],
+            iocs: draft.sourceIp.trim() ? [{ type: "ip", value: draft.sourceIp.trim() }] : [],
+        };
+
+        setAlerts((prev) => [alert, ...prev]);
+        toaster.show({
+            intent: "success",
+            icon: "new-object",
+            message: `Incident ${id} created — "${alert.title}".`,
+        });
     };
 
     const handleCopyIoc = (value: string) => {
@@ -174,9 +222,7 @@ export function SocConsole() {
                     <Button
                         intent="primary"
                         icon={<Icon icon="plus" className="!text-current" />}
-                        onClick={() =>
-                            toaster.show({ intent: "primary", icon: "new-object", message: "New incident drafted." })
-                        }
+                        onClick={() => setNewIncidentOpen(true)}
                     >
                         New incident
                     </Button>
@@ -191,7 +237,7 @@ export function SocConsole() {
                         />
                     </Tooltip>
                     <NavbarDivider />
-                    <Popover
+                    <MenuPopover
                         side="bottom"
                         align="end"
                         dark={dark}
@@ -212,7 +258,9 @@ export function SocConsole() {
                         >
                             Maya O.
                         </Button>
-                    </Popover>
+                    </MenuPopover>
+                    <NavbarDivider />
+                    <AppChromeControls />
                 </NavbarGroup>
             </Navbar>
 
@@ -317,6 +365,14 @@ export function SocConsole() {
                     )}
                 </div>
             </div>
+
+            {/* ── New-incident wizard ────────────────────────────────────── */}
+            <NewIncidentDialog
+                isOpen={newIncidentOpen}
+                dark={dark}
+                onClose={() => setNewIncidentOpen(false)}
+                onCreate={handleCreateIncident}
+            />
 
             {/* ── Detail drawer ──────────────────────────────────────────── */}
             <AlertDetail

@@ -20,7 +20,7 @@ import { Icon } from "@/components/ui/icon";
 import { InputGroup } from "@/components/ui/input-group";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Section } from "@/components/ui/section";
 import { Switch } from "@/components/ui/switch";
@@ -28,6 +28,7 @@ import { Tag } from "@/components/ui/tag";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useToaster } from "@/components/ui/toast";
 import { useDark } from "@/lib/dark-context";
+import { AppChromeControls } from "@/lib/app-chrome";
 
 import { DroneDetail } from "./DroneDetail";
 import { EventFeed } from "./EventFeed";
@@ -195,7 +196,7 @@ function MissionControlInner() {
                     <NavbarDivider />
                     <HotkeysHelpButton dark={dark} />
                     <NavbarDivider />
-                    <Popover
+                    <MenuPopover
                         side="bottom"
                         align="end"
                         dark={dark}
@@ -217,7 +218,9 @@ function MissionControlInner() {
                         >
                             Reyes
                         </Button>
-                    </Popover>
+                    </MenuPopover>
+                    <NavbarDivider />
+                    <AppChromeControls />
                 </NavbarGroup>
             </Navbar>
 

@@ -12,7 +12,7 @@ import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { Popover } from "@/components/ui/popover";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Divider } from "@/components/ui/divider";
-import { Icon, type IconIntent } from "@/components/ui/icon";
+import { Icon, type IconIntent, type IconName } from "@/components/ui/icon";
 import { InputGroup, type InputGroupIntent } from "@/components/ui/input-group";
 import { TextArea, type TextAreaIntent } from "@/components/ui/text-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,6 +67,7 @@ import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
 
 import { DarkContext } from "@/lib/dark-context";
+import { AppChromeProvider, AppChromeControls, type AppChrome, type Palette } from "@/lib/app-chrome";
 import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
 
 // The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
@@ -5159,6 +5160,11 @@ const INITIAL_DARK = params.get("theme") === "dark";
 /** `?palette=datex` selects the example alternate theme (P2.5 themeability proof). */
 const INITIAL_DATEX = params.get("palette") === "datex";
 
+// Apply the initial palette to <html> up front so the isolated harness mode
+// (`?component=<id>`, which returns before any palette effect runs) still honors
+// `?palette=datex`. In the interactive app the per-app theme effect manages it after.
+if (INITIAL_DATEX) document.documentElement.setAttribute("data-theme", "datex");
+
 /**
  * Components whose specimens render a portaled/floating overlay OPEN by default (for the
  * harness). In the combined all-components view these would stack on top of the page and
@@ -5225,128 +5231,91 @@ function useHash(): string {
     return hash;
 }
 
-function Sidebar({
-    selectedId,
-    dark,
-    onToggleDark,
-    view,
-    onViewChange,
-    datex,
-    onToggleDatex,
-}: {
-    selectedId: string;
-    dark: boolean;
-    onToggleDark: () => void;
-    view: "showcase" | "demos";
-    onViewChange: (v: "showcase" | "demos") => void;
-    datex: boolean;
-    onToggleDatex: () => void;
-}) {
-    return (
-        <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
-            <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                <span className="text-heading-sm font-semibold text-foreground">mithril</span>
-                <div className="flex items-center gap-1">
-                    <Button
-                        size="small"
-                        variant="minimal"
-                        intent={datex ? "primary" : "none"}
-                        aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
-                        aria-pressed={datex}
-                        icon={<Icon icon="tint" className="!text-current" />}
-                        onClick={onToggleDatex}
-                    />
-                    <Button
-                        size="small"
-                        variant="minimal"
-                        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-                        icon={<Icon icon={dark ? "lightbulb" : "moon"} className="!text-current" />}
-                        onClick={onToggleDark}
-                    />
-                </div>
-            </div>
-            <div className="border-b border-border px-3 py-2">
-                <SegmentedControl
-                    fill
-                    options={[
-                        { label: "Showcase", value: "showcase" },
-                        { label: "Demos", value: "demos" },
-                    ]}
-                    value={view}
-                    onValueChange={(v) => onViewChange(v as "showcase" | "demos")}
-                />
-            </div>
-            {view === "demos" ? (
-                <nav className="flex-1 overflow-y-auto px-2 py-3">
-                    <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                        Demo apps
-                    </div>
-                    <ul className="flex flex-col gap-px">
-                        {DEMOS.map((d) => (
-                            <li key={d.id}>
-                                <a
-                                    href={`#demo-${d.id}`}
-                                    className="block rounded-bp px-2 py-1 text-body-sm text-foreground transition-colors hover:bg-[var(--interactive-hover)]"
-                                >
-                                    {d.title}
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </nav>
-            ) : (
-            <nav className="flex-1 overflow-y-auto px-2 py-3">
-                {CATEGORY_GROUPS.map((group) => (
-                    <div key={group.label} className="mb-4">
-                        <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                            {group.label}
-                        </div>
-                        <ul className="flex flex-col gap-px">
-                            {group.items.map((c) => {
-                                const active = c.id === selectedId;
-                                return (
-                                    <li key={c.id}>
-                                        <a
-                                            href={`#${c.id}`}
-                                            aria-current={active ? "page" : undefined}
-                                            className={cn(
-                                                "block rounded-bp px-2 py-1 text-body-sm transition-colors",
-                                                active
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "text-foreground hover:bg-[var(--interactive-hover)]",
-                                            )}
-                                        >
-                                            {c.title}
-                                        </a>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
-                ))}
-            </nav>
-            )}
-        </aside>
-    );
+/* ── Routing ──────────────────────────────────────────────────────────────
+ * Hash-based, with the landing app gallery at the root. There is no persistent
+ * global sidebar any more — each app owns its own chrome and gets its full width:
+ *   ""                                    → landing app gallery
+ *   "showcase" / "showcase/<componentId>" → Component Showcase (its own sidebar)
+ *   "soc" | "board" | "mission"           → the demo apps (their own navbars)
+ * A bare legacy component id ("#button") resolves into the showcase.
+ */
+type ChromeAppId = "landing" | "showcase" | "soc" | "board" | "mission";
+
+const DEMO_IDS = new Set(DEMOS.map((d) => d.id));
+
+interface Route {
+    appId: ChromeAppId;
+    /** Showcase only: the selected component id ("" → default to the first). */
+    componentId: string;
 }
 
-/** The Demos view: renders the demo selected via the URL hash (`#demo-<id>`), full-bleed. */
-function DemosView() {
-    const dark = useContext(DarkContext);
-    const hash = useHash();
-    const demoId = hash.startsWith("demo-") ? hash.slice("demo-".length) : "";
-    const demo = DEMOS.find((d) => d.id === demoId) ?? DEMOS[0];
-    if (!demo) {
-        return (
-            <div className="p-10 text-body text-foreground-muted">No demos registered.</div>
-        );
+function parseRoute(hash: string): Route {
+    if (hash === "" || hash === "home") return { appId: "landing", componentId: "" };
+    if (hash === "showcase" || hash.startsWith("showcase/")) {
+        const id = hash.startsWith("showcase/") ? hash.slice("showcase/".length) : "";
+        return { appId: "showcase", componentId: id };
     }
-    const DemoComponent = demo.component;
-    // Each demo gets its own Toaster so `useToaster()` works inside the demo subtree.
+    if (DEMO_IDS.has(hash)) return { appId: hash as ChromeAppId, componentId: "" };
+    // Legacy bare component id (e.g. a shared "#button" link) → showcase.
+    if (COMPONENTS.some((c) => c.id === hash)) return { appId: "showcase", componentId: hash };
+    return { appId: "landing", componentId: "" };
+}
+
+type ThemePref = { palette: Palette; dark: boolean };
+const CHROME_APP_IDS: ChromeAppId[] = ["landing", "showcase", "soc", "board", "mission"];
+
+/** The cards on the landing gallery: the showcase plus every registered demo. */
+const LANDING_APPS: { title: string; description: string; icon: IconName; hash: string }[] = [
+    {
+        title: "Component Showcase",
+        description: "Browse and exercise every mithril component, grouped by category, in light or dark.",
+        icon: "widget",
+        hash: "showcase",
+    },
+    ...DEMOS.map((d) => ({ title: d.title, description: d.description, icon: d.icon, hash: d.id })),
+];
+
+/** The landing app gallery. Each card deep-links to an app via the URL hash. */
+function LandingPage() {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, []);
     return (
-        <Toaster dark={dark} position="top">
-            <DemoComponent />
-        </Toaster>
+        <div className="min-h-screen bg-background text-foreground">
+            <header className="flex items-center justify-between border-b border-border px-8 py-4">
+                <div className="flex items-center gap-2">
+                    <Icon icon="layout-grid" size={20} className="text-intent-primary-text" />
+                    <span className="text-heading-sm font-semibold">mithril</span>
+                </div>
+                {/* Landing has no "back" target, so the gallery button is hidden — palette + mode only. */}
+                <AppChromeControls showExit={false} />
+            </header>
+            <main className="mx-auto max-w-[960px] px-8 py-12">
+                <h1 className="text-heading-lg font-semibold">App gallery</h1>
+                <p className="mt-1.5 text-body text-foreground-muted">
+                    Pick an app to open. Each one carries its own theme — palette and light/dark.
+                </p>
+                <div className="mt-8 grid gap-5 sm:grid-cols-2">
+                    {LANDING_APPS.map((app) => (
+                        <a
+                            key={app.hash}
+                            href={`#${app.hash}`}
+                            className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        >
+                            <Card interactive elevation={1} className="flex h-full items-start gap-4">
+                                <span className="flex size-11 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                    <Icon icon={app.icon} size={22} className="!text-current" />
+                                </span>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-heading-sm font-semibold text-foreground">{app.title}</span>
+                                    <span className="text-body-sm text-foreground-muted">{app.description}</span>
+                                </div>
+                            </Card>
+                        </a>
+                    ))}
+                </div>
+            </main>
+        </div>
     );
 }
 
@@ -5367,40 +5336,78 @@ function ComponentView({ component }: { component: ComponentEntry }) {
     );
 }
 
-type AppView = "showcase" | "demos";
+/** The Component Showcase app: its own component-nav sidebar + the selected gallery. */
+function ShowcaseApp({ componentId }: { componentId: string }) {
+    const selected = COMPONENTS.find((c) => c.id === componentId) ?? COMPONENTS[0];
+    return (
+        <div className="flex min-h-screen bg-background text-foreground">
+            <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
+                <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+                    <span className="text-heading-sm font-semibold text-foreground">mithril</span>
+                    <AppChromeControls />
+                </div>
+                <nav className="flex-1 overflow-y-auto px-2 py-3">
+                    {CATEGORY_GROUPS.map((group) => (
+                        <div key={group.label} className="mb-4">
+                            <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                                {group.label}
+                            </div>
+                            <ul className="flex flex-col gap-px">
+                                {group.items.map((c) => {
+                                    const active = c.id === selected.id;
+                                    return (
+                                        <li key={c.id}>
+                                            <a
+                                                href={`#showcase/${c.id}`}
+                                                aria-current={active ? "page" : undefined}
+                                                className={cn(
+                                                    "block rounded-bp px-2 py-1 text-body-sm transition-colors",
+                                                    active
+                                                        ? "bg-primary text-primary-foreground"
+                                                        : "text-foreground hover:bg-[var(--interactive-hover)]",
+                                                )}
+                                            >
+                                                {c.title}
+                                            </a>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+                    ))}
+                </nav>
+            </aside>
+            <main className="flex-1 overflow-x-hidden px-10 py-8">
+                <div className="mx-auto max-w-[820px]">
+                    <ComponentView component={selected} />
+                </div>
+            </main>
+        </div>
+    );
+}
+
+/** Hosts a demo app full-bleed, with its own Toaster so `useToaster()` works inside it. */
+function DemoHost({ id, dark }: { id: ChromeAppId; dark: boolean }) {
+    const demo = DEMOS.find((d) => d.id === id);
+    if (!demo) return null;
+    const DemoComponent = demo.component;
+    return (
+        <Toaster dark={dark} position="top">
+            <DemoComponent />
+        </Toaster>
+    );
+}
 
 export default function App() {
-    const [dark, setDark] = useState(INITIAL_DARK);
-    const [datex, setDatex] = useState(INITIAL_DATEX);
-
-    // The theme (seed set) must be applied at the document root: light-mode semantic
-    // tokens are declared on `:root`, so their `var(--seed)` substitution resolves
-    // against the root's seeds. Setting `data-theme` on a descendant would leave those
-    // already-computed (default-seed) values inherited unchanged. Applying it on <html>
-    // also lets portaled content (rendered at <body>) inherit the theme automatically.
-    useEffect(() => {
-        const el = document.documentElement;
-        if (datex) el.setAttribute("data-theme", "datex");
-        else el.removeAttribute("data-theme");
-    }, [datex]);
-    const [view, setView] = useState<AppView>(() =>
-        decodeURIComponent(window.location.hash.replace(/^#/, "")).startsWith("demo-") ? "demos" : "showcase",
-    );
-    // Called unconditionally to satisfy the rules of hooks; harmless in isolated mode.
-    const hash = useHash();
-
-    // If the hash points at a demo (e.g. via a shared in-session link), switch to the Demos view.
-    useEffect(() => {
-        if (hash.startsWith("demo-")) setView("demos");
-    }, [hash]);
-
     // Isolated single-component view (harness mode): no chrome, just the specimens.
-    // This path MUST stay behavior-identical for tools/compare.sh.
+    // This path MUST stay behavior-identical for tools/compare.sh. It runs before any
+    // hooks, which is safe because `ONLY`/`INITIAL_DARK` are module constants — the
+    // early return is stable across every render of this instance.
     if (ONLY != null && COMPONENTS.some((c) => c.id === ONLY)) {
         const c = COMPONENTS.find((x) => x.id === ONLY)!;
         return (
-            <DarkContext.Provider value={dark}>
-                <div className={dark ? "dark" : ""}>
+            <DarkContext.Provider value={INITIAL_DARK}>
+                <div className={INITIAL_DARK ? "dark" : ""}>
                     <div className="min-h-screen bg-background text-foreground p-10">
                         <div className="mx-auto flex max-w-[760px] flex-col gap-8">
                             <div id={c.id} className="flex flex-col gap-2.5">
@@ -5413,34 +5420,52 @@ export default function App() {
         );
     }
 
-    const selected = COMPONENTS.find((c) => c.id === hash) ?? COMPONENTS[0];
+    // Each app owns its theme independently (palette + light/dark); switching apps
+    // re-applies that app's palette to <html>.
+    const [themes, setThemes] = useState<Record<ChromeAppId, ThemePref>>(() => {
+        const base: ThemePref = { palette: INITIAL_DATEX ? "datex" : "default", dark: INITIAL_DARK };
+        return Object.fromEntries(CHROME_APP_IDS.map((id) => [id, { ...base }])) as Record<
+            ChromeAppId,
+            ThemePref
+        >;
+    });
+    const hash = useHash();
+    const route = parseRoute(hash);
+    const activeId = route.appId;
+    const current = themes[activeId];
+
+    // The palette (seed set) must live on the document root so light-mode semantic
+    // tokens re-resolve against it and portaled content (rendered at <body>) inherits
+    // the theme. Re-applied whenever the active app — or its palette — changes.
+    useEffect(() => {
+        const el = document.documentElement;
+        if (current.palette === "datex") el.setAttribute("data-theme", "datex");
+        else el.removeAttribute("data-theme");
+    }, [current.palette]);
+
+    const chrome: AppChrome = {
+        exit: () => {
+            window.location.hash = "";
+        },
+        palette: current.palette,
+        dark: current.dark,
+        setPalette: (p) => setThemes((t) => ({ ...t, [activeId]: { ...t[activeId], palette: p } })),
+        toggleDark: () => setThemes((t) => ({ ...t, [activeId]: { ...t[activeId], dark: !t[activeId].dark } })),
+    };
 
     return (
-        <DarkContext.Provider value={dark}>
-            <div className={dark ? "dark" : ""}>
-                <div className="flex min-h-screen bg-background text-foreground">
-                    <Sidebar
-                        selectedId={selected.id}
-                        dark={dark}
-                        onToggleDark={() => setDark((d) => !d)}
-                        view={view}
-                        onViewChange={setView}
-                        datex={datex}
-                        onToggleDatex={() => setDatex((p) => !p)}
-                    />
-                    {view === "showcase" ? (
-                        <main className="flex-1 overflow-x-hidden px-10 py-8">
-                            <div className="mx-auto max-w-[820px]">
-                                <ComponentView component={selected} />
-                            </div>
-                        </main>
+        <DarkContext.Provider value={current.dark}>
+            <AppChromeProvider value={chrome}>
+                <div className={current.dark ? "dark" : ""}>
+                    {activeId === "landing" ? (
+                        <LandingPage />
+                    ) : activeId === "showcase" ? (
+                        <ShowcaseApp componentId={route.componentId} />
                     ) : (
-                        <main className="flex-1 min-w-0 overflow-x-hidden">
-                            <DemosView />
-                        </main>
+                        <DemoHost id={activeId} dark={current.dark} />
                     )}
                 </div>
-            </div>
+            </AppChromeProvider>
         </DarkContext.Provider>
     );
 }
