@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Tag } from "@/components/ui/tag";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -67,7 +67,7 @@ export function TaskCard({
             {/* Top row: id + actions menu */}
             <div className="mb-1.5 flex items-center justify-between gap-2">
                 <span className="font-mono text-body-sm text-foreground-muted">{task.id}</span>
-                <Popover
+                <MenuPopover
                     side="bottom"
                     align="end"
                     dark={dark}
@@ -96,7 +96,7 @@ export function TaskCard({
                     >
                         <Icon icon="more" size={16} className="!text-current" />
                     </button>
-                </Popover>
+                </MenuPopover>
             </div>
 
             {/* Title */}

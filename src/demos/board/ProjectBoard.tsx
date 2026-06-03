@@ -7,7 +7,7 @@ import { InputGroup } from "@/components/ui/input-group";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -15,6 +15,7 @@ import { Tag } from "@/components/ui/tag";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useToaster } from "@/components/ui/toast";
 import { useDark } from "@/lib/dark-context";
+import { AppChromeControls } from "@/lib/app-chrome";
 
 import { Avatar } from "./Avatar";
 import { BoardColumn } from "./BoardColumn";
@@ -34,7 +35,11 @@ import {
     memberName,
 } from "./data";
 
-const ASSIGNEE_FILTER_OPTIONS: (string | null)[] = [null, ...MEMBERS.map((m) => m.id)];
+// "all" = no filter (every assignee), null = unassigned tasks, otherwise a member id.
+const ASSIGNEE_FILTER_OPTIONS: (string | null)[] = ["all", null, ...MEMBERS.map((m) => m.id)];
+
+const assigneeLabel = (item: string | null): string =>
+    item === "all" ? "All assignees" : memberName(item);
 
 export function ProjectBoard() {
     const toaster = useToaster();
@@ -110,6 +115,35 @@ export function ProjectBoard() {
             icon: "arrow-right",
             message: `${task.id} moved to ${COLUMNS.find((c) => c.id === columnId)?.title}.`,
         });
+    };
+
+    // Drop a dragged task into `columnId`, positioned just before `anchorId`
+    // (null → end of the column). Handles both cross-column moves and
+    // same-column reordering by splicing the task into the flat `tasks` array.
+    const reorderTask = (task: Task, columnId: ColumnId, anchorId: string | null) => {
+        if (anchorId === task.id) return; // dropped back onto its own slot
+        const changedColumn = task.columnId !== columnId;
+        setTasks((prev) => {
+            const without = prev.filter((t) => t.id !== task.id);
+            const moved: Task = { ...task, columnId };
+            if (anchorId) {
+                const idx = without.findIndex((t) => t.id === anchorId);
+                if (idx !== -1) return [...without.slice(0, idx), moved, ...without.slice(idx)];
+            }
+            // Append after the last task already in this column (or at the very end).
+            let lastIdx = -1;
+            without.forEach((t, i) => {
+                if (t.columnId === columnId) lastIdx = i;
+            });
+            return [...without.slice(0, lastIdx + 1), moved, ...without.slice(lastIdx + 1)];
+        });
+        if (changedColumn) {
+            toaster.show({
+                intent: "primary",
+                icon: "arrow-right",
+                message: `${task.id} moved to ${COLUMNS.find((c) => c.id === columnId)?.title}.`,
+            });
+        }
     };
 
     const deleteTask = (task: Task) => {
@@ -191,7 +225,7 @@ export function ProjectBoard() {
     const availableFilterLabels = ALL_LABELS.filter((id) => !labelFilter.includes(id));
 
     return (
-        <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <div className="flex h-screen flex-col bg-background text-foreground">
             {/* ── Top navbar ─────────────────────────────────────────────── */}
             <Navbar className="shrink-0">
                 <NavbarGroup align="left">
@@ -231,7 +265,7 @@ export function ProjectBoard() {
                         </span>
                     </Tooltip>
                     <NavbarDivider />
-                    <Popover
+                    <MenuPopover
                         side="bottom"
                         align="end"
                         dark={dark}
@@ -252,7 +286,9 @@ export function ProjectBoard() {
                         >
                             Maya O.
                         </Button>
-                    </Popover>
+                    </MenuPopover>
+                    <NavbarDivider />
+                    <AppChromeControls />
                 </NavbarGroup>
             </Navbar>
 
@@ -265,13 +301,13 @@ export function ProjectBoard() {
                         filterable
                         dark={dark}
                         placeholder="Filter people…"
-                        selectedItem={assigneeFilter === "all" ? undefined : assigneeFilter}
-                        itemPredicate={(q, item) => memberName(item).toLowerCase().includes(q.toLowerCase())}
+                        selectedItem={assigneeFilter}
+                        itemPredicate={(q, item) => assigneeLabel(item).toLowerCase().includes(q.toLowerCase())}
                         onItemSelect={(v) => setAssigneeFilter(v)}
                         itemRenderer={(item, { modifiers, handleClick }) => (
                             <MenuItem
                                 key={item ?? "unassigned"}
-                                text={memberName(item)}
+                                text={assigneeLabel(item)}
                                 active={modifiers.active}
                                 icon={item === assigneeFilter ? "tick" : undefined}
                                 onClick={handleClick}
@@ -283,7 +319,7 @@ export function ProjectBoard() {
                             icon={<Icon icon="person" className="!text-current" />}
                             endIcon={<Icon icon="caret-down" className="!text-current" />}
                         >
-                            {assigneeFilter === "all" ? "All assignees" : memberName(assigneeFilter)}
+                            {assigneeLabel(assigneeFilter)}
                         </Button>
                     </Select>
 
@@ -349,7 +385,7 @@ export function ProjectBoard() {
 
                 {/* Board */}
                 <div className="flex-1 overflow-auto p-6">
-                    <div className="flex items-start gap-4">
+                    <div className="flex min-h-full items-stretch gap-4">
                         {COLUMNS.map((col) => (
                             <BoardColumn
                                 key={col.id}
@@ -365,8 +401,8 @@ export function ProjectBoard() {
                                 onAdd={openNewTask}
                                 onDragStart={setDraggingTask}
                                 onDragEnd={() => setDraggingTask(null)}
-                                onDrop={(columnId) => {
-                                    if (draggingTask) moveTask(draggingTask, columnId);
+                                onDrop={(columnId, anchorId) => {
+                                    if (draggingTask) reorderTask(draggingTask, columnId, anchorId);
                                     setDraggingTask(null);
                                 }}
                             />

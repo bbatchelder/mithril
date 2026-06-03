@@ -7,7 +7,7 @@ import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { EntityTitle } from "@/components/ui/entity-title";
 import { Icon } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { Tabs, Tab } from "@/components/ui/tabs";
 import { Tag } from "@/components/ui/tag";
 
@@ -217,7 +217,7 @@ export function AlertDetail({
                         >
                             Escalate
                         </Button>
-                        <Popover
+                        <MenuPopover
                             side="bottom"
                             align="start"
                             dark={dark}
@@ -249,7 +249,7 @@ export function AlertDetail({
                             >
                                 Assign
                             </Button>
-                        </Popover>
+                        </MenuPopover>
                         <div className="grow" />
                         <Button
                             intent="danger"

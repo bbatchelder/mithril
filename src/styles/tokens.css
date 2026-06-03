@@ -210,11 +210,15 @@
     --duration-bp: 100ms;
 
     /* --- Z-index --------------------------------------------------------- */
-    --z-base: 0;
-    --z-content: 10;
-    --z-overlay: 20;
-    --z-dialog-header: 30;
-    --z-max: 40;
+    /* Tailwind v4 generates z-index utilities (z-overlay, z-content, …) only from
+     * the --z-index-* namespace. Declaring these as --z-* would emit no utility,
+     * leaving overlays at `z-index: auto` (so positive-z app content like an
+     * InputGroup's left icon would poke through a drawer/dialog backdrop). */
+    --z-index-base: 0;
+    --z-index-content: 10;
+    --z-index-overlay: 20;
+    --z-index-dialog-header: 30;
+    --z-index-max: 40;
 }
 
 /* =============================================================================

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { HTMLTable } from "@/components/ui/html-table";
 import { Icon } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
-import { Popover } from "@/components/ui/popover";
+import { MenuPopover } from "@/components/ui/popover";
 import { Tag } from "@/components/ui/tag";
 
 import {
@@ -34,12 +34,12 @@ function RowActionsMenu({
     onAction: (action: RowAction, alert: Alert) => void;
 }) {
     return (
-        <Popover
+        <MenuPopover
             side="bottom"
             align="end"
             dark={dark}
             content={
-                <Menu>
+                <Menu size="small">
                     <MenuItem
                         icon="endorsed"
                         text="Acknowledge"
@@ -73,7 +73,7 @@ function RowActionsMenu({
                 icon={<Icon icon="more" className="!text-current" />}
                 onClick={(e) => e.stopPropagation()}
             />
-        </Popover>
+        </MenuPopover>
     );
 }
 

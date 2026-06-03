@@ -41,6 +41,13 @@ export type MenuItemSlot = React.ComponentType<MenuItemSlotProps>;
 export const MenuItemSlotContext = createContext<MenuItemSlot | null>(null);
 export type MenuSize = "small" | "medium" | "large";
 
+/**
+ * Size set by a parent <Menu size>, inherited by every MenuItem child unless the item
+ * overrides it with its own `size`/`large`/`small`. Lets `<Menu size="small">` make a
+ * whole menu compact in one place.
+ */
+const MenuSizeContext = createContext<MenuSize>("medium");
+
 /* ============================================================
  * Menu container
  *
@@ -95,7 +102,7 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
             )}
             data-menu-size={size}
         >
-            {children}
+            <MenuSizeContext.Provider value={size}>{children}</MenuSizeContext.Provider>
         </ul>
     );
 });
@@ -246,6 +253,8 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
 ) {
     // A parent menu system (Radix ContextMenu) may inject a slot to own keyboard nav.
     const Slot = useContext(MenuItemSlotContext);
+    // A parent <Menu size> sets the default item size, overridable per item below.
+    const menuSize = useContext(MenuSizeContext);
 
     // Role structure (mirrors Blueprint): [liRole, targetRole, ariaSelected].
     const [liRole, targetRole, ariaSelected]: [
@@ -264,8 +273,9 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
     if (dataCompare !== undefined) {
         delete (liProps as Record<string, unknown>)["data-compare"];
     }
-    // Determine effective size
-    const effectiveSize = size ?? (large ? "large" : small ? "small" : "medium");
+    // Determine effective size: explicit item `size` > `large`/`small` shorthand >
+    // the size inherited from the parent <Menu size> (default "medium").
+    const effectiveSize = size ?? (large ? "large" : small ? "small" : menuSize);
 
     // Base classes for the inner anchor/button/div element
     const innerClasses = cn(
