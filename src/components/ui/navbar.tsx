@@ -137,6 +137,10 @@ export const NavbarGroup = forwardRef<HTMLDivElement, NavbarGroupProps>(function
                 "flex items-center h-[50px]",
                 // Gap between children (buttons, dividers, headings)
                 "gap-1",
+                // align="right": push to the end of the row. `ml-auto` honors the prop
+                // independent of sibling count (the parent's justify-between only positions
+                // the exact two-group case), so a lone right group lands on the right.
+                align === "right" && "ml-auto",
                 className,
             )}
             {...htmlProps}
