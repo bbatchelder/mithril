@@ -189,6 +189,9 @@ export const InputGroup = forwardRef<HTMLInputElement, InputGroupProps>(function
 
     const intentShadow = INTENT_SHADOW[intent ?? "none"];
     const focusShadow = INTENT_FOCUS_SHADOW[intent ?? "none"];
+    // Expose a real (non-"none") intent so a parent ControlGroup can raise this input above
+    // its neighbors (z-index intent tier) — keeping its intent border/ring from being clipped.
+    const dataIntent = intent && intent !== "none" ? intent : undefined;
 
     return (
         <div
@@ -227,6 +230,7 @@ export const InputGroup = forwardRef<HTMLInputElement, InputGroupProps>(function
                 data-has-left={hasLeft || undefined}
                 data-has-right={hasRight || undefined}
                 {...inputProps}
+                data-intent={dataIntent}
                 className={cn(
                     inputVariants({ size, round, intent, hasLeft, hasRight }),
                     intentShadow,
