@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { AnchorButton } from "../anchor-button";
 import { Button } from "../button";
 import { ControlGroup } from "../control-group";
 import { HTMLSelect } from "../html-select";
@@ -86,10 +87,12 @@ describe("ControlGroup", () => {
       </ControlGroup>,
     );
     const cls = (container.firstChild as HTMLElement).className;
-    // Intent tiers key off data-intent; :not(:disabled) keeps ties off Tailwind emit order.
+    // Intent tiers key off data-intent; :not(:disabled)/:where() keep ties off Tailwind emit order.
     expect(cls).toContain("[&_input[data-intent]:not(:disabled)]:z-[7]");
     expect(cls).toContain("[&_input[data-intent]:not(:disabled):focus]:z-[9]");
-    expect(cls).toContain("[&_button[data-intent]:not(:disabled)]:z-[6]");
+    // Button tiers match :where(button, .bp6-button) so they reach <a>-rendered buttons too.
+    expect(cls).toContain("[&_:where(button,.bp6-button)[data-intent]:not(:disabled)]:z-[6]");
+    expect(cls).toContain("[&_:where(button,.bp6-button)]:z-[4]");
     expect(cls).toContain("[&_[data-select-caret]]:z-[11]");
   });
 
@@ -105,6 +108,30 @@ describe("ControlGroup", () => {
     expect(screen.getByRole("button", { name: "Go" })).toHaveAttribute("data-intent", "primary");
     // The default ("none") intent must NOT emit the attribute (it would wrongly raise the child).
     expect(screen.getByRole("button", { name: "Plain" })).not.toHaveAttribute("data-intent");
+  });
+
+  it("makes <a>-rendered buttons (asChild / AnchorButton) targetable via the .bp6-button marker", () => {
+    render(
+      <ControlGroup>
+        <AnchorButton href="#" intent="success">
+          Link
+        </AnchorButton>
+        <Button asChild intent="warning">
+          <a href="#">As child</a>
+        </Button>
+      </ControlGroup>,
+    );
+    // Both render <a>, so the `button` element selector can't reach them — the .bp6-button
+    // marker (from buttonVariants) + data-intent are what let ControlGroup's tiers apply.
+    const anchorBtn = screen.getByRole("button", { name: "Link" });
+    expect(anchorBtn.tagName).toBe("A");
+    expect(anchorBtn).toHaveClass("bp6-button");
+    expect(anchorBtn).toHaveAttribute("data-intent", "success");
+
+    const asChild = screen.getByRole("link", { name: "As child" });
+    expect(asChild.tagName).toBe("A");
+    expect(asChild).toHaveClass("bp6-button");
+    expect(asChild).toHaveAttribute("data-intent", "warning");
   });
 
   it("tags the HTMLSelect caret so the z-11 tier can target it", () => {

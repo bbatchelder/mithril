@@ -43,9 +43,12 @@ import { cn } from "@/lib/utils";
  * - Input-group children (icons): z-10 (self-managed by InputGroup's slots)
  * - Select caret: z-11 (HTMLSelect tags it `data-select-caret`)
  *
- * Intent tiers key off the `data-intent` attribute that Button and InputGroup emit for a
- * real (non-"none") intent; `:not(:disabled)` qualifiers keep the equal-specificity tiers
- * from depending on Tailwind's class emit order.
+ * Button tiers match `:where(button, .bp6-button)` so they apply to a raw <button>, a
+ * Button, an `asChild` Button, and an AnchorButton alike (the last two render <a> but carry
+ * the `.bp6-button` marker from `buttonVariants`). Intent tiers key off the `data-intent`
+ * attribute that Button, AnchorButton, and InputGroup emit for a real (non-"none") intent;
+ * `:where()` (zero specificity) plus `:not(:disabled)` qualifiers keep the tiers' ordering
+ * independent of Tailwind's class emit order.
  *
  * IMPORTANT: Tailwind v4 tree-shakes `@theme` vars referenced at runtime. All utility
  * classes here MUST be literal strings (no template literals or runtime construction).
@@ -70,18 +73,22 @@ const controlGroupVariants = cva(
         // focused intent input: z-9 — extra `:not(:disabled)` qualifier makes this strictly
         // more specific than both the z-7 intent and z-8 focus rules, so it wins outright.
         "[&_input[data-intent]:not(:disabled):focus]:z-[9]",
-        // Z-index stacking — buttons (our Button renders a <button> element)
+        // Z-index stacking — buttons. `:where(button, .bp6-button)` matches a raw <button>,
+        // a mithril Button, an `asChild` Button, and an AnchorButton (the latter two render
+        // <a>, not <button>, but carry the `.bp6-button` marker). `:where()` adds zero
+        // specificity, so these tiers' relative ordering comes entirely from the pseudo-class
+        // / attribute qualifiers below, independent of Tailwind's class emit order.
         // disabled button: z-3
-        "[&_button:disabled]:z-[3]",
+        "[&_:where(button,.bp6-button):disabled]:z-[3]",
         // default button: z-4
-        "[&_button]:z-[4]",
+        "[&_:where(button,.bp6-button)]:z-[4]",
         // focused/hovered/active button: z-5
-        "[&_button:focus]:z-[5]",
-        "[&_button:hover]:z-[5]",
-        "[&_button:active]:z-[5]",
-        // intent button: z-6 — `:not(:disabled)` outranks the equal-specificity z-5
-        // interaction rules so an intent button stays above them (and disabled → z-3).
-        "[&_button[data-intent]:not(:disabled)]:z-[6]",
+        "[&_:where(button,.bp6-button):focus]:z-[5]",
+        "[&_:where(button,.bp6-button):hover]:z-[5]",
+        "[&_:where(button,.bp6-button):active]:z-[5]",
+        // intent button: z-6 — `[data-intent]:not(:disabled)` outranks the z-4/z-5 rules so an
+        // intent button stays above them; the `:not(:disabled)` guard drops a disabled one to z-3.
+        "[&_:where(button,.bp6-button)[data-intent]:not(:disabled)]:z-[6]",
         // Input-group icon/action slots self-manage z-10 (hardcoded in InputGroup), which
         // already places them above every input/button tier — no ControlGroup rule needed.
         // Select caret: z-11 (top of the stack) — HTMLSelect tags its caret `data-select-caret`.
