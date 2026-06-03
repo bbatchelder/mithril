@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { Button } from "../button";
 import { ControlGroup } from "../control-group";
+import { HTMLSelect } from "../html-select";
+import { InputGroup } from "../input-group";
 
 describe("ControlGroup", () => {
   it("renders its children", () => {
@@ -74,6 +77,45 @@ describe("ControlGroup", () => {
     );
     const root = container.firstChild as HTMLElement;
     expect(root.className).toContain("flex-col");
+  });
+
+  it("emits the intent and select-caret z-index tier rules", () => {
+    const { container } = render(
+      <ControlGroup>
+        <input />
+      </ControlGroup>,
+    );
+    const cls = (container.firstChild as HTMLElement).className;
+    // Intent tiers key off data-intent; :not(:disabled) keeps ties off Tailwind emit order.
+    expect(cls).toContain("[&_input[data-intent]:not(:disabled)]:z-[7]");
+    expect(cls).toContain("[&_input[data-intent]:not(:disabled):focus]:z-[9]");
+    expect(cls).toContain("[&_button[data-intent]:not(:disabled)]:z-[6]");
+    expect(cls).toContain("[&_[data-select-caret]]:z-[11]");
+  });
+
+  it("raises intent-bearing children via a data-intent attribute", () => {
+    render(
+      <ControlGroup>
+        <InputGroup intent="danger" placeholder="email" />
+        <Button intent="primary">Go</Button>
+        <Button>Plain</Button>
+      </ControlGroup>,
+    );
+    expect(screen.getByPlaceholderText("email")).toHaveAttribute("data-intent", "danger");
+    expect(screen.getByRole("button", { name: "Go" })).toHaveAttribute("data-intent", "primary");
+    // The default ("none") intent must NOT emit the attribute (it would wrongly raise the child).
+    expect(screen.getByRole("button", { name: "Plain" })).not.toHaveAttribute("data-intent");
+  });
+
+  it("tags the HTMLSelect caret so the z-11 tier can target it", () => {
+    const { container } = render(
+      <ControlGroup>
+        <HTMLSelect>
+          <option>One</option>
+        </HTMLSelect>
+      </ControlGroup>,
+    );
+    expect(container.querySelector("[data-select-caret]")).not.toBeNull();
   });
 
   it("renders multiple children in order", () => {

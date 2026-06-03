@@ -40,7 +40,12 @@ import { cn } from "@/lib/utils";
  * - Default input: z-2; focused input: z-8; intent input: z-7; focused intent input: z-9
  * - Default button: z-4; focused/hovered/active button: z-5; intent button: z-6
  * - Disabled: z-1 (input) / z-3 (button) — below defaults
- * - Input-group children (icons): z-10
+ * - Input-group children (icons): z-10 (self-managed by InputGroup's slots)
+ * - Select caret: z-11 (HTMLSelect tags it `data-select-caret`)
+ *
+ * Intent tiers key off the `data-intent` attribute that Button and InputGroup emit for a
+ * real (non-"none") intent; `:not(:disabled)` qualifiers keep the equal-specificity tiers
+ * from depending on Tailwind's class emit order.
  *
  * IMPORTANT: Tailwind v4 tree-shakes `@theme` vars referenced at runtime. All utility
  * classes here MUST be literal strings (no template literals or runtime construction).
@@ -56,8 +61,15 @@ const controlGroupVariants = cva(
         "[&_input:disabled]:z-[1]",
         // default input: z-2
         "[&_input]:z-[2]",
+        // intent input (resting): z-7 — keyed off Button/InputGroup's `data-intent`
+        // attribute (emitted only for a real intent). `:not(:disabled)` raises specificity
+        // above the disabled tier so a disabled intent input still falls back to z-1.
+        "[&_input[data-intent]:not(:disabled)]:z-[7]",
         // focused input (no intent): z-8
         "[&_input:focus]:z-[8]",
+        // focused intent input: z-9 — extra `:not(:disabled)` qualifier makes this strictly
+        // more specific than both the z-7 intent and z-8 focus rules, so it wins outright.
+        "[&_input[data-intent]:not(:disabled):focus]:z-[9]",
         // Z-index stacking — buttons (our Button renders a <button> element)
         // disabled button: z-3
         "[&_button:disabled]:z-[3]",
@@ -67,9 +79,13 @@ const controlGroupVariants = cva(
         "[&_button:focus]:z-[5]",
         "[&_button:hover]:z-[5]",
         "[&_button:active]:z-[5]",
-        // Input group children (icons/slots inside input groups — the span wrappers): z-10
-        // These are the absolute-positioned spans inside InputGroup
-        "[&_.input-group-slot]:z-[10]",
+        // intent button: z-6 — `:not(:disabled)` outranks the equal-specificity z-5
+        // interaction rules so an intent button stays above them (and disabled → z-3).
+        "[&_button[data-intent]:not(:disabled)]:z-[6]",
+        // Input-group icon/action slots self-manage z-10 (hardcoded in InputGroup), which
+        // already places them above every input/button tier — no ControlGroup rule needed.
+        // Select caret: z-11 (top of the stack) — HTMLSelect tags its caret `data-select-caret`.
+        "[&_[data-select-caret]]:z-[11]",
     ],
     {
         variants: {

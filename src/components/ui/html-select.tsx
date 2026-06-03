@@ -196,6 +196,9 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
             <Icon
                 icon={ICON_BY_NAME[iconName]}
                 size={16}
+                // Hook for ControlGroup's z-11 tier — keeps the caret above an abutting
+                // neighbor when a select sits inside a ControlGroup.
+                data-select-caret=""
                 className={cn(
                     "pointer-events-none absolute",
                     large ? "right-3 top-3" : "right-2 top-[7px]",

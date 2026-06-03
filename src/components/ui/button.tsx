@@ -157,9 +157,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         className,
     );
 
+    // Expose a real (non-"none") intent so a parent ControlGroup can raise this button
+    // above its neighbors (z-index intent tier). Omitted entirely for the default intent.
+    const dataIntent = intent && intent !== "none" ? intent : undefined;
+
     if (asChild) {
         return (
-            <Slot ref={ref} className={classes} data-active={active || undefined} {...props}>
+            <Slot ref={ref} className={classes} data-active={active || undefined} data-intent={dataIntent} {...props}>
                 {children}
             </Slot>
         );
@@ -175,6 +179,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
             ref={ref}
             className={classes}
             data-active={active || undefined}
+            data-intent={dataIntent}
             disabled={disabled || loading}
             aria-busy={loading || undefined}
             {...props}
