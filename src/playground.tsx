@@ -42,6 +42,14 @@ import { CardList } from "@/components/ui/card-list";
 import { Section, SectionCard, type SectionElevation } from "@/components/ui/section";
 import { CheckboxCard, RadioCard, SwitchCard } from "@/components/ui/control-card";
 import { RadioGroup } from "@/components/ui/radio";
+import { Text } from "@/components/ui/text";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { FileInput } from "@/components/ui/file-input";
+import { FormGroup } from "@/components/ui/form-group";
+import { ControlGroup } from "@/components/ui/control-group";
+import { KeyCombo } from "@/components/ui/hotkeys";
+import { Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from "@/components/ui/navbar";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -129,6 +137,32 @@ const LINK_COLORS: EnumOption[] = [
 ];
 const LAYOUTS: EnumOption[] = [{ value: "vertical" }, { value: "horizontal" }];
 const BUTTON_POSITIONS: EnumOption[] = [{ value: "left" }, { value: "right" }, { value: "none" }];
+const TEXT_VARIANTS: EnumOption[] = [
+    { value: "body" },
+    { value: "large" },
+    { value: "small" },
+    { value: "muted" },
+    { value: "disabled" },
+    { value: "code" },
+    { value: "h1" },
+    { value: "h2" },
+    { value: "h3" },
+    { value: "h4" },
+    { value: "h5" },
+    { value: "h6" },
+];
+const SKELETON_SHAPES: EnumOption[] = [
+    { value: "text", label: "text" },
+    { value: "avatar", label: "avatar" },
+    { value: "button", label: "button" },
+    { value: "block", label: "block" },
+];
+const SKELETON_CLASS: Record<string, string> = {
+    text: "h-4 w-48",
+    avatar: "h-10 w-10 rounded-full",
+    button: "h-7.5 w-24",
+    block: "h-24 w-64",
+};
 
 // ── The playground renderer ──────────────────────────────────────────────────
 function ControlField({
@@ -939,6 +973,214 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             [
                 `<RadioGroup label="Frequency" selectedValue={value} onChange={setValue}${p.inline ? " inline" : ""}${p.disabled ? " disabled" : ""}`,
                 `  options={[{ value: "day", label: "Daily" }, … ]} />`,
+            ].join("\n"),
+    },
+
+    // ── Batch 4: easy scalar-control components ────────────────────────────────
+    text: {
+        initial: { variant: "body", content: "The quick brown fox jumps over the lazy dog.", ellipsize: false },
+        controls: [
+            { kind: "enum", prop: "variant", options: TEXT_VARIANTS, widget: "select" },
+            { kind: "text", prop: "content" },
+            { kind: "boolean", prop: "ellipsize" },
+        ],
+        presets: [
+            { name: "Heading", props: { variant: "h3", content: "Section heading" } },
+            { name: "Muted note", props: { variant: "muted", content: "Secondary, lower-emphasis text." } },
+            { name: "Code", props: { variant: "code", content: "npm install mithril" } },
+            { name: "Truncated", props: { variant: "body", ellipsize: true, content: "A long line of text that overflows its container and is truncated with an ellipsis." } },
+        ],
+        render: (p) => (
+            <div style={{ width: 280 }}>
+                <Text variant={p.variant} ellipsize={p.ellipsize}>
+                    {p.content}
+                </Text>
+            </div>
+        ),
+        code: (p) => jsx("Text", { variant: p.variant === "body" ? undefined : p.variant, ellipsize: p.ellipsize }, p.content),
+    },
+
+    skeleton: {
+        initial: { shape: "text", animate: true },
+        controls: [
+            { kind: "enum", prop: "shape", options: SKELETON_SHAPES, widget: "select" },
+            { kind: "boolean", prop: "animate" },
+        ],
+        render: (p) => <Skeleton className={SKELETON_CLASS[p.shape as string]} animate={p.animate} />,
+        code: (p) => jsx("Skeleton", { className: SKELETON_CLASS[p.shape as string], animate: p.animate === true ? undefined : false }),
+    },
+
+    "button-group": {
+        initial: { variant: "solid", size: "medium", vertical: false, fill: false },
+        controls: [
+            { kind: "enum", prop: "variant", options: VARIANTS },
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "boolean", prop: "vertical" },
+            { kind: "boolean", prop: "fill" },
+        ],
+        render: (p) => (
+            <div style={{ width: p.fill ? 280 : undefined }}>
+                <ButtonGroup variant={p.variant} size={p.size} vertical={p.vertical} fill={p.fill}>
+                    <Button icon="grid-view">List</Button>
+                    <Button icon="cog">Settings</Button>
+                    <Button icon="user">Account</Button>
+                </ButtonGroup>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<ButtonGroup${p.variant === "solid" ? "" : ` variant="${p.variant}"`}${p.size === "medium" ? "" : ` size="${p.size}"`}${p.vertical ? " vertical" : ""}${p.fill ? " fill" : ""}>`,
+                `  <Button icon="grid-view">List</Button>`,
+                `  <Button icon="cog">Settings</Button>`,
+                `  <Button icon="user">Account</Button>`,
+                `</ButtonGroup>`,
+            ].join("\n"),
+    },
+
+    "file-input": {
+        initial: { size: "medium", text: "Choose file...", buttonText: "Browse", hasSelection: false, fill: false, disabled: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "text", prop: "text" },
+            { kind: "text", prop: "buttonText", label: "button" },
+            { kind: "boolean", prop: "hasSelection", label: "selected" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "Has file", props: { hasSelection: true, text: "report-q3.pdf" } },
+        ],
+        render: (p) => (
+            <div style={{ width: p.fill ? 320 : undefined }}>
+                <FileInput size={p.size} text={p.text} buttonText={p.buttonText} hasSelection={p.hasSelection} fill={p.fill} disabled={p.disabled} />
+            </div>
+        ),
+        code: (p) => jsx("FileInput", { size: p.size === "medium" ? undefined : p.size, text: p.text === "Choose file..." ? undefined : p.text, buttonText: p.buttonText === "Browse" ? undefined : p.buttonText, hasSelection: p.hasSelection, fill: p.fill, disabled: p.disabled }),
+    },
+
+    "form-group": {
+        initial: { label: "Email address", helperText: "We'll never share it.", subLabel: "", intent: "none", inline: false, disabled: false, fill: false },
+        controls: [
+            { kind: "text", prop: "label" },
+            { kind: "text", prop: "helperText", label: "helper" },
+            { kind: "text", prop: "subLabel", label: "subLabel" },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "boolean", prop: "inline" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "Error", props: { intent: "danger", helperText: "Enter a valid email address.", subLabel: "" } },
+            { name: "With sub-label", props: { intent: "none", subLabel: "Used for sign-in and notifications.", helperText: "" } },
+        ],
+        render: (p) => (
+            <div style={{ width: 320 }}>
+                <FormGroup label={p.label} helperText={p.helperText || undefined} subLabel={p.subLabel || undefined} intent={p.intent} inline={p.inline} disabled={p.disabled}>
+                    <InputGroup placeholder="you@example.com" intent={p.intent} disabled={p.disabled} />
+                </FormGroup>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<FormGroup label="${p.label}"${p.subLabel ? ` subLabel="${p.subLabel}"` : ""}${p.helperText ? ` helperText="${p.helperText}"` : ""}${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.inline ? " inline" : ""}${p.disabled ? " disabled" : ""}>`,
+                `  <InputGroup placeholder="you@example.com"${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.disabled ? " disabled" : ""} />`,
+                `</FormGroup>`,
+            ].join("\n"),
+    },
+
+    "control-group": {
+        initial: { vertical: false, fill: false },
+        controls: [
+            { kind: "boolean", prop: "vertical" },
+            { kind: "boolean", prop: "fill" },
+        ],
+        render: (p) => (
+            <div style={{ width: 360 }}>
+                <ControlGroup vertical={p.vertical} fill={p.fill}>
+                    <HTMLSelect options={["Name", "Date", "Size"]} />
+                    <InputGroup placeholder="Search…" leftIcon="search" fill={p.fill} />
+                    <Button icon="arrow-right" intent="primary">
+                        Go
+                    </Button>
+                </ControlGroup>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<ControlGroup${p.vertical ? " vertical" : ""}${p.fill ? " fill" : ""}>`,
+                `  <HTMLSelect options={["Name", "Date", "Size"]} />`,
+                `  <InputGroup placeholder="Search…" leftIcon="search" />`,
+                `  <Button icon="arrow-right" intent="primary">Go</Button>`,
+                `</ControlGroup>`,
+            ].join("\n"),
+    },
+
+    hotkeys: {
+        initial: { combo: "mod+shift+n", minimal: false },
+        controls: [
+            { kind: "text", prop: "combo" },
+            { kind: "boolean", prop: "minimal" },
+        ],
+        presets: [
+            { name: "Save", props: { combo: "mod+s", minimal: false } },
+            { name: "Undo", props: { combo: "ctrl+z", minimal: false } },
+            { name: "Arrows", props: { combo: "shift+up", minimal: false } },
+            { name: "Minimal", props: { combo: "mod+k", minimal: true } },
+        ],
+        render: (p) => <KeyCombo combo={String(p.combo) || "mod+s"} minimal={p.minimal} />,
+        code: (p) => jsx("KeyCombo", { combo: p.combo, minimal: p.minimal }),
+    },
+
+    navbar: {
+        initial: { heading: "Mithril", showSearch: true, showRight: true },
+        controls: [
+            { kind: "text", prop: "heading" },
+            { kind: "boolean", prop: "showSearch", label: "search" },
+            { kind: "boolean", prop: "showRight", label: "right group" },
+        ],
+        render: (p) => (
+            <div style={{ width: 460 }}>
+                <Navbar>
+                    <NavbarGroup align="left">
+                        <NavbarHeading>{p.heading}</NavbarHeading>
+                        <NavbarDivider />
+                        <Button variant="minimal" icon="home">
+                            Home
+                        </Button>
+                        <Button variant="minimal" icon="document">
+                            Files
+                        </Button>
+                    </NavbarGroup>
+                    {p.showRight && (
+                        <NavbarGroup align="right">
+                            {p.showSearch && (
+                                <InputGroup size="small" leftIcon="search" placeholder="Search…" style={{ width: 140 }} />
+                            )}
+                            <Button variant="minimal" icon="cog" aria-label="Settings" />
+                            <Button variant="minimal" icon="user" aria-label="Account" />
+                        </NavbarGroup>
+                    )}
+                </Navbar>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<Navbar>`,
+                `  <NavbarGroup align="left">`,
+                `    <NavbarHeading>${p.heading}</NavbarHeading>`,
+                `    <NavbarDivider />`,
+                `    <Button variant="minimal" icon="home">Home</Button>`,
+                `    <Button variant="minimal" icon="document">Files</Button>`,
+                `  </NavbarGroup>`,
+                ...(p.showRight
+                    ? [
+                          `  <NavbarGroup align="right">`,
+                          ...(p.showSearch ? [`    <InputGroup size="small" leftIcon="search" placeholder="Search…" />`] : []),
+                          `    <Button variant="minimal" icon="cog" aria-label="Settings" />`,
+                          `    <Button variant="minimal" icon="user" aria-label="Account" />`,
+                          `  </NavbarGroup>`,
+                      ]
+                    : []),
+                `</Navbar>`,
             ].join("\n"),
     },
 };
