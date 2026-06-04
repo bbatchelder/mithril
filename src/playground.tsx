@@ -50,6 +50,16 @@ import { FormGroup } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
 import { KeyCombo } from "@/components/ui/hotkeys";
 import { Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from "@/components/ui/navbar";
+import { useDark } from "@/lib/dark-context";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Popover } from "@/components/ui/popover";
+import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
+import { Drawer, DrawerBody, DrawerFooter } from "@/components/ui/drawer";
+import { Alert } from "@/components/ui/alert";
+import { MultistepDialog, DialogStep } from "@/components/ui/multistep-dialog";
+import { ContextMenu } from "@/components/ui/context-menu";
+import { Toaster, useToaster } from "@/components/ui/toast";
+import { Omnibar } from "@/components/ui/omnibar";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -64,13 +74,28 @@ interface Preset {
     props: Record<string, unknown>;
 }
 
+/**
+ * Extra context handed to `render` for **overlay** configs. Overlays portal to
+ * `document.body` (outside the app's `.dark` ancestor) and several render no inline
+ * trigger of their own, so the framework supplies:
+ *   - `dark`  — thread into every overlay (`dark={ctx.dark}`); the #1 overlays gotcha.
+ *   - `open` / `setOpen` — a managed open state so a stage trigger button can open a
+ *     Dialog/Drawer/Alert/MultistepDialog/Omnibar (which render only the portaled panel).
+ * Inline configs (batches 1–4) ignore the second arg entirely.
+ */
+export interface PlaygroundContext {
+    dark: boolean;
+    open: boolean;
+    setOpen: (open: boolean) => void;
+}
+
 export interface PlaygroundConfig {
     /** Starting prop values (also the "Custom…" reset target). */
     initial: Record<string, unknown>;
     controls: Control[];
     presets?: Preset[];
-    /** Render the live instance from the current prop state. */
-    render: (props: Record<string, never>) => React.ReactNode;
+    /** Render the live instance from the current prop state (+ overlay `ctx`). */
+    render: (props: Record<string, never>, ctx: PlaygroundContext) => React.ReactNode;
     /** Produce the code snippet for the current prop state. */
     code: (props: Record<string, never>) => string;
 }
@@ -163,6 +188,18 @@ const SKELETON_CLASS: Record<string, string> = {
     button: "h-7.5 w-24",
     block: "h-24 w-64",
 };
+// Overlay positioning (Radix side/align), shared by Tooltip + Popover.
+const SIDES: EnumOption[] = [{ value: "top" }, { value: "right" }, { value: "bottom" }, { value: "left" }];
+const ALIGNS: EnumOption[] = [{ value: "start" }, { value: "center" }, { value: "end" }];
+const DRAWER_POSITIONS: EnumOption[] = [{ value: "left" }, { value: "right" }, { value: "top" }, { value: "bottom" }];
+const OMNIBAR_ITEMS = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew"];
+const TOAST_ICONS: EnumOption[] = [
+    { value: "", label: "none" },
+    { value: "info-sign" },
+    { value: "tick-circle" },
+    { value: "warning-sign" },
+    { value: "error" },
+];
 
 // ── The playground renderer ──────────────────────────────────────────────────
 function ControlField({
@@ -256,6 +293,10 @@ function PlaygroundCode({ code }: { code: string }) {
 export function Playground({ config }: { config: PlaygroundConfig }) {
     const [props, setProps] = useState<Record<string, unknown>>(() => ({ ...config.initial }));
     const [preset, setPreset] = useState("");
+    // Overlay support: dark (threaded into portals) + a managed open state for
+    // trigger-driven overlays (Dialog/Drawer/Alert/MultistepDialog/Omnibar).
+    const dark = useDark();
+    const [open, setOpen] = useState(false);
     const set = (prop: string, value: unknown) => {
         setProps((p) => ({ ...p, [prop]: value }));
         setPreset("");
@@ -274,30 +315,33 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
         }
     };
     const live = props as Record<string, never>;
+    const ctx: PlaygroundContext = { dark, open, setOpen };
     return (
         <div className="flex flex-col gap-3">
             {/* Stage */}
             <div className="flex min-h-[160px] flex-wrap items-center justify-center gap-4 rounded-bp border border-border bg-surface p-8">
-                {config.render(live)}
+                {config.render(live, ctx)}
             </div>
-            {/* Controls */}
-            <div className="flex flex-col gap-4 rounded-bp border border-border bg-surface p-4">
-                {presetNames.length > 0 && (
-                    <div className="flex items-center gap-3">
-                        <span className="w-24 shrink-0 text-body-sm text-foreground-muted">Preset</span>
-                        <HTMLSelect
-                            value={preset}
-                            onChange={(e) => applyPreset(e.target.value)}
-                            options={[{ value: "", label: "Custom…" }, ...presetNames.map((n) => ({ value: n }))]}
-                        />
+            {/* Controls — omitted entirely for interaction-only configs (no controls + no presets) */}
+            {(config.controls.length > 0 || presetNames.length > 0) && (
+                <div className="flex flex-col gap-4 rounded-bp border border-border bg-surface p-4">
+                    {presetNames.length > 0 && (
+                        <div className="flex items-center gap-3">
+                            <span className="w-24 shrink-0 text-body-sm text-foreground-muted">Preset</span>
+                            <HTMLSelect
+                                value={preset}
+                                onChange={(e) => applyPreset(e.target.value)}
+                                options={[{ value: "", label: "Custom…" }, ...presetNames.map((n) => ({ value: n }))]}
+                            />
+                        </div>
+                    )}
+                    <div className={cn("grid gap-x-8 gap-y-3", config.controls.length > 1 && "sm:grid-cols-2")}>
+                        {config.controls.map((c) => (
+                            <ControlField key={c.prop} control={c} value={props[c.prop]} onChange={(v) => set(c.prop, v)} />
+                        ))}
                     </div>
-                )}
-                <div className={cn("grid gap-x-8 gap-y-3", config.controls.length > 1 && "sm:grid-cols-2")}>
-                    {config.controls.map((c) => (
-                        <ControlField key={c.prop} control={c} value={props[c.prop]} onChange={(v) => set(c.prop, v)} />
-                    ))}
                 </div>
-            </div>
+            )}
             {/* Code */}
             <PlaygroundCode code={config.code(live)} />
         </div>
@@ -321,6 +365,51 @@ function RadioGroupDemo({ inline, disabled }: { inline: boolean; disabled: boole
                 { value: "month", label: "Monthly" },
             ]}
         />
+    );
+}
+
+/**
+ * Toast is driven imperatively (`toaster.show(...)`), so the trigger must live inside a
+ * `ToastProvider`. This small wrapper renders the provider (threading `dark` to the portaled
+ * viewport) and a button that fires a toast with the current control values.
+ */
+function ToasterDemo({
+    dark,
+    intent,
+    icon,
+    message,
+    action,
+}: {
+    dark: boolean;
+    intent: string;
+    icon: string;
+    message: string;
+    action: boolean;
+}) {
+    return (
+        <Toaster dark={dark} position="top">
+            <ToasterButton intent={intent} icon={icon} message={message} action={action} />
+        </Toaster>
+    );
+}
+
+function ToasterButton({ intent, icon, message, action }: { intent: string; icon: string; message: string; action: boolean }) {
+    const toaster = useToaster();
+    return (
+        <Button
+            intent={intent === "none" ? "primary" : (intent as never)}
+            onClick={() =>
+                toaster.show({
+                    intent: intent === "none" ? undefined : (intent as never),
+                    icon: (icon || undefined) as never,
+                    message,
+                    timeout: 0,
+                    action: action ? { text: "Undo", onClick: () => {} } : undefined,
+                })
+            }
+        >
+            Show toast
+        </Button>
     );
 }
 
@@ -1181,6 +1270,363 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                       ]
                     : []),
                 `</Navbar>`,
+            ].join("\n"),
+    },
+
+    // ── Batch 5: overlays (portal to <body> → thread `dark`; trigger-driven via ctx) ──
+    tooltip: {
+        initial: { content: "Tooltip content", side: "bottom", align: "center", intent: "none" },
+        controls: [
+            { kind: "enum", prop: "side", options: SIDES },
+            { kind: "enum", prop: "align", options: ALIGNS },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "text", prop: "content" },
+        ],
+        render: (p, ctx) => (
+            <Tooltip content={p.content} side={p.side} align={p.align} intent={p.intent} dark={ctx.dark}>
+                <Button intent={p.intent === "none" ? "primary" : p.intent}>Hover me</Button>
+            </Tooltip>
+        ),
+        code: (p) =>
+            [
+                `<Tooltip content="${p.content}"${p.side === "bottom" ? "" : ` side="${p.side}"`}${p.align === "center" ? "" : ` align="${p.align}"`}${p.intent === "none" ? "" : ` intent="${p.intent}"`} dark={dark}>`,
+                `  <Button>Hover me</Button>`,
+                `</Tooltip>`,
+            ].join("\n"),
+    },
+
+    popover: {
+        initial: { side: "bottom", align: "center", hasContentPadding: true },
+        controls: [
+            { kind: "enum", prop: "side", options: SIDES },
+            { kind: "enum", prop: "align", options: ALIGNS },
+            { kind: "boolean", prop: "hasContentPadding", label: "padding" },
+        ],
+        render: (p, ctx) => (
+            <Popover
+                side={p.side}
+                align={p.align}
+                hasContentPadding={p.hasContentPadding}
+                dark={ctx.dark}
+                content={
+                    <div style={{ width: 220 }} className="text-body text-foreground">
+                        A popover panel — put any content here: text, forms, or a menu.
+                    </div>
+                }
+            >
+                <Button intent="primary" endIcon="caret-down">
+                    Open popover
+                </Button>
+            </Popover>
+        ),
+        code: (p) =>
+            [
+                `<Popover${p.side === "bottom" ? "" : ` side="${p.side}"`}${p.align === "center" ? "" : ` align="${p.align}"`}${p.hasContentPadding ? "" : " hasContentPadding={false}"} dark={dark}`,
+                `  content={<div style={{ width: 220 }}>A popover panel…</div>}>`,
+                `  <Button intent="primary" endIcon="caret-down">Open popover</Button>`,
+                `</Popover>`,
+            ].join("\n"),
+    },
+
+    dialog: {
+        initial: { title: "Dialog title", closeButton: true },
+        controls: [
+            { kind: "text", prop: "title" },
+            { kind: "boolean", prop: "closeButton", label: "close button" },
+        ],
+        render: (p, ctx) => (
+            <>
+                <Button intent="primary" onClick={() => ctx.setOpen(true)}>
+                    Open dialog
+                </Button>
+                <Dialog open={ctx.open} onOpenChange={ctx.setOpen} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} dark={ctx.dark}>
+                    <DialogBody>
+                        <p className="m-0 text-body text-foreground">
+                            This is the dialog body. It can hold forms, messages, or any layout.
+                        </p>
+                    </DialogBody>
+                    <DialogFooter
+                        actions={
+                            <>
+                                <Button variant="minimal" onClick={() => ctx.setOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button intent="primary" onClick={() => ctx.setOpen(false)}>
+                                    Confirm
+                                </Button>
+                            </>
+                        }
+                    />
+                </Dialog>
+            </>
+        ),
+        code: (p) =>
+            [
+                `const [open, setOpen] = useState(false);`,
+                ``,
+                `<Button onClick={() => setOpen(true)}>Open dialog</Button>`,
+                `<Dialog open={open} onOpenChange={setOpen} title="${p.title}"${p.closeButton ? "" : " closeButton={false}"} dark={dark}>`,
+                `  <DialogBody>…</DialogBody>`,
+                `  <DialogFooter actions={<><Button variant="minimal">Cancel</Button><Button intent="primary">Confirm</Button></>} />`,
+                `</Dialog>`,
+            ].join("\n"),
+    },
+
+    drawer: {
+        initial: { position: "right", size: 360, title: "Drawer title", closeButton: true },
+        controls: [
+            { kind: "enum", prop: "position", options: DRAWER_POSITIONS },
+            { kind: "number", prop: "size", min: 240, max: 600, stepSize: 20 },
+            { kind: "text", prop: "title" },
+            { kind: "boolean", prop: "closeButton", label: "close button" },
+        ],
+        render: (p, ctx) => (
+            <>
+                <Button intent="primary" onClick={() => ctx.setOpen(true)}>
+                    Open drawer
+                </Button>
+                <Drawer open={ctx.open} onOpenChange={ctx.setOpen} position={p.position} size={p.size} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} dark={ctx.dark}>
+                    <DrawerBody className="p-5">
+                        <p className="m-0 text-body text-foreground">
+                            Drawer body content. Slides in from the chosen edge; the backdrop locks page scroll.
+                        </p>
+                    </DrawerBody>
+                    <DrawerFooter className="px-5">
+                        <Button variant="minimal" onClick={() => ctx.setOpen(false)}>
+                            Close
+                        </Button>
+                        <Button intent="primary" onClick={() => ctx.setOpen(false)}>
+                            Save
+                        </Button>
+                    </DrawerFooter>
+                </Drawer>
+            </>
+        ),
+        code: (p) =>
+            [
+                `const [open, setOpen] = useState(false);`,
+                ``,
+                `<Button onClick={() => setOpen(true)}>Open drawer</Button>`,
+                `<Drawer open={open} onOpenChange={setOpen}${p.position === "right" ? "" : ` position="${p.position}"`} size={${p.size}} title="${p.title}"${p.closeButton ? "" : " closeButton={false}"} dark={dark}>`,
+                `  <DrawerBody className="p-5">…</DrawerBody>`,
+                `  <DrawerFooter className="px-5"><Button variant="minimal">Close</Button><Button intent="primary">Save</Button></DrawerFooter>`,
+                `</Drawer>`,
+            ].join("\n"),
+    },
+
+    alert: {
+        initial: { intent: "danger", confirmButtonText: "Delete", cancelButtonText: "Cancel" },
+        controls: [
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "text", prop: "confirmButtonText", label: "confirm" },
+            { kind: "text", prop: "cancelButtonText", label: "cancel" },
+        ],
+        render: (p, ctx) => (
+            <>
+                <Button intent={p.intent === "none" ? "primary" : p.intent} onClick={() => ctx.setOpen(true)}>
+                    Open alert
+                </Button>
+                <Alert
+                    open={ctx.open}
+                    onOpenChange={ctx.setOpen}
+                    intent={p.intent}
+                    icon="warning-sign"
+                    confirmButtonText={p.confirmButtonText}
+                    cancelButtonText={p.cancelButtonText}
+                    onConfirm={() => ctx.setOpen(false)}
+                    onCancel={() => ctx.setOpen(false)}
+                    dark={ctx.dark}
+                >
+                    Are you sure? This action cannot be undone.
+                </Alert>
+            </>
+        ),
+        code: (p) =>
+            [
+                `const [open, setOpen] = useState(false);`,
+                ``,
+                `<Button onClick={() => setOpen(true)}>Open alert</Button>`,
+                `<Alert open={open} onOpenChange={setOpen}${p.intent === "none" ? "" : ` intent="${p.intent}"`} icon="warning-sign"`,
+                `  confirmButtonText="${p.confirmButtonText}" cancelButtonText="${p.cancelButtonText}"`,
+                `  onConfirm={…} onCancel={…} dark={dark}>`,
+                `  Are you sure? This action cannot be undone.`,
+                `</Alert>`,
+            ].join("\n"),
+    },
+
+    "multistep-dialog": {
+        initial: { title: "Create project", initialStepIndex: 0 },
+        controls: [
+            { kind: "text", prop: "title" },
+            { kind: "number", prop: "initialStepIndex", label: "start step", min: 0, max: 2, stepSize: 1 },
+        ],
+        render: (p, ctx) => (
+            <>
+                <Button intent="primary" onClick={() => ctx.setOpen(true)}>
+                    Open wizard
+                </Button>
+                <MultistepDialog
+                    // initialStepIndex only applies on mount; remount when it changes so the control works.
+                    key={String(p.initialStepIndex)}
+                    open={ctx.open}
+                    onOpenChange={ctx.setOpen}
+                    title={p.title}
+                    icon={<Icon icon="projects" />}
+                    initialStepIndex={p.initialStepIndex}
+                    dark={ctx.dark}
+                    finalButtonProps={{ children: "Create", onClick: () => ctx.setOpen(false) }}
+                >
+                    <DialogStep
+                        id="info"
+                        title="Project info"
+                        panel={
+                            <div className="flex flex-col gap-4 p-5">
+                                <FormGroup label="Project name" labelFor="pg-ms-name">
+                                    <InputGroup id="pg-ms-name" leftIcon="projects" defaultValue="Apollo Initiative" fill />
+                                </FormGroup>
+                            </div>
+                        }
+                    />
+                    <DialogStep
+                        id="members"
+                        title="Members"
+                        panel={<div className="p-5 text-body text-foreground">Invite teammates by email to collaborate.</div>}
+                    />
+                    <DialogStep
+                        id="review"
+                        title="Review"
+                        panel={
+                            <div className="p-5">
+                                <Callout intent="primary" title="Ready to create">
+                                    Review the summary, then choose Create.
+                                </Callout>
+                            </div>
+                        }
+                    />
+                </MultistepDialog>
+            </>
+        ),
+        code: (p) =>
+            [
+                `const [open, setOpen] = useState(false);`,
+                ``,
+                `<Button onClick={() => setOpen(true)}>Open wizard</Button>`,
+                `<MultistepDialog open={open} onOpenChange={setOpen} title="${p.title}"${p.initialStepIndex ? ` initialStepIndex={${p.initialStepIndex}}` : ""} dark={dark}`,
+                `  finalButtonProps={{ children: "Create" }}>`,
+                `  <DialogStep id="info" title="Project info" panel={…} />`,
+                `  <DialogStep id="members" title="Members" panel={…} />`,
+                `  <DialogStep id="review" title="Review" panel={…} />`,
+                `</MultistepDialog>`,
+            ].join("\n"),
+    },
+
+    toast: {
+        initial: { intent: "success", icon: "tick-circle", message: "Changes saved.", action: false },
+        controls: [
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "icon", options: TOAST_ICONS, widget: "select" },
+            { kind: "text", prop: "message" },
+            { kind: "boolean", prop: "action", label: "action button" },
+        ],
+        presets: [
+            { name: "Error + retry", props: { intent: "danger", icon: "error", message: "Failed to save. Check your connection.", action: true } },
+            { name: "Info", props: { intent: "none", icon: "info-sign", message: "Reconnecting to the server…", action: false } },
+        ],
+        render: (p, ctx) => <ToasterDemo dark={ctx.dark} intent={p.intent} icon={p.icon} message={p.message} action={p.action} />,
+        code: (p) =>
+            [
+                `const toaster = useToaster(); // inside <Toaster dark={dark}>`,
+                ``,
+                `toaster.show({`,
+                `${p.intent === "none" ? "" : `  intent: "${p.intent}",\n`}${p.icon ? `  icon: "${p.icon}",\n` : ""}  message: "${p.message}",${p.action ? `\n  action: { text: "Undo", onClick: undo },` : ""}`,
+                `});`,
+            ].join("\n"),
+    },
+
+    "context-menu": {
+        initial: { icons: true, danger: true },
+        controls: [
+            { kind: "boolean", prop: "icons" },
+            { kind: "boolean", prop: "danger", label: "danger item" },
+        ],
+        render: (p, ctx) => (
+            <ContextMenu
+                dark={ctx.dark}
+                content={
+                    <Menu>
+                        <MenuItem icon={p.icons ? "document-open" : undefined} text="Open" />
+                        <MenuItem icon={p.icons ? "duplicate" : undefined} text="Duplicate" />
+                        <MenuItem icon={p.icons ? "cog" : undefined} text="Settings" />
+                        {p.danger && (
+                            <>
+                                <MenuDivider />
+                                <MenuItem icon={p.icons ? "trash" : undefined} text="Delete" intent="danger" />
+                            </>
+                        )}
+                    </Menu>
+                }
+            >
+                <div
+                    className="flex items-center justify-center rounded-bp border border-dashed border-foreground-muted p-10 text-body text-foreground-muted"
+                    style={{ width: 320, cursor: "context-menu" }}
+                >
+                    Right-click anywhere in this area
+                </div>
+            </ContextMenu>
+        ),
+        code: (p) =>
+            [
+                `<ContextMenu dark={dark} content={`,
+                `  <Menu>`,
+                `    <MenuItem${p.icons ? ' icon="document-open"' : ""} text="Open" />`,
+                `    <MenuItem${p.icons ? ' icon="duplicate"' : ""} text="Duplicate" />`,
+                `    <MenuItem${p.icons ? ' icon="cog"' : ""} text="Settings" />`,
+                ...(p.danger
+                    ? [`    <MenuDivider />`, `    <MenuItem${p.icons ? ' icon="trash"' : ""} text="Delete" intent="danger" />`]
+                    : []),
+                `  </Menu>`,
+                `}>`,
+                `  <div>Right-click anywhere in this area</div>`,
+                `</ContextMenu>`,
+            ].join("\n"),
+    },
+
+    omnibar: {
+        initial: { placeholder: "Search fruit…" },
+        controls: [{ kind: "text", prop: "placeholder" }],
+        render: (p, ctx) => (
+            <>
+                <Button intent="primary" icon="search" onClick={() => ctx.setOpen(true)}>
+                    Open omnibar
+                </Button>
+                <Omnibar<string>
+                    isOpen={ctx.open}
+                    onClose={() => ctx.setOpen(false)}
+                    items={OMNIBAR_ITEMS}
+                    inputProps={{ placeholder: String(p.placeholder) || "Search…" }}
+                    itemPredicate={(query, item) => item.toLowerCase().includes(query.toLowerCase())}
+                    itemRenderer={(item, { modifiers, handleClick }) => (
+                        <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />
+                    )}
+                    onItemSelect={() => ctx.setOpen(false)}
+                    dark={ctx.dark}
+                />
+            </>
+        ),
+        code: (p) =>
+            [
+                `const [open, setOpen] = useState(false);`,
+                ``,
+                `<Button icon="search" onClick={() => setOpen(true)}>Open omnibar</Button>`,
+                `<Omnibar<string>`,
+                `  isOpen={open} onClose={() => setOpen(false)} dark={dark}`,
+                `  items={items}`,
+                `  inputProps={{ placeholder: "${p.placeholder}" }}`,
+                `  itemPredicate={(q, item) => item.toLowerCase().includes(q.toLowerCase())}`,
+                `  itemRenderer={(item, { modifiers, handleClick }) => (`,
+                `    <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />`,
+                `  )}`,
+                `  onItemSelect={() => setOpen(false)} />`,
             ].join("\n"),
     },
 };
