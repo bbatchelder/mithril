@@ -5501,6 +5501,11 @@ function TileBadges({ id }: { id: string }) {
                     )}
                 </>
             )}
+            {meta.axe && (
+                <MetaBadge icon="endorsed" intent="success" title="Accessibility-audited by the shared axe smoke-test suite">
+                    axe
+                </MetaBadge>
+            )}
             {meta.portal && (
                 <MetaBadge icon="panel-stats" intent="warning" title="Portals to document.body — pass dark={dark} when used as an overlay">
                     Portal
@@ -5511,6 +5516,11 @@ function TileBadges({ id }: { id: string }) {
             )}
             {meta.polymorphic && (
                 <MetaBadge icon="fork" title="Polymorphic — supports asChild (Radix Slot)">asChild</MetaBadge>
+            )}
+            {meta.exports.length > 1 && (
+                <MetaBadge icon="cube" title={`Exports ${meta.exports.length} components: ${meta.exports.join(" · ")}`}>
+                    {meta.exports.length} exports
+                </MetaBadge>
             )}
             {!meta.registry && (
                 <MetaBadge icon="lock" title="Internal — not published via the owned-source registry">internal</MetaBadge>

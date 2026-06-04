@@ -15,6 +15,10 @@ export interface ComponentMeta {
     polymorphic: boolean;
     /** Distributable as owned-source via registry.json. */
     registry: boolean;
+    /** Rendered (and thus a11y-audited) by the shared axe-smoke suite. */
+    axe: boolean;
+    /** Component-like exports the module ships (the compound-component family). */
+    exports: string[];
 }
 
 export const COMPONENT_META: Record<string, ComponentMeta> = {
@@ -29,7 +33,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Alert"
+        ]
     },
     "anchor-button": {
         "tests": {
@@ -42,7 +50,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "AnchorButton"
+        ]
     },
     "breadcrumbs": {
         "tests": {
@@ -55,7 +67,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Breadcrumb",
+            "Breadcrumbs"
+        ]
     },
     "button": {
         "tests": {
@@ -68,7 +85,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Button"
+        ]
     },
     "button-group": {
         "tests": {
@@ -81,7 +102,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "ButtonGroup"
+        ]
     },
     "callout": {
         "tests": {
@@ -94,7 +119,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Callout"
+        ]
     },
     "card": {
         "tests": {
@@ -107,7 +136,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Card"
+        ]
     },
     "card-list": {
         "tests": {
@@ -120,7 +153,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "CardList"
+        ]
     },
     "checkbox": {
         "tests": {
@@ -133,7 +170,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Checkbox"
+        ]
     },
     "collapse": {
         "tests": {
@@ -146,7 +187,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Collapse"
+        ]
     },
     "context-menu": {
         "tests": {
@@ -159,7 +204,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "ContextMenu"
+        ]
     },
     "control-base": {
         "tests": {
@@ -172,7 +221,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "ControlBase"
+        ]
     },
     "control-card": {
         "tests": {
@@ -185,7 +238,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "CheckboxCard",
+            "RadioCard",
+            "SwitchCard"
+        ]
     },
     "control-group": {
         "tests": {
@@ -198,7 +257,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "ControlGroup"
+        ]
     },
     "data-table": {
         "tests": {
@@ -211,7 +274,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "DataTable"
+        ]
     },
     "date-input": {
         "tests": {
@@ -224,7 +291,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "DateInput"
+        ]
     },
     "date-picker": {
         "tests": {
@@ -237,7 +308,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "DatePicker"
+        ]
     },
     "date-range-input": {
         "tests": {
@@ -250,7 +325,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "DateRangeInput"
+        ]
     },
     "date-range-picker": {
         "tests": {
@@ -263,7 +342,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "DateRangePicker"
+        ]
     },
     "dialog": {
         "tests": {
@@ -276,7 +359,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Dialog",
+            "DialogBody",
+            "DialogFooter"
+        ]
     },
     "divider": {
         "tests": {
@@ -289,7 +378,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Divider"
+        ]
     },
     "drawer": {
         "tests": {
@@ -302,7 +395,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Drawer",
+            "DrawerBody",
+            "DrawerFooter"
+        ]
     },
     "editable-text": {
         "tests": {
@@ -315,7 +414,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "EditableText"
+        ]
     },
     "entity-title": {
         "tests": {
@@ -328,7 +431,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "EntityTitle"
+        ]
     },
     "file-input": {
         "tests": {
@@ -341,7 +448,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "FileInput"
+        ]
     },
     "form-group": {
         "tests": {
@@ -354,7 +465,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Label",
+            "FormGroup"
+        ]
     },
     "hotkeys": {
         "tests": {
@@ -367,7 +483,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "KeyCombo",
+            "HotkeysDialog",
+            "HotkeysProvider"
+        ]
     },
     "html-select": {
         "tests": {
@@ -380,7 +502,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "HTMLSelect"
+        ]
     },
     "html-table": {
         "tests": {
@@ -393,7 +519,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "HTMLTable"
+        ]
     },
     "icon": {
         "tests": {
@@ -406,7 +536,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Icon"
+        ]
     },
     "input-group": {
         "tests": {
@@ -419,7 +553,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "InputGroup"
+        ]
     },
     "link": {
         "tests": {
@@ -432,7 +570,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Link"
+        ]
     },
     "menu": {
         "tests": {
@@ -445,7 +587,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Menu",
+            "MenuItem",
+            "MenuDivider"
+        ]
     },
     "multi-select": {
         "tests": {
@@ -458,7 +606,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "MultiSelect"
+        ]
     },
     "multistep-dialog": {
         "tests": {
@@ -471,7 +623,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "DialogStep",
+            "MultistepDialog"
+        ]
     },
     "navbar": {
         "tests": {
@@ -484,7 +641,14 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Navbar",
+            "NavbarGroup",
+            "NavbarHeading",
+            "NavbarDivider"
+        ]
     },
     "non-ideal-state": {
         "tests": {
@@ -497,7 +661,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "NonIdealState"
+        ]
     },
     "numeric-input": {
         "tests": {
@@ -510,7 +678,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "NumericInput"
+        ]
     },
     "omnibar": {
         "tests": {
@@ -523,7 +695,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Omnibar"
+        ]
     },
     "overflow-list": {
         "tests": {
@@ -536,7 +712,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "OverflowList"
+        ]
     },
     "panel-stack": {
         "tests": {
@@ -549,7 +729,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "PanelStack"
+        ]
     },
     "popover": {
         "tests": {
@@ -562,7 +746,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Popover",
+            "MenuPopover"
+        ]
     },
     "portal": {
         "tests": {
@@ -575,7 +764,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "PortalProvider",
+            "Portal"
+        ]
     },
     "progress-bar": {
         "tests": {
@@ -588,7 +782,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "ProgressBar"
+        ]
     },
     "radio": {
         "tests": {
@@ -601,7 +799,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "RadioGroup",
+            "Radio"
+        ]
     },
     "resize-sensor": {
         "tests": {
@@ -614,7 +817,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "ResizeSensor"
+        ]
     },
     "section": {
         "tests": {
@@ -627,7 +834,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Section",
+            "SectionCard"
+        ]
     },
     "segmented-control": {
         "tests": {
@@ -640,7 +852,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "SegmentedControl"
+        ]
     },
     "select": {
         "tests": {
@@ -653,7 +869,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Select"
+        ]
     },
     "skeleton": {
         "tests": {
@@ -666,7 +886,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Skeleton"
+        ]
     },
     "slider": {
         "tests": {
@@ -679,7 +903,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": true,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Slider"
+        ]
     },
     "spinner": {
         "tests": {
@@ -692,7 +920,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Spinner"
+        ]
     },
     "suggest": {
         "tests": {
@@ -705,7 +937,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Suggest"
+        ]
     },
     "switch": {
         "tests": {
@@ -718,7 +954,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Switch"
+        ]
     },
     "tabs": {
         "tests": {
@@ -731,7 +971,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": true,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Tabs",
+            "Tab"
+        ]
     },
     "tag": {
         "tests": {
@@ -744,7 +989,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "Tag"
+        ]
     },
     "tag-input": {
         "tests": {
@@ -757,7 +1006,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "TagInput"
+        ]
     },
     "text": {
         "tests": {
@@ -770,7 +1023,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Text"
+        ]
     },
     "text-area": {
         "tests": {
@@ -783,7 +1040,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "TextArea"
+        ]
     },
     "time-picker": {
         "tests": {
@@ -796,7 +1057,11 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": true,
+        "exports": [
+            "TimePicker"
+        ]
     },
     "timezone-select": {
         "tests": {
@@ -809,7 +1074,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "TimezoneSelect",
+            "MINIMAL_IANA_CODES"
+        ]
     },
     "toast": {
         "tests": {
@@ -822,7 +1092,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Toast",
+            "ToastProvider",
+            "Toaster"
+        ]
     },
     "tooltip": {
         "tests": {
@@ -835,7 +1111,12 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": true,
         "radix": true,
         "polymorphic": true,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "TooltipProvider",
+            "Tooltip"
+        ]
     },
     "tree": {
         "tests": {
@@ -848,6 +1129,10 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "Tree"
+        ]
     }
 };

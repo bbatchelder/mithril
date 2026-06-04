@@ -19,6 +19,11 @@
  *   - radix       — backed by a `@radix-ui/*` headless primitive (vs hand-rolled).
  *   - polymorphic — exposes `asChild` (Radix Slot polymorphism).
  *   - registry    — distributable as owned-source via `registry.json`.
+ *   - axe         — rendered (and thus a11y-audited) by the shared `axe-smoke` suite,
+ *                   derived from that file's `../<module>` imports.
+ *   - exports     — the component-like exports the module ships (the compound-component
+ *                   family, e.g. Menu · MenuItem · MenuDivider) — PascalCase value exports
+ *                   declared via forwardRef / function / arrow, skipping contexts & helpers.
  *
  * Re-run after adding components or tests:  pnpm gen:meta
  */
@@ -45,7 +50,47 @@ for (const item of registry.items ?? []) {
     }
 }
 
-// ── Per-source signals (rsc / portal / radix / polymorphic) ──────────────────
+// ── Which component ids are rendered by the shared axe-smoke suite ───────────
+const axeSrc = readFileSync(join(TEST_DIR, "axe-smoke.test.tsx"), "utf8");
+const axeAudited = new Set(
+    [...axeSrc.matchAll(/from ["']\.\.\/([a-z0-9-]+)["']/g)].map((m) => m[1]),
+);
+
+/**
+ * The component-like value exports a module ships — its compound-component family.
+ * PascalCase exports declared as a function/class, or as a const bound to
+ * forwardRef/memo/an arrow, plus PascalCase names re-exported via `export { … }`.
+ * Skips contexts (`createContext`), variant helpers (`cva`), and size/enum objects
+ * (`= { … }`), and all `type`/`interface` exports.
+ * @param {string} src
+ */
+function componentExports(src) {
+    const names = new Set();
+    // export (default) function/class Name
+    for (const m of src.matchAll(/^export\s+(?:default\s+)?(?:async\s+)?(?:function|class)\s+([A-Z]\w*)/gm)) {
+        names.add(m[1]);
+    }
+    // export const Name = <forwardRef|memo|arrow|function …>  (skip object/context/cva)
+    for (const m of src.matchAll(/^export\s+const\s+([A-Z]\w*)\s*(?::[^=]+)?=\s*(.+)$/gm)) {
+        const [, name, rhs] = m;
+        if (/^(?:React\.)?(?:forwardRef|memo)\b|^(?:async\s*)?\(|^function\b/.test(rhs.trim())) {
+            names.add(name);
+        }
+    }
+    // export { A, B as C }  (not `export type { … }`); skip inline `type X` members
+    for (const m of src.matchAll(/^export\s+\{([^}]*)\}/gm)) {
+        if (/^export\s+type\s+\{/.test(m[0])) continue;
+        for (const part of m[1].split(",")) {
+            const seg = part.trim();
+            if (!seg || /^type\s/.test(seg)) continue;
+            const exported = (seg.split(/\s+as\s+/).pop() ?? "").trim();
+            if (/^[A-Z]\w*$/.test(exported)) names.add(exported);
+        }
+    }
+    return [...names];
+}
+
+// ── Per-source signals (rsc / portal / radix / polymorphic / axe / exports) ──
 /** @param {string} id */
 function sourceSignals(id) {
     const src = readFileSync(join(UI_DIR, `${id}.tsx`), "utf8");
@@ -54,7 +99,7 @@ function sourceSignals(id) {
     const portal = /createPortal|<\w*Portal\b|\.Portal\b|from ["']\.\/portal["']/.test(src);
     const radix = /@radix-ui\//.test(src);
     const polymorphic = /\basChild\b/.test(src);
-    return { rsc, portal, radix, polymorphic };
+    return { rsc, portal, radix, polymorphic, axe: axeAudited.has(id), exports: componentExports(src) };
 }
 
 // ── Test attribution + bucketing ─────────────────────────────────────────────
@@ -91,7 +136,7 @@ function testTitles(src) {
 
 const meta = {};
 for (const id of moduleIds) {
-    const { rsc, portal, radix, polymorphic } = sourceSignals(id);
+    const { rsc, portal, radix, polymorphic, axe, exports } = sourceSignals(id);
     meta[id] = {
         tests: { total: 0, a11y: 0, keyboard: 0, behavior: 0 },
         rsc,
@@ -99,6 +144,8 @@ for (const id of moduleIds) {
         radix,
         polymorphic,
         registry: inRegistry.has(id),
+        axe,
+        exports,
     };
 }
 
@@ -139,6 +186,10 @@ export interface ComponentMeta {
     polymorphic: boolean;
     /** Distributable as owned-source via registry.json. */
     registry: boolean;
+    /** Rendered (and thus a11y-audited) by the shared axe-smoke suite. */
+    axe: boolean;
+    /** Component-like exports the module ships (the compound-component family). */
+    exports: string[];
 }
 
 export const COMPONENT_META: Record<string, ComponentMeta> = ${JSON.stringify(sorted, null, 4)};

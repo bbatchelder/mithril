@@ -54,9 +54,9 @@ the ongoing goal:
   demo app (`#soc`, `#board`, `#mission`). There is **no persistent global sidebar** — each app owns its
   full width and carries its own chrome (back-to-gallery + theme chooser) via `<AppChromeControls>` from
   `src/lib/app-chrome.tsx`. Each overview tile carries badges (test count + a11y/keyboard/behavior split,
-  server-renderable vs client, portals/Radix/asChild traits) sourced from
-  `src/components/ui/component-meta.generated.ts` — re-run `pnpm gen:meta` (`tools/gen-component-meta.mjs`)
-  after adding components or tests. Each app keeps its **own** palette +
+  axe-audited, server-renderable vs client, portals/Radix/asChild traits, compound-export count) sourced
+  from `src/components/ui/component-meta.generated.ts` — re-run `pnpm gen:meta`
+  (`tools/gen-component-meta.mjs`) after adding components or tests. Each app keeps its **own** palette +
   light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
   `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).
