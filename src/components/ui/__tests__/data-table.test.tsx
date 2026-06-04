@@ -583,7 +583,7 @@ describe("DataTable — keyboard navigation + clipboard (Loop 6)", () => {
     });
 
     it("Cmd/Ctrl-C copies the selected region as TSV", () => {
-        const writeText = vi.fn(() => Promise.resolve());
+        const writeText = vi.fn((_text: string) => Promise.resolve());
         const orig = Object.getOwnPropertyDescriptor(navigator, "clipboard");
         Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
         try {
@@ -699,7 +699,7 @@ describe("DataTable — multi-region selection (Loop 7)", () => {
     });
 
     it("Cmd/Ctrl-C copies every region, blank-line separated", () => {
-        const writeText = vi.fn(() => Promise.resolve());
+        const writeText = vi.fn((_text: string) => Promise.resolve());
         const orig = Object.getOwnPropertyDescriptor(navigator, "clipboard");
         Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
         try {

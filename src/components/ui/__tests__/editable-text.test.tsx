@@ -28,7 +28,6 @@ describe("EditableText — display state", () => {
 
 describe("EditableText — entering edit mode", () => {
     it("renders an input seeded with the current value when focused", async () => {
-        const user = userEvent.setup();
         const { container } = render(<EditableText defaultValue="Hello" />);
 
         const root = container.firstChild as HTMLElement;
