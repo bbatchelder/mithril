@@ -56,7 +56,9 @@ the ongoing goal:
   `src/lib/app-chrome.tsx`. Each overview tile carries badges (test count + a11y/keyboard/behavior split,
   axe-audited, server-renderable vs client, portals/Radix/asChild traits, compound-export count) sourced
   from `src/components/ui/component-meta.generated.ts` — re-run `pnpm gen:meta`
-  (`tools/gen-component-meta.mjs`) after adding components or tests. Each app keeps its **own** palette +
+  (`tools/gen-component-meta.mjs`) after adding components or tests. A component's page also shows a
+  props/API table from `component-props.generated.ts` (`pnpm gen:props`, via react-docgen-typescript).
+  Each app keeps its **own** palette +
   light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
   `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).
@@ -126,6 +128,7 @@ cd tools/blueprint-reference && pnpm dev   # Blueprint v6.15 reference gallery a
 
 pnpm gen:icons       # regenerate the 706-glyph icon map from tools/gen-icons.mjs
 pnpm gen:meta        # regenerate per-component showcase badge metadata (tests/RSC/portal/radix)
+pnpm gen:props       # regenerate per-component props/API tables (react-docgen-typescript)
 pnpm gen:registry    # regenerate registry.json from src/components/ui
 pnpm build:registry  # build the published shadcn registry items into dist/r
 
