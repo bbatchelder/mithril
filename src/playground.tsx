@@ -60,6 +60,10 @@ import { MultistepDialog, DialogStep } from "@/components/ui/multistep-dialog";
 import { ContextMenu } from "@/components/ui/context-menu";
 import { Toaster, useToaster } from "@/components/ui/toast";
 import { Omnibar } from "@/components/ui/omnibar";
+import { Select } from "@/components/ui/select";
+import { Suggest } from "@/components/ui/suggest";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { TagInput } from "@/components/ui/tag-input";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -410,6 +414,106 @@ function ToasterButton({ intent, icon, message, action }: { intent: string; icon
         >
             Show toast
         </Button>
+    );
+}
+
+// ── Batch 6: Select / Suggest / MultiSelect / TagInput ───────────────────────
+// These are controlled + (the first three) portal their listbox, so each needs a
+// small stateful wrapper holding selection/value and threading `dark` into the portal.
+const PG_FRUITS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape", "Honeydew"];
+const fruitMatch = (query: string, item: string) => item.toLowerCase().includes(query.toLowerCase());
+
+function SelectDemo({ dark, filterable, disabled, fill }: { dark: boolean; filterable: boolean; disabled: boolean; fill: boolean }) {
+    const [selected, setSelected] = useState<string | null>("Cherry");
+    return (
+        <div style={{ width: 260 }}>
+            <Select<string>
+                items={PG_FRUITS}
+                selectedItem={selected}
+                filterable={filterable}
+                disabled={disabled}
+                fill={fill}
+                itemPredicate={fruitMatch}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} icon={item === selected ? "tick" : undefined} onClick={handleClick} />
+                )}
+                onItemSelect={(item) => setSelected(item)}
+                noResults={<MenuItem disabled text="No results." />}
+                dark={dark}
+            >
+                <Button variant="solid" endIcon="caret-down" disabled={disabled} fill={fill}>
+                    {selected ?? "Select a fruit…"}
+                </Button>
+            </Select>
+        </div>
+    );
+}
+
+function SuggestDemo({ dark, disabled, fill, placeholder }: { dark: boolean; disabled: boolean; fill: boolean; placeholder: string }) {
+    const [selected, setSelected] = useState<string | null>(null);
+    return (
+        <div style={{ width: 260 }}>
+            <Suggest<string>
+                items={PG_FRUITS}
+                selectedItem={selected}
+                inputValueRenderer={(item) => item}
+                itemPredicate={fruitMatch}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} icon={item === selected ? "tick" : undefined} onClick={handleClick} />
+                )}
+                onItemSelect={(item) => setSelected(item)}
+                noResults={<MenuItem disabled text="No results." />}
+                inputProps={{ placeholder }}
+                disabled={disabled}
+                fill={fill}
+                dark={dark}
+            />
+        </div>
+    );
+}
+
+function MultiSelectDemo({ dark, intent, leftIcon, disabled, fill, placeholder }: { dark: boolean; intent: string; leftIcon: string; disabled: boolean; fill: boolean; placeholder: string }) {
+    const [selected, setSelected] = useState<string[]>(["Banana", "Cherry"]);
+    return (
+        <div style={{ width: 340 }}>
+            <MultiSelect<string>
+                items={PG_FRUITS}
+                selectedItems={selected}
+                tagRenderer={(item) => item}
+                itemPredicate={fruitMatch}
+                itemRenderer={(item, { modifiers, handleClick }) => (
+                    <MenuItem key={item} text={item} active={modifiers.active} icon={selected.includes(item) ? "tick" : undefined} onClick={handleClick} />
+                )}
+                onItemSelect={(item) => setSelected((s) => (s.includes(item) ? s : [...s, item]))}
+                onRemove={(_item, index) => setSelected((s) => s.filter((_, i) => i !== index))}
+                noResults={<MenuItem disabled text="No results." />}
+                placeholder={placeholder}
+                intent={intent as never}
+                leftIcon={(leftIcon || undefined) as never}
+                disabled={disabled}
+                fill={fill}
+                dark={dark}
+            />
+        </div>
+    );
+}
+
+function TagInputDemo({ large, intent, leftIcon, disabled, fill, placeholder }: { large: boolean; intent: string; leftIcon: string; disabled: boolean; fill: boolean; placeholder: string }) {
+    const [values, setValues] = useState<string[]>(["design", "ui", "ux"]);
+    return (
+        <div style={{ width: 360 }}>
+            <TagInput
+                values={values}
+                onChange={(v) => setValues(v as string[])}
+                placeholder={placeholder}
+                inputProps={{ "aria-label": "Tags" }}
+                large={large}
+                intent={intent as never}
+                leftIcon={(leftIcon || undefined) as never}
+                disabled={disabled}
+                fill={fill}
+            />
+        </div>
     );
 }
 
@@ -1627,6 +1731,111 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 `    <MenuItem key={item} text={item} active={modifiers.active} onClick={handleClick} />`,
                 `  )}`,
                 `  onItemSelect={() => setOpen(false)} />`,
+            ].join("\n"),
+    },
+
+    // ── Batch 6: Select / Suggest / MultiSelect / TagInput (stateful + portaled) ──
+    select: {
+        initial: { filterable: true, fill: false, disabled: false },
+        controls: [
+            { kind: "boolean", prop: "filterable" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p, ctx) => <SelectDemo dark={ctx.dark} filterable={p.filterable} fill={p.fill} disabled={p.disabled} />,
+        code: (p) =>
+            [
+                `const [selected, setSelected] = useState<string | null>("Cherry");`,
+                ``,
+                `<Select<string>`,
+                `  items={items} selectedItem={selected}${p.filterable ? "" : " filterable={false}"}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
+                `  itemPredicate={(q, item) => item.toLowerCase().includes(q.toLowerCase())}`,
+                `  itemRenderer={(item, { modifiers, handleClick }) => (`,
+                `    <MenuItem key={item} text={item} active={modifiers.active}`,
+                `      icon={item === selected ? "tick" : undefined} onClick={handleClick} />`,
+                `  )}`,
+                `  onItemSelect={setSelected} dark={dark}>`,
+                `  <Button endIcon="caret-down">{selected ?? "Select a fruit…"}</Button>`,
+                `</Select>`,
+            ].join("\n"),
+    },
+
+    suggest: {
+        initial: { placeholder: "Search fruit…", fill: false, disabled: false },
+        controls: [
+            { kind: "text", prop: "placeholder" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p, ctx) => <SuggestDemo dark={ctx.dark} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} />,
+        code: (p) =>
+            [
+                `const [selected, setSelected] = useState<string | null>(null);`,
+                ``,
+                `<Suggest<string>`,
+                `  items={items} selectedItem={selected}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
+                `  inputValueRenderer={(item) => item}`,
+                `  inputProps={{ placeholder: "${p.placeholder}" }}`,
+                `  itemPredicate={(q, item) => item.toLowerCase().includes(q.toLowerCase())}`,
+                `  itemRenderer={(item, { modifiers, handleClick }) => (`,
+                `    <MenuItem key={item} text={item} active={modifiers.active}`,
+                `      icon={item === selected ? "tick" : undefined} onClick={handleClick} />`,
+                `  )}`,
+                `  onItemSelect={setSelected} dark={dark} />`,
+            ].join("\n"),
+    },
+
+    "multi-select": {
+        initial: { placeholder: "Add fruit…", intent: "none", leftIcon: "", fill: true, disabled: false },
+        controls: [
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "leftIcon", label: "leftIcon", options: ICONS },
+            { kind: "text", prop: "placeholder" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p, ctx) => (
+            <MultiSelectDemo dark={ctx.dark} intent={p.intent} leftIcon={p.leftIcon} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [selected, setSelected] = useState<string[]>(["Banana", "Cherry"]);`,
+                ``,
+                `<MultiSelect<string>`,
+                `  items={items} selectedItems={selected}${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.leftIcon ? ` leftIcon="${p.leftIcon}"` : ""}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
+                `  tagRenderer={(item) => item}`,
+                `  itemPredicate={(q, item) => item.toLowerCase().includes(q.toLowerCase())}`,
+                `  itemRenderer={(item, { modifiers, handleClick }) => (`,
+                `    <MenuItem key={item} text={item} active={modifiers.active}`,
+                `      icon={selected.includes(item) ? "tick" : undefined} onClick={handleClick} />`,
+                `  )}`,
+                `  onItemSelect={(item) => setSelected((s) => s.includes(item) ? s : [...s, item])}`,
+                `  onRemove={(_item, i) => setSelected((s) => s.filter((_, j) => j !== i))}`,
+                `  dark={dark} />`,
+            ].join("\n"),
+    },
+
+    "tag-input": {
+        initial: { placeholder: "Add a tag…", intent: "none", leftIcon: "", large: false, fill: true, disabled: false },
+        controls: [
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "leftIcon", label: "leftIcon", options: ICONS },
+            { kind: "text", prop: "placeholder" },
+            { kind: "boolean", prop: "large" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <TagInputDemo intent={p.intent} leftIcon={p.leftIcon} placeholder={String(p.placeholder)} large={p.large} fill={p.fill} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [values, setValues] = useState<string[]>(["design", "ui", "ux"]);`,
+                ``,
+                `<TagInput`,
+                `  values={values} onChange={(v) => setValues(v as string[])}`,
+                `  placeholder="${p.placeholder}"${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.leftIcon ? ` leftIcon="${p.leftIcon}"` : ""}${p.large ? " large" : ""}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
+                `  inputProps={{ "aria-label": "Tags" }} />`,
             ].join("\n"),
     },
 };
