@@ -66,6 +66,7 @@ import { DEMOS } from "@/demos/registry";
 import { COMPONENT_META, type ComponentMeta } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { Playground, PLAYGROUNDS } from "@/playground";
+import { ComponentPreview, hasPreview } from "@/previews";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
@@ -6063,12 +6064,17 @@ function ShowcaseOverview() {
                                         className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                     >
                                         <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
-                                            <div className="flex items-center gap-2.5">
-                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
-                                                    <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
-                                                </span>
+                                            {hasPreview(c.id) ? (
                                                 <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
-                                            </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                                        <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
+                                                    </span>
+                                                    <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
+                                                </div>
+                                            )}
+                                            <ComponentPreview id={c.id} />
                                             <TileBadges id={c.id} className="mt-auto pt-0.5" />
                                         </Card>
                                     </a>
