@@ -19,6 +19,139 @@ export interface ComponentApiDoc {
 
 /** Props reference per showcase component id (array = the compound-component family). */
 export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
+    "ai-label": [
+        {
+            "name": "AILabelExplanation",
+            "description": "Provenance / explainability callout for an {@link AILabel} popover. Surfaces where AI content came from and how much to trust it: a stacked provenance headline, confidence (with its source), grounding sources (or an explicit \"no sources\" state), and the model + context. Pass to `AILabel`'s `popover` prop, or skip it and pass arbitrary content for full control.",
+            "props": [
+                {
+                    "name": "actions",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Footer actions (e.g. a Regenerate button)."
+                },
+                {
+                    "name": "children",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Optional one-line summary under the headline."
+                },
+                {
+                    "name": "className",
+                    "type": "string",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": ""
+                },
+                {
+                    "name": "confidence",
+                    "type": "AIConfidence",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Confidence with its source (the qualifier outranks the value)."
+                },
+                {
+                    "name": "grounding",
+                    "type": "AIGroundingSource[]",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Grounding sources. Provide the prop (even as `[]`) to show the section: a non-empty list renders linked sources; an empty list renders the explicit \"No sources\" state."
+                },
+                {
+                    "name": "model",
+                    "type": "AIModelContext",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Model + context footer."
+                },
+                {
+                    "name": "states",
+                    "type": "AIProvenanceState[]",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "The stacked provenance headline (states coexist)."
+                }
+            ]
+        },
+        {
+            "name": "AILabel",
+            "description": "AILabel — see the module header. Renders a static marker, or (when `popover` is set) an interactive button that opens an explainability `Popover`. Control placement via `popoverProps={{ side, align }}`.",
+            "props": [
+                {
+                    "name": "ariaLabel",
+                    "type": "string",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Accessible name. Defaults to \"AI\"; useful to override for an icon-only marker."
+                },
+                {
+                    "name": "dark",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "false",
+                    "description": "Dark mode — forwarded to the portaled popover so it renders in the dark theme."
+                },
+                {
+                    "name": "icon",
+                    "type": "IconProp",
+                    "required": false,
+                    "defaultValue": "{ 16: [\"m12 8-1.2 2.796-2.8 1.2 2.8 1.…",
+                    "description": "Leading glyph. Defaults to the `clean` sparkle. Pass `false` to hide."
+                },
+                {
+                    "name": "inline",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "false",
+                    "description": "Tighter baseline alignment for use inside running text."
+                },
+                {
+                    "name": "intent",
+                    "type": "\"none\" | \"primary\" | \"success\" | \"warning\" | \"danger\"",
+                    "required": false,
+                    "defaultValue": "primary",
+                    "description": "Visual intent / color scheme (same set as Tag)."
+                },
+                {
+                    "name": "label",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": "AI",
+                    "description": "Chip text. Defaults to the letters \"AI\". Pass null/false/\"\" for an icon-only marker."
+                },
+                {
+                    "name": "popover",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Explainability callout content. When provided the marker becomes an interactive button that opens a `Popover`; pair with {@link AILabelExplanation} for the standard layout."
+                },
+                {
+                    "name": "popoverProps",
+                    "type": "Partial<Omit<PopoverProps, \"content\" | \"children\" | \"dark\">>",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Partial overrides for the underlying `Popover`. This is where placement lives — `side` / `align` / `sideOffset` are forwarded to Radix."
+                },
+                {
+                    "name": "size",
+                    "type": "\"small\" | \"medium\" | \"large\"",
+                    "required": false,
+                    "defaultValue": "medium",
+                    "description": "Size of the marker."
+                },
+                {
+                    "name": "variant",
+                    "type": "\"minimal\" | \"solid\"",
+                    "required": false,
+                    "defaultValue": "minimal",
+                    "description": "\"minimal\" translucent tint or \"solid\" filled chip."
+                }
+            ]
+        }
+    ],
     "alert": [
         {
             "name": "Alert",
@@ -202,7 +335,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "variant",
-                    "type": "\"solid\" | \"outlined\" | \"minimal\"",
+                    "type": "\"minimal\" | \"solid\" | \"outlined\"",
                     "required": false,
                     "defaultValue": null,
                     "description": ""
@@ -252,7 +385,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "icon",
-                    "type": "\"function\" | \"add\" | \"add-application\" | \"add-child\" | … (706 options)",
+                    "type": "\"function\" | \"style\" | \"translate\" | \"property\" | … (706 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Blueprint icon name to show left of the text."
@@ -371,7 +504,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "variant",
-                    "type": "\"solid\" | \"outlined\" | \"minimal\"",
+                    "type": "\"minimal\" | \"solid\" | \"outlined\"",
                     "required": false,
                     "defaultValue": null,
                     "description": ""
@@ -400,7 +533,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "variant",
-                    "type": "\"solid\" | \"outlined\" | \"minimal\"",
+                    "type": "\"minimal\" | \"solid\" | \"outlined\"",
                     "required": false,
                     "defaultValue": "solid",
                     "description": "Visual style applied to child buttons (overridable per button)."
@@ -758,7 +891,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "checkboxProps",
-                    "type": "Omit<CheckboxProps, \"label\" | \"defaultChecked\" | \"className\" | \"onChange\" | \"disabled\" |…",
+                    "type": "Omit<CheckboxProps, \"defaultChecked\" | \"className\" | \"onChange\" | \"label\" | \"disabled\" |…",
                     "required": false,
                     "defaultValue": null,
                     "description": "Additional CheckboxProps to pass to the inner Checkbox."
@@ -953,7 +1086,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "radioProps",
-                    "type": "Omit<RadioProps, \"label\" | \"defaultChecked\" | \"className\" | \"onChange\" | \"disabled\" | \"n…",
+                    "type": "Omit<RadioProps, \"defaultChecked\" | \"className\" | \"onChange\" | \"label\" | \"disabled\" | \"n…",
                     "required": false,
                     "defaultValue": null,
                     "description": "Additional RadioProps to pass to the inner Radio."
@@ -1099,7 +1232,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "switchProps",
-                    "type": "Omit<SwitchProps, \"label\" | \"defaultChecked\" | \"className\" | \"onChange\" | \"disabled\" | \"…",
+                    "type": "Omit<SwitchProps, \"defaultChecked\" | \"className\" | \"onChange\" | \"label\" | \"disabled\" | \"…",
                     "required": false,
                     "defaultValue": null,
                     "description": "Additional SwitchProps to pass to the inner Switch."
@@ -1340,7 +1473,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "inputProps",
-                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"type\" | \"size\" | \"disabled\" | \"value\">",
+                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"size\" | \"disabled\" | \"type\" | \"value\">",
                     "required": false,
                     "defaultValue": "{}",
                     "description": "Props passed to the underlying InputGroup. `value`, `disabled`, `type`, `size` are reserved."
@@ -1566,7 +1699,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "endInputProps",
-                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"type\" | \"size\" | \"disabled\" | \"value\">",
+                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"size\" | \"disabled\" | \"type\" | \"value\">",
                     "required": false,
                     "defaultValue": "{}",
                     "description": "Props passed to the end-date InputGroup. `value`, `disabled`, `type`, `size` are reserved."
@@ -1622,7 +1755,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "startInputProps",
-                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"type\" | \"size\" | \"disabled\" | \"value\">",
+                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"size\" | \"disabled\" | \"type\" | \"value\">",
                     "required": false,
                     "defaultValue": "{}",
                     "description": "Props passed to the start-date InputGroup. `value`, `disabled`, `type`, `size` are reserved."
@@ -1854,7 +1987,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
             "props": [
                 {
                     "name": "as",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Override the rendered HTML element."
@@ -1868,7 +2001,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "tagName",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Alias for `as` (Blueprint API compat). `as` takes precedence if both are provided."
@@ -2170,7 +2303,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "as",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Override the HTML element rendered for the title. Defaults to the semantic element for the `size` prop (\"div\" for \"text\", \"h1\"–\"h6\" for heading sizes)."
@@ -2276,7 +2409,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "inputProps",
-                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"type\" | \"disabled\">",
+                    "type": "Omit<InputHTMLAttributes<HTMLInputElement>, \"disabled\" | \"type\">",
                     "required": false,
                     "defaultValue": "{}",
                     "description": "Props forwarded to the hidden `<input type=\"file\">` element. `type` and `disabled` are controlled and will be overridden."
@@ -2805,7 +2938,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "icon",
-                    "type": "\"function\" | \"add\" | \"add-application\" | \"add-child\" | … (706 options)",
+                    "type": "\"function\" | \"style\" | \"translate\" | \"property\" | … (706 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Blueprint icon name rendered on the left."
@@ -2987,7 +3120,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "leftIcon",
-                    "type": "\"function\" | \"add\" | \"add-application\" | \"add-child\" | … (706 options)",
+                    "type": "\"function\" | \"style\" | \"translate\" | \"property\" | … (706 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Left icon on the TagInput container."
@@ -3674,7 +3807,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "tagName",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "HTML tag for the container element."
@@ -4723,14 +4856,14 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "as",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Override the rendered HTML tag."
                 },
                 {
                     "name": "tagName",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Alias for `as`. `as` takes precedence if both are provided."
@@ -4865,7 +4998,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
             "props": [
                 {
                     "name": "as",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Override the rendered HTML wrapper tag. Use an SVG element (e.g. \"g\") when rendering inside an <svg>."
@@ -4893,7 +5026,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "tagName",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "\"div\"",
                     "description": "Alias for `as` (Blueprint API compat). `as` takes precedence if both are provided."
@@ -4992,7 +5125,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "inputProps",
-                    "type": "Omit<InputGroupProps, \"onChange\" | \"fill\" | \"disabled\" | \"value\">",
+                    "type": "Omit<InputGroupProps, \"onChange\" | \"disabled\" | \"fill\" | \"value\">",
                     "required": false,
                     "defaultValue": null,
                     "description": "Additional props forwarded to the InputGroup trigger. `value`, `onChange`, `disabled`, and `fill` are controlled by Suggest."
@@ -5422,7 +5555,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "leftIcon",
-                    "type": "\"function\" | \"add\" | \"add-application\" | \"add-child\" | … (706 options)",
+                    "type": "\"function\" | \"style\" | \"translate\" | \"property\" | … (706 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Icon rendered on the left side of the container."
@@ -5493,7 +5626,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
             "props": [
                 {
                     "name": "as",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Override the rendered HTML element. Defaults to the semantic element for the variant (h1–h6 for headings, `p` for body tiers, `code` for code)."
@@ -5507,7 +5640,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "tagName",
-                    "type": "\"symbol\" | \"object\" | \"circle\" | \"code\" | … (178 options)",
+                    "type": "\"symbol\" | \"object\" | \"slot\" | \"style\" | … (178 options)",
                     "required": false,
                     "defaultValue": "variant's semantic default",
                     "description": "Alias for `as` (Blueprint API compat). `as` takes precedence if both are provided."
@@ -5521,7 +5654,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "variant",
-                    "type": "\"code\" | \"small\" | \"large\" | \"disabled\" | \"body\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h…",
+                    "type": "\"small\" | \"large\" | \"code\" | \"disabled\" | \"body\" | \"h1\" | \"h2\" | \"h3\" | \"h4\" | \"h5\" | \"h…",
                     "required": false,
                     "defaultValue": "body",
                     "description": ""
@@ -5664,7 +5797,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
             "props": [
                 {
                     "name": "buttonProps",
-                    "type": "Omit<ButtonProps & RefAttributes<HTMLButtonElement>, \"children\" | \"fill\" | \"disabled\">",
+                    "type": "Omit<ButtonProps & RefAttributes<HTMLButtonElement>, \"children\" | \"disabled\" | \"fill\">",
                     "required": false,
                     "defaultValue": null,
                     "description": "Extra props passed to the trigger Button. Ignored if custom children are provided."
@@ -5805,7 +5938,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                 },
                 {
                     "name": "icon",
-                    "type": "\"function\" | \"add\" | \"add-application\" | \"add-child\" | … (706 options)",
+                    "type": "\"function\" | \"style\" | \"translate\" | \"property\" | … (706 options)",
                     "required": false,
                     "defaultValue": null,
                     "description": "Leading icon name (Blueprint Icon glyph name)."
