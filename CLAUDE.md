@@ -57,7 +57,9 @@ the ongoing goal:
   axe-audited, server-renderable vs client, portals/Radix/asChild traits, compound-export count) sourced
   from `src/components/ui/component-meta.generated.ts` — re-run `pnpm gen:meta`
   (`tools/gen-component-meta.mjs`) after adding components or tests. A component's page also shows a
-  props/API table from `component-props.generated.ts` (`pnpm gen:props`, via react-docgen-typescript).
+  props/API table from `component-props.generated.ts` (`pnpm gen:props`, via react-docgen-typescript),
+  and — for components with a curated config in `src/playground.tsx` — an interactive playground (a
+  single live instance + controls + presets + live code); others fall back to their Examples gallery.
   Each app keeps its **own** palette +
   light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
   `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
