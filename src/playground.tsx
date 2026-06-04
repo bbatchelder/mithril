@@ -562,7 +562,8 @@ function DataTableDemo({
     reordering,
     editable,
     loading,
-    virtualized,
+    height,
+    rowHeight,
 }: {
     numberedRows: boolean;
     selectionMode: string;
@@ -571,7 +572,8 @@ function DataTableDemo({
     reordering: boolean;
     editable: boolean;
     loading: boolean;
-    virtualized: boolean;
+    height: number | undefined;
+    rowHeight: number;
 }) {
     const [rows, setRows] = useState<PgPerson[]>(() => PG_TABLE_POOL.slice(0, rowCount));
     const columns = useMemo<DataTableColumn<PgPerson>[]>(
@@ -599,7 +601,8 @@ function DataTableDemo({
                 enableColumnResizing={resizing}
                 enableColumnReordering={reordering}
                 loading={loading}
-                height={virtualized ? 260 : undefined}
+                height={height}
+                rowHeight={rowHeight}
                 onCellEdit={({ row, columnId, value }) =>
                     setRows((rs) => rs.map((r, i) => (i === row ? { ...r, [columnId]: value } : r)))
                 }
@@ -1941,11 +1944,12 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
 
     // ── Batch 7: DataTable (inline, stateful for inline edits) ──
     "data-table": {
-        initial: { selectionMode: "multi", rows: "6", numberedRows: true, resizing: true, reordering: false, editable: true, virtualized: false, loading: false },
+        initial: { selectionMode: "multi", rows: "6", height: "auto", rowHeight: 20, numberedRows: true, resizing: true, reordering: false, editable: true, loading: false },
         controls: [
             { kind: "enum", prop: "selectionMode", label: "selection", options: [{ value: "none" }, { value: "single" }, { value: "multi" }] },
             { kind: "enum", prop: "rows", label: "rows", options: [{ value: "6" }, { value: "50" }, { value: "1000", label: "1,000" }] },
-            { kind: "boolean", prop: "virtualized", label: "virtualized" },
+            { kind: "enum", prop: "height", label: "height", widget: "segmented", options: [{ value: "auto" }, { value: "200" }, { value: "400" }, { value: "800" }] },
+            { kind: "number", prop: "rowHeight", label: "row height", min: 16, max: 48, stepSize: 2 },
             { kind: "boolean", prop: "numberedRows", label: "gutter" },
             { kind: "boolean", prop: "resizing", label: "resize cols" },
             { kind: "boolean", prop: "reordering", label: "reorder cols" },
@@ -1954,13 +1958,15 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         ],
         render: (p) => {
             const rowCount = Number(p.rows);
+            const heightPx = p.height === "auto" ? undefined : Number(p.height);
             return (
                 <DataTableDemo
                     // Remount on row-count change so the data slice resets cleanly.
                     key={rowCount}
                     selectionMode={p.selectionMode}
                     rowCount={rowCount}
-                    virtualized={p.virtualized}
+                    height={heightPx}
+                    rowHeight={Number(p.rowHeight)}
                     numberedRows={p.numberedRows}
                     resizing={p.resizing}
                     reordering={p.reordering}
@@ -1972,6 +1978,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         code: (p) => {
             const ed = p.editable ? ", editable: true" : "";
             const n = Number(p.rows);
+            const h = p.height === "auto" ? undefined : Number(p.height);
+            const rh = Number(p.rowHeight);
             return [
                 `const [data, setData] = useState(rows); // ${n.toLocaleString()} rows`,
                 `const columns: DataTableColumn<Person>[] = [`,
@@ -1982,9 +1990,9 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 `];`,
                 ``,
                 `<DataTable`,
-                `  data={data} columns={columns}${p.numberedRows ? "" : " numberedRows={false}"}${p.selectionMode === "single" ? "" : ` selectionMode="${p.selectionMode}"`}${p.resizing ? " enableColumnResizing" : ""}${p.reordering ? " enableColumnReordering" : ""}${p.virtualized ? " height={260}" : ""}${p.loading ? " loading" : ""}`,
+                `  data={data} columns={columns}${p.numberedRows ? "" : " numberedRows={false}"}${p.selectionMode === "single" ? "" : ` selectionMode="${p.selectionMode}"`}${p.resizing ? " enableColumnResizing" : ""}${p.reordering ? " enableColumnReordering" : ""}${h != null ? ` height={${h}}` : ""}${rh !== 20 ? ` rowHeight={${rh}}` : ""}${p.loading ? " loading" : ""}`,
                 ...(p.editable ? [`  onCellEdit={({ row, columnId, value }) => save(row, columnId, value)}`] : []),
-                p.virtualized ? `/> // height set ⇒ rows virtualize within a fixed-height scroll viewport` : `/>`,
+                h != null ? `/> // a fixed height bounds the viewport ⇒ rows virtualize (only the visible window renders)` : `/>`,
             ].join("\n");
         },
     },
