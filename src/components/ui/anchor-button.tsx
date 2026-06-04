@@ -33,6 +33,11 @@ export interface AnchorButtonProps
  * stays identical and DRY, and consumes `ButtonGroupContext` so it composes inside a
  * `<ButtonGroup>` just like `Button`.
  *
+ * Semantics: an enabled anchor with an `href` is a *real link*, so it keeps its native
+ * `link` role — assistive tech announces it as a link and "open in new tab" works. We only
+ * apply `role="button"` when the element is *not* a link: either it's disabled (no `href`) or
+ * it's used as a button with no `href` (activated via `onClick`).
+ *
  * Disabled handling: an `<a>` can't be natively `disabled`, so — matching Blueprint's
  * `AnchorButton` — we set `role="button"` + `aria-disabled`, drop `href`, pull it out of the
  * tab order (`tabIndex={-1}`), kill pointer events, and block click/keyboard activation.
@@ -66,6 +71,10 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
     // `loading` implies disabled (even if disabled={false}), matching Button/Blueprint.
     const disabled = disabledProp || loading;
 
+    // An enabled anchor with an href is a genuine link — keep its native `link` role.
+    // Otherwise (disabled, or no href and acting as a button) expose `role="button"`.
+    const isLink = !disabled && href != null;
+
     const classes = cn(
         buttonVariants({ variant: resolvedVariant, intent, size: resolvedSize, fill }),
         // Anchors can't be natively `disabled`, so `buttonVariants`' `disabled:` utilities
@@ -94,7 +103,7 @@ export const AnchorButton = forwardRef<HTMLAnchorElement, AnchorButtonProps>(fun
     return (
         <a
             ref={ref}
-            role="button"
+            role={isLink ? undefined : "button"}
             className={classes}
             data-active={active || undefined}
             data-intent={dataIntent}

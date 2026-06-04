@@ -123,7 +123,8 @@ describe("ControlGroup", () => {
     );
     // Both render <a>, so the `button` element selector can't reach them — the .bp6-button
     // marker (from buttonVariants) + data-intent are what let ControlGroup's tiers apply.
-    const anchorBtn = screen.getByRole("button", { name: "Link" });
+    // (The enabled AnchorButton with an href is a real link, hence the `link` role.)
+    const anchorBtn = screen.getByRole("link", { name: "Link" });
     expect(anchorBtn.tagName).toBe("A");
     expect(anchorBtn).toHaveClass("bp6-button");
     expect(anchorBtn).toHaveAttribute("data-intent", "success");
