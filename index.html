@@ -3,7 +3,54 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>mithril — preview</title>
+
+        <!-- Primary metadata -->
+        <title>mithril — a modern owned-source component library</title>
+        <meta
+            name="description"
+            content="mithril is a modern, owned-source component library and design system — ~60 components on React 19, Tailwind v4, Radix and CVA, distributed shadcn-style so you copy and own the source."
+        />
+
+        <!-- Icons. %BASE_URL% resolves to /mithril/ in production and / in dev. -->
+        <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%favicon-32.png" />
+        <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
+
+        <!-- Browser UI tint (mobile address bar). -->
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1c2127" media="(prefers-color-scheme: dark)" />
+
+        <!-- Open Graph (Facebook, Threads, LinkedIn, iMessage, Slack, Discord…). -->
+        <!-- og:url and og:image must be ABSOLUTE — crawlers fetch them with no page context. -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="mithril" />
+        <meta property="og:title" content="mithril — a modern owned-source component library" />
+        <meta
+            property="og:description"
+            content="~60 components on React 19, Tailwind v4, Radix and CVA. A maintained design system, distributed shadcn-style so you copy and own the source — plus SOC, Project Board and Mission Control demo apps."
+        />
+        <meta property="og:url" content="https://bbatchelder.github.io/mithril/" />
+        <meta property="og:image" content="https://bbatchelder.github.io/mithril/og-image.png" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta
+            property="og:image:alt"
+            content="mithril's Mission Control demo — a fleet-ops dashboard with a live MapLibre map, drone roster and telemetry panels, built entirely from mithril components."
+        />
+
+        <!-- Twitter / X card. -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="mithril — a modern owned-source component library" />
+        <meta
+            name="twitter:description"
+            content="~60 components on React 19, Tailwind v4, Radix and CVA. A maintained design system, distributed shadcn-style so you copy and own the source."
+        />
+        <meta name="twitter:image" content="https://bbatchelder.github.io/mithril/og-image.png" />
+        <meta
+            name="twitter:image:alt"
+            content="mithril's Mission Control demo — a fleet-ops dashboard with a live MapLibre map, drone roster and telemetry panels, built entirely from mithril components."
+        />
     </head>
     <body>
         <div id="root"></div>

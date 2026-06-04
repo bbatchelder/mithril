@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#1c2127"/>
+  <!-- mithril gem: a faceted diamond in the brand blue ramp -->
+  <g>
+    <path d="M16 5 L25 13 L16 27 L7 13 Z" fill="#2d72d2"/>
+    <path d="M16 5 L25 13 L16 13 Z" fill="#4c90f0"/>
+    <path d="M16 5 L7 13 L16 13 Z" fill="#8abbff"/>
+    <path d="M7 13 L16 13 L16 27 Z" fill="#215db0"/>
+    <path d="M25 13 L16 13 L16 27 Z" fill="#184a90"/>
+  </g>
+</svg>
