@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * ContextMenu — Blueprint v6.15 fidelity, modern Radix API.
  *

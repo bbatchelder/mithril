@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import { forwardRef } from "react";
 

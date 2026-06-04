@@ -1,3 +1,5 @@
+"use client";
+
 import { forwardRef, useCallback, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 

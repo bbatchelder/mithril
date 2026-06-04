@@ -1,3 +1,5 @@
+"use client";
+
 import { flexRender, type Table } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo } from "react";
