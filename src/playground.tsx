@@ -89,6 +89,7 @@ const ICONS: EnumOption[] = [
     { value: "user" },
     { value: "tick" },
     { value: "trash" },
+    { value: "caret-down" },
 ];
 const ICONS_REQ = ICONS.slice(1);
 
@@ -235,12 +236,13 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
 // ── The curated configs ──────────────────────────────────────────────────────
 export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     button: {
-        initial: { variant: "solid", intent: "primary", size: "medium", label: "Click me", icon: "", fill: false, loading: false, disabled: false },
+        initial: { variant: "solid", intent: "primary", size: "medium", label: "Click me", icon: "", endIcon: "", fill: false, loading: false, disabled: false },
         controls: [
             { kind: "enum", prop: "variant", options: VARIANTS },
             { kind: "enum", prop: "intent", options: INTENTS },
             { kind: "enum", prop: "size", options: SIZES },
             { kind: "enum", prop: "icon", options: ICONS },
+            { kind: "enum", prop: "endIcon", label: "endIcon", options: ICONS },
             { kind: "text", prop: "label" },
             { kind: "boolean", prop: "fill" },
             { kind: "boolean", prop: "loading" },
@@ -249,6 +251,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         presets: [
             { name: "Primary CTA", props: { variant: "solid", intent: "primary", label: "Save changes", icon: "tick" } },
             { name: "Danger", props: { variant: "solid", intent: "danger", label: "Delete", icon: "trash" } },
+            { name: "Dropdown", props: { variant: "outlined", intent: "none", label: "Options", endIcon: "caret-down" } },
             { name: "Minimal", props: { variant: "minimal", intent: "none", label: "Cancel", icon: "" } },
         ],
         render: (p) => (
@@ -260,11 +263,12 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 loading={p.loading}
                 disabled={p.disabled}
                 icon={p.icon || undefined}
+                endIcon={p.endIcon || undefined}
             >
                 {p.label}
             </Button>
         ),
-        code: (p) => jsx("Button", { variant: p.variant, intent: p.intent, size: p.size, icon: p.icon, fill: p.fill, loading: p.loading, disabled: p.disabled }, p.label),
+        code: (p) => jsx("Button", { variant: p.variant, intent: p.intent, size: p.size, icon: p.icon, endIcon: p.endIcon, fill: p.fill, loading: p.loading, disabled: p.disabled }, p.label),
     },
 
     tag: {
