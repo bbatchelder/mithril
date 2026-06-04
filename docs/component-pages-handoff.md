@@ -143,8 +143,13 @@ gotcha hit: `useToaster()` needs a `<Toaster>` ancestor, **not** `<ToastProvider
   wrapper's own state, not a `default*` prop.
 - *DataTable* — `DataTableDemo` holds the row data (so inline edits persist via `onCellEdit`);
   columns are `useMemo`'d on the `editable` toggle so the engine doesn't re-init sizing/order each
-  render. Inline (no `ctx.dark`). Controls: selection mode, gutter, resize/reorder, editable,
-  fixed-height, loading. Shares `PgPerson` + `PG_TABLE_ROWS`.
+  render. Inline (no `ctx.dark`). Controls: selection mode, **row count** (6/50/1,000, sliced from a
+  1,000-row `PG_TABLE_POOL`; the demo is keyed on count so changing it resets the slice),
+  **virtualized** (sets `height` ⇒ windowed scroll), gutter, resize/reorder, editable, loading. It
+  also renders **contextual usage hints** under the grid (the selection gesture for the active mode,
+  double-click-to-edit, drag-to-reorder). Note: DataTable has **no `fill`** — columns are
+  fixed-width and the grid is intrinsically sized to their sum, so a full-width wrapper would just
+  leave empty space, not stretch columns.
 
 Copy these as the template for the rest.
 
