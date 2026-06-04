@@ -49,10 +49,11 @@ the ongoing goal:
   in `all.ts` and must stay typed `Record<IconName, IconGlyph>` (explicit union, **never** `as const`) or
   it hits TS2590.
 - `src/App.tsx` — the app shell (`pnpm dev` → :5173). The root is a **landing app gallery**; hash-routed
-  into one of: the **Component Showcase** (`#showcase` / `#showcase/<id>`, its own component-nav sidebar,
-  components grouped by category) or a demo app (`#soc`, `#board`, `#mission`). There is **no persistent
-  global sidebar** — each app owns its full width and carries its own chrome (back-to-gallery + theme
-  chooser) via `<AppChromeControls>` from `src/lib/app-chrome.tsx`. Each app keeps its **own** palette +
+  into one of: the **Component Showcase** (`#showcase` / `#showcase/<id>`, a top app bar over an
+  IBM-Carbon-style tiled overview grouped by category, each tile deep-linking to a component page) or a
+  demo app (`#soc`, `#board`, `#mission`). There is **no persistent global sidebar** — each app owns its
+  full width and carries its own chrome (back-to-gallery + theme chooser) via `<AppChromeControls>` from
+  `src/lib/app-chrome.tsx`. Each app keeps its **own** palette +
   light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
   `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).

@@ -1,6 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { AnchorButton } from "@/components/ui/anchor-button";
@@ -5191,9 +5190,9 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
 }
 
 /**
- * Sidebar category grouping. Each COMPONENTS id should appear in exactly one group;
+ * Overview category grouping. Each COMPONENTS id should appear in exactly one group;
  * any id missing from every group is collected into "Other" so nothing is silently
- * dropped from the gallery (a guard against this list drifting from COMPONENTS).
+ * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
@@ -5220,6 +5219,88 @@ const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
     return groups;
 })();
 
+/**
+ * A representative glyph per component, shown on its overview tile (IBM Carbon–style).
+ * Ids missing from the map fall back to a generic glyph, so a new component still gets
+ * a tile without forcing an entry here.
+ */
+const COMPONENT_ICONS: Record<string, IconName> = {
+    button: "widget-button",
+    card: "credit-card",
+    icon: "grid-view",
+    text: "font",
+    divider: "minus",
+    spinner: "refresh",
+    "progress-bar": "horizontal-bar-chart",
+    skeleton: "widget",
+    tag: "tag",
+    callout: "info-sign",
+    "input-group": "new-text-box",
+    "text-area": "manually-entered-data",
+    checkbox: "tick-circle",
+    radio: "selection",
+    switch: "power",
+    "form-group": "form",
+    "control-group": "group-objects",
+    "html-select": "chevron-down",
+    "file-input": "document-open",
+    "numeric-input": "numerical",
+    "segmented-control": "segmented-control",
+    "control-card": "control",
+    dialog: "application",
+    "multistep-dialog": "step-chart",
+    alert: "warning-sign",
+    drawer: "menu-open",
+    popover: "comment",
+    tooltip: "help",
+    toast: "notifications",
+    menu: "menu",
+    "context-menu": "more",
+    navbar: "header",
+    tabs: "list-detail-view",
+    collapse: "collapse-all",
+    section: "panel-stats",
+    "card-list": "list",
+    breadcrumbs: "chevron-right",
+    tree: "diagram-tree",
+    "panel-stack": "page-layout",
+    "html-table": "th",
+    "data-table": "th-list",
+    "editable-text": "edit",
+    "entity-title": "id-number",
+    "non-ideal-state": "issue",
+    link: "link",
+    slider: "double-caret-horizontal",
+    hotkeys: "key",
+    "tag-input": "label",
+    select: "filter-list",
+    suggest: "search-template",
+    "multi-select": "multi-select",
+    omnibar: "search",
+    "time-picker": "time",
+    "date-picker": "calendar",
+    "date-input": "calendar",
+    "date-range-picker": "timeline-events",
+    "date-range-input": "timeline-events",
+    "timezone-select": "globe",
+    "resize-sensor": "maximize",
+    "overflow-list": "double-chevron-right",
+    portal: "exchange",
+};
+
+/** A glyph per overview category, shown beside each section heading. */
+const CATEGORY_ICONS: Record<string, IconName> = {
+    "Buttons & display": "widget-button",
+    "Form controls": "form",
+    Overlays: "applications",
+    "Navigation & structure": "page-layout",
+    "Composite selects": "multi-select",
+    "Date & time": "calendar",
+    Data: "th",
+    Infrastructure: "cog",
+    Other: "more",
+};
+
 /** The selected component is driven by the URL hash (`#button`) so links are shareable. */
 function useHash(): string {
     const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
@@ -5235,7 +5316,7 @@ function useHash(): string {
  * Hash-based, with the landing app gallery at the root. There is no persistent
  * global sidebar any more — each app owns its own chrome and gets its full width:
  *   ""                                    → landing app gallery
- *   "showcase" / "showcase/<componentId>" → Component Showcase (its own sidebar)
+ *   "showcase" / "showcase/<componentId>" → Component Showcase (tiled overview + top app bar)
  *   "soc" | "board" | "mission"           → the demo apps (their own navbars)
  * A bare legacy component id ("#button") resolves into the showcase.
  */
@@ -5336,51 +5417,105 @@ function ComponentView({ component }: { component: ComponentEntry }) {
     );
 }
 
-/** The Component Showcase app: its own component-nav sidebar + the selected gallery. */
-function ShowcaseApp({ componentId }: { componentId: string }) {
-    const selected = COMPONENTS.find((c) => c.id === componentId) ?? COMPONENTS[0];
+/**
+ * Component Showcase landing: an IBM Carbon–style tiled overview. Components are laid
+ * out as a responsive grid of tiles, grouped by category; each tile deep-links to that
+ * component's page (`#showcase/<id>`).
+ */
+function ShowcaseOverview() {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, []);
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
-                <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                    <span className="text-heading-sm font-semibold text-foreground">mithril</span>
-                    <AppChromeControls />
-                </div>
-                <nav className="flex-1 overflow-y-auto px-2 py-3">
-                    {CATEGORY_GROUPS.map((group) => (
-                        <div key={group.label} className="mb-4">
-                            <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                                {group.label}
-                            </div>
-                            <ul className="flex flex-col gap-px">
-                                {group.items.map((c) => {
-                                    const active = c.id === selected.id;
-                                    return (
-                                        <li key={c.id}>
-                                            <a
-                                                href={`#showcase/${c.id}`}
-                                                aria-current={active ? "page" : undefined}
-                                                className={cn(
-                                                    "block rounded-bp px-2 py-1 text-body-sm transition-colors",
-                                                    active
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "text-foreground hover:bg-[var(--interactive-hover)]",
-                                                )}
-                                            >
-                                                {c.title}
-                                            </a>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+        <div className="mx-auto max-w-[1100px] px-8 py-10">
+            <h1 className="text-heading-lg font-semibold text-foreground">Components</h1>
+            <p className="mt-1.5 text-body text-foreground-muted">
+                {COMPONENTS.length} components, grouped by category. Pick one to browse and exercise it in light or dark.
+            </p>
+            <div className="mt-10 flex flex-col gap-10">
+                {CATEGORY_GROUPS.map((group) => (
+                    <section key={group.label}>
+                        <div className="flex items-center gap-2 border-b border-border pb-2">
+                            <Icon icon={CATEGORY_ICONS[group.label] ?? "more"} size={16} className="text-foreground-muted" />
+                            <h2 className="text-heading-sm font-semibold text-foreground">{group.label}</h2>
+                            <span className="text-body-xs text-foreground-muted">{group.items.length}</span>
                         </div>
-                    ))}
-                </nav>
-            </aside>
-            <main className="flex-1 overflow-x-hidden px-10 py-8">
-                <div className="mx-auto max-w-[820px]">
-                    <ComponentView component={selected} />
-                </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                            {group.items.map((c) => (
+                                <a
+                                    key={c.id}
+                                    href={`#showcase/${c.id}`}
+                                    className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                >
+                                    <Card interactive className="flex h-full items-center gap-3 !p-4">
+                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                            <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
+                                        </span>
+                                        <span className="text-body-sm font-medium text-foreground">{c.title}</span>
+                                    </Card>
+                                </a>
+                            ))}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+/**
+ * The Component Showcase app: a top app bar (matching the demo apps — the gallery +
+ * theme controls stay in the same top-right spot across every app) over either the
+ * tiled overview (no component selected) or the selected component's gallery.
+ */
+function ShowcaseApp({ componentId }: { componentId: string }) {
+    const selected = componentId ? COMPONENTS.find((c) => c.id === componentId) : undefined;
+    return (
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
+            {/* ── Top app bar ─────────────────────────────────────────────── */}
+            <Navbar className="shrink-0">
+                <NavbarGroup align="left">
+                    <a
+                        href="#showcase"
+                        className="flex items-center gap-2 rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                        <Icon icon="layout-grid" size={20} className="text-intent-primary-text" />
+                        <NavbarHeading className="font-semibold">mithril</NavbarHeading>
+                    </a>
+                    <NavbarDivider />
+                    {selected ? (
+                        <>
+                            <a href="#showcase" className="text-body-sm text-foreground-muted hover:text-foreground">
+                                Components
+                            </a>
+                            <Icon icon="chevron-right" size={14} className="mx-0.5 text-foreground-muted" />
+                            <span className="text-body-sm font-medium text-foreground">{selected.title}</span>
+                        </>
+                    ) : (
+                        <span className="text-body-sm font-medium text-foreground">Components</span>
+                    )}
+                </NavbarGroup>
+                <NavbarGroup align="right">
+                    <AppChromeControls />
+                </NavbarGroup>
+            </Navbar>
+
+            {/* ── Body ────────────────────────────────────────────────────── */}
+            <main className="flex-1 overflow-x-hidden">
+                {selected ? (
+                    <div className="mx-auto max-w-[860px] px-8 py-8">
+                        <a
+                            href="#showcase"
+                            className="mb-5 inline-flex items-center gap-1 text-body-sm text-foreground-muted hover:text-foreground"
+                        >
+                            <Icon icon="chevron-left" size={14} className="!text-current" />
+                            All components
+                        </a>
+                        <ComponentView component={selected} />
+                    </div>
+                ) : (
+                    <ShowcaseOverview />
+                )}
             </main>
         </div>
     );

@@ -35,8 +35,8 @@ export function useAppChrome(): AppChrome {
 /**
  * The shared chrome cluster every app renders in its own header: a "back to the app
  * gallery" button and the app's theme chooser (palette tint + light/dark). Kept
- * divider-free so it drops cleanly into either a Navbar group (the demos) or a plain
- * flex header (the showcase sidebar). The landing page renders it with `showExit`
+ * divider-free so it drops cleanly into a Navbar group — the demos and the showcase's
+ * top app bar alike — or a plain flex header. The landing page renders it with `showExit`
  * off, since there's nowhere "back" to go from the gallery itself.
  */
 export function AppChromeControls({ showExit = true }: { showExit?: boolean } = {}) {
