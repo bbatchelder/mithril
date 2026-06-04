@@ -104,7 +104,7 @@ describe("ResizeSensor", () => {
         function Harness() {
             return (
                 <ResizeSensor onResize={onResize}>
-                    <div data-testid="child" ref={(el) => (captured = el)} />
+                    <div data-testid="child" ref={(el) => { captured = el; }} />
                 </ResizeSensor>
             );
         }
