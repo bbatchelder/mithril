@@ -62,6 +62,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
+import { COMPONENT_META } from "@/components/ui/component-meta.generated";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
@@ -5191,9 +5192,9 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
 }
 
 /**
- * Sidebar category grouping. Each COMPONENTS id should appear in exactly one group;
+ * Overview category grouping. Each COMPONENTS id should appear in exactly one group;
  * any id missing from every group is collected into "Other" so nothing is silently
- * dropped from the gallery (a guard against this list drifting from COMPONENTS).
+ * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
     { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
@@ -5220,6 +5221,88 @@ const CATEGORY_GROUPS: { label: string; items: ComponentEntry[] }[] = (() => {
     return groups;
 })();
 
+/**
+ * A representative glyph per component, shown on its overview tile (IBM Carbon–style).
+ * Ids missing from the map fall back to a generic glyph, so a new component still gets
+ * a tile without forcing an entry here.
+ */
+const COMPONENT_ICONS: Record<string, IconName> = {
+    button: "widget-button",
+    card: "credit-card",
+    icon: "grid-view",
+    text: "font",
+    divider: "minus",
+    spinner: "refresh",
+    "progress-bar": "horizontal-bar-chart",
+    skeleton: "widget",
+    tag: "tag",
+    callout: "info-sign",
+    "input-group": "new-text-box",
+    "text-area": "manually-entered-data",
+    checkbox: "tick-circle",
+    radio: "selection",
+    switch: "power",
+    "form-group": "form",
+    "control-group": "group-objects",
+    "html-select": "chevron-down",
+    "file-input": "document-open",
+    "numeric-input": "numerical",
+    "segmented-control": "segmented-control",
+    "control-card": "control",
+    dialog: "application",
+    "multistep-dialog": "step-chart",
+    alert: "warning-sign",
+    drawer: "menu-open",
+    popover: "comment",
+    tooltip: "help",
+    toast: "notifications",
+    menu: "menu",
+    "context-menu": "more",
+    navbar: "header",
+    tabs: "list-detail-view",
+    collapse: "collapse-all",
+    section: "panel-stats",
+    "card-list": "list",
+    breadcrumbs: "chevron-right",
+    tree: "diagram-tree",
+    "panel-stack": "page-layout",
+    "html-table": "th",
+    "data-table": "th-list",
+    "editable-text": "edit",
+    "entity-title": "id-number",
+    "non-ideal-state": "issue",
+    link: "link",
+    slider: "double-caret-horizontal",
+    hotkeys: "key",
+    "tag-input": "label",
+    select: "filter-list",
+    suggest: "search-template",
+    "multi-select": "multi-select",
+    omnibar: "search",
+    "time-picker": "time",
+    "date-picker": "calendar",
+    "date-input": "calendar",
+    "date-range-picker": "timeline-events",
+    "date-range-input": "timeline-events",
+    "timezone-select": "globe",
+    "resize-sensor": "maximize",
+    "overflow-list": "double-chevron-right",
+    portal: "exchange",
+};
+
+/** A glyph per overview category, shown beside each section heading. */
+const CATEGORY_ICONS: Record<string, IconName> = {
+    "Buttons & display": "widget-button",
+    "Form controls": "form",
+    Overlays: "applications",
+    "Navigation & structure": "page-layout",
+    "Composite selects": "multi-select",
+    "Date & time": "calendar",
+    Data: "th",
+    Infrastructure: "cog",
+    Other: "more",
+};
+
 /** The selected component is driven by the URL hash (`#button`) so links are shareable. */
 function useHash(): string {
     const [hash, setHash] = useState(() => decodeURIComponent(window.location.hash.replace(/^#/, "")));
@@ -5235,7 +5318,7 @@ function useHash(): string {
  * Hash-based, with the landing app gallery at the root. There is no persistent
  * global sidebar any more — each app owns its own chrome and gets its full width:
  *   ""                                    → landing app gallery
- *   "showcase" / "showcase/<componentId>" → Component Showcase (its own sidebar)
+ *   "showcase" / "showcase/<componentId>" → Component Showcase (tiled overview + top app bar)
  *   "soc" | "board" | "mission"           → the demo apps (their own navbars)
  * A bare legacy component id ("#button") resolves into the showcase.
  */
@@ -5336,51 +5419,218 @@ function ComponentView({ component }: { component: ComponentEntry }) {
     );
 }
 
-/** The Component Showcase app: its own component-nav sidebar + the selected gallery. */
-function ShowcaseApp({ componentId }: { componentId: string }) {
-    const selected = COMPONENTS.find((c) => c.id === componentId) ?? COMPONENTS[0];
+/**
+ * A compact meta chip for the overview tiles. Mirrors the minimal-Tag token classes
+ * (so it re-tints with the theme) but smaller and denser than `<Tag>` — there can be
+ * half a dozen per tile. `title` carries the long-form explanation on hover.
+ */
+type BadgeIntent = "none" | "primary" | "success" | "warning";
+function MetaBadge({
+    icon,
+    intent = "none",
+    title,
+    children,
+}: {
+    icon?: IconName;
+    intent?: BadgeIntent;
+    title?: string;
+    children: React.ReactNode;
+}) {
+    const colors: Record<BadgeIntent, string> = {
+        none: "bg-tag-minimal-bg text-tag-minimal-none-text",
+        primary: "bg-primary/10 text-tag-minimal-primary-text",
+        success: "bg-success/10 text-tag-minimal-success-text",
+        warning: "bg-warning/10 text-tag-minimal-warning-text",
+    };
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
-            <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r border-border bg-surface">
-                <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                    <span className="text-heading-sm font-semibold text-foreground">mithril</span>
-                    <AppChromeControls />
-                </div>
-                <nav className="flex-1 overflow-y-auto px-2 py-3">
-                    {CATEGORY_GROUPS.map((group) => (
-                        <div key={group.label} className="mb-4">
-                            <div className="px-2 pb-1 text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
-                                {group.label}
-                            </div>
-                            <ul className="flex flex-col gap-px">
-                                {group.items.map((c) => {
-                                    const active = c.id === selected.id;
-                                    return (
-                                        <li key={c.id}>
-                                            <a
-                                                href={`#showcase/${c.id}`}
-                                                aria-current={active ? "page" : undefined}
-                                                className={cn(
-                                                    "block rounded-bp px-2 py-1 text-body-sm transition-colors",
-                                                    active
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "text-foreground hover:bg-[var(--interactive-hover)]",
-                                                )}
-                                            >
-                                                {c.title}
-                                            </a>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+        <span
+            title={title}
+            className={cn(
+                "inline-flex items-center gap-1 rounded-bp px-1.5 py-0.5 text-body-xs font-medium leading-none",
+                colors[intent],
+            )}
+        >
+            {icon && <Icon icon={icon} size={12} className="!text-current" />}
+            {children}
+        </span>
+    );
+}
+
+/**
+ * The metadata badges shown on a component's overview tile, derived from
+ * `component-meta.generated.ts` (regenerate with `pnpm gen:meta`):
+ *   - server-renderable (RSC) vs client-only — the `"use client"` directive
+ *   - test coverage — total + a heuristic a11y / keyboard / behavior split
+ *   - capability traits — portals (needs `dark` threading), Radix-backed, asChild
+ *   - distribution — an `internal` flag only when NOT in the owned-source registry
+ */
+function TileBadges({ id }: { id: string }) {
+    const meta = COMPONENT_META[id];
+    if (!meta) return null;
+    const { tests } = meta;
+    return (
+        <div className="mt-auto flex flex-wrap items-center gap-1 pt-0.5">
+            {meta.rsc ? (
+                <MetaBadge icon="server" intent="success" title="Server-renderable (RSC) — no &quot;use client&quot; directive">
+                    RSC
+                </MetaBadge>
+            ) : (
+                <MetaBadge icon="desktop" title="Client component (carries a &quot;use client&quot; directive)">
+                    Client
+                </MetaBadge>
+            )}
+            {tests.total === 0 ? (
+                <MetaBadge icon="lab-test" title="No dedicated test suite (accessibility is still covered by the shared axe smoke test)">
+                    untested
+                </MetaBadge>
+            ) : (
+                <>
+                    <MetaBadge icon="lab-test" title={`${tests.total} test ${tests.total === 1 ? "case" : "cases"} in this component's suite`}>
+                        {tests.total} tests
+                    </MetaBadge>
+                    {tests.a11y > 0 && (
+                        <MetaBadge intent="primary" title={`${tests.a11y} accessibility / ARIA test cases`}>
+                            a11y {tests.a11y}
+                        </MetaBadge>
+                    )}
+                    {tests.keyboard > 0 && (
+                        <MetaBadge title={`${tests.keyboard} keyboard-interaction test cases`}>kbd {tests.keyboard}</MetaBadge>
+                    )}
+                    {tests.behavior > 0 && (
+                        <MetaBadge title={`${tests.behavior} behavior test cases`}>beh {tests.behavior}</MetaBadge>
+                    )}
+                </>
+            )}
+            {meta.axe && (
+                <MetaBadge icon="endorsed" intent="success" title="Accessibility-audited by the shared axe smoke-test suite">
+                    axe
+                </MetaBadge>
+            )}
+            {meta.portal && (
+                <MetaBadge icon="panel-stats" intent="warning" title="Portals to document.body — pass dark={dark} when used as an overlay">
+                    Portal
+                </MetaBadge>
+            )}
+            {meta.radix && (
+                <MetaBadge icon="build" title="Backed by a Radix headless primitive">Radix</MetaBadge>
+            )}
+            {meta.polymorphic && (
+                <MetaBadge icon="fork" title="Polymorphic — supports asChild (Radix Slot)">asChild</MetaBadge>
+            )}
+            {meta.exports.length > 1 && (
+                <MetaBadge icon="cube" title={`Exports ${meta.exports.length} components: ${meta.exports.join(" · ")}`}>
+                    {meta.exports.length} exports
+                </MetaBadge>
+            )}
+            {!meta.registry && (
+                <MetaBadge icon="lock" title="Internal — not published via the owned-source registry">internal</MetaBadge>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Component Showcase landing: an IBM Carbon–style tiled overview. Components are laid
+ * out as a responsive grid of tiles, grouped by category; each tile deep-links to that
+ * component's page (`#showcase/<id>`).
+ */
+function ShowcaseOverview() {
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+    }, []);
+    return (
+        <div className="mx-auto max-w-[1100px] px-8 py-10">
+            <h1 className="text-heading-lg font-semibold text-foreground">Components</h1>
+            <p className="mt-1.5 text-body text-foreground-muted">
+                {COMPONENTS.length} components, grouped by category. Pick one to browse and exercise it in light or dark.
+            </p>
+            <div className="mt-10 flex flex-col gap-10">
+                {CATEGORY_GROUPS.map((group) => (
+                    <section key={group.label}>
+                        <div className="flex items-center gap-2 border-b border-border pb-2">
+                            <Icon icon={CATEGORY_ICONS[group.label] ?? "more"} size={16} className="text-foreground-muted" />
+                            <h2 className="text-heading-sm font-semibold text-foreground">{group.label}</h2>
+                            <span className="text-body-xs text-foreground-muted">{group.items.length}</span>
                         </div>
-                    ))}
-                </nav>
-            </aside>
-            <main className="flex-1 overflow-x-hidden px-10 py-8">
-                <div className="mx-auto max-w-[820px]">
-                    <ComponentView component={selected} />
-                </div>
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {group.items.map((c) => (
+                                <a
+                                    key={c.id}
+                                    href={`#showcase/${c.id}`}
+                                    className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                >
+                                    <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                                <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
+                                            </span>
+                                            <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
+                                        </div>
+                                        <TileBadges id={c.id} />
+                                    </Card>
+                                </a>
+                            ))}
+                        </div>
+                    </section>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+/**
+ * The Component Showcase app: a top app bar (matching the demo apps — the gallery +
+ * theme controls stay in the same top-right spot across every app) over either the
+ * tiled overview (no component selected) or the selected component's gallery.
+ */
+function ShowcaseApp({ componentId }: { componentId: string }) {
+    const selected = componentId ? COMPONENTS.find((c) => c.id === componentId) : undefined;
+    return (
+        <div className="flex min-h-screen flex-col bg-background text-foreground">
+            {/* ── Top app bar ─────────────────────────────────────────────── */}
+            <Navbar className="shrink-0">
+                <NavbarGroup align="left">
+                    <a
+                        href="#showcase"
+                        className="flex items-center gap-2 rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                        <Icon icon="layout-grid" size={20} className="text-intent-primary-text" />
+                        <NavbarHeading className="font-semibold">mithril</NavbarHeading>
+                    </a>
+                    <NavbarDivider />
+                    {selected ? (
+                        <>
+                            <a href="#showcase" className="text-body-sm text-foreground-muted hover:text-foreground">
+                                Components
+                            </a>
+                            <Icon icon="chevron-right" size={14} className="mx-0.5 text-foreground-muted" />
+                            <span className="text-body-sm font-medium text-foreground">{selected.title}</span>
+                        </>
+                    ) : (
+                        <span className="text-body-sm font-medium text-foreground">Components</span>
+                    )}
+                </NavbarGroup>
+                <NavbarGroup align="right">
+                    <AppChromeControls />
+                </NavbarGroup>
+            </Navbar>
+
+            {/* ── Body ────────────────────────────────────────────────────── */}
+            <main className="flex-1 overflow-x-hidden">
+                {selected ? (
+                    <div className="mx-auto max-w-[860px] px-8 py-8">
+                        <a
+                            href="#showcase"
+                            className="mb-5 inline-flex items-center gap-1 text-body-sm text-foreground-muted hover:text-foreground"
+                        >
+                            <Icon icon="chevron-left" size={14} className="!text-current" />
+                            All components
+                        </a>
+                        <ComponentView component={selected} />
+                    </div>
+                ) : (
+                    <ShowcaseOverview />
+                )}
             </main>
         </div>
     );

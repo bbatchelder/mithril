@@ -35,6 +35,7 @@
         "test:watch": "vitest",
         "typecheck:test": "tsc -p tsconfig.test.json",
         "gen:icons": "node tools/gen-icons.mjs",
+        "gen:meta": "node tools/gen-component-meta.mjs",
         "gen:registry": "node tools/gen-registry.mjs",
         "build:registry": "pnpm dlx shadcn@4.9.0 build registry.json --output dist/r && node tools/rewrite-registry-urls.mjs"
     },
