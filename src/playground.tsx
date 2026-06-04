@@ -1959,14 +1959,18 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         render: (p) => {
             const rowCount = Number(p.rows);
             const heightPx = p.height === "auto" ? undefined : Number(p.height);
+            const rowHeight = Number(p.rowHeight);
             return (
                 <DataTableDemo
-                    // Remount on row-count change so the data slice resets cleanly.
-                    key={rowCount}
+                    // Remount on row-count change so the data slice resets cleanly, and on
+                    // rowHeight change to dodge issue #44 (a runtime rowHeight change leaves the
+                    // virtualizer's cached row offsets stale → overlapping rows). Remounting seeds
+                    // the virtualizer's estimate at the new height from the first render.
+                    key={`${rowCount}-${rowHeight}`}
                     selectionMode={p.selectionMode}
                     rowCount={rowCount}
                     height={heightPx}
-                    rowHeight={Number(p.rowHeight)}
+                    rowHeight={rowHeight}
                     numberedRows={p.numberedRows}
                     resizing={p.resizing}
                     reordering={p.reordering}
