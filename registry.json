@@ -47,6 +47,28 @@
             ]
         },
         {
+            "name": "ai-label",
+            "type": "registry:ui",
+            "title": "AILabel",
+            "description": "AILabel — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/ai-label.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/ai-label.tsx"
+                }
+            ],
+            "registryDependencies": [
+                "icon",
+                "link",
+                "popover",
+                "tag",
+                "types",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "alert",
             "type": "registry:ui",
             "title": "Alert",

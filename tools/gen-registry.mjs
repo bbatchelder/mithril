@@ -26,6 +26,7 @@ const NPM_PREFIXES = ["@radix-ui/", "@tanstack/", "react-day-picker", "class-var
 
 /** Pretty titles for the registry item `title` field. Falls back to PascalCase. */
 const TITLES = {
+    "ai-label": "AILabel",
     "data-table": "DataTable",
     "input-group": "InputGroup",
     "text-area": "TextArea",

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AnchorButton } from "@/components/ui/anchor-button";
 import { Tag } from "@/components/ui/tag";
+import { AILabel, AILabelExplanation } from "@/components/ui/ai-label";
 import { Callout } from "@/components/ui/callout";
 import { Spinner, SpinnerSize } from "@/components/ui/spinner";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -865,6 +866,71 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             </Tag>
         ),
         code: (p) => jsx("Tag", { intent: p.intent, icon: p.icon, minimal: p.minimal, round: p.round, size: p.large ? "large" : undefined }, p.label),
+    },
+
+    "ai-label": {
+        initial: { intent: "primary", variant: "minimal", size: "medium", label: "AI", side: "bottom", showIcon: true, interactive: true },
+        controls: [
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "variant", options: [{ value: "minimal" }, { value: "solid" }] },
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "enum", prop: "side", options: [{ value: "top" }, { value: "right" }, { value: "bottom" }, { value: "left" }] },
+            { kind: "text", prop: "label" },
+            { kind: "boolean", prop: "showIcon" },
+            { kind: "boolean", prop: "interactive" },
+        ],
+        presets: [
+            { name: "Inline marker", props: { intent: "primary", variant: "minimal", size: "small", label: "AI", showIcon: true, interactive: false } },
+            { name: "Solid + explanation", props: { intent: "primary", variant: "solid", size: "large", label: "AI assisted", side: "right", showIcon: true, interactive: true } },
+        ],
+        render: (p, ctx) => (
+            <AILabel
+                intent={p.intent}
+                variant={p.variant}
+                size={p.size}
+                label={p.label || null}
+                icon={p.showIcon ? undefined : false}
+                ariaLabel={p.label ? undefined : "AI generated"}
+                dark={ctx.dark}
+                popoverProps={{ side: p.side }}
+                popover={
+                    p.interactive ? (
+                        <AILabelExplanation
+                            states={[
+                                { label: "AI-authored", tone: "info" },
+                                { label: "human-edited", tone: "neutral", icon: "edit" },
+                                { label: "grounded", tone: "positive", icon: "tick-circle" },
+                                { label: "unverified", tone: "caution" },
+                            ]}
+                            confidence={{
+                                label: "High",
+                                method: "llm-judge",
+                                detail: "claude-opus-4-8, against retrieved sources",
+                                tone: "positive",
+                            }}
+                            grounding={[
+                                { title: "Q3 Financial Report.pdf", href: "#", meta: "p. 12" },
+                                { title: "CRM export 2026-05.csv", href: "#", meta: "rows 1–40" },
+                            ]}
+                            model={{ model: "claude-opus-4-8", at: "2h ago", retrieval: true }}
+                            actions={<Button intent="primary" size="small">Regenerate</Button>}
+                        >
+                            This summary was drafted by AI, then edited by an analyst.
+                        </AILabelExplanation>
+                    ) : undefined
+                }
+            />
+        ),
+        code: (p) =>
+            jsx("AILabel", {
+                intent: p.intent === "primary" ? undefined : p.intent,
+                variant: p.variant === "minimal" ? undefined : p.variant,
+                size: p.size === "medium" ? undefined : p.size,
+                label: p.label || undefined,
+                icon: p.showIcon ? undefined : "{false}",
+                popoverProps: p.interactive && p.side !== "bottom" ? `{{ side: "${p.side}" }}` : undefined,
+                popover: p.interactive ? "{<AILabelExplanation>…</AILabelExplanation>}" : undefined,
+            }),
     },
 
     callout: {

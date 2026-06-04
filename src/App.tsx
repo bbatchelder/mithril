@@ -30,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
+import { AILabel, AILabelExplanation, type AILabelSize, type AILabelIntent } from "@/components/ui/ai-label";
 import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider, Toaster } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
@@ -820,6 +821,149 @@ function TagGallery() {
                     <Tag interactive active intent="success">
                         Active
                     </Tag>
+                </div>
+            </Section>
+        </div>
+    );
+}
+
+const AI_LABEL_SIZES: AILabelSize[] = ["small", "medium", "large"];
+const AI_LABEL_INTENTS: AILabelIntent[] = ["none", "primary", "success", "warning", "danger"];
+
+function AILabelGallery() {
+    const dark = useContext(DarkContext);
+    const explanation = (
+        <AILabelExplanation
+            states={[
+                { label: "AI-authored", tone: "info" },
+                { label: "human-edited", tone: "neutral", icon: "edit" },
+                { label: "grounded", tone: "positive", icon: "tick-circle" },
+                { label: "unverified", tone: "caution" },
+            ]}
+            confidence={{
+                label: "High",
+                method: "llm-judge",
+                detail: "claude-opus-4-8, against retrieved sources",
+                tone: "positive",
+            }}
+            grounding={[
+                { title: "Q3 Financial Report.pdf", href: "#", meta: "p. 12" },
+                { title: "CRM export 2026-05.csv", href: "#", meta: "rows 1–40" },
+            ]}
+            model={{ model: "claude-opus-4-8", at: "2h ago", retrieval: true }}
+            actions={
+                <>
+                    <Button variant="minimal" size="small">
+                        View details
+                    </Button>
+                    <Button intent="primary" size="small">
+                        Regenerate
+                    </Button>
+                </>
+            }
+        >
+            This summary was drafted by AI, then edited by an analyst. Review before relying on it.
+        </AILabelExplanation>
+    );
+
+    // The cautionary counterpart: ungrounded, self-reported, unverified.
+    const explanationWeak = (
+        <AILabelExplanation
+            states={[
+                { label: "AI-authored", tone: "info" },
+                { label: "unverified", tone: "caution" },
+            ]}
+            confidence={{ label: "Unverified", method: "self-reported", tone: "caution" }}
+            grounding={[]}
+            model={{ model: "claude-haiku-4-5", at: "just now", retrieval: false }}
+            actions={
+                <Button intent="primary" size="small">
+                    Regenerate
+                </Button>
+            }
+        >
+            Generated without retrieval. Treat as a draft until verified.
+        </AILabelExplanation>
+    );
+
+    return (
+        <div className="flex flex-col gap-6 text-foreground">
+            <Section title="Minimal intents">
+                <div className="flex flex-wrap items-center gap-3">
+                    {AI_LABEL_INTENTS.map((intent) => (
+                        <AILabel key={intent} intent={intent} label={intent === "none" ? "AI" : intent} />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Solid intents">
+                <div className="flex flex-wrap items-center gap-3">
+                    {AI_LABEL_INTENTS.map((intent) => (
+                        <AILabel
+                            key={intent}
+                            intent={intent}
+                            variant="solid"
+                            label={intent === "none" ? "AI" : intent}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Sizes">
+                <div className="flex flex-wrap items-center gap-3">
+                    {AI_LABEL_SIZES.map((size) => (
+                        <AILabel key={size} size={size} />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Icon-only & custom label">
+                <div className="flex flex-wrap items-center gap-3">
+                    <AILabel label={null} ariaLabel="AI generated" />
+                    <AILabel label={null} variant="solid" ariaLabel="AI generated" />
+                    <AILabel label="AI assisted" size="large" />
+                    <AILabel icon={false} label="AI" />
+                </div>
+            </Section>
+
+            <Section title="Inline in text">
+                <p className="max-w-prose text-body text-foreground">
+                    The quarterly report{" "}
+                    <AILabel inline size="small" label="AI" dark={dark} popover={explanation} />{" "}
+                    was drafted automatically and is awaiting review by the analyst on duty.
+                </p>
+            </Section>
+
+            <Section title="Placement — popoverProps={{ side }}">
+                <div className="flex flex-wrap items-center gap-6">
+                    {(["top", "right", "bottom", "left"] as const).map((side) => (
+                        <AILabel
+                            key={side}
+                            label={side}
+                            dark={dark}
+                            popover={explanation}
+                            popoverProps={{ side }}
+                        />
+                    ))}
+                </div>
+            </Section>
+
+            <Section title="Interactive — provenance popover">
+                <div className="flex flex-wrap items-center gap-3">
+                    <AILabel dark={dark} popover={explanation} />
+                    <AILabel
+                        size="large"
+                        variant="solid"
+                        label="AI assisted"
+                        dark={dark}
+                        popover={explanation}
+                    />
+                    <AILabel
+                        intent="warning"
+                        label="unverified"
+                        dark={dark}
+                        popover={explanationWeak}
+                    />
                 </div>
             </Section>
         </div>
@@ -5101,6 +5245,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
+    { id: "ai-label", title: "AILabel", render: () => <AILabelGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
@@ -5199,7 +5344,7 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
  * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
-    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "ai-label", "callout"] },
     { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
     { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
@@ -5238,6 +5383,7 @@ const COMPONENT_ICONS: Record<string, IconName> = {
     "progress-bar": "horizontal-bar-chart",
     skeleton: "widget",
     tag: "tag",
+    "ai-label": "clean",
     callout: "info-sign",
     "input-group": "new-text-box",
     "text-area": "manually-entered-data",
