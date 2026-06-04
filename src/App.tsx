@@ -5555,7 +5555,9 @@ function ComponentView({ component }: { component: ComponentEntry }) {
             {/* ── Playground (curated components only) ────────────────────── */}
             {PLAYGROUNDS[id] && (
                 <PageSection title="Playground">
-                    <Playground config={PLAYGROUNDS[id]} />
+                    {/* key={id} remounts on navigation so the playground's prop + open state
+                        resets per component (ComponentView itself reconciles in place). */}
+                    <Playground key={id} config={PLAYGROUNDS[id]} />
                 </PageSection>
             )}
 
