@@ -73,7 +73,7 @@ import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
 
 import { DarkContext } from "@/lib/dark-context";
-import { AppChromeProvider, AppChromeControls, useAppChrome, type AppChrome, type Palette } from "@/lib/app-chrome";
+import { AppChromeProvider, AppChromeControls, type AppChrome } from "@/lib/app-chrome";
 import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
 
 // The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
@@ -5494,7 +5494,6 @@ function parseRoute(hash: string): Route {
     return { appId: "landing", componentId: "" };
 }
 
-type ThemePref = { palette: Palette; dark: boolean };
 const CHROME_APP_IDS: ChromeAppId[] = ["landing", "showcase", "soc", "board", "mission"];
 
 /** The cards on the landing gallery: the showcase plus every registered demo. */
@@ -5520,13 +5519,13 @@ function LandingPage() {
                     <Icon icon="layout-grid" size={20} className="text-intent-primary-text" />
                     <span className="text-heading-sm font-semibold">mithril</span>
                 </div>
-                {/* Landing has no "back" target, so the gallery button is hidden — palette + mode only. */}
+                {/* Landing has no "back" target, so the gallery button is hidden — theme + mode only. */}
                 <AppChromeControls showExit={false} />
             </header>
             <main className="mx-auto max-w-[960px] px-8 py-12">
                 <h1 className="text-heading-lg font-semibold">App gallery</h1>
                 <p className="mt-1.5 text-body text-foreground-muted">
-                    Pick an app to open. Each one carries its own theme — palette and light/dark.
+                    Pick an app to open. The theme is shared across all of them; each keeps its own light/dark.
                 </p>
                 <div className="mt-8 grid gap-5 sm:grid-cols-2">
                     {LANDING_APPS.map((app) => (
@@ -6096,11 +6095,6 @@ function ShowcaseOverview() {
  */
 function ShowcaseApp({ componentId }: { componentId: string }) {
     const selected = componentId ? COMPONENTS.find((c) => c.id === componentId) : undefined;
-    // The Theme Builder lives at the showcase level so its seed overrides apply (and persist)
-    // across component pages with the panel open or closed, against the live component grid.
-    const builder = useThemeBuilder();
-    const [builderOpen, setBuilderOpen] = useState(false);
-    const { dark } = useAppChrome();
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
             {/* ── Top app bar (sticky so it stays in view while scrolling) ──── */}
@@ -6127,24 +6121,7 @@ function ShowcaseApp({ componentId }: { componentId: string }) {
                     )}
                 </NavbarGroup>
                 <NavbarGroup align="right">
-                    <Tooltip content="Theme builder" dark={dark}>
-                        <Button
-                            size="small"
-                            variant="minimal"
-                            intent={builderOpen ? "primary" : "none"}
-                            aria-label="Theme builder"
-                            aria-pressed={builderOpen}
-                            icon={<Icon icon="style" className="!text-current" />}
-                            onClick={() => setBuilderOpen((o) => !o)}
-                        />
-                    </Tooltip>
-                    <AppChromeControls
-                        themePicker={{
-                            names: builder.themeNames,
-                            selected: builder.selectedName,
-                            onSelect: builder.selectTheme,
-                        }}
-                    />
+                    <AppChromeControls />
                 </NavbarGroup>
             </Navbar>
 
@@ -6165,8 +6142,6 @@ function ShowcaseApp({ componentId }: { componentId: string }) {
                     <ShowcaseOverview />
                 )}
             </main>
-
-            <ThemeBuilderPanel open={builderOpen} onClose={() => setBuilderOpen(false)} builder={builder} />
         </div>
     );
 }
@@ -6205,50 +6180,47 @@ export default function App() {
         );
     }
 
-    // Each app owns its theme independently (palette + light/dark); switching apps
-    // re-applies that app's palette to <html>.
-    const [themes, setThemes] = useState<Record<ChromeAppId, ThemePref>>(() => {
-        const base: ThemePref = { palette: INITIAL_DATEX ? "datex" : "default", dark: INITIAL_DARK };
-        return Object.fromEntries(CHROME_APP_IDS.map((id) => [id, { ...base }])) as Record<
-            ChromeAppId,
-            ThemePref
-        >;
-    });
+    // Light/dark is owned per app; the theme (seed colors) is global — driven by the Theme
+    // Builder and applied as document-root overrides, so it's shared across every app.
+    const [darkByApp, setDarkByApp] = useState<Record<ChromeAppId, boolean>>(
+        () => Object.fromEntries(CHROME_APP_IDS.map((id) => [id, INITIAL_DARK])) as Record<ChromeAppId, boolean>,
+    );
     const hash = useHash();
     const route = parseRoute(hash);
     const activeId = route.appId;
-    const current = themes[activeId];
+    const dark = darkByApp[activeId];
 
-    // The palette (seed set) must live on the document root so light-mode semantic
-    // tokens re-resolve against it and portaled content (rendered at <body>) inherits
-    // the theme. Re-applied whenever the active app — or its palette — changes.
-    useEffect(() => {
-        const el = document.documentElement;
-        if (current.palette === "datex") el.setAttribute("data-theme", "datex");
-        else el.removeAttribute("data-theme");
-    }, [current.palette]);
+    // The global Theme Builder: its seed overrides live on the document root, so every app
+    // (landing, showcase, demos) and all portaled content re-tint together. The editor panel
+    // is rendered once here and overlays whichever app is active.
+    const builder = useThemeBuilder();
+    const [editorOpen, setEditorOpen] = useState(false);
 
     const chrome: AppChrome = {
         exit: () => {
             window.location.hash = "";
         },
-        palette: current.palette,
-        dark: current.dark,
-        setPalette: (p) => setThemes((t) => ({ ...t, [activeId]: { ...t[activeId], palette: p } })),
-        toggleDark: () => setThemes((t) => ({ ...t, [activeId]: { ...t[activeId], dark: !t[activeId].dark } })),
+        dark,
+        toggleDark: () => setDarkByApp((d) => ({ ...d, [activeId]: !d[activeId] })),
+        themeNames: builder.themeNames,
+        selectedTheme: builder.selectedName,
+        selectTheme: builder.selectTheme,
+        editorOpen,
+        toggleEditor: () => setEditorOpen((o) => !o),
     };
 
     return (
-        <DarkContext.Provider value={current.dark}>
+        <DarkContext.Provider value={dark}>
             <AppChromeProvider value={chrome}>
-                <div className={current.dark ? "dark" : ""}>
+                <div className={dark ? "dark" : ""}>
                     {activeId === "landing" ? (
                         <LandingPage />
                     ) : activeId === "showcase" ? (
                         <ShowcaseApp componentId={route.componentId} />
                     ) : (
-                        <DemoHost id={activeId} dark={current.dark} />
+                        <DemoHost id={activeId} dark={dark} />
                     )}
+                    <ThemeBuilderPanel open={editorOpen} onClose={() => setEditorOpen(false)} builder={builder} />
                 </div>
             </AppChromeProvider>
         </DarkContext.Provider>
