@@ -3,6 +3,18 @@ import { createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Tooltip } from "@/components/ui/tooltip";
+import { HTMLSelect } from "@/components/ui/html-select";
+
+/**
+ * Optional named-theme picker for the chrome cluster. When supplied (the showcase wires it
+ * to the Theme Builder's state), the palette tint toggle is replaced by a dropdown of named
+ * themes — built-ins plus the user's saved custom themes — kept in sync with the builder panel.
+ */
+export interface ThemePickerConfig {
+    names: string[];
+    selected: string;
+    onSelect: (name: string) => void;
+}
 
 /** The seed palettes the gallery ships. `default` plus the bundled `datex` theme. */
 export type Palette = "default" | "datex";
@@ -39,7 +51,10 @@ export function useAppChrome(): AppChrome {
  * top app bar alike — or a plain flex header. The landing page renders it with `showExit`
  * off, since there's nowhere "back" to go from the gallery itself.
  */
-export function AppChromeControls({ showExit = true }: { showExit?: boolean } = {}) {
+export function AppChromeControls({
+    showExit = true,
+    themePicker,
+}: { showExit?: boolean; themePicker?: ThemePickerConfig } = {}) {
     const { exit, palette, dark, setPalette, toggleDark } = useAppChrome();
     const datex = palette === "datex";
     return (
@@ -55,15 +70,25 @@ export function AppChromeControls({ showExit = true }: { showExit?: boolean } = 
                     />
                 </Tooltip>
             )}
-            <Button
-                size="small"
-                variant="minimal"
-                intent={datex ? "primary" : "none"}
-                aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
-                aria-pressed={datex}
-                icon={<Icon icon="tint" className="!text-current" />}
-                onClick={() => setPalette(datex ? "default" : "datex")}
-            />
+            {themePicker ? (
+                <HTMLSelect
+                    minimal
+                    aria-label="Theme"
+                    value={themePicker.selected}
+                    options={themePicker.names}
+                    onChange={(e) => themePicker.onSelect(e.target.value)}
+                />
+            ) : (
+                <Button
+                    size="small"
+                    variant="minimal"
+                    intent={datex ? "primary" : "none"}
+                    aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
+                    aria-pressed={datex}
+                    icon={<Icon icon="tint" className="!text-current" />}
+                    onClick={() => setPalette(datex ? "default" : "datex")}
+                />
+            )}
             <Button
                 size="small"
                 variant="minimal"

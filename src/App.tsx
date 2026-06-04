@@ -66,13 +66,14 @@ import { DEMOS } from "@/demos/registry";
 import { COMPONENT_META, type ComponentMeta } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { Playground, PLAYGROUNDS } from "@/playground";
+import { useThemeBuilder, ThemeBuilderPanel } from "@/theme-builder";
 import { ComponentPreview, hasPreview } from "@/previews";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
 
 import { DarkContext } from "@/lib/dark-context";
-import { AppChromeProvider, AppChromeControls, type AppChrome, type Palette } from "@/lib/app-chrome";
+import { AppChromeProvider, AppChromeControls, useAppChrome, type AppChrome, type Palette } from "@/lib/app-chrome";
 import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
 
 // The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
@@ -6095,10 +6096,15 @@ function ShowcaseOverview() {
  */
 function ShowcaseApp({ componentId }: { componentId: string }) {
     const selected = componentId ? COMPONENTS.find((c) => c.id === componentId) : undefined;
+    // The Theme Builder lives at the showcase level so its seed overrides apply (and persist)
+    // across component pages with the panel open or closed, against the live component grid.
+    const builder = useThemeBuilder();
+    const [builderOpen, setBuilderOpen] = useState(false);
+    const { dark } = useAppChrome();
     return (
         <div className="flex min-h-screen flex-col bg-background text-foreground">
-            {/* ── Top app bar ─────────────────────────────────────────────── */}
-            <Navbar className="shrink-0">
+            {/* ── Top app bar (sticky so it stays in view while scrolling) ──── */}
+            <Navbar sticky className="shrink-0">
                 <NavbarGroup align="left">
                     <a
                         href="#showcase"
@@ -6121,7 +6127,24 @@ function ShowcaseApp({ componentId }: { componentId: string }) {
                     )}
                 </NavbarGroup>
                 <NavbarGroup align="right">
-                    <AppChromeControls />
+                    <Tooltip content="Theme builder" dark={dark}>
+                        <Button
+                            size="small"
+                            variant="minimal"
+                            intent={builderOpen ? "primary" : "none"}
+                            aria-label="Theme builder"
+                            aria-pressed={builderOpen}
+                            icon={<Icon icon="style" className="!text-current" />}
+                            onClick={() => setBuilderOpen((o) => !o)}
+                        />
+                    </Tooltip>
+                    <AppChromeControls
+                        themePicker={{
+                            names: builder.themeNames,
+                            selected: builder.selectedName,
+                            onSelect: builder.selectTheme,
+                        }}
+                    />
                 </NavbarGroup>
             </Navbar>
 
@@ -6142,6 +6165,8 @@ function ShowcaseApp({ componentId }: { componentId: string }) {
                     <ShowcaseOverview />
                 )}
             </main>
+
+            <ThemeBuilderPanel open={builderOpen} onClose={() => setBuilderOpen(false)} builder={builder} />
         </div>
     );
 }
