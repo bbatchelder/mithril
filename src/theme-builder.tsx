@@ -156,11 +156,34 @@ const DATEX: Overrides = {
     "--color-danger-disabled": "#fd6265",
 };
 
+/** Anthropic: warm terracotta primary on a cream/clay neutral base. Mirrors tokens.css. */
+const ANTHROPIC: Overrides = {
+    "--color-primary": "#db7759",
+    "--color-primary-hover": "#c76547",
+    "--color-primary-active": "#b25235",
+    "--color-primary-disabled": "#fe9677",
+    "--color-primary-foreground": "#ffffff",
+    "--color-success": "#c4d3e1",
+    "--color-success-hover": "#b1c0cd",
+    "--color-success-active": "#9eadba",
+    "--color-success-disabled": "#e7f3ff",
+    "--color-success-foreground": "#111418",
+    "--color-danger": "#c46686",
+    "--color-danger-hover": "#b05474",
+    "--color-danger-active": "#9c4263",
+    "--color-danger-disabled": "#e684a4",
+    "--color-danger-foreground": "#ffffff",
+    "--color-white": "#e6e6dd",
+    "--color-black": "#593025",
+    "--color-light-gray-5": "#efeee6",
+};
+
 const BUILTIN_THEMES: Record<string, Overrides> = {
     Blueprint: {}, // pure defaults
     Datex: DATEX,
+    Anthropic: ANTHROPIC,
 };
-const BUILTIN_NAMES = ["Blueprint", "Datex"];
+const BUILTIN_NAMES = ["Blueprint", "Datex", "Anthropic"];
 const BUILTIN_SET = new Set(BUILTIN_NAMES);
 
 // ─── Color math (culori) ─────────────────────────────────────────────────────
