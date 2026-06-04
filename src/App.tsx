@@ -5403,18 +5403,149 @@ function LandingPage() {
 }
 
 /** Main pane: title + the selected component's gallery. Overlays stay behind a Show toggle. */
+/** Where the served shadcn registry items and the component source live. */
+const REGISTRY_BASE = "https://bbatchelder.github.io/mithril/r";
+const GITHUB_BLOB = "https://github.com/bbatchelder/mithril/blob/main";
+
+/** A copyable one-line code block (install command / import statement). */
+function CodeBlock({ label, code }: { label: string; code: string }) {
+    const [copied, setCopied] = useState(false);
+    const copy = () => {
+        navigator.clipboard?.writeText(code).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        });
+    };
+    return (
+        <div className="flex flex-col gap-1">
+            <span className="text-body-xs font-medium uppercase tracking-wide text-foreground-muted">{label}</span>
+            <div className="flex items-center gap-2 rounded-bp border border-border bg-surface py-1.5 pl-3 pr-1.5">
+                <pre className="flex-1 overflow-x-auto text-body-sm text-foreground">
+                    <code className="font-mono">{code}</code>
+                </pre>
+                <Button
+                    size="small"
+                    variant="minimal"
+                    aria-label={copied ? "Copied" : "Copy to clipboard"}
+                    title={copied ? "Copied" : "Copy"}
+                    icon={<Icon icon={copied ? "tick" : "duplicate"} className="!text-current" />}
+                    onClick={copy}
+                />
+            </div>
+        </div>
+    );
+}
+
+/** A small heading for the component-page sections. */
+function PageSection({ title, children }: { title: string; children: React.ReactNode }) {
+    return (
+        <section className="flex flex-col gap-3">
+            <h3 className="text-heading-sm font-semibold text-foreground">{title}</h3>
+            {children}
+        </section>
+    );
+}
+
+/**
+ * A single component's page: a header (description + metadata badges + source link),
+ * how-to-add (registry install command + import snippet), what it builds on
+ * (registry + npm dependencies), and the live examples gallery.
+ */
 function ComponentView({ component }: { component: ComponentEntry }) {
     useEffect(() => {
         window.scrollTo({ top: 0 });
     }, [component.id]);
+    const id = component.id;
+    const meta = COMPONENT_META[id];
+    const exportList = meta?.exports ?? [];
+    const importLine = exportList.length
+        ? `import { ${exportList.join(", ")} } from "@/components/ui/${id}";`
+        : null;
+    const addCommand = `npx shadcn@latest add ${REGISTRY_BASE}/${id}.json`;
+    const sourceUrl = `${GITHUB_BLOB}/src/components/ui/${id}.tsx`;
+
+    // Split registry deps into linkable components vs foundation items (tokens/utils/types).
+    const knownIds = new Set(COMPONENTS.map((c) => c.id));
+    const regDeps = meta?.registryDependencies ?? [];
+    const componentDeps = regDeps.filter((d) => knownIds.has(d) && d !== id);
+    const foundationDeps = regDeps.filter((d) => !knownIds.has(d));
+    const npmDeps = meta?.dependencies ?? [];
+    const hasDeps = componentDeps.length + foundationDeps.length + npmDeps.length > 0;
+
     return (
-        <div id={component.id} className="flex flex-col gap-5">
-            <h2 className="text-heading-lg font-semibold text-foreground">{component.title}</h2>
-            {OVERLAY_IDS.has(component.id) ? (
-                <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
-            ) : (
-                component.render()
+        <div id={id} className="flex flex-col gap-8">
+            {/* ── Header ─────────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-3">
+                <h2 className="text-heading-lg font-semibold text-foreground">{component.title}</h2>
+                {meta?.description && <p className="text-body text-foreground-muted">{meta.description}</p>}
+                {meta && <TileBadges id={id} />}
+                <a
+                    href={sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-fit items-center gap-1.5 text-body-sm text-intent-primary-text hover:underline"
+                >
+                    <Icon icon="git-repo" size={14} className="!text-current" />
+                    View source
+                    <Icon icon="share" size={12} className="!text-current" />
+                </a>
+            </div>
+
+            {/* ── Add to your app ────────────────────────────────────────── */}
+            <PageSection title="Add to your app">
+                <CodeBlock label="Install" code={addCommand} />
+                {importLine && <CodeBlock label="Import" code={importLine} />}
+            </PageSection>
+
+            {/* ── Dependencies ───────────────────────────────────────────── */}
+            {hasDeps && (
+                <PageSection title="Dependencies">
+                    {(componentDeps.length > 0 || foundationDeps.length > 0) && (
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-body-xs font-medium uppercase tracking-wide text-foreground-muted">
+                                Built on
+                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                {componentDeps.map((d) => (
+                                    <a key={d} href={`#showcase/${d}`} className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                                        <MetaBadge icon="cube" intent="primary" title={`Go to ${COMPONENT_META[d]?.title ?? d}`}>
+                                            {COMPONENT_META[d]?.title ?? d}
+                                        </MetaBadge>
+                                    </a>
+                                ))}
+                                {foundationDeps.map((d) => (
+                                    <MetaBadge key={d} icon="cube" title="Foundation (shared tokens / utilities / types)">
+                                        {d}
+                                    </MetaBadge>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    {npmDeps.length > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-body-xs font-medium uppercase tracking-wide text-foreground-muted">
+                                Packages
+                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                {npmDeps.map((d) => (
+                                    <MetaBadge key={d} icon="package" title="npm dependency">
+                                        {d}
+                                    </MetaBadge>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </PageSection>
             )}
+
+            {/* ── Examples ───────────────────────────────────────────────── */}
+            <PageSection title="Examples">
+                {OVERLAY_IDS.has(id) ? (
+                    <OverlaySpecimen title={component.title}>{component.render()}</OverlaySpecimen>
+                ) : (
+                    component.render()
+                )}
+            </PageSection>
         </div>
     );
 }
@@ -5464,12 +5595,12 @@ function MetaBadge({
  *   - capability traits — portals (needs `dark` threading), Radix-backed, asChild
  *   - distribution — an `internal` flag only when NOT in the owned-source registry
  */
-function TileBadges({ id }: { id: string }) {
+function TileBadges({ id, className }: { id: string; className?: string }) {
     const meta = COMPONENT_META[id];
     if (!meta) return null;
     const { tests } = meta;
     return (
-        <div className="mt-auto flex flex-wrap items-center gap-1 pt-0.5">
+        <div className={cn("flex flex-wrap items-center gap-1", className)}>
             {meta.rsc ? (
                 <MetaBadge icon="server" intent="success" title="Server-renderable (RSC) — no &quot;use client&quot; directive">
                     RSC
@@ -5566,7 +5697,7 @@ function ShowcaseOverview() {
                                             </span>
                                             <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
                                         </div>
-                                        <TileBadges id={c.id} />
+                                        <TileBadges id={c.id} className="mt-auto pt-0.5" />
                                     </Card>
                                 </a>
                             ))}
