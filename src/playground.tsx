@@ -34,6 +34,14 @@ import { NonIdealState } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
 import { Divider } from "@/components/ui/divider";
 import { Collapse } from "@/components/ui/collapse";
+import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
+import { Tabs, Tab } from "@/components/ui/tabs";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { HTMLTable } from "@/components/ui/html-table";
+import { CardList } from "@/components/ui/card-list";
+import { Section, SectionCard, type SectionElevation } from "@/components/ui/section";
+import { CheckboxCard, RadioCard, SwitchCard } from "@/components/ui/control-card";
+import { RadioGroup } from "@/components/ui/radio";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -259,6 +267,26 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
             {/* Code */}
             <PlaygroundCode code={config.code(live)} />
         </div>
+    );
+}
+
+/** RadioGroup is controlled, so it needs its own state to be interactive in the stage. */
+function RadioGroupDemo({ inline, disabled }: { inline: boolean; disabled: boolean }) {
+    const [value, setValue] = useState("week");
+    return (
+        <RadioGroup
+            name="pg-radio"
+            label="Frequency"
+            selectedValue={value}
+            onChange={(v) => setValue(v)}
+            inline={inline}
+            disabled={disabled}
+            options={[
+                { value: "day", label: "Daily" },
+                { value: "week", label: "Weekly" },
+                { value: "month", label: "Monthly" },
+            ]}
+        />
     );
 }
 
@@ -689,5 +717,228 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             </div>
         ),
         code: (p) => jsx("Collapse", { isOpen: p.isOpen, keepChildrenMounted: p.keepChildrenMounted }, "…"),
+    },
+
+    // ── Batch 3: compound components ──────────────────────────────────────────
+    menu: {
+        initial: { size: "medium", icons: true, divider: true, danger: true, disabledItem: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "boolean", prop: "icons" },
+            { kind: "boolean", prop: "divider" },
+            { kind: "boolean", prop: "danger", label: "danger item" },
+            { kind: "boolean", prop: "disabledItem", label: "disabled item" },
+        ],
+        render: (p) => (
+            <div style={{ width: 220 }}>
+                <Menu size={p.size}>
+                    <MenuItem icon={p.icons ? "document" : undefined} text="New" />
+                    <MenuItem icon={p.icons ? "folder-open" : undefined} text="Open…" label="⌘O" />
+                    <MenuItem icon={p.icons ? "floppy-disk" : undefined} text="Save" disabled={p.disabledItem} />
+                    {p.divider && <MenuDivider />}
+                    {p.danger && <MenuItem icon={p.icons ? "trash" : undefined} text="Delete" intent="danger" />}
+                </Menu>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<Menu${p.size === "medium" ? "" : ` size="${p.size}"`}>`,
+                `  <MenuItem${p.icons ? ' icon="document"' : ""} text="New" />`,
+                `  <MenuItem${p.icons ? ' icon="folder-open"' : ""} text="Open…" label="⌘O" />`,
+                `  <MenuItem${p.icons ? ' icon="floppy-disk"' : ""} text="Save"${p.disabledItem ? " disabled" : ""} />`,
+                ...(p.divider ? ["  <MenuDivider />"] : []),
+                ...(p.danger ? [`  <MenuItem${p.icons ? ' icon="trash"' : ""} text="Delete" intent="danger" />`] : []),
+                `</Menu>`,
+            ].join("\n"),
+    },
+
+    tabs: {
+        initial: { vertical: false, fill: false, disabledTab: false },
+        controls: [
+            { kind: "boolean", prop: "vertical" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabledTab", label: "disabled tab" },
+        ],
+        render: (p) => {
+            const panel = (text: string) => <div className="pt-3 text-body text-foreground">{text}</div>;
+            return (
+                <div style={{ width: 420 }}>
+                    <Tabs id="pg-tabs" defaultSelectedTabId="overview" vertical={p.vertical} fill={p.fill}>
+                        <Tab id="overview" title="Overview" panel={panel("Overview panel content.")} />
+                        <Tab id="details" title="Details" panel={panel("Details panel content.")} />
+                        <Tab id="settings" title="Settings" disabled={p.disabledTab} panel={panel("Settings panel content.")} />
+                    </Tabs>
+                </div>
+            );
+        },
+        code: (p) =>
+            [
+                `<Tabs defaultSelectedTabId="overview"${p.vertical ? " vertical" : ""}${p.fill ? " fill" : ""}>`,
+                `  <Tab id="overview" title="Overview" panel={…} />`,
+                `  <Tab id="details" title="Details" panel={…} />`,
+                `  <Tab id="settings" title="Settings"${p.disabledTab ? " disabled" : ""} panel={…} />`,
+                `</Tabs>`,
+            ].join("\n"),
+    },
+
+    breadcrumbs: {
+        initial: { count: 4, icons: false },
+        controls: [
+            { kind: "number", prop: "count", label: "items", min: 2, max: 5, stepSize: 1 },
+            { kind: "boolean", prop: "icons" },
+        ],
+        render: (p) => {
+            const base = [
+                { text: "Home", icon: "home" as IconName },
+                { text: "Projects", icon: "folder-close" as IconName },
+                { text: "Apollo", icon: "projects" as IconName },
+                { text: "Reports", icon: "document" as IconName },
+                { text: "Q3 Summary", icon: "label" as IconName },
+            ];
+            const n = p.count as number;
+            const items = base.slice(0, n).map((it, i, arr) => ({
+                text: it.text,
+                icon: p.icons ? it.icon : undefined,
+                href: i === arr.length - 1 ? undefined : "#",
+                current: i === arr.length - 1,
+            }));
+            return <Breadcrumbs items={items} />;
+        },
+        code: (p) => `<Breadcrumbs items={[ /* ${p.count} items${p.icons ? ", each with an icon" : ""} */ ]} />`,
+    },
+
+    "html-table": {
+        initial: { bordered: false, striped: true, interactive: false, compact: false },
+        controls: [
+            { kind: "boolean", prop: "bordered" },
+            { kind: "boolean", prop: "striped" },
+            { kind: "boolean", prop: "interactive" },
+            { kind: "boolean", prop: "compact" },
+        ],
+        render: (p) => (
+            <HTMLTable bordered={p.bordered} striped={p.striped} interactive={p.interactive} compact={p.compact}>
+                <thead>
+                    <tr>
+                        <th className="text-left">Name</th>
+                        <th className="text-left">Role</th>
+                        <th className="text-left">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Alice</td>
+                        <td>Engineer</td>
+                        <td>Active</td>
+                    </tr>
+                    <tr>
+                        <td>Bob</td>
+                        <td>Designer</td>
+                        <td>Away</td>
+                    </tr>
+                    <tr>
+                        <td>Carol</td>
+                        <td>Manager</td>
+                        <td>Active</td>
+                    </tr>
+                </tbody>
+            </HTMLTable>
+        ),
+        code: (p) => jsx("HTMLTable", { bordered: p.bordered, striped: p.striped, interactive: p.interactive, compact: p.compact }, "…"),
+    },
+
+    "card-list": {
+        initial: { bordered: true, compact: false },
+        controls: [
+            { kind: "boolean", prop: "bordered" },
+            { kind: "boolean", prop: "compact" },
+        ],
+        render: (p) => (
+            <div style={{ width: 320 }}>
+                <CardList bordered={p.bordered} compact={p.compact}>
+                    <Card>Inbox</Card>
+                    <Card interactive>Drafts</Card>
+                    <Card>Sent</Card>
+                    <Card>Archive</Card>
+                </CardList>
+            </div>
+        ),
+        code: (p) => jsx("CardList", { bordered: p.bordered, compact: p.compact }, "…"),
+    },
+
+    section: {
+        initial: { collapsible: true, compact: false, elevation: "0", open: true },
+        controls: [
+            { kind: "boolean", prop: "collapsible" },
+            { kind: "boolean", prop: "compact" },
+            { kind: "enum", prop: "elevation", options: [{ value: "0" }, { value: "1" }] },
+            { kind: "boolean", prop: "open", label: "defaultOpen" },
+        ],
+        render: (p) => (
+            <div style={{ width: 380 }}>
+                <Section
+                    key={`${p.collapsible}-${p.open}`}
+                    title="Account settings"
+                    subtitle="Manage your preferences"
+                    collapsible={p.collapsible}
+                    compact={p.compact}
+                    elevation={Number(p.elevation) as SectionElevation}
+                    collapseProps={{ defaultIsOpen: p.open }}
+                >
+                    <SectionCard>
+                        <span className="text-body text-foreground">Section card content goes here.</span>
+                    </SectionCard>
+                </Section>
+            </div>
+        ),
+        code: (p) =>
+            [
+                `<Section title="Account settings" subtitle="Manage your preferences"${p.collapsible ? " collapsible" : ""}${p.compact ? " compact" : ""}${p.elevation === "1" ? " elevation={1}" : ""}>`,
+                `  <SectionCard>…</SectionCard>`,
+                `</Section>`,
+            ].join("\n"),
+    },
+
+    "control-card": {
+        initial: { type: "checkbox", label: "Enable notifications", large: false, compact: false, disabled: false, elevation: "0" },
+        controls: [
+            { kind: "enum", prop: "type", options: [{ value: "checkbox" }, { value: "radio" }, { value: "switch" }] },
+            { kind: "text", prop: "label" },
+            { kind: "boolean", prop: "large" },
+            { kind: "boolean", prop: "compact" },
+            { kind: "boolean", prop: "disabled" },
+            { kind: "enum", prop: "elevation", options: [{ value: "0" }, { value: "1" }, { value: "2" }] },
+        ],
+        render: (p) => {
+            const common = {
+                label: p.label,
+                large: p.large,
+                compact: p.compact,
+                disabled: p.disabled,
+                elevation: Number(p.elevation) as CardElevation,
+                defaultChecked: true,
+                style: { width: 280 } as React.CSSProperties,
+            };
+            if (p.type === "radio") return <RadioCard {...common} value="a" />;
+            if (p.type === "switch") return <SwitchCard {...common} />;
+            return <CheckboxCard {...common} />;
+        },
+        code: (p) => {
+            const tag = p.type === "radio" ? "RadioCard" : p.type === "switch" ? "SwitchCard" : "CheckboxCard";
+            return jsx(tag, { label: p.label, large: p.large, compact: p.compact, disabled: p.disabled, elevation: Number(p.elevation), defaultChecked: true });
+        },
+    },
+
+    radio: {
+        initial: { inline: false, disabled: false },
+        controls: [
+            { kind: "boolean", prop: "inline" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => <RadioGroupDemo inline={p.inline} disabled={p.disabled} />,
+        code: (p) =>
+            [
+                `<RadioGroup label="Frequency" selectedValue={value} onChange={setValue}${p.inline ? " inline" : ""}${p.disabled ? " disabled" : ""}`,
+                `  options={[{ value: "day", label: "Daily" }, … ]} />`,
+            ].join("\n"),
     },
 };
