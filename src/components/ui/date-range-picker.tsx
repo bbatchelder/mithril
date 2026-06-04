@@ -84,13 +84,6 @@ export interface DateRangePickerProps {
      * @default false
      */
     singleMonthOnly?: boolean;
-    /**
-     * Show TimePicker inputs below the calendars.
-     * Pass "minute" | "second" | "millisecond" to enable.
-     * @default undefined (no time picker)
-     * @stub TODO: implement TimePicker integration
-     */
-    timePrecision?: "minute" | "second" | "millisecond";
     /** Whether to allow a range where start === end (single day). @default false */
     allowSingleDayRange?: boolean;
     /** Disable the entire picker. @default false */
@@ -370,7 +363,6 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
             maxDate = DEFAULT_MAX_DATE,
             contiguousCalendarMonths = true,
             singleMonthOnly = false,
-            timePrecision: _timePrecision, // stub — TODO
             allowSingleDayRange = false,
             disabled = false,
             className,

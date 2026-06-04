@@ -46,6 +46,12 @@ if [ -z "$COMPONENT" ]; then
     echo "usage: tools/compare.sh <component> [light|dark|both]" >&2
     exit 2
 fi
+# COMPONENT is interpolated into URLs and output file paths below; constrain it to a
+# safe slug so a stray value can't traverse out of the screenshots dir.
+case "$COMPONENT" in
+    *[!a-z0-9-]*|"")
+        echo "component must match ^[a-z0-9-]+\$ (got '$COMPONENT')" >&2; exit 2 ;;
+esac
 case "$THEME_ARG" in
     light) THEMES=(light) ;;
     dark) THEMES=(dark) ;;
