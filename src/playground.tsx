@@ -9,7 +9,7 @@
  * Components without an entry fall back to their existing Examples gallery — add a config
  * here to give one the interactive treatment.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { TagInput } from "@/components/ui/tag-input";
+import { DataTable, type DataTableColumn, type DataTableSelectionMode } from "@/components/ui/data-table";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -513,6 +514,108 @@ function TagInputDemo({ large, intent, leftIcon, disabled, fill, placeholder }: 
                 disabled={disabled}
                 fill={fill}
             />
+        </div>
+    );
+}
+
+// ── Batch 7: DataTable ───────────────────────────────────────────────────────
+// Inline (no portal → no `ctx.dark`), but controlled for inline edits, so it needs a
+// stateful wrapper holding the row data. Columns are memoized on the `editable` toggle
+// so the engine doesn't re-init its sizing/order state every render. Row data is sliced
+// from a 1,000-row pool; the wrapper is keyed on the row count so changing it remounts
+// with a fresh slice (resetting any inline edits).
+interface PgPerson {
+    name: string;
+    age: number;
+    role: string;
+    location: string;
+}
+const PG_TABLE_NAMED: PgPerson[] = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+const PG_TABLE_ROLES = ["Engineer", "Designer", "Manager", "Analyst", "Director"];
+const PG_TABLE_CITIES = ["London", "Seattle", "Austin", "Lagos", "Prague", "Osaka"];
+// First 6 are the hand-named rows; the rest are generated so virtualization has something to chew on.
+const PG_TABLE_POOL: PgPerson[] = [
+    ...PG_TABLE_NAMED,
+    ...Array.from({ length: 994 }, (_, i) => {
+        const n = i + 7;
+        return {
+            name: `Person ${n}`,
+            age: 20 + (n % 50),
+            role: PG_TABLE_ROLES[n % PG_TABLE_ROLES.length],
+            location: PG_TABLE_CITIES[n % PG_TABLE_CITIES.length],
+        };
+    }),
+];
+
+function DataTableDemo({
+    numberedRows,
+    selectionMode,
+    rowCount,
+    resizing,
+    reordering,
+    editable,
+    loading,
+    height,
+    rowHeight,
+}: {
+    numberedRows: boolean;
+    selectionMode: string;
+    rowCount: number;
+    resizing: boolean;
+    reordering: boolean;
+    editable: boolean;
+    loading: boolean;
+    height: number | undefined;
+    rowHeight: number;
+}) {
+    const [rows, setRows] = useState<PgPerson[]>(() => PG_TABLE_POOL.slice(0, rowCount));
+    const columns = useMemo<DataTableColumn<PgPerson>[]>(
+        () => [
+            { id: "name", header: "Name", accessor: "name", width: 150, editable },
+            { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+            { id: "role", header: "Role", accessor: "role", width: 110, editable },
+            { id: "location", header: "Location", accessor: "location", width: 120 },
+        ],
+        [editable],
+    );
+    // Contextual usage hints — only the gestures that apply to the current mode.
+    const hints: string[] = [];
+    if (!loading && selectionMode === "single") hints.push("Click or drag to select a cell range · Shift-click extends it");
+    if (!loading && selectionMode === "multi") hints.push("Click a range · Cmd/Ctrl-click adds another region · Cmd/Ctrl-C copies");
+    if (!loading && editable) hints.push("Double-click an editable cell (Name / Role) to edit · Enter commits · Esc reverts");
+    if (!loading && reordering) hints.push("Click a column header to select it, then drag it to reorder");
+    return (
+        <div className="flex flex-col gap-2" style={{ width: 440 }}>
+            <DataTable<PgPerson>
+                data={rows}
+                columns={columns}
+                numberedRows={numberedRows}
+                selectionMode={selectionMode as DataTableSelectionMode}
+                enableColumnResizing={resizing}
+                enableColumnReordering={reordering}
+                loading={loading}
+                height={height}
+                rowHeight={rowHeight}
+                onCellEdit={({ row, columnId, value }) =>
+                    setRows((rs) => rs.map((r, i) => (i === row ? { ...r, [columnId]: value } : r)))
+                }
+            />
+            {hints.length > 0 && (
+                <div className="flex flex-col gap-0.5">
+                    {hints.map((h) => (
+                        <span key={h} className="text-body-sm text-foreground-muted">
+                            {h}
+                        </span>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -1837,5 +1940,64 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 `  placeholder="${p.placeholder}"${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.leftIcon ? ` leftIcon="${p.leftIcon}"` : ""}${p.large ? " large" : ""}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
                 `  inputProps={{ "aria-label": "Tags" }} />`,
             ].join("\n"),
+    },
+
+    // ── Batch 7: DataTable (inline, stateful for inline edits) ──
+    "data-table": {
+        initial: { selectionMode: "multi", rows: "6", height: "auto", rowHeight: 20, numberedRows: true, resizing: true, reordering: false, editable: true, loading: false },
+        controls: [
+            { kind: "enum", prop: "selectionMode", label: "selection", options: [{ value: "none" }, { value: "single" }, { value: "multi" }] },
+            { kind: "enum", prop: "rows", label: "rows", options: [{ value: "6" }, { value: "50" }, { value: "1000", label: "1,000" }] },
+            { kind: "enum", prop: "height", label: "height", widget: "segmented", options: [{ value: "auto" }, { value: "200" }, { value: "400" }, { value: "800" }] },
+            { kind: "number", prop: "rowHeight", label: "row height", min: 16, max: 48, stepSize: 2 },
+            { kind: "boolean", prop: "numberedRows", label: "gutter" },
+            { kind: "boolean", prop: "resizing", label: "resize cols" },
+            { kind: "boolean", prop: "reordering", label: "reorder cols" },
+            { kind: "boolean", prop: "editable", label: "editable" },
+            { kind: "boolean", prop: "loading" },
+        ],
+        render: (p) => {
+            const rowCount = Number(p.rows);
+            const heightPx = p.height === "auto" ? undefined : Number(p.height);
+            const rowHeight = Number(p.rowHeight);
+            return (
+                <DataTableDemo
+                    // Remount on row-count change so the data slice resets cleanly, and on
+                    // rowHeight change to dodge issue #44 (a runtime rowHeight change leaves the
+                    // virtualizer's cached row offsets stale → overlapping rows). Remounting seeds
+                    // the virtualizer's estimate at the new height from the first render.
+                    key={`${rowCount}-${rowHeight}`}
+                    selectionMode={p.selectionMode}
+                    rowCount={rowCount}
+                    height={heightPx}
+                    rowHeight={rowHeight}
+                    numberedRows={p.numberedRows}
+                    resizing={p.resizing}
+                    reordering={p.reordering}
+                    editable={p.editable}
+                    loading={p.loading}
+                />
+            );
+        },
+        code: (p) => {
+            const ed = p.editable ? ", editable: true" : "";
+            const n = Number(p.rows);
+            const h = p.height === "auto" ? undefined : Number(p.height);
+            const rh = Number(p.rowHeight);
+            return [
+                `const [data, setData] = useState(rows); // ${n.toLocaleString()} rows`,
+                `const columns: DataTableColumn<Person>[] = [`,
+                `  { id: "name", header: "Name", accessor: "name", width: 150${ed} },`,
+                `  { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },`,
+                `  { id: "role", header: "Role", accessor: "role", width: 110${ed} },`,
+                `  { id: "location", header: "Location", accessor: "location", width: 120 },`,
+                `];`,
+                ``,
+                `<DataTable`,
+                `  data={data} columns={columns}${p.numberedRows ? "" : " numberedRows={false}"}${p.selectionMode === "single" ? "" : ` selectionMode="${p.selectionMode}"`}${p.resizing ? " enableColumnResizing" : ""}${p.reordering ? " enableColumnReordering" : ""}${h != null ? ` height={${h}}` : ""}${rh !== 20 ? ` rowHeight={${rh}}` : ""}${p.loading ? " loading" : ""}`,
+                ...(p.editable ? [`  onCellEdit={({ row, columnId, value }) => save(row, columnId, value)}`] : []),
+                h != null ? `/> // a fixed height bounds the viewport ⇒ rows virtualize (only the visible window renders)` : `/>`,
+            ].join("\n");
+        },
     },
 };
