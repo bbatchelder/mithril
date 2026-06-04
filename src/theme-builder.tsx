@@ -31,13 +31,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { clampChroma, converter, formatHex, wcagContrast } from "culori";
+import { clampChroma, converter, formatHex } from "culori";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Collapse } from "@/components/ui/collapse";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { InputGroup } from "@/components/ui/input-group";
 import { useAppChrome } from "@/lib/app-chrome";
@@ -65,10 +66,16 @@ const INTENTS: { key: IntentKey; label: string }[] = [
 ];
 
 const NEUTRAL_GROUPS: { label: string; props: string[] }[] = [
+    // White/black are the extremes the light-mode surfaces, app background, and body text
+    // derive from (e.g. Card's light bg = --surface = var(--color-white)).
+    { label: "Black & white", props: ["--color-white", "--color-black"] },
     { label: "Dark grays", props: [1, 2, 3, 4, 5].map((n) => `--color-dark-gray-${n}`) },
     { label: "Mid grays", props: [1, 2, 3, 4, 5].map((n) => `--color-gray-${n}`) },
     { label: "Light grays", props: [1, 2, 3, 4, 5].map((n) => `--color-light-gray-${n}`) },
 ];
+
+/** Default OKLCH-lightness crossover: fills lighter than this get dark text, else white. */
+const DEFAULT_FG_THRESHOLD = 0.62;
 
 /** Default seed values, byte-for-byte from tokens.css. Used as the swatch baseline. */
 const DEFAULTS: Record<string, string> = {
@@ -93,6 +100,9 @@ const DEFAULTS: Record<string, string> = {
     "--color-danger-active": "#8e292c",
     "--color-danger-disabled": "#e76a6e",
     "--color-danger-foreground": "#ffffff",
+    // Black & white (the extremes light-mode surfaces / body text derive from)
+    "--color-white": "#ffffff",
+    "--color-black": "#111418",
     // Neutral ramp
     "--color-dark-gray-1": "#1c2127",
     "--color-dark-gray-2": "#252a31",
@@ -165,24 +175,34 @@ function shiftLightness(hex: string, dl: number): string {
     return formatHex(shifted) ?? hex;
 }
 
-/** Pick the foreground (near-black vs white) with the higher contrast on `hex`. */
-function pickForeground(hex: string): string {
-    const onWhite = wcagContrast(hex, "#ffffff");
-    const onBlack = wcagContrast(hex, "#111418");
-    return onBlack >= onWhite ? "#111418" : "#ffffff";
+/**
+ * Choose the on-fill text color by the fill's OKLCH lightness: fills at/above `threshold`
+ * get the dark seed, lighter… er, darker ones get white. Returns the actual black/white seed
+ * values so customizing those re-tints derived foregrounds too.
+ */
+function pickForeground(hex: string, threshold: number, blackHex: string, whiteHex: string): string {
+    const c = toOklch(hex);
+    if (!c) return whiteHex;
+    return c.l >= threshold ? blackHex : whiteHex;
 }
 
 /**
  * Derive an intent's variants from its base color. The lightness offsets approximate
  * Blueprint's family tiers (hover ≈ one tier darker, active ≈ two, disabled ≈ one lighter);
- * they are exposed as editable so a fidelity-minded user can fine-tune.
+ * they are exposed as editable so a fidelity-minded user can fine-tune. The foreground flips
+ * dark/light at `threshold`.
  */
-function deriveVariants(base: string): Record<string, string> {
+function deriveVariants(
+    base: string,
+    threshold: number,
+    blackHex: string,
+    whiteHex: string,
+): Record<string, string> {
     return {
         "-hover": shiftLightness(base, -0.06),
         "-active": shiftLightness(base, -0.12),
         "-disabled": shiftLightness(base, 0.1),
-        "-foreground": pickForeground(base),
+        "-foreground": pickForeground(base, threshold, blackHex, whiteHex),
     };
 }
 
@@ -230,22 +250,23 @@ function loadCustomThemes(): Record<string, Overrides> {
     }
 }
 
-function loadWorking(): { name: string; overrides: Overrides } {
-    if (typeof window === "undefined") return { name: "Blueprint", overrides: {} };
+function loadWorking(): { name: string; overrides: Overrides; fgThreshold: number } {
+    const fallback = { name: "Blueprint", overrides: {}, fgThreshold: DEFAULT_FG_THRESHOLD };
+    if (typeof window === "undefined") return fallback;
     try {
         const parsed = JSON.parse(window.localStorage.getItem(WORKING_KEY) || "null") as unknown;
         if (parsed && typeof parsed === "object" && "overrides" in parsed) {
-            const p = parsed as { name?: unknown; overrides?: unknown };
+            const p = parsed as { name?: unknown; overrides?: unknown; fgThreshold?: unknown };
             return {
                 name: typeof p.name === "string" ? p.name : "Blueprint",
                 overrides: sanitize(p.overrides),
+                fgThreshold: typeof p.fgThreshold === "number" ? p.fgThreshold : DEFAULT_FG_THRESHOLD,
             };
         }
         // Migrate the previous shape (a bare overrides map) → a Blueprint-based edit.
-        const legacy = sanitize(parsed);
-        return { name: "Blueprint", overrides: legacy };
+        return { ...fallback, overrides: sanitize(parsed) };
     } catch {
-        return { name: "Blueprint", overrides: {} };
+        return fallback;
     }
 }
 
@@ -274,6 +295,10 @@ export interface ThemeBuilderState {
     setIntentBase: (key: IntentKey, hex: string) => void;
     setSeed: (prop: string, hex: string) => void;
     resetIntent: (key: IntentKey) => void;
+    /** OKLCH-lightness crossover for auto text color: fills ≥ this get dark text, else white. */
+    fgThreshold: number;
+    /** Set the crossover and re-derive the foreground of every customized intent. */
+    setFgThreshold: (t: number) => void;
     /** The exportable CSS block. */
     css: string;
 
@@ -295,6 +320,7 @@ export function useThemeBuilder(): ThemeBuilderState {
     const [customThemes, setCustomThemes] = useState<Record<string, Overrides>>(loadCustomThemes);
     const [selectedName, setSelectedName] = useState<string>(() => loadWorking().name);
     const [overrides, setOverrides] = useState<Overrides>(() => loadWorking().overrides);
+    const [fgThreshold, setFgThresholdState] = useState<number>(() => loadWorking().fgThreshold);
     // The selected theme's saved definition — the baseline for the "modified" indicator.
     const [baseline, setBaseline] = useState<Overrides>(() => {
         const w = loadWorking();
@@ -314,11 +340,14 @@ export function useThemeBuilder(): ThemeBuilderState {
     // Persist the working theme (selection + edits) and the custom-theme library.
     useEffect(() => {
         try {
-            window.localStorage.setItem(WORKING_KEY, JSON.stringify({ name: selectedName, overrides }));
+            window.localStorage.setItem(
+                WORKING_KEY,
+                JSON.stringify({ name: selectedName, overrides, fgThreshold }),
+            );
         } catch {
             /* storage unavailable — non-fatal */
         }
-    }, [selectedName, overrides]);
+    }, [selectedName, overrides, fgThreshold]);
     useEffect(() => {
         try {
             window.localStorage.setItem(CUSTOM_KEY, JSON.stringify(customThemes));
@@ -332,13 +361,38 @@ export function useThemeBuilder(): ThemeBuilderState {
         [overrides],
     );
 
-    const setIntentBase = useCallback((key: IntentKey, hex: string) => {
-        const variants = deriveVariants(hex);
-        setOverrides((o) => ({
-            ...o,
-            [`--color-${key}`]: hex,
-            ...Object.fromEntries(VARIANT_SUFFIXES.map((s) => [`--color-${key}${s}`, variants[s]])),
-        }));
+    const setIntentBase = useCallback(
+        (key: IntentKey, hex: string) => {
+            setOverrides((o) => {
+                const black = o["--color-black"] ?? DEFAULTS["--color-black"];
+                const white = o["--color-white"] ?? DEFAULTS["--color-white"];
+                const variants = deriveVariants(hex, fgThreshold, black, white);
+                return {
+                    ...o,
+                    [`--color-${key}`]: hex,
+                    ...Object.fromEntries(VARIANT_SUFFIXES.map((s) => [`--color-${key}${s}`, variants[s]])),
+                };
+            });
+        },
+        [fgThreshold],
+    );
+
+    const setFgThreshold = useCallback((t: number) => {
+        setFgThresholdState(t);
+        // Re-derive the foreground of every *customized* intent (leave default intents alone
+        // so the slider doesn't silently add overrides to a pristine theme).
+        setOverrides((o) => {
+            const black = o["--color-black"] ?? DEFAULTS["--color-black"];
+            const white = o["--color-white"] ?? DEFAULTS["--color-white"];
+            const next = { ...o };
+            for (const { key } of INTENTS) {
+                const baseProp = `--color-${key}`;
+                if (baseProp in o) {
+                    next[`--color-${key}-foreground`] = pickForeground(o[baseProp], t, black, white);
+                }
+            }
+            return next;
+        });
     }, []);
 
     const setSeed = useCallback((prop: string, hex: string) => {
@@ -417,6 +471,8 @@ export function useThemeBuilder(): ThemeBuilderState {
         setIntentBase,
         setSeed,
         resetIntent,
+        fgThreshold,
+        setFgThreshold,
         css,
         themeNames,
         selectedName,
@@ -738,6 +794,28 @@ export function ThemeBuilderPanel({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     {tab === "intents" ? (
                         <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5 rounded-bp border border-border bg-surface p-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-body-sm font-medium text-foreground">
+                                        Auto text color
+                                    </span>
+                                    <code className="font-mono text-body-xs text-foreground-muted">
+                                        ≥ {builder.fgThreshold.toFixed(2)} → dark
+                                    </code>
+                                </div>
+                                <Slider
+                                    min={0.3}
+                                    max={0.9}
+                                    stepSize={0.01}
+                                    value={builder.fgThreshold}
+                                    onChange={builder.setFgThreshold}
+                                    labelRenderer={false}
+                                />
+                                <p className="text-body-xs text-foreground-muted">
+                                    When you pick an intent color, its text flips dark once the fill's
+                                    lightness reaches this point. Lower it for dark text on more colors.
+                                </p>
+                            </div>
                             {INTENTS.map((intent) => (
                                 <IntentBlock key={intent.key} intent={intent} builder={builder} />
                             ))}
