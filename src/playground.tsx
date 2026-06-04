@@ -65,6 +65,14 @@ import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { TagInput } from "@/components/ui/tag-input";
 import { DataTable, type DataTableColumn, type DataTableSelectionMode } from "@/components/ui/data-table";
+import { TimePicker } from "@/components/ui/time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
+import { DateRangePicker, type DateRangePickerValue } from "@/components/ui/date-range-picker";
+import { DateInput } from "@/components/ui/date-input";
+import { DateRangeInput } from "@/components/ui/date-range-input";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
+import { Tree, useTreeState, type TreeNodeInfo } from "@/components/ui/tree";
+import { PanelStack, type PanelInfo, type PanelActions } from "@/components/ui/panel-stack";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -616,6 +624,185 @@ function DataTableDemo({
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+// ── Batch 8: dates / time + tree / panel-stack (stateful wrappers) ────────────
+// All of these are controlled, so each needs a small stateful wrapper holding its
+// value/selection (render() is a pure function of props). The input variants
+// (DateInput / DateRangeInput / TimezoneSelect) portal a popover → thread `ctx.dark`;
+// the inline calendars (TimePicker / DatePicker / DateRangePicker) and Tree /
+// PanelStack render in place and need no `dark` threading. Fixed seed dates keep the
+// live instance deterministic.
+const PG_DATE = new Date(2026, 0, 15); // Jan 15, 2026
+const PG_TIME = new Date(2026, 0, 15, 14, 30, 0, 0); // 2:30 PM
+const PG_RANGE: DateRangePickerValue = { start: new Date(2026, 0, 8), end: new Date(2026, 0, 20) };
+
+function TimePickerDemo({ precision, useAmPm, showArrowButtons, selectAllOnFocus, disabled }: { precision: string; useAmPm: boolean; showArrowButtons: boolean; selectAllOnFocus: boolean; disabled: boolean }) {
+    const [value, setValue] = useState<Date>(PG_TIME);
+    return (
+        <TimePicker
+            value={value}
+            onChange={setValue}
+            precision={precision as never}
+            useAmPm={useAmPm}
+            showArrowButtons={showArrowButtons}
+            selectAllOnFocus={selectAllOnFocus}
+            disabled={disabled}
+        />
+    );
+}
+
+function DatePickerDemo({ timePrecision, showOutsideDays, highlightCurrentDay, canClearSelection, disabled }: { timePrecision: string; showOutsideDays: boolean; highlightCurrentDay: boolean; canClearSelection: boolean; disabled: boolean }) {
+    const [value, setValue] = useState<Date | null>(PG_DATE);
+    return (
+        <DatePicker
+            value={value}
+            onChange={setValue}
+            timePrecision={(timePrecision || undefined) as never}
+            showOutsideDays={showOutsideDays}
+            highlightCurrentDay={highlightCurrentDay}
+            canClearSelection={canClearSelection}
+            disabled={disabled}
+        />
+    );
+}
+
+function DateRangePickerDemo({ singleMonthOnly, contiguousCalendarMonths, allowSingleDayRange, disabled }: { singleMonthOnly: boolean; contiguousCalendarMonths: boolean; allowSingleDayRange: boolean; disabled: boolean }) {
+    const [value, setValue] = useState<DateRangePickerValue>(PG_RANGE);
+    return (
+        <DateRangePicker
+            value={value}
+            onChange={setValue}
+            singleMonthOnly={singleMonthOnly}
+            contiguousCalendarMonths={contiguousCalendarMonths}
+            allowSingleDayRange={allowSingleDayRange}
+            disabled={disabled}
+        />
+    );
+}
+
+function DateInputDemo({ dark, placeholder, timePrecision, closeOnSelection, fill, disabled }: { dark: boolean; placeholder: string; timePrecision: string; closeOnSelection: boolean; fill: boolean; disabled: boolean }) {
+    const [value, setValue] = useState<Date | null>(PG_DATE);
+    return (
+        <div style={{ width: 240 }}>
+            <DateInput
+                value={value}
+                onChange={setValue}
+                placeholder={placeholder}
+                timePrecision={(timePrecision || undefined) as never}
+                closeOnSelection={closeOnSelection}
+                fill={fill}
+                disabled={disabled}
+                dark={dark}
+            />
+        </div>
+    );
+}
+
+function DateRangeInputDemo({ dark, allowSingleDayRange, contiguousCalendarMonths, closeOnSelection, fill, disabled }: { dark: boolean; allowSingleDayRange: boolean; contiguousCalendarMonths: boolean; closeOnSelection: boolean; fill: boolean; disabled: boolean }) {
+    const [value, setValue] = useState<DateRangePickerValue>(PG_RANGE);
+    return (
+        <div style={{ width: 340 }}>
+            <DateRangeInput
+                value={value}
+                onChange={setValue}
+                allowSingleDayRange={allowSingleDayRange}
+                contiguousCalendarMonths={contiguousCalendarMonths}
+                closeOnSelection={closeOnSelection}
+                fill={fill}
+                disabled={disabled}
+                dark={dark}
+            />
+        </div>
+    );
+}
+
+function TimezoneSelectDemo({ dark, showLocalTimezone, filterable, fill, disabled, placeholder }: { dark: boolean; showLocalTimezone: boolean; filterable: boolean; fill: boolean; disabled: boolean; placeholder: string }) {
+    const [value, setValue] = useState<string>("America/Los_Angeles");
+    return (
+        <div style={{ width: 320 }}>
+            <TimezoneSelect
+                value={value}
+                onChange={setValue}
+                showLocalTimezone={showLocalTimezone}
+                filterable={filterable}
+                fill={fill}
+                disabled={disabled}
+                placeholder={placeholder}
+                dark={dark}
+            />
+        </div>
+    );
+}
+
+const PG_TREE_NODES: TreeNodeInfo[] = [
+    {
+        id: 1,
+        label: "Documents",
+        icon: "folder-close",
+        isExpanded: true,
+        childNodes: [
+            { id: 2, label: "Annual Report 2025", icon: "document", secondaryLabel: <span style={{ fontSize: 12, opacity: 0.6 }}>4.2 MB</span> },
+            {
+                id: 3,
+                label: "Projects",
+                icon: "folder-close",
+                isExpanded: true,
+                childNodes: [
+                    { id: 4, label: "mithril", icon: "document", isSelected: true },
+                    { id: 5, label: "blueprint-ref", icon: "document" },
+                ],
+            },
+        ],
+    },
+    { id: 6, label: "Drafts", icon: "folder-close" },
+    { id: 7, label: "Trash", icon: "trash", disabled: true },
+];
+
+function TreeDemo({ compact }: { compact: boolean }) {
+    const [contents, { handleNodeClick, handleNodeExpand, handleNodeCollapse }] = useTreeState(PG_TREE_NODES);
+    return (
+        <div style={{ width: 300 }}>
+            <Tree
+                contents={contents}
+                compact={compact}
+                onNodeClick={handleNodeClick}
+                onNodeExpand={handleNodeExpand}
+                onNodeCollapse={handleNodeCollapse}
+            />
+        </div>
+    );
+}
+
+const PG_ROOT_PANEL: PanelInfo = {
+    title: "Root",
+    renderPanel: ({ openPanel }: PanelActions & object) => (
+        <div className="flex flex-col gap-2 p-4 text-body text-foreground">
+            <p>Root panel content.</p>
+            <Button
+                size="small"
+                onClick={() => openPanel({ title: "Detail", renderPanel: () => <div className="p-4 text-body text-foreground">Detail panel content.</div> })}
+            >
+                Open Detail
+            </Button>
+        </div>
+    ),
+};
+
+function PanelStackDemo({ showPanelHeader, renderActivePanelOnly }: { showPanelHeader: boolean; renderActivePanelOnly: boolean }) {
+    const [stack, setStack] = useState<PanelInfo[]>([PG_ROOT_PANEL]);
+    return (
+        <div style={{ width: 320, height: 240, position: "relative", border: "1px solid var(--border)", borderRadius: 6, overflow: "hidden" }}>
+            <PanelStack
+                stack={stack}
+                onOpen={(p) => setStack((prev) => [...prev, p])}
+                onClose={() => setStack((prev) => prev.slice(0, -1))}
+                showPanelHeader={showPanelHeader}
+                renderActivePanelOnly={renderActivePanelOnly}
+                style={{ width: "100%", height: "100%" }}
+            />
         </div>
     );
 }
@@ -1999,5 +2186,219 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 h != null ? `/> // a fixed height bounds the viewport ⇒ rows virtualize (only the visible window renders)` : `/>`,
             ].join("\n");
         },
+    },
+
+    // ── Batch 8: dates / time (inline calendars + portaled inputs) + tree / panel-stack ──
+    "time-picker": {
+        initial: { precision: "minute", useAmPm: false, showArrowButtons: false, selectAllOnFocus: false, disabled: false },
+        controls: [
+            { kind: "enum", prop: "precision", options: [{ value: "minute" }, { value: "second" }, { value: "millisecond" }] },
+            { kind: "boolean", prop: "useAmPm" },
+            { kind: "boolean", prop: "showArrowButtons" },
+            { kind: "boolean", prop: "selectAllOnFocus" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "Seconds + arrows", props: { precision: "second", showArrowButtons: true, useAmPm: false } },
+            { name: "12-hour (AM/PM)", props: { precision: "minute", useAmPm: true, showArrowButtons: false } },
+        ],
+        render: (p) => (
+            <TimePickerDemo precision={p.precision} useAmPm={p.useAmPm} showArrowButtons={p.showArrowButtons} selectAllOnFocus={p.selectAllOnFocus} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState(() => new Date(2026, 0, 15, 14, 30));`,
+                ``,
+                jsx("TimePicker", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    precision: p.precision === "minute" ? undefined : (p.precision as never),
+                    useAmPm: p.useAmPm,
+                    showArrowButtons: p.showArrowButtons,
+                    selectAllOnFocus: p.selectAllOnFocus,
+                    disabled: p.disabled,
+                }),
+            ].join("\n"),
+    },
+
+    "date-picker": {
+        initial: { timePrecision: "", showOutsideDays: true, highlightCurrentDay: false, canClearSelection: true, disabled: false },
+        controls: [
+            { kind: "enum", prop: "timePrecision", label: "timePrecision", options: [{ value: "", label: "none" }, { value: "minute" }, { value: "second" }], widget: "select" },
+            { kind: "boolean", prop: "showOutsideDays" },
+            { kind: "boolean", prop: "highlightCurrentDay" },
+            { kind: "boolean", prop: "canClearSelection" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <DatePickerDemo timePrecision={p.timePrecision} showOutsideDays={p.showOutsideDays} highlightCurrentDay={p.highlightCurrentDay} canClearSelection={p.canClearSelection} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState<Date | null>(() => new Date(2026, 0, 15));`,
+                ``,
+                jsx("DatePicker", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    timePrecision: p.timePrecision || undefined,
+                    showOutsideDays: p.showOutsideDays ? undefined : false,
+                    highlightCurrentDay: p.highlightCurrentDay,
+                    canClearSelection: p.canClearSelection ? undefined : false,
+                    disabled: p.disabled,
+                }),
+            ].join("\n"),
+    },
+
+    "date-range-picker": {
+        initial: { singleMonthOnly: false, contiguousCalendarMonths: true, allowSingleDayRange: false, disabled: false },
+        controls: [
+            { kind: "boolean", prop: "singleMonthOnly" },
+            { kind: "boolean", prop: "contiguousCalendarMonths" },
+            { kind: "boolean", prop: "allowSingleDayRange" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <DateRangePickerDemo singleMonthOnly={p.singleMonthOnly} contiguousCalendarMonths={p.contiguousCalendarMonths} allowSingleDayRange={p.allowSingleDayRange} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState(() => ({`,
+                `  start: new Date(2026, 0, 8), end: new Date(2026, 0, 20),`,
+                `}));`,
+                ``,
+                jsx("DateRangePicker", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    singleMonthOnly: p.singleMonthOnly,
+                    contiguousCalendarMonths: p.contiguousCalendarMonths ? undefined : false,
+                    allowSingleDayRange: p.allowSingleDayRange,
+                    disabled: p.disabled,
+                }),
+            ].join("\n"),
+    },
+
+    "date-input": {
+        initial: { placeholder: "M/d/yyyy", timePrecision: "", closeOnSelection: true, fill: false, disabled: false },
+        controls: [
+            { kind: "text", prop: "placeholder" },
+            { kind: "enum", prop: "timePrecision", label: "timePrecision", options: [{ value: "", label: "none" }, { value: "minute" }, { value: "second" }], widget: "select" },
+            { kind: "boolean", prop: "closeOnSelection" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p, ctx) => (
+            <DateInputDemo dark={ctx.dark} placeholder={String(p.placeholder)} timePrecision={p.timePrecision} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState<Date | null>(() => new Date(2026, 0, 15));`,
+                ``,
+                jsx("DateInput", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    placeholder: String(p.placeholder),
+                    timePrecision: p.timePrecision || undefined,
+                    closeOnSelection: p.closeOnSelection ? undefined : false,
+                    fill: p.fill,
+                    disabled: p.disabled,
+                    dark: "{dark}",
+                }),
+            ].join("\n"),
+    },
+
+    "date-range-input": {
+        initial: { allowSingleDayRange: false, contiguousCalendarMonths: true, closeOnSelection: true, fill: false, disabled: false },
+        controls: [
+            { kind: "boolean", prop: "allowSingleDayRange" },
+            { kind: "boolean", prop: "contiguousCalendarMonths" },
+            { kind: "boolean", prop: "closeOnSelection" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p, ctx) => (
+            <DateRangeInputDemo dark={ctx.dark} allowSingleDayRange={p.allowSingleDayRange} contiguousCalendarMonths={p.contiguousCalendarMonths} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState(() => ({`,
+                `  start: new Date(2026, 0, 8), end: new Date(2026, 0, 20),`,
+                `}));`,
+                ``,
+                jsx("DateRangeInput", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    allowSingleDayRange: p.allowSingleDayRange,
+                    contiguousCalendarMonths: p.contiguousCalendarMonths ? undefined : false,
+                    closeOnSelection: p.closeOnSelection ? undefined : false,
+                    fill: p.fill,
+                    disabled: p.disabled,
+                    dark: "{dark}",
+                }),
+            ].join("\n"),
+    },
+
+    "timezone-select": {
+        initial: { showLocalTimezone: true, filterable: true, fill: false, disabled: false, placeholder: "Select timezone…" },
+        controls: [
+            { kind: "boolean", prop: "showLocalTimezone" },
+            { kind: "boolean", prop: "filterable" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+            { kind: "text", prop: "placeholder" },
+        ],
+        render: (p, ctx) => (
+            <TimezoneSelectDemo dark={ctx.dark} showLocalTimezone={p.showLocalTimezone} filterable={p.filterable} fill={p.fill} disabled={p.disabled} placeholder={String(p.placeholder)} />
+        ),
+        code: (p) =>
+            [
+                `const [value, setValue] = useState("America/Los_Angeles");`,
+                ``,
+                jsx("TimezoneSelect", {
+                    value: "{value}",
+                    onChange: "{setValue}",
+                    showLocalTimezone: p.showLocalTimezone ? undefined : false,
+                    filterable: p.filterable ? undefined : false,
+                    fill: p.fill,
+                    disabled: p.disabled,
+                    placeholder: String(p.placeholder),
+                    dark: "{dark}",
+                }),
+            ].join("\n"),
+    },
+
+    tree: {
+        initial: { compact: false },
+        controls: [{ kind: "boolean", prop: "compact" }],
+        render: (p) => <TreeDemo compact={p.compact} />,
+        code: (p) =>
+            [
+                `const [contents, handlers] = useTreeState(nodes);`,
+                ``,
+                `<Tree`,
+                `  contents={contents}${p.compact ? " compact" : ""}`,
+                `  onNodeClick={handlers.handleNodeClick}`,
+                `  onNodeExpand={handlers.handleNodeExpand}`,
+                `  onNodeCollapse={handlers.handleNodeCollapse}`,
+                `/>`,
+            ].join("\n"),
+    },
+
+    "panel-stack": {
+        initial: { showPanelHeader: true, renderActivePanelOnly: true },
+        controls: [
+            { kind: "boolean", prop: "showPanelHeader" },
+            { kind: "boolean", prop: "renderActivePanelOnly" },
+        ],
+        render: (p) => <PanelStackDemo showPanelHeader={p.showPanelHeader} renderActivePanelOnly={p.renderActivePanelOnly} />,
+        code: (p) =>
+            [
+                `const [stack, setStack] = useState([rootPanel]);`,
+                ``,
+                `<PanelStack`,
+                `  stack={stack}`,
+                `  onOpen={(p) => setStack((s) => [...s, p])}`,
+                `  onClose={() => setStack((s) => s.slice(0, -1))}${p.showPanelHeader ? "" : "\n  showPanelHeader={false}"}${p.renderActivePanelOnly ? "" : "\n  renderActivePanelOnly={false}"}`,
+                `/>`,
+            ].join("\n"),
     },
 };
