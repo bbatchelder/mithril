@@ -1,5 +1,5 @@
 /**
- * Vendored Blueprint icon path data — the full @blueprintjs/icons v6.15 set
+ * Vendored Blueprint icon path data — the full @blueprintjs/icons v6.10.0 set
  * (706 glyphs), copied verbatim from the package's generated path files.
  *
  * GENERATED FILE — do not edit by hand. Regenerate with:
