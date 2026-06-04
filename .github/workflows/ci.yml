@@ -34,6 +34,11 @@ jobs:
       # tsc -b + vite build (typecheck is part of build).
       - run: pnpm build
 
+      # Typecheck the test sources too. `pnpm build` only covers the app/node tsconfigs;
+      # `pnpm test` (vitest) strips types without checking them, so without this a test-only
+      # type error would slip through CI.
+      - run: pnpm typecheck:test
+
       - run: pnpm test
 
       # Registry-drift guard: registry.json must be in lock-step with the component source.
