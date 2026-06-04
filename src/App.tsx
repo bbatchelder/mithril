@@ -64,6 +64,7 @@ import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
 import { COMPONENT_META } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
+import { Playground, PLAYGROUNDS } from "@/playground";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
@@ -5550,6 +5551,13 @@ function ComponentView({ component }: { component: ComponentEntry }) {
                     <Icon icon="share" size={12} className="!text-current" />
                 </a>
             </div>
+
+            {/* ── Playground (curated components only) ────────────────────── */}
+            {PLAYGROUNDS[id] && (
+                <PageSection title="Playground">
+                    <Playground config={PLAYGROUNDS[id]} />
+                </PageSection>
+            )}
 
             {/* ── Add to your app ────────────────────────────────────────── */}
             <PageSection title="Add to your app">
