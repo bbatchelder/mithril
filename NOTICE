@@ -9,3 +9,9 @@ Color palette, intent colors, typographic scale, spacing/density, elevation
 shadows, and motion curves are derived from Blueprint's design-token set and
 SCSS variables. Component implementations are original work built on Radix UI,
 Tailwind CSS, and class-variance-authority.
+
+The icon set under src/components/ui/icons/ vendors the SVG path data of the
+@blueprintjs/icons package (https://github.com/palantir/blueprint), Copyright
+Palantir Technologies, Inc., licensed under the Apache License, 2.0. The path
+data is copied verbatim by tools/gen-icons.mjs; the surrounding TypeScript
+(types, exports, registry, and the Icon component) is original work.
