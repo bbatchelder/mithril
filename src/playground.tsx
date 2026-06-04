@@ -9,7 +9,7 @@
  * Components without an entry fall back to their existing Examples gallery — add a config
  * here to give one the interactive treatment.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ import { Select } from "@/components/ui/select";
 import { Suggest } from "@/components/ui/suggest";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { TagInput } from "@/components/ui/tag-input";
+import { DataTable, type DataTableColumn, type DataTableSelectionMode } from "@/components/ui/data-table";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -512,6 +513,71 @@ function TagInputDemo({ large, intent, leftIcon, disabled, fill, placeholder }: 
                 leftIcon={(leftIcon || undefined) as never}
                 disabled={disabled}
                 fill={fill}
+            />
+        </div>
+    );
+}
+
+// ── Batch 7: DataTable ───────────────────────────────────────────────────────
+// Inline (no portal → no `ctx.dark`), but controlled for inline edits, so it needs a
+// stateful wrapper holding the row data. Columns are memoized on the `editable` toggle
+// so the engine doesn't re-init its sizing/order state every render.
+interface PgPerson {
+    name: string;
+    age: number;
+    role: string;
+    location: string;
+}
+const PG_TABLE_ROWS: PgPerson[] = [
+    { name: "Alice Hancock", age: 34, role: "Engineer", location: "London" },
+    { name: "Bob Liu", age: 29, role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", age: 41, role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", age: 38, role: "Analyst", location: "Lagos" },
+    { name: "Eve Novak", age: 26, role: "Engineer", location: "Prague" },
+    { name: "Frank Mori", age: 52, role: "Director", location: "Osaka" },
+];
+
+function DataTableDemo({
+    numberedRows,
+    selectionMode,
+    resizing,
+    reordering,
+    editable,
+    loading,
+    fixedHeight,
+}: {
+    numberedRows: boolean;
+    selectionMode: string;
+    resizing: boolean;
+    reordering: boolean;
+    editable: boolean;
+    loading: boolean;
+    fixedHeight: boolean;
+}) {
+    const [rows, setRows] = useState<PgPerson[]>(PG_TABLE_ROWS);
+    const columns = useMemo<DataTableColumn<PgPerson>[]>(
+        () => [
+            { id: "name", header: "Name", accessor: "name", width: 150, editable },
+            { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },
+            { id: "role", header: "Role", accessor: "role", width: 110, editable },
+            { id: "location", header: "Location", accessor: "location", width: 120 },
+        ],
+        [editable],
+    );
+    return (
+        <div style={{ width: 440 }}>
+            <DataTable<PgPerson>
+                data={rows}
+                columns={columns}
+                numberedRows={numberedRows}
+                selectionMode={selectionMode as DataTableSelectionMode}
+                enableColumnResizing={resizing}
+                enableColumnReordering={reordering}
+                loading={loading}
+                height={fixedHeight ? 200 : undefined}
+                onCellEdit={({ row, columnId, value }) =>
+                    setRows((rs) => rs.map((r, i) => (i === row ? { ...r, [columnId]: value } : r)))
+                }
             />
         </div>
     );
@@ -1837,5 +1903,47 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 `  placeholder="${p.placeholder}"${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.leftIcon ? ` leftIcon="${p.leftIcon}"` : ""}${p.large ? " large" : ""}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""}`,
                 `  inputProps={{ "aria-label": "Tags" }} />`,
             ].join("\n"),
+    },
+
+    // ── Batch 7: DataTable (inline, stateful for inline edits) ──
+    "data-table": {
+        initial: { selectionMode: "single", numberedRows: true, resizing: true, reordering: false, editable: true, fixedHeight: false, loading: false },
+        controls: [
+            { kind: "enum", prop: "selectionMode", label: "selection", options: [{ value: "none" }, { value: "single" }, { value: "multi" }] },
+            { kind: "boolean", prop: "numberedRows", label: "gutter" },
+            { kind: "boolean", prop: "resizing", label: "resize cols" },
+            { kind: "boolean", prop: "reordering", label: "reorder cols" },
+            { kind: "boolean", prop: "editable", label: "editable" },
+            { kind: "boolean", prop: "fixedHeight", label: "fixed height" },
+            { kind: "boolean", prop: "loading" },
+        ],
+        render: (p) => (
+            <DataTableDemo
+                selectionMode={p.selectionMode}
+                numberedRows={p.numberedRows}
+                resizing={p.resizing}
+                reordering={p.reordering}
+                editable={p.editable}
+                fixedHeight={p.fixedHeight}
+                loading={p.loading}
+            />
+        ),
+        code: (p) => {
+            const ed = p.editable ? ", editable: true" : "";
+            return [
+                `const [data, setData] = useState(rows);`,
+                `const columns: DataTableColumn<Person>[] = [`,
+                `  { id: "name", header: "Name", accessor: "name", width: 150${ed} },`,
+                `  { id: "age", header: "Age", accessor: "age", width: 60, align: "right" },`,
+                `  { id: "role", header: "Role", accessor: "role", width: 110${ed} },`,
+                `  { id: "location", header: "Location", accessor: "location", width: 120 },`,
+                `];`,
+                ``,
+                `<DataTable`,
+                `  data={data} columns={columns}${p.numberedRows ? "" : " numberedRows={false}"}${p.selectionMode === "single" ? "" : ` selectionMode="${p.selectionMode}"`}${p.resizing ? " enableColumnResizing" : ""}${p.reordering ? " enableColumnReordering" : ""}${p.fixedHeight ? " height={200}" : ""}${p.loading ? " loading" : ""}`,
+                ...(p.editable ? [`  onCellEdit={({ row, columnId, value }) => save(row, columnId, value)}`] : []),
+                `/>`,
+            ].join("\n");
+        },
     },
 };
