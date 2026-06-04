@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 
+import { cn } from "@/lib/utils";
 import { Button, type ButtonIntent, type ButtonVariant } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { AnchorButton } from "@/components/ui/anchor-button";
@@ -61,6 +62,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
+import { COMPONENT_META } from "@/components/ui/component-meta.generated";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
@@ -5418,6 +5420,106 @@ function ComponentView({ component }: { component: ComponentEntry }) {
 }
 
 /**
+ * A compact meta chip for the overview tiles. Mirrors the minimal-Tag token classes
+ * (so it re-tints with the theme) but smaller and denser than `<Tag>` — there can be
+ * half a dozen per tile. `title` carries the long-form explanation on hover.
+ */
+type BadgeIntent = "none" | "primary" | "success" | "warning";
+function MetaBadge({
+    icon,
+    intent = "none",
+    title,
+    children,
+}: {
+    icon?: IconName;
+    intent?: BadgeIntent;
+    title?: string;
+    children: React.ReactNode;
+}) {
+    const colors: Record<BadgeIntent, string> = {
+        none: "bg-tag-minimal-bg text-tag-minimal-none-text",
+        primary: "bg-primary/10 text-tag-minimal-primary-text",
+        success: "bg-success/10 text-tag-minimal-success-text",
+        warning: "bg-warning/10 text-tag-minimal-warning-text",
+    };
+    return (
+        <span
+            title={title}
+            className={cn(
+                "inline-flex items-center gap-1 rounded-bp px-1.5 py-0.5 text-body-xs font-medium leading-none",
+                colors[intent],
+            )}
+        >
+            {icon && <Icon icon={icon} size={12} className="!text-current" />}
+            {children}
+        </span>
+    );
+}
+
+/**
+ * The metadata badges shown on a component's overview tile, derived from
+ * `component-meta.generated.ts` (regenerate with `pnpm gen:meta`):
+ *   - server-renderable (RSC) vs client-only — the `"use client"` directive
+ *   - test coverage — total + a heuristic a11y / keyboard / behavior split
+ *   - capability traits — portals (needs `dark` threading), Radix-backed, asChild
+ *   - distribution — an `internal` flag only when NOT in the owned-source registry
+ */
+function TileBadges({ id }: { id: string }) {
+    const meta = COMPONENT_META[id];
+    if (!meta) return null;
+    const { tests } = meta;
+    return (
+        <div className="mt-auto flex flex-wrap items-center gap-1 pt-0.5">
+            {meta.rsc ? (
+                <MetaBadge icon="server" intent="success" title="Server-renderable (RSC) — no &quot;use client&quot; directive">
+                    RSC
+                </MetaBadge>
+            ) : (
+                <MetaBadge icon="desktop" title="Client component (carries a &quot;use client&quot; directive)">
+                    Client
+                </MetaBadge>
+            )}
+            {tests.total === 0 ? (
+                <MetaBadge icon="lab-test" title="No dedicated test suite (accessibility is still covered by the shared axe smoke test)">
+                    untested
+                </MetaBadge>
+            ) : (
+                <>
+                    <MetaBadge icon="lab-test" title={`${tests.total} test ${tests.total === 1 ? "case" : "cases"} in this component's suite`}>
+                        {tests.total} tests
+                    </MetaBadge>
+                    {tests.a11y > 0 && (
+                        <MetaBadge intent="primary" title={`${tests.a11y} accessibility / ARIA test cases`}>
+                            a11y {tests.a11y}
+                        </MetaBadge>
+                    )}
+                    {tests.keyboard > 0 && (
+                        <MetaBadge title={`${tests.keyboard} keyboard-interaction test cases`}>kbd {tests.keyboard}</MetaBadge>
+                    )}
+                    {tests.behavior > 0 && (
+                        <MetaBadge title={`${tests.behavior} behavior test cases`}>beh {tests.behavior}</MetaBadge>
+                    )}
+                </>
+            )}
+            {meta.portal && (
+                <MetaBadge icon="panel-stats" intent="warning" title="Portals to document.body — pass dark={dark} when used as an overlay">
+                    Portal
+                </MetaBadge>
+            )}
+            {meta.radix && (
+                <MetaBadge icon="build" title="Backed by a Radix headless primitive">Radix</MetaBadge>
+            )}
+            {meta.polymorphic && (
+                <MetaBadge icon="fork" title="Polymorphic — supports asChild (Radix Slot)">asChild</MetaBadge>
+            )}
+            {!meta.registry && (
+                <MetaBadge icon="lock" title="Internal — not published via the owned-source registry">internal</MetaBadge>
+            )}
+        </div>
+    );
+}
+
+/**
  * Component Showcase landing: an IBM Carbon–style tiled overview. Components are laid
  * out as a responsive grid of tiles, grouped by category; each tile deep-links to that
  * component's page (`#showcase/<id>`).
@@ -5440,18 +5542,21 @@ function ShowcaseOverview() {
                             <h2 className="text-heading-sm font-semibold text-foreground">{group.label}</h2>
                             <span className="text-body-xs text-foreground-muted">{group.items.length}</span>
                         </div>
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             {group.items.map((c) => (
                                 <a
                                     key={c.id}
                                     href={`#showcase/${c.id}`}
                                     className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                 >
-                                    <Card interactive className="flex h-full items-center gap-3 !p-4">
-                                        <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
-                                            <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
-                                        </span>
-                                        <span className="text-body-sm font-medium text-foreground">{c.title}</span>
+                                    <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                                <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
+                                            </span>
+                                            <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
+                                        </div>
+                                        <TileBadges id={c.id} />
                                     </Card>
                                 </a>
                             ))}
