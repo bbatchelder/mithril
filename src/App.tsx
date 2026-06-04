@@ -63,6 +63,7 @@ import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
 import { COMPONENT_META } from "@/components/ui/component-meta.generated";
+import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
@@ -5447,6 +5448,65 @@ function PageSection({ title, children }: { title: string; children: React.React
 }
 
 /**
+ * The props/API reference for a component, from `component-props.generated.ts`
+ * (regenerate with `pnpm gen:props`). One table per export in the family (Menu ·
+ * MenuItem · MenuDivider); inherited DOM props are excluded by the generator.
+ */
+function PropsTable({ id }: { id: string }) {
+    const docs = COMPONENT_PROPS[id];
+    if (!docs?.length) return null;
+    const multi = docs.length > 1;
+    return (
+        <div className="flex flex-col gap-6">
+            {docs.map((c) => (
+                <div key={c.name} className="flex flex-col gap-2">
+                    {multi && (
+                        <code className="font-mono text-body font-semibold text-foreground">{c.name}</code>
+                    )}
+                    <div className="overflow-x-auto">
+                        <HTMLTable bordered compact className="w-full align-top text-body-sm">
+                            <thead>
+                                <tr>
+                                    <th className="text-left">Prop</th>
+                                    <th className="text-left">Type</th>
+                                    <th className="text-left">Default</th>
+                                    <th className="text-left">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {c.props.map((p) => (
+                                    <tr key={p.name}>
+                                        <td className="whitespace-nowrap align-top">
+                                            <code className="font-mono text-foreground">{p.name}</code>
+                                            {p.required && (
+                                                <span className="ml-0.5 text-intent-danger-text" title="Required">
+                                                    *
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="align-top">
+                                            <code className="font-mono text-intent-primary-text">{p.type}</code>
+                                        </td>
+                                        <td className="align-top">
+                                            {p.defaultValue ? (
+                                                <code className="font-mono text-foreground-muted">{p.defaultValue}</code>
+                                            ) : (
+                                                <span className="text-foreground-muted">—</span>
+                                            )}
+                                        </td>
+                                        <td className="align-top text-foreground-muted">{p.description || "—"}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </HTMLTable>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/**
  * A single component's page: a header (description + metadata badges + source link),
  * how-to-add (registry install command + import snippet), what it builds on
  * (registry + npm dependencies), and the live examples gallery.
@@ -5537,6 +5597,13 @@ function ComponentView({ component }: { component: ComponentEntry }) {
                     )}
                 </PageSection>
             )}
+
+            {/* ── Props / API ────────────────────────────────────────────── */}
+            {COMPONENT_PROPS[id]?.length ? (
+                <PageSection title="Props">
+                    <PropsTable id={id} />
+                </PageSection>
+            ) : null}
 
             {/* ── Examples ───────────────────────────────────────────────── */}
             <PageSection title="Examples">
