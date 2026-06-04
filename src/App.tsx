@@ -63,7 +63,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
-import { COMPONENT_META } from "@/components/ui/component-meta.generated";
+import { COMPONENT_META, type ComponentMeta } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { Playground, PLAYGROUNDS } from "@/playground";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
@@ -5884,50 +5884,200 @@ function TileBadges({ id, className }: { id: string; className?: string }) {
 }
 
 /**
+ * The capability filters offered above the overview grid. Each tests a component's
+ * generated metadata; an active filter keeps only components it matches (filters are
+ * ANDed together). Mirrors the trait badges shown on each tile.
+ */
+const TRAIT_FILTERS: { key: string; label: string; icon: IconName; match: (m: ComponentMeta) => boolean }[] = [
+    { key: "rsc", label: "Server-renderable", icon: "server", match: (m) => m.rsc },
+    { key: "tested", label: "Has tests", icon: "lab-test", match: (m) => m.tests.total > 0 },
+    { key: "axe", label: "Axe-audited", icon: "endorsed", match: (m) => m.axe },
+    { key: "portal", label: "Portal", icon: "panel-stats", match: (m) => m.portal },
+    { key: "radix", label: "Radix", icon: "build", match: (m) => m.radix },
+    { key: "polymorphic", label: "asChild", icon: "fork", match: (m) => m.polymorphic },
+];
+
+/** A toggleable pill used for the capability filters. Mirrors MetaBadge sizing. */
+function FilterChip({
+    active,
+    icon,
+    onClick,
+    children,
+}: {
+    active: boolean;
+    icon?: IconName;
+    onClick: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={active}
+            className={cn(
+                "inline-flex items-center gap-1 rounded-bp px-2 py-1 text-body-xs font-medium leading-none outline-none transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
+                active
+                    ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                    : "bg-tag-minimal-bg text-tag-minimal-none-text hover:bg-[var(--interactive-hover)]",
+            )}
+        >
+            {icon && <Icon icon={icon} size={12} className="!text-current" />}
+            {children}
+        </button>
+    );
+}
+
+/**
  * Component Showcase landing: an IBM Carbon–style tiled overview. Components are laid
  * out as a responsive grid of tiles, grouped by category; each tile deep-links to that
- * component's page (`#showcase/<id>`).
+ * component's page (`#showcase/<id>`). A search box (matching title / id / description)
+ * and capability filters narrow the grid; empty groups drop out as you filter.
  */
 function ShowcaseOverview() {
     useEffect(() => {
         window.scrollTo({ top: 0 });
     }, []);
+    const [query, setQuery] = useState("");
+    const [activeTraits, setActiveTraits] = useState<Set<string>>(() => new Set());
+
+    const toggleTrait = (key: string) =>
+        setActiveTraits((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+
+    const q = query.trim().toLowerCase();
+    const traits = TRAIT_FILTERS.filter((t) => activeTraits.has(t.key));
+    const hasFilters = q.length > 0 || traits.length > 0;
+
+    const matches = (c: ComponentEntry) => {
+        const meta = COMPONENT_META[c.id];
+        if (q) {
+            const haystack = `${c.title} ${c.id} ${meta?.description ?? ""}`.toLowerCase();
+            if (!haystack.includes(q)) return false;
+        }
+        if (traits.length && (!meta || !traits.every((t) => t.match(meta)))) return false;
+        return true;
+    };
+
+    const filteredGroups = CATEGORY_GROUPS.map((group) => ({
+        label: group.label,
+        items: group.items.filter(matches),
+    })).filter((group) => group.items.length > 0);
+
+    const matchCount = filteredGroups.reduce((n, g) => n + g.items.length, 0);
+
+    const clearAll = () => {
+        setQuery("");
+        setActiveTraits(new Set());
+    };
+
     return (
         <div className="mx-auto max-w-[1100px] px-8 py-10">
             <h1 className="text-heading-lg font-semibold text-foreground">Components</h1>
             <p className="mt-1.5 text-body text-foreground-muted">
                 {COMPONENTS.length} components, grouped by category. Pick one to browse and exercise it in light or dark.
             </p>
-            <div className="mt-10 flex flex-col gap-10">
-                {CATEGORY_GROUPS.map((group) => (
-                    <section key={group.label}>
-                        <div className="flex items-center gap-2 border-b border-border pb-2">
-                            <Icon icon={CATEGORY_ICONS[group.label] ?? "more"} size={16} className="text-foreground-muted" />
-                            <h2 className="text-heading-sm font-semibold text-foreground">{group.label}</h2>
-                            <span className="text-body-xs text-foreground-muted">{group.items.length}</span>
-                        </div>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                            {group.items.map((c) => (
-                                <a
-                                    key={c.id}
-                                    href={`#showcase/${c.id}`}
-                                    className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                                >
-                                    <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
-                                        <div className="flex items-center gap-2.5">
-                                            <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
-                                                <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
-                                            </span>
-                                            <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
-                                        </div>
-                                        <TileBadges id={c.id} className="mt-auto pt-0.5" />
-                                    </Card>
-                                </a>
-                            ))}
-                        </div>
-                    </section>
-                ))}
+
+            {/* ── Search + capability filters ─────────────────────────────── */}
+            <div className="mt-6 flex flex-col gap-3">
+                <div className="w-full max-w-[360px]">
+                    <InputGroup
+                        fill
+                        leftIcon="search"
+                        placeholder="Search components…"
+                        aria-label="Search components"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        rightElement={
+                            query ? (
+                                <Button
+                                    size="small"
+                                    variant="minimal"
+                                    aria-label="Clear search"
+                                    icon={<Icon icon="cross" size={12} className="!text-current" />}
+                                    onClick={() => setQuery("")}
+                                />
+                            ) : undefined
+                        }
+                    />
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="mr-0.5 text-body-xs font-medium uppercase tracking-wide text-foreground-muted">
+                        Filter
+                    </span>
+                    {TRAIT_FILTERS.map((t) => (
+                        <FilterChip key={t.key} active={activeTraits.has(t.key)} icon={t.icon} onClick={() => toggleTrait(t.key)}>
+                            {t.label}
+                        </FilterChip>
+                    ))}
+                    {hasFilters && (
+                        <button
+                            type="button"
+                            onClick={clearAll}
+                            className="ml-0.5 inline-flex items-center gap-1 rounded-bp px-1.5 py-1 text-body-xs font-medium leading-none text-intent-primary-text outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+                        >
+                            <Icon icon="small-cross" size={12} className="!text-current" />
+                            Clear
+                        </button>
+                    )}
+                </div>
+                {hasFilters && (
+                    <span className="text-body-xs text-foreground-muted">
+                        {matchCount} of {COMPONENTS.length} components
+                    </span>
+                )}
             </div>
+
+            {/* ── Grid ────────────────────────────────────────────────────── */}
+            {filteredGroups.length === 0 ? (
+                <div className="mt-16">
+                    <NonIdealState
+                        icon="search"
+                        title="No matching components"
+                        description="Try a different search term or clear the filters."
+                        action={
+                            <Button variant="outlined" onClick={clearAll}>
+                                Clear filters
+                            </Button>
+                        }
+                    />
+                </div>
+            ) : (
+                <div className="mt-10 flex flex-col gap-10">
+                    {filteredGroups.map((group) => (
+                        <section key={group.label}>
+                            <div className="flex items-center gap-2 border-b border-border pb-2">
+                                <Icon icon={CATEGORY_ICONS[group.label] ?? "more"} size={16} className="text-foreground-muted" />
+                                <h2 className="text-heading-sm font-semibold text-foreground">{group.label}</h2>
+                                <span className="text-body-xs text-foreground-muted">{group.items.length}</span>
+                            </div>
+                            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                {group.items.map((c) => (
+                                    <a
+                                        key={c.id}
+                                        href={`#showcase/${c.id}`}
+                                        className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                    >
+                                        <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
+                                            <div className="flex items-center gap-2.5">
+                                                <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                                    <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
+                                                </span>
+                                                <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
+                                            </div>
+                                            <TileBadges id={c.id} className="mt-auto pt-0.5" />
+                                        </Card>
+                                    </a>
+                                ))}
+                            </div>
+                        </section>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
