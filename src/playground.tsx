@@ -13,6 +13,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { AnchorButton } from "@/components/ui/anchor-button";
 import { Tag } from "@/components/ui/tag";
 import { Callout } from "@/components/ui/callout";
 import { Spinner, SpinnerSize } from "@/components/ui/spinner";
@@ -20,11 +21,19 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { InputGroup } from "@/components/ui/input-group";
+import { TextArea } from "@/components/ui/text-area";
+import { EditableText } from "@/components/ui/editable-text";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Slider } from "@/components/ui/slider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { Card, type CardElevation } from "@/components/ui/card";
+import { EntityTitle, type EntityTitleSize } from "@/components/ui/entity-title";
+import { NonIdealState } from "@/components/ui/non-ideal-state";
+import { Link } from "@/components/ui/link";
+import { Divider } from "@/components/ui/divider";
+import { Collapse } from "@/components/ui/collapse";
 
 // ── Config model ─────────────────────────────────────────────────────────────
 type EnumOption = { value: string; label?: string };
@@ -92,6 +101,26 @@ const ICONS: EnumOption[] = [
     { value: "caret-down" },
 ];
 const ICONS_REQ = ICONS.slice(1);
+const ELEVATIONS: EnumOption[] = [{ value: "0" }, { value: "1" }, { value: "2" }, { value: "3" }, { value: "4" }];
+const ENTITY_SIZES: EnumOption[] = [
+    { value: "text" },
+    { value: "h1" },
+    { value: "h2" },
+    { value: "h3" },
+    { value: "h4" },
+    { value: "h5" },
+    { value: "h6" },
+];
+const UNDERLINE: EnumOption[] = [{ value: "always" }, { value: "hover" }, { value: "none" }];
+const LINK_COLORS: EnumOption[] = [
+    { value: "primary" },
+    { value: "success" },
+    { value: "warning" },
+    { value: "danger" },
+    { value: "inherit" },
+];
+const LAYOUTS: EnumOption[] = [{ value: "vertical" }, { value: "horizontal" }];
+const BUTTON_POSITIONS: EnumOption[] = [{ value: "left" }, { value: "right" }, { value: "none" }];
 
 // ── The playground renderer ──────────────────────────────────────────────────
 function ControlField({
@@ -426,5 +455,239 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             </div>
         ),
         code: (p) => jsx("Slider", { min: 0, max: 100, stepSize: p.stepSize, intent: p.intent, vertical: p.vertical, disabled: p.disabled, showTrackFill: p.showTrackFill, defaultValue: 40 }),
+    },
+
+    // ── Batch 2: form controls ────────────────────────────────────────────────
+    "anchor-button": {
+        initial: { variant: "solid", intent: "primary", size: "medium", label: "Continue", icon: "", endIcon: "share", fill: false, active: false, disabled: false },
+        controls: [
+            { kind: "enum", prop: "variant", options: VARIANTS },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "enum", prop: "icon", options: ICONS },
+            { kind: "enum", prop: "endIcon", label: "endIcon", options: ICONS },
+            { kind: "text", prop: "label" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "active" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "External link", props: { variant: "minimal", intent: "primary", label: "Open docs", icon: "", endIcon: "share" } },
+            { name: "Disabled", props: { variant: "solid", intent: "none", label: "Unavailable", disabled: true } },
+        ],
+        render: (p) => (
+            <AnchorButton href="#" variant={p.variant} intent={p.intent} size={p.size} fill={p.fill} active={p.active} disabled={p.disabled} icon={p.icon || undefined} endIcon={p.endIcon || undefined}>
+                {p.label}
+            </AnchorButton>
+        ),
+        code: (p) => jsx("AnchorButton", { href: "#", variant: p.variant, intent: p.intent, size: p.size, icon: p.icon, endIcon: p.endIcon, fill: p.fill, active: p.active, disabled: p.disabled }, p.label),
+    },
+
+    "text-area": {
+        initial: { size: "medium", intent: "none", placeholder: "Write a message…", rows: 4, fill: false, disabled: false, autoResize: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "number", prop: "rows", label: "rows", min: 2, max: 10, stepSize: 1 },
+            { kind: "text", prop: "placeholder" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+            { kind: "boolean", prop: "autoResize" },
+        ],
+        render: (p) => (
+            <div style={{ width: 300 }}>
+                <TextArea size={p.size} intent={p.intent} rows={p.rows} placeholder={p.placeholder} fill={p.fill} disabled={p.disabled} autoResize={p.autoResize} />
+            </div>
+        ),
+        code: (p) => jsx("TextArea", { size: p.size, intent: p.intent === "none" ? undefined : p.intent, rows: p.rows, placeholder: p.placeholder, fill: p.fill, disabled: p.disabled, autoResize: p.autoResize }),
+    },
+
+    "html-select": {
+        initial: { large: false, minimal: false, fill: false, disabled: false },
+        controls: [
+            { kind: "boolean", prop: "large" },
+            { kind: "boolean", prop: "minimal" },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <div style={{ width: 220 }}>
+                <HTMLSelect large={p.large} minimal={p.minimal} fill={p.fill} disabled={p.disabled} defaultValue="Banana" options={["Apple", "Banana", "Cherry", "Date"]} />
+            </div>
+        ),
+        code: (p) => `<HTMLSelect${p.large ? " large" : ""}${p.minimal ? " minimal" : ""}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""} options={["Apple", "Banana", "Cherry", "Date"]} />`,
+    },
+
+    "numeric-input": {
+        initial: { size: "medium", intent: "none", buttonPosition: "right", stepSize: 1, fill: false, disabled: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "enum", prop: "buttonPosition", label: "buttons", options: BUTTON_POSITIONS },
+            { kind: "number", prop: "stepSize", label: "stepSize", min: 1, max: 25, stepSize: 1 },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <div style={{ width: 200 }}>
+                <NumericInput size={p.size} intent={p.intent} buttonPosition={p.buttonPosition} stepSize={p.stepSize} fill={p.fill} disabled={p.disabled} defaultValue={5} />
+            </div>
+        ),
+        code: (p) => jsx("NumericInput", { size: p.size, intent: p.intent === "none" ? undefined : p.intent, buttonPosition: p.buttonPosition === "right" ? undefined : p.buttonPosition, stepSize: p.stepSize, fill: p.fill, disabled: p.disabled, defaultValue: 5 }),
+    },
+
+    "segmented-control": {
+        initial: { size: "medium", intent: "none", fill: false, disabled: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "boolean", prop: "fill" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        render: (p) => (
+            <SegmentedControl
+                size={p.size}
+                intent={p.intent}
+                fill={p.fill}
+                disabled={p.disabled}
+                defaultValue="list"
+                options={[
+                    { label: "List", value: "list" },
+                    { label: "Grid", value: "grid" },
+                    { label: "Gallery", value: "gallery" },
+                ]}
+            />
+        ),
+        code: (p) => `<SegmentedControl${p.size === "medium" ? "" : ` size="${p.size}"`}${p.intent === "none" ? "" : ` intent="${p.intent}"`}${p.fill ? " fill" : ""}${p.disabled ? " disabled" : ""} defaultValue="list" options={[{ label: "List", value: "list" }, … ]} />`,
+    },
+
+    "editable-text": {
+        initial: { value: "Edit me", placeholder: "Click to edit…", intent: "none", multiline: false, disabled: false, selectAllOnFocus: false },
+        controls: [
+            { kind: "text", prop: "value" },
+            { kind: "text", prop: "placeholder" },
+            { kind: "enum", prop: "intent", options: INTENTS },
+            { kind: "boolean", prop: "multiline" },
+            { kind: "boolean", prop: "disabled" },
+            { kind: "boolean", prop: "selectAllOnFocus", label: "selectAll" },
+        ],
+        render: (p) => (
+            <div style={{ width: 260 }}>
+                <EditableText key={String(p.multiline)} defaultValue={p.value} placeholder={p.placeholder} intent={p.intent} multiline={p.multiline} disabled={p.disabled} selectAllOnFocus={p.selectAllOnFocus} />
+            </div>
+        ),
+        code: (p) => jsx("EditableText", { defaultValue: p.value, placeholder: p.placeholder, intent: p.intent === "none" ? undefined : p.intent, multiline: p.multiline, disabled: p.disabled, selectAllOnFocus: p.selectAllOnFocus }),
+    },
+
+    // ── Batch 2: display & layout ─────────────────────────────────────────────
+    card: {
+        initial: { elevation: "1", body: "A surface for grouping related content.", interactive: false, selected: false, compact: false },
+        controls: [
+            { kind: "enum", prop: "elevation", options: ELEVATIONS },
+            { kind: "text", prop: "body" },
+            { kind: "boolean", prop: "interactive" },
+            { kind: "boolean", prop: "selected" },
+            { kind: "boolean", prop: "compact" },
+        ],
+        presets: [
+            { name: "Raised", props: { elevation: "3", body: "A floating, elevated card." } },
+            { name: "Selectable", props: { elevation: "0", interactive: true, selected: true, body: "An interactive, selected card." } },
+        ],
+        render: (p) => (
+            <Card elevation={Number(p.elevation) as CardElevation} interactive={p.interactive} selected={p.selected} compact={p.compact} style={{ width: 280 }}>
+                {p.body}
+            </Card>
+        ),
+        code: (p) => jsx("Card", { elevation: Number(p.elevation), interactive: p.interactive, selected: p.selected, compact: p.compact }, p.body),
+    },
+
+    "entity-title": {
+        initial: { title: "Spectre mission", subtitle: "Updated 2 hours ago", size: "h4", icon: "star", ellipsize: false },
+        controls: [
+            { kind: "enum", prop: "size", options: ENTITY_SIZES, widget: "select" },
+            { kind: "enum", prop: "icon", options: ICONS },
+            { kind: "text", prop: "title" },
+            { kind: "text", prop: "subtitle" },
+            { kind: "boolean", prop: "ellipsize" },
+        ],
+        render: (p) => (
+            <div style={{ width: 280 }}>
+                <EntityTitle title={p.title} subtitle={p.subtitle || undefined} size={p.size as EntityTitleSize} icon={p.icon || undefined} ellipsize={p.ellipsize} />
+            </div>
+        ),
+        code: (p) => jsx("EntityTitle", { title: p.title, subtitle: p.subtitle, size: p.size, icon: p.icon, ellipsize: p.ellipsize }),
+    },
+
+    "non-ideal-state": {
+        initial: { icon: "search", title: "No results", description: "Try adjusting your filters or search terms.", layout: "vertical" },
+        controls: [
+            { kind: "enum", prop: "icon", options: ICONS_REQ },
+            { kind: "enum", prop: "layout", options: LAYOUTS },
+            { kind: "text", prop: "title" },
+            { kind: "text", prop: "description" },
+        ],
+        render: (p) => (
+            <div style={{ width: 320 }}>
+                <NonIdealState icon={p.icon as IconName} title={p.title} description={p.description} layout={p.layout} />
+            </div>
+        ),
+        code: (p) => jsx("NonIdealState", { icon: p.icon, title: p.title, description: p.description, layout: p.layout === "vertical" ? undefined : p.layout }),
+    },
+
+    link: {
+        initial: { label: "Read the documentation", underline: "always", color: "primary" },
+        controls: [
+            { kind: "text", prop: "label" },
+            { kind: "enum", prop: "underline", options: UNDERLINE },
+            { kind: "enum", prop: "color", options: LINK_COLORS, widget: "select" },
+        ],
+        render: (p) => (
+            <Link href="#" underline={p.underline} color={p.color}>
+                {p.label}
+            </Link>
+        ),
+        code: (p) => jsx("Link", { href: "#", underline: p.underline === "always" ? undefined : p.underline, color: p.color === "primary" ? undefined : p.color }, p.label),
+    },
+
+    divider: {
+        initial: { orientation: "horizontal", compact: false },
+        controls: [
+            { kind: "enum", prop: "orientation", options: LAYOUTS },
+            { kind: "boolean", prop: "compact" },
+        ],
+        render: (p) =>
+            p.orientation === "horizontal" ? (
+                <div className="flex w-56 flex-col text-body text-foreground">
+                    <span>Above</span>
+                    <Divider compact={p.compact} />
+                    <span>Below</span>
+                </div>
+            ) : (
+                <div className="flex h-8 items-center text-body text-foreground">
+                    <span>Left</span>
+                    <Divider compact={p.compact} />
+                    <span>Right</span>
+                </div>
+            ),
+        // Orientation is contextual (set by the flex container), so it isn't a Divider prop.
+        code: (p) => jsx("Divider", { compact: p.compact }),
+    },
+
+    collapse: {
+        initial: { isOpen: true, keepChildrenMounted: false },
+        controls: [
+            { kind: "boolean", prop: "isOpen" },
+            { kind: "boolean", prop: "keepChildrenMounted", label: "keepMounted" },
+        ],
+        render: (p) => (
+            <div style={{ width: 320 }}>
+                <Collapse isOpen={p.isOpen} keepChildrenMounted={p.keepChildrenMounted}>
+                    <Card elevation={0} className="text-body text-foreground">
+                        Collapsible content — toggle <code className="font-mono">isOpen</code> to animate it in and out.
+                    </Card>
+                </Collapse>
+            </div>
+        ),
+        code: (p) => jsx("Collapse", { isOpen: p.isOpen, keepChildrenMounted: p.keepChildrenMounted }, "…"),
     },
 };
