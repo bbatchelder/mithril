@@ -1,3 +1,5 @@
+"use client";
+
 import { createElement, useLayoutEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Drawer — pixel-faithful Blueprint v6.15 reimplementation on Radix Dialog.
  *

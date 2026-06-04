@@ -1,3 +1,5 @@
+"use client";
+
 import { flexRender, type Table } from "@tanstack/react-table";
 
 import { cn } from "@/lib/utils";

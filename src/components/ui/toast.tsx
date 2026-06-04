@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Toast / Toaster — pixel-faithful Blueprint v6.15 reimplementation on Radix Toast.
  *

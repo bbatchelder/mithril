@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Menu + MenuItem + MenuDivider — Blueprint v6.15 fidelity.
  *

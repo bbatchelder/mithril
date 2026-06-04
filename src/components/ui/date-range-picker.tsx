@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * DateRangePicker — pixel-faithful Blueprint v6.15 reimplementation with a clean modern API.
  *

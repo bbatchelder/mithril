@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Checkbox — pixel-faithful Blueprint v6.15 reimplementation.
  *

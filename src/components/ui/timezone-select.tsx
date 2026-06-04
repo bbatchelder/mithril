@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * TimezoneSelect — pixel-faithful Blueprint v6.15 reimplementation.
  *

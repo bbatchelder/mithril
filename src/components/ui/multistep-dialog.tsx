@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * MultistepDialog + DialogStep — pixel-faithful Blueprint v6.15 reimplementation,
  * built on the owned `Dialog` (Radix) so it inherits the portal + dark-mode wrapper,
