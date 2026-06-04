@@ -1,8 +1,9 @@
 /**
  * Codegen: vendored Blueprint icon path data — tree-shakeable.
  *
- * Reads the full @blueprintjs/icons v6.15 path set from the reference gallery's
- * node_modules and emits two files into `src/components/ui/icons/`:
+ * Reads the full @blueprintjs/icons path set from the reference gallery's
+ * node_modules (the exact resolved version is stamped into the generated headers)
+ * and emits two files into `src/components/ui/icons/`:
  *
  *   - `index.ts` — one `export const <camelName>: IconGlyph` per glyph (706 of
  *     them), plus the `IconGlyph` type and the kebab-case `IconName` union. Because
@@ -22,16 +23,23 @@
  * To pick up new Blueprint icons, bump @blueprintjs/icons in
  * tools/blueprint-reference and re-run this script.
  */
-import { writeFileSync, readdirSync } from "node:fs";
+import { writeFileSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
-const esm = resolve(
+const iconsPkg = resolve(
     repoRoot,
-    "tools/blueprint-reference/node_modules/@blueprintjs/icons/lib/esm",
+    "tools/blueprint-reference/node_modules/@blueprintjs/icons",
 );
+const esm = resolve(iconsPkg, "lib/esm");
+
+// Stamp the exact resolved package version into the generated headers so the comment
+// can never drift from what was actually vendored.
+const iconsVersion = JSON.parse(
+    readFileSync(resolve(iconsPkg, "package.json"), "utf8"),
+).version;
 
 // The per-icon path files (e.g. `add.js`) carry only `export default [...]` with
 // no internal imports, so Node can import them directly. (The `paths/index.js`
@@ -88,7 +96,7 @@ const glyphConsts = entries
     .join("\n");
 
 const indexOut = `/**
- * Vendored Blueprint icon path data — the full @blueprintjs/icons v6.15 set
+ * Vendored Blueprint icon path data — the full @blueprintjs/icons v${iconsVersion} set
  * (${entries.length} glyphs), copied verbatim from the package's generated path files.
  *
  * GENERATED FILE — do not edit by hand. Regenerate with:
@@ -127,8 +135,8 @@ const allMap = entries
     .join("\n");
 
 const allOut = `/**
- * The full glyph map, keyed by \`IconName\` — GENERATED, do not edit by hand.
- * Regenerate with:  node tools/gen-icons.mjs
+ * The full glyph map, keyed by \`IconName\` (@blueprintjs/icons v${iconsVersion}) —
+ * GENERATED, do not edit by hand. Regenerate with:  node tools/gen-icons.mjs
  *
  * Importing this module pulls in **every** glyph (≈195 KB), so it is kept in its
  * own file, separate from \`index.ts\`, and is never imported by \`icon.tsx\`. Use it

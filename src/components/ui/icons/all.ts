@@ -1,6 +1,6 @@
 /**
- * The full glyph map, keyed by `IconName` — GENERATED, do not edit by hand.
- * Regenerate with:  node tools/gen-icons.mjs
+ * The full glyph map, keyed by `IconName` (@blueprintjs/icons v6.10.0) —
+ * GENERATED, do not edit by hand. Regenerate with:  node tools/gen-icons.mjs
  *
  * Importing this module pulls in **every** glyph (≈195 KB), so it is kept in its
  * own file, separate from `index.ts`, and is never imported by `icon.tsx`. Use it
