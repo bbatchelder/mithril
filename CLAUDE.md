@@ -60,6 +60,7 @@ the ongoing goal:
   props/API table from `component-props.generated.ts` (`pnpm gen:props`, via react-docgen-typescript),
   and — for components with a curated config in `src/playground.tsx` — an interactive playground (a
   single live instance + controls + presets + live code); others fall back to their Examples gallery.
+  Remaining playground work + the how‑to is in [`docs/component-pages-handoff.md`](docs/component-pages-handoff.md).
   Each app keeps its **own** palette +
   light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
   `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
