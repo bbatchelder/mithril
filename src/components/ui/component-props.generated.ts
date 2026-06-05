@@ -256,6 +256,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled alert into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the alert's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -795,6 +802,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Called when the open state changes. Note: Radix ContextMenu is uncontrolled — it opens on right-click events only. Use this callback to track open state externally."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled menu into this element instead of `document.body`. Forwarded to Radix `ContextMenu.Portal`'s `container`. Used by the showcase to confine the menu to its playground stage (give that stage a CSS containing block so the menu's positioning resolves against it)."
                 }
             ]
         }
@@ -1924,6 +1938,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled dialog into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the dialog's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -2083,6 +2104,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled drawer into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the drawer's `fixed` backdrop/panel resolve against it)."
                 },
                 {
                     "name": "position",
@@ -3505,6 +3533,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled dialog into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the dialog's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -3855,6 +3890,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Additional props passed to the portal overlay wrapper. Use `portalClassName` to pass `Classes.DARK` in dark theme (Blueprint reference gallery pattern)."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": "document.body",
+                    "description": "Render the portaled overlay into this element instead of `document.body`. Used by the showcase to confine the omnibar to its playground stage (give that stage a CSS containing block so the `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "query",
                     "type": "string",
                     "required": false,
@@ -4187,6 +4229,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled panel into this element instead of `document.body`. Forwarded to Radix `Popover.Portal`'s `container`. Used by the component showcase to confine an overlay to its playground stage (give that stage a CSS containing block so the panel's positioning resolves against it)."
+                },
+                {
                     "name": "side",
                     "type": "\"left\" | \"right\" | \"top\" | \"bottom\"",
                     "required": false,
@@ -4366,6 +4415,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled panel into this element instead of `document.body`. Forwarded to Radix `Popover.Portal`'s `container`. Used by the component showcase to confine an overlay to its playground stage (give that stage a CSS containing block so the panel's positioning resolves against it)."
                 },
                 {
                     "name": "side",
@@ -6333,6 +6389,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled tooltip into this element instead of `document.body`. Forwarded to Radix `Tooltip.Portal`'s `container`. Used by the showcase to confine the bubble to its playground stage (give that stage a CSS containing block so the bubble's positioning resolves against it)."
                 },
                 {
                     "name": "side",

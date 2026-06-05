@@ -161,6 +161,14 @@ export interface TooltipProps {
      */
     dark?: boolean;
 
+    /**
+     * Render the portaled tooltip into this element instead of `document.body`.
+     * Forwarded to Radix `Tooltip.Portal`'s `container`. Used by the showcase to
+     * confine the bubble to its playground stage (give that stage a CSS containing
+     * block so the bubble's positioning resolves against it).
+     */
+    portalContainer?: HTMLElement | null;
+
     /** Additional class on the tooltip bubble element. */
     className?: string;
 
@@ -258,6 +266,7 @@ export function Tooltip({
     hoverCloseDelay = 0,
     disabled = false,
     dark = false,
+    portalContainer,
     className,
     "data-compare": dataCompare,
     children,
@@ -296,7 +305,7 @@ export function Tooltip({
                 {/* Trigger — asChild forwards Radix accessibility props onto the child element */}
                 <RadixTooltip.Trigger asChild>{children}</RadixTooltip.Trigger>
 
-                <RadixTooltip.Portal>
+                <RadixTooltip.Portal container={portalContainer}>
                     {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                         The portal renders at document.body (outside the app's .dark ancestor),
                         so dark utilities wouldn't apply without this wrapper. The wrapper is

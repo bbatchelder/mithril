@@ -209,6 +209,14 @@ export interface PopoverProps {
     disabled?: boolean;
 
     /**
+     * Render the portaled panel into this element instead of `document.body`.
+     * Forwarded to Radix `Popover.Portal`'s `container`. Used by the component
+     * showcase to confine an overlay to its playground stage (give that stage a
+     * CSS containing block so the panel's positioning resolves against it).
+     */
+    portalContainer?: HTMLElement | null;
+
+    /**
      * Render `children` as a positioning *anchor* (`Popover.Anchor`) instead of a
      * *trigger* (`Popover.Trigger`). An anchor only provides the positioning
      * reference — it does NOT toggle the popover on click.
@@ -306,6 +314,7 @@ export function Popover({
     matchTargetWidth = false,
     dark = false,
     disabled = false,
+    portalContainer,
     anchorOnly = false,
     autoFocusContent = true,
     interactionKind = "click",
@@ -399,7 +408,7 @@ export function Popover({
                 <RadixPopover.Trigger asChild>{children}</RadixPopover.Trigger>
             )}
 
-            <RadixPopover.Portal>
+            <RadixPopover.Portal container={portalContainer}>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                     The portal renders at document.body (outside the app's .dark ancestor),
                     so dark utilities wouldn't apply without this wrapper. The wrapper is

@@ -117,6 +117,13 @@ export interface DrawerProps {
      * Same requirement as Dialog — portals render at document.body (outside .dark ancestor).
      */
     dark?: boolean;
+    /**
+     * Render the portaled drawer into this element instead of `document.body`.
+     * Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to
+     * confine the overlay to its playground stage (the stage must establish a CSS
+     * containing block so the drawer's `fixed` backdrop/panel resolve against it).
+     */
+    portalContainer?: HTMLElement | null;
     /** Additional class on the drawer panel element. */
     className?: string;
     /** Inline styles on the drawer panel element (merged with position/size styles). */
@@ -156,6 +163,7 @@ export function Drawer({
     canEscapeKeyClose = true,
     canOutsideClickClose = true,
     dark = false,
+    portalContainer,
     className,
     style,
     children,
@@ -191,7 +199,7 @@ export function Drawer({
 
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-            <RadixDialog.Portal>
+            <RadixDialog.Portal container={portalContainer}>
                 {/* No wrapper div here. RadixDialog.Portal wraps EACH of its direct children in
                     its own <Presence present={open}>; a plain wrapper would be that Presence child
                     with no exit animation, so Radix unmounts it instantly on close — which kills

@@ -104,6 +104,13 @@ export interface AlertProps {
      * Same requirement as Dialog — portals render at document.body (outside .dark ancestor).
      */
     dark?: boolean;
+    /**
+     * Render the portaled alert into this element instead of `document.body`.
+     * Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to
+     * confine the overlay to its playground stage (the stage must establish a CSS
+     * containing block so the alert's `fixed` backdrop/panel resolve against it).
+     */
+    portalContainer?: HTMLElement | null;
     /** Additional class on the alert panel element. */
     className?: string;
     /** Inline styles on the alert panel element. */
@@ -148,6 +155,7 @@ export function Alert({
     canEscapeKeyCancel = false,
     canOutsideClickCancel = false,
     dark = false,
+    portalContainer,
     className,
     style,
     children,
@@ -182,7 +190,7 @@ export function Alert({
 
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-            <RadixDialog.Portal>
+            <RadixDialog.Portal container={portalContainer}>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                     See dialog.tsx for full explanation. Same pattern required for all portaled
                     components (Dialog, Alert, Drawer, Popover, etc.). */}

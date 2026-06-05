@@ -107,6 +107,14 @@ export interface OmnibarProps<T> extends Omit<UseQueryListOptions<T>, "onItemSel
      */
     dark?: boolean;
 
+    /**
+     * Render the portaled overlay into this element instead of `document.body`.
+     * Used by the showcase to confine the omnibar to its playground stage (give
+     * that stage a CSS containing block so the `fixed` backdrop/panel resolve
+     * against it). @default document.body
+     */
+    portalContainer?: HTMLElement | null;
+
     /** Callback or key to determine if an item is disabled. */
     itemDisabled?: keyof T | ((item: T, index: number) => boolean);
 
@@ -156,6 +164,7 @@ export function Omnibar<T>({
     inputProps,
     overlayProps,
     dark = false,
+    portalContainer,
     className,
 }: OmnibarProps<T>) {
     const inputRef = useRef<HTMLInputElement>(null);
@@ -168,8 +177,8 @@ export function Omnibar<T>({
     const optionId = (index: number) => `${listboxId}-option-${index}`;
 
     useEffect(() => {
-        setPortalTarget(document.body);
-    }, []);
+        setPortalTarget(portalContainer ?? document.body);
+    }, [portalContainer]);
 
     const ql = useQueryList<T>({
         items,

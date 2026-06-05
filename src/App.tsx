@@ -5413,8 +5413,8 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
  * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
-    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
     { label: "AI", ids: ["ai-explainability"] },
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
     { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "file-dropzone", "numeric-input", "segmented-control", "control-card"] },
     { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
