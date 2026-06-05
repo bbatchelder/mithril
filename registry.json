@@ -47,15 +47,15 @@
             ]
         },
         {
-            "name": "ai-label",
+            "name": "ai-explainability",
             "type": "registry:ui",
-            "title": "AILabel",
-            "description": "AILabel — Blueprint-faithful, built on CVA.",
+            "title": "AiExplainability",
+            "description": "AiExplainability — Blueprint-faithful, built on CVA.",
             "files": [
                 {
-                    "path": "src/components/ui/ai-label.tsx",
+                    "path": "src/components/ui/ai-explainability.tsx",
                     "type": "registry:ui",
-                    "target": "components/ui/ai-label.tsx"
+                    "target": "components/ui/ai-explainability.tsx"
                 }
             ],
             "registryDependencies": [

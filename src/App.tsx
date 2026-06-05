@@ -30,7 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner, SpinnerSize, type SpinnerIntent } from "@/components/ui/spinner";
 import { Callout, type CalloutIntent } from "@/components/ui/callout";
 import { Tag, type TagIntent } from "@/components/ui/tag";
-import { AILabel, AILabelExplanation, type AILabelSize, type AILabelIntent } from "@/components/ui/ai-label";
+import { AIExplainability, AIExplainabilityDetails, type AIExplainabilitySize, type AIExplainabilityIntent } from "@/components/ui/ai-explainability";
 import { Text } from "@/components/ui/text";
 import { Toast, ToastProvider, Toaster } from "@/components/ui/toast";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
@@ -829,13 +829,13 @@ function TagGallery() {
     );
 }
 
-const AI_LABEL_SIZES: AILabelSize[] = ["small", "medium", "large"];
-const AI_LABEL_INTENTS: AILabelIntent[] = ["none", "primary", "success", "warning", "danger"];
+const AI_EXPLAINABILITY_SIZES: AIExplainabilitySize[] = ["small", "medium", "large"];
+const AI_EXPLAINABILITY_INTENTS: AIExplainabilityIntent[] = ["none", "primary", "success", "warning", "danger"];
 
-function AILabelGallery() {
+function AIExplainabilityGallery() {
     const dark = useContext(DarkContext);
     const explanation = (
-        <AILabelExplanation
+        <AIExplainabilityDetails
             states={[
                 { label: "AI-authored", tone: "info" },
                 { label: "human-edited", tone: "neutral", icon: "edit" },
@@ -865,12 +865,12 @@ function AILabelGallery() {
             }
         >
             This summary was drafted by AI, then edited by an analyst. Review before relying on it.
-        </AILabelExplanation>
+        </AIExplainabilityDetails>
     );
 
     // The cautionary counterpart: ungrounded, self-reported, unverified.
     const explanationWeak = (
-        <AILabelExplanation
+        <AIExplainabilityDetails
             states={[
                 { label: "AI-authored", tone: "info" },
                 { label: "unverified", tone: "caution" },
@@ -885,23 +885,23 @@ function AILabelGallery() {
             }
         >
             Generated without retrieval. Treat as a draft until verified.
-        </AILabelExplanation>
+        </AIExplainabilityDetails>
     );
 
     return (
         <div className="flex flex-col gap-6 text-foreground">
             <Section title="Minimal intents">
                 <div className="flex flex-wrap items-center gap-3">
-                    {AI_LABEL_INTENTS.map((intent) => (
-                        <AILabel key={intent} intent={intent} label={intent === "none" ? "AI" : intent} />
+                    {AI_EXPLAINABILITY_INTENTS.map((intent) => (
+                        <AIExplainability key={intent} intent={intent} label={intent === "none" ? "AI" : intent} />
                     ))}
                 </div>
             </Section>
 
             <Section title="Solid intents">
                 <div className="flex flex-wrap items-center gap-3">
-                    {AI_LABEL_INTENTS.map((intent) => (
-                        <AILabel
+                    {AI_EXPLAINABILITY_INTENTS.map((intent) => (
+                        <AIExplainability
                             key={intent}
                             intent={intent}
                             variant="solid"
@@ -913,25 +913,25 @@ function AILabelGallery() {
 
             <Section title="Sizes">
                 <div className="flex flex-wrap items-center gap-3">
-                    {AI_LABEL_SIZES.map((size) => (
-                        <AILabel key={size} size={size} />
+                    {AI_EXPLAINABILITY_SIZES.map((size) => (
+                        <AIExplainability key={size} size={size} />
                     ))}
                 </div>
             </Section>
 
             <Section title="Icon-only & custom label">
                 <div className="flex flex-wrap items-center gap-3">
-                    <AILabel label={null} ariaLabel="AI generated" />
-                    <AILabel label={null} variant="solid" ariaLabel="AI generated" />
-                    <AILabel label="AI assisted" size="large" />
-                    <AILabel icon={false} label="AI" />
+                    <AIExplainability label={null} ariaLabel="AI generated" />
+                    <AIExplainability label={null} variant="solid" ariaLabel="AI generated" />
+                    <AIExplainability label="AI assisted" size="large" />
+                    <AIExplainability icon={false} label="AI" />
                 </div>
             </Section>
 
             <Section title="Inline in text">
                 <p className="max-w-prose text-body text-foreground">
                     The quarterly report{" "}
-                    <AILabel inline size="small" label="AI" dark={dark} popover={explanation} />{" "}
+                    <AIExplainability inline size="small" label="AI" dark={dark} popover={explanation} />{" "}
                     was drafted automatically and is awaiting review by the analyst on duty.
                 </p>
             </Section>
@@ -939,7 +939,7 @@ function AILabelGallery() {
             <Section title="Placement — popoverProps={{ side }}">
                 <div className="flex flex-wrap items-center gap-6">
                     {(["top", "right", "bottom", "left"] as const).map((side) => (
-                        <AILabel
+                        <AIExplainability
                             key={side}
                             label={side}
                             dark={dark}
@@ -952,15 +952,15 @@ function AILabelGallery() {
 
             <Section title="Interactive — provenance popover">
                 <div className="flex flex-wrap items-center gap-3">
-                    <AILabel dark={dark} popover={explanation} />
-                    <AILabel
+                    <AIExplainability dark={dark} popover={explanation} />
+                    <AIExplainability
                         size="large"
                         variant="solid"
                         label="AI assisted"
                         dark={dark}
                         popover={explanation}
                     />
-                    <AILabel
+                    <AIExplainability
                         intent="warning"
                         label="unverified"
                         dark={dark}
@@ -5247,7 +5247,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "progress-bar", title: "ProgressBar", render: () => <ProgressBarGallery /> },
     { id: "skeleton", title: "Skeleton", render: () => <SkeletonGallery /> },
     { id: "tag", title: "Tag", render: () => <TagGallery /> },
-    { id: "ai-label", title: "AILabel", render: () => <AILabelGallery /> },
+    { id: "ai-explainability", title: "AIExplainability", render: () => <AIExplainabilityGallery /> },
     { id: "callout", title: "Callout", render: () => <CalloutGallery /> },
     { id: "input-group", title: "InputGroup", render: () => <InputGroupGallery /> },
     { id: "text-area", title: "TextArea", render: () => <TextAreaGallery /> },
@@ -5346,7 +5346,8 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
  * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
-    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "ai-label", "callout"] },
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "AI", ids: ["ai-explainability"] },
     { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
     { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
@@ -5385,7 +5386,7 @@ const COMPONENT_ICONS: Record<string, IconName> = {
     "progress-bar": "horizontal-bar-chart",
     skeleton: "widget",
     tag: "tag",
-    "ai-label": "clean",
+    "ai-explainability": "clean",
     callout: "info-sign",
     "input-group": "new-text-box",
     "text-area": "manually-entered-data",
@@ -5447,6 +5448,7 @@ const CATEGORY_ICONS: Record<string, IconName> = {
     Overlays: "applications",
     "Navigation & structure": "page-layout",
     "Composite selects": "multi-select",
+    AI: "clean",
     "Date & time": "calendar",
     Data: "th",
     Infrastructure: "cog",

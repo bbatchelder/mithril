@@ -31,7 +31,8 @@ import { Divider } from "@/components/ui/divider";
 import { Spinner, SpinnerSize } from "@/components/ui/spinner";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AILabel, AILabelExplanation } from "@/components/ui/ai-label";
+import { AIExplainability } from "@/components/ui/ai-explainability";
+import { AIExplainabilityDemoDetails } from "@/lib/demo/ai-explainability";
 import { InputGroup } from "@/components/ui/input-group";
 import { TextArea } from "@/components/ui/text-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -46,6 +47,20 @@ import { CheckboxCard } from "@/components/ui/control-card";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { HTMLTable } from "@/components/ui/html-table";
+import { Navbar, NavbarDivider, NavbarGroup, NavbarHeading } from "@/components/ui/navbar";
+import { Tab, Tabs } from "@/components/ui/tabs";
+import { Collapse } from "@/components/ui/collapse";
+import { Section, SectionCard } from "@/components/ui/section";
+import { CardList } from "@/components/ui/card-list";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Tree, type TreeNodeInfo } from "@/components/ui/tree";
+import { PanelStack, type PanelInfo } from "@/components/ui/panel-stack";
+import { EditableText } from "@/components/ui/editable-text";
+import { EntityTitle } from "@/components/ui/entity-title";
+import { NonIdealState } from "@/components/ui/non-ideal-state";
+import { Link } from "@/components/ui/link";
+import { Slider } from "@/components/ui/slider";
+import { KeyCombo } from "@/components/ui/hotkeys";
 
 /**
  * Shared surface for overlays. The real overlay components portal to `document.body`
@@ -67,7 +82,7 @@ interface PreviewEntry {
     frameClassName?: string;
     /**
      * Anchor the preview to the top of the frame instead of centering it. For tall
-     * surfaces we want to show from the top down and let the bottom clip (e.g. ai-label's
+     * surfaces we want to show from the top down and let the bottom clip (e.g. ai-explainability's
      * popover), rather than centering and clipping both ends.
      */
     align?: "top";
@@ -172,48 +187,41 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
     },
 
     // Show the explainability popover "in action": the marker + its full
-    // AILabelExplanation surface (provenance, confidence, grounding, model, actions).
+    // AIExplainabilityDetails surface (provenance, confidence, grounding, model, actions).
     // Needs a taller tile to stay legible, so it overrides the frame height.
-    "ai-label": {
+    "ai-explainability": {
         align: "top",
         scale: 0.6,
         render: () => (
             <div className="flex flex-col items-center gap-2">
-                <AILabel label="AI assisted" intent="primary" />
-                {/* Wider than the default popover so its content doesn't hang past the
-                    border; no overflow-hidden so the confidence badge isn't clipped. */}
-                <div className="w-96 rounded-bp bg-surface p-3.5 shadow-overlay-3">
-                    <AILabelExplanation
-                        states={[
-                            { label: "AI-authored", tone: "info" },
-                            { label: "human-edited", tone: "neutral", icon: "edit" },
-                            { label: "grounded", tone: "positive", icon: "tick-circle" },
-                            { label: "unverified", tone: "caution" },
-                        ]}
-                        confidence={{
-                            label: "High",
-                            method: "llm-judge",
-                            detail: "claude-opus-4-8, against retrieved sources",
-                            tone: "positive",
-                        }}
-                        grounding={[
-                            { title: "Q3 Financial Report.pdf", href: "#", meta: "p. 12" },
-                            { title: "CRM export 2026-05.csv", href: "#", meta: "rows 1–40" },
-                        ]}
-                        model={{ model: "claude-opus-4-8", at: "2h ago", retrieval: true }}
-                        actions={
-                            <>
-                                <Button variant="minimal" size="small">
-                                    View details
-                                </Button>
-                                <Button intent="primary" size="small">
-                                    Regenerate
-                                </Button>
-                            </>
-                        }
+                <AIExplainability label="AI assisted" intent="primary" />
+                {/* Static mock of the live popover: a surface panel sized to hug its
+                    content (the inner details are a fixed w-80), with the Blueprint
+                    arrow wedge — the same paths as Popover.Arrow, rotated to point up —
+                    sitting flush on the top edge so it connects to the marker above. */}
+                <div className="relative w-fit">
+                    <svg
+                        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[10px]"
+                        width={30}
+                        height={11}
+                        viewBox="0 0 30 11"
+                        style={{ overflow: "visible" }}
                     >
-                        This summary was drafted by AI, then edited by an analyst. Review before relying on it.
-                    </AILabelExplanation>
+                        <g transform="rotate(90 15 15)">
+                            <path
+                                d="M8.11 6.302c1.015-.936 1.887-2.922 1.887-4.297v26c0-1.378-.868-3.357-1.888-4.297L.925 17.09c-1.237-1.14-1.233-3.034 0-4.17L8.11 6.302z"
+                                fill="black"
+                                fillOpacity={0.1}
+                            />
+                            <path
+                                d="M8.787 7.036c1.22-1.125 2.21-3.376 2.21-5.03V0v30-2.005c0-1.654-.983-3.9-2.21-5.03l-7.183-6.616c-.81-.746-.802-1.96 0-2.7l7.183-6.614z"
+                                className="fill-surface"
+                            />
+                        </g>
+                    </svg>
+                    <div className="rounded-bp bg-surface p-3.5 shadow-overlay-3">
+                        <AIExplainabilityDemoDetails />
+                    </div>
                 </div>
             </div>
         ),
@@ -552,6 +560,234 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
                     </tr>
                 </tbody>
             </HTMLTable>
+        ),
+    },
+
+    // ── Navigation & structure ────────────────────────────────────────────────
+    navbar: {
+        scale: 0.6,
+        render: () => (
+            <div style={{ width: 440 }}>
+                <Navbar>
+                    <NavbarGroup align="left">
+                        <NavbarHeading>Mithril</NavbarHeading>
+                        <NavbarDivider />
+                        <Button variant="minimal" icon="home">
+                            Home
+                        </Button>
+                        <Button variant="minimal" icon="document">
+                            Files
+                        </Button>
+                    </NavbarGroup>
+                    <NavbarGroup align="right">
+                        <InputGroup size="small" leftIcon="search" placeholder="Search…" style={{ width: 130 }} />
+                        <Button variant="minimal" icon="cog" aria-label="Settings" />
+                    </NavbarGroup>
+                </Navbar>
+            </div>
+        ),
+    },
+
+    tabs: {
+        scale: 0.8,
+        align: "top",
+        render: () => {
+            const panel = (text: string) => <div className="pt-3 text-body-sm text-foreground">{text}</div>;
+            return (
+                <div style={{ width: 320 }}>
+                    <Tabs id="preview-tabs" defaultSelectedTabId="overview">
+                        <Tab id="overview" title="Overview" panel={panel("Project overview and status.")} />
+                        <Tab id="activity" title="Activity" panel={panel("Recent activity feed.")} />
+                        <Tab id="settings" title="Settings" panel={panel("Configuration options.")} />
+                    </Tabs>
+                </div>
+            );
+        },
+    },
+
+    collapse: {
+        scale: 0.95,
+        render: () => (
+            <div style={{ width: 240 }} className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1 text-body-sm font-semibold text-foreground">
+                    <Icon icon="chevron-down" size={14} className="text-foreground-muted" />
+                    Build details
+                </div>
+                <Collapse isOpen>
+                    <Card elevation={0} compact className="text-body-sm text-foreground-muted">
+                        Compiled 248 modules in 1.9s — no errors.
+                    </Card>
+                </Collapse>
+            </div>
+        ),
+    },
+
+    section: {
+        scale: 0.72,
+        align: "top",
+        render: () => (
+            <div style={{ width: 360 }}>
+                <Section
+                    title="Account settings"
+                    subtitle="Manage your preferences"
+                    collapsible
+                    collapseProps={{ defaultIsOpen: true }}
+                >
+                    <SectionCard>
+                        <span className="text-body-sm text-foreground">Two-factor authentication is enabled.</span>
+                    </SectionCard>
+                </Section>
+            </div>
+        ),
+    },
+
+    "card-list": {
+        scale: 0.82,
+        align: "top",
+        render: () => (
+            <div style={{ width: 300 }}>
+                <CardList bordered>
+                    <Card>Inbox</Card>
+                    <Card interactive>Drafts</Card>
+                    <Card>Sent</Card>
+                    <Card>Archive</Card>
+                </CardList>
+            </div>
+        ),
+    },
+
+    breadcrumbs: {
+        render: () => (
+            <Breadcrumbs
+                items={[
+                    { text: "Home", href: "#", icon: "home" },
+                    { text: "Projects", href: "#", icon: "folder-close" },
+                    { text: "Apollo", current: true, icon: "projects" },
+                ]}
+            />
+        ),
+    },
+
+    tree: {
+        scale: 0.92,
+        align: "top",
+        render: () => {
+            const contents: TreeNodeInfo[] = [
+                {
+                    id: "src",
+                    label: "src",
+                    icon: "folder-close",
+                    isExpanded: true,
+                    childNodes: [
+                        {
+                            id: "components",
+                            label: "components",
+                            icon: "folder-close",
+                            isExpanded: true,
+                            childNodes: [
+                                { id: "button", label: "button.tsx", icon: "document", isSelected: true },
+                                { id: "card", label: "card.tsx", icon: "document" },
+                            ],
+                        },
+                        { id: "index", label: "index.ts", icon: "document" },
+                    ],
+                },
+            ];
+            return (
+                <div style={{ width: 230 }}>
+                    <Tree contents={contents} />
+                </div>
+            );
+        },
+    },
+
+    "panel-stack": {
+        scale: 0.74,
+        align: "top",
+        render: () => {
+            const stack: PanelInfo[] = [
+                { title: "Settings", renderPanel: () => null },
+                {
+                    title: "Notifications",
+                    renderPanel: () => (
+                        <div className="flex flex-col gap-2 p-3">
+                            <Checkbox label="Email" defaultChecked />
+                            <Checkbox label="Push" />
+                            <Checkbox label="SMS" defaultChecked />
+                        </div>
+                    ),
+                },
+            ];
+            return (
+                <div style={{ width: 280 }} className={cn("h-[150px]", OVERLAY_PANEL)}>
+                    <PanelStack stack={stack} style={{ width: "100%", height: "100%" }} />
+                </div>
+            );
+        },
+    },
+
+    "editable-text": {
+        render: () => (
+            <div style={{ width: 240 }} className="flex flex-col gap-1">
+                <span className="text-body-xs font-semibold uppercase tracking-wide text-foreground-muted">
+                    Project name
+                </span>
+                <EditableText defaultValue="Spectre mission" />
+            </div>
+        ),
+    },
+
+    "entity-title": {
+        render: () => (
+            <div style={{ width: 260 }}>
+                <EntityTitle title="Spectre mission" subtitle="Updated 2 hours ago" size="h4" icon="star" />
+            </div>
+        ),
+    },
+
+    "non-ideal-state": {
+        scale: 0.8,
+        render: () => (
+            <div style={{ width: 300 }}>
+                <NonIdealState
+                    icon="search"
+                    title="No results"
+                    description="Try adjusting your filters or search terms."
+                />
+            </div>
+        ),
+    },
+
+    link: {
+        render: () => (
+            <div style={{ width: 230 }} className="text-body text-foreground">
+                See the <Link href="#">documentation</Link> or{" "}
+                <Link href="#">contact support</Link> for help.
+            </div>
+        ),
+    },
+
+    slider: {
+        scale: 0.92,
+        render: () => (
+            <div style={{ width: 250 }}>
+                <Slider min={0} max={100} stepSize={10} labelStepSize={25} intent="primary" showTrackFill defaultValue={40} />
+            </div>
+        ),
+    },
+
+    hotkeys: {
+        render: () => (
+            <div className="flex flex-col items-start gap-2">
+                <div className="flex items-center gap-2 text-body-sm text-foreground">
+                    <span className="w-16 text-foreground-muted">Save</span>
+                    <KeyCombo combo="mod+s" />
+                </div>
+                <div className="flex items-center gap-2 text-body-sm text-foreground">
+                    <span className="w-16 text-foreground-muted">Command</span>
+                    <KeyCombo combo="mod+shift+p" />
+                </div>
+            </div>
         ),
     },
 };
