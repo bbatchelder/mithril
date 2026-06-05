@@ -30,24 +30,24 @@ interface PreviewEntry {
 }
 ```
 
-### Coverage: **49 / 64** (as of this handoff)
+### Coverage: **61 / 64** — DONE (only the deliberately‑skipped infra trio remains)
 
-The **Navigation & structure** batch (14) shipped here: `navbar, tabs, collapse, section,
+Shipped in batches: the **Navigation & structure** batch (14) — `navbar, tabs, collapse, section,
 card-list, breadcrumbs, tree, panel-stack, editable-text, entity-title, non-ideal-state, link,
-slider, hotkeys`. Plus the pre‑existing 35 (buttons/display, form controls, all overlays, html-table,
-ai-explainability).
+slider, hotkeys`; the pre‑existing 35 (buttons/display, form controls, all overlays, html-table,
+ai-explainability); and the final **selects + dates + data** batch (12) below.
 
-### Remaining (15), grouped by approach
+### What shipped, grouped by approach
 
 | Group | Ids | Approach |
 | --- | --- | --- |
-| **Composite selects** (5) | `select`, `suggest`, `multi-select`, `omnibar`, `tag-input` | These **portal** their dropdown — mock the *surface* inline (closed control + a static results panel built with `OVERLAY_PANEL`), like the overlay previews. `tag-input` is inline (no portal) so it can use the real component directly. |
-| **Date & time** (6) | `time-picker`, `date-picker`, `date-range-picker`, `date-input`, `date-range-input`, `timezone-select` | The **calendars/time pickers render inline** → use the real component with a static `defaultValue`. The **\*-input** + `timezone-select` variants portal a popover → show the *field* (real component, closed) or mock the open surface. |
-| **Data** (1) | `data-table` | Real component with a small static row set; it's intrinsically sized. Likely needs a `scale` + a bounded width; see DataTable notes in the playground handoff (always virtualized; no `fill`). |
-| **Infrastructure** (3) | `resize-sensor`, `overflow-list`, `portal` | **Decision: leave icon‑only.** Behavioral/layout utilities with no meaningful static thumbnail — the icon‑tile fallback is the intended outcome (mirrors the playground handoff's group D). Don't force a preview. |
+| **Composite selects** (5) | `select`, `suggest`, `multi-select`, `omnibar`, `tag-input` | These **portal** their dropdown, so the preview mocks the *open surface* inline: the real closed control (`Button` / `InputGroup` / `TagInput`) over a static results `Menu` (`OVERLAY_PANEL`), top‑anchored so the list clips at the bottom like a real dropdown. `tag-input` is inline (no portal) → real component directly. |
+| **Date & time** (6) | `time-picker`, `date-picker`, `date-range-picker`, `date-input`, `date-range-input`, `timezone-select` | The **calendars/time picker render inline** → real component with a static **`defaultValue`** (uncontrolled — no `onChange`; the inert frame blocks interaction). `date-range-picker` uses `singleMonthOnly` to fit. The **\*-input** + `timezone-select` variants render their **closed field** (real component, `defaultValue`) — the portaled popover never mounts at rest. |
+| **Data** (1) | `data-table` | Real `DataTable` with a 4‑row / 3‑col static set, `selectionMode="none"`, no `height` (renders all rows un‑virtualized). `scale: 0.82`, `align: "top"`, bounded width. |
+| **Infrastructure** (3) | `resize-sensor`, `overflow-list`, `portal` | **Left icon‑only by decision.** Behavioral/layout utilities with no meaningful static thumbnail — the icon‑tile fallback is the intended outcome. Don't force a preview. |
 
-So the real remaining work is **12** (selects 5 + dates 6 + data 1); the infra trio is deliberately
-skipped.
+Seed dates + the table's rows/cols live as module constants at the top of `previews.tsx`
+(`PREVIEW_DATE`, `PREVIEW_TIME`, `PREVIEW_RANGE`, `PREVIEW_TABLE_ROWS/COLUMNS`).
 
 ---
 
@@ -86,6 +86,13 @@ skipped.
   `editable-text`) so a bare value doesn't read as plain text on the tile.
 - **Don't regenerate `gen:meta`/`gen:props` for previews** — those generators key off components &
   tests, not `previews.tsx`. Adding a preview changes no badge/props data.
+- **Every date/time component takes `defaultValue`** (uncontrolled) → static previews need no state or
+  `onChange`. The `*-input` / `timezone-select` variants only mount their popover on open, so at rest
+  they render just the closed field — exactly what you want on a tile.
+- **`DataTable` only virtualizes when `height` is set.** Omit `height` for a small static set and all
+  rows render; it's intrinsically sized, so bound the width and `scale` to fit.
+- **`PREVIEWS` breaks Fast Refresh** (non‑component export) — editing `previews.tsx` does a full HMR
+  reload, not a hot patch. Harmless, just expect the page to flash.
 
 ---
 
