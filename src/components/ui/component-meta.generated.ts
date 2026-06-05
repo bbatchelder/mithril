@@ -705,6 +705,34 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         ],
         "dependencies": []
     },
+    "file-dropzone": {
+        "title": "FileDropzone",
+        "description": "FileDropzone — Blueprint-faithful, built on CVA.",
+        "tests": {
+            "total": 9,
+            "a11y": 1,
+            "keyboard": 0,
+            "behavior": 8
+        },
+        "rsc": false,
+        "portal": false,
+        "radix": false,
+        "polymorphic": false,
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "FileDropzone"
+        ],
+        "registryDependencies": [
+            "icon",
+            "progress-bar",
+            "utils",
+            "tokens"
+        ],
+        "dependencies": [
+            "react-dropzone"
+        ]
+    },
     "file-input": {
         "title": "FileInput",
         "description": "FileInput — Blueprint-faithful, built on CVA.",

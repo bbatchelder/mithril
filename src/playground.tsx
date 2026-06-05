@@ -48,6 +48,7 @@ import { Text } from "@/components/ui/text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { FileInput } from "@/components/ui/file-input";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { FormGroup } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
 import { KeyCombo } from "@/components/ui/hotkeys";
@@ -1581,6 +1582,43 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             </div>
         ),
         code: (p) => jsx("FileInput", { size: p.size === "medium" ? undefined : p.size, text: p.text === "Choose file..." ? undefined : p.text, buttonText: p.buttonText === "Browse" ? undefined : p.buttonText, hasSelection: p.hasSelection, fill: p.fill, disabled: p.disabled }),
+    },
+
+    "file-dropzone": {
+        initial: { size: "medium", title: "Drag & drop files here", browseText: "browse", multiple: true, showFileList: true, disabled: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "text", prop: "title" },
+            { kind: "text", prop: "browseText", label: "browse" },
+            { kind: "boolean", prop: "multiple" },
+            { kind: "boolean", prop: "showFileList", label: "file list" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "Single file", props: { multiple: false, title: "Drop a file" } },
+            { name: "Drag-only", props: { browseText: "" } },
+        ],
+        render: (p) => (
+            <FileDropzone
+                size={p.size}
+                title={p.title}
+                browseText={p.browseText || undefined}
+                noClick={!p.browseText}
+                multiple={p.multiple}
+                showFileList={p.showFileList}
+                disabled={p.disabled}
+            />
+        ),
+        code: (p) =>
+            jsx("FileDropzone", {
+                size: p.size === "medium" ? undefined : p.size,
+                title: p.title === "Drag & drop files here" ? undefined : p.title,
+                browseText: p.browseText === "browse" ? undefined : p.browseText || undefined,
+                noClick: !p.browseText || undefined,
+                multiple: p.multiple ? undefined : false,
+                showFileList: p.showFileList ? undefined : false,
+                disabled: p.disabled,
+            }),
     },
 
     "form-group": {

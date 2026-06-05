@@ -41,6 +41,7 @@ import { FormGroup } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { FileInput } from "@/components/ui/file-input";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { CheckboxCard } from "@/components/ui/control-card";
@@ -364,6 +365,14 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
         render: () => (
             <div style={{ width: 240 }}>
                 <FileInput text="Choose file…" />
+            </div>
+        ),
+    },
+
+    "file-dropzone": {
+        render: () => (
+            <div style={{ width: 240 }}>
+                <FileDropzone size="small" showFileList={false} />
             </div>
         ),
     },
