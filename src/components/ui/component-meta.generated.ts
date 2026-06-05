@@ -31,8 +31,8 @@ export interface ComponentMeta {
 
 export const COMPONENT_META: Record<string, ComponentMeta> = {
     "ai-explainability": {
-        "title": "",
-        "description": "",
+        "title": "AiExplainability",
+        "description": "AiExplainability — Blueprint-faithful, built on CVA.",
         "tests": {
             "total": 10,
             "a11y": 1,
@@ -43,13 +43,21 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": false,
+        "registry": true,
         "axe": true,
         "exports": [
             "AIExplainabilityDetails",
             "AIExplainability"
         ],
-        "registryDependencies": [],
+        "registryDependencies": [
+            "icon",
+            "link",
+            "popover",
+            "tag",
+            "types",
+            "utils",
+            "tokens"
+        ],
         "dependencies": []
     },
     "alert": {
@@ -704,6 +712,34 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
             "tokens"
         ],
         "dependencies": []
+    },
+    "file-dropzone": {
+        "title": "FileDropzone",
+        "description": "FileDropzone — Blueprint-faithful, built on CVA.",
+        "tests": {
+            "total": 9,
+            "a11y": 1,
+            "keyboard": 0,
+            "behavior": 8
+        },
+        "rsc": false,
+        "portal": false,
+        "radix": false,
+        "polymorphic": false,
+        "registry": true,
+        "axe": false,
+        "exports": [
+            "FileDropzone"
+        ],
+        "registryDependencies": [
+            "icon",
+            "progress-bar",
+            "utils",
+            "tokens"
+        ],
+        "dependencies": [
+            "react-dropzone"
+        ]
     },
     "file-input": {
         "title": "FileInput",

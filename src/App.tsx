@@ -22,6 +22,7 @@ import { Label, FormGroup, type FormGroupIntent } from "@/components/ui/form-gro
 import { ControlGroup } from "@/components/ui/control-group";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { FileInput } from "@/components/ui/file-input";
+import { FileDropzone, type FileDropzoneFile } from "@/components/ui/file-dropzone";
 import { NumericInput, type NumericInputIntent } from "@/components/ui/numeric-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { CheckboxCard, RadioCard, SwitchCard } from "@/components/ui/control-card";
@@ -1765,6 +1766,71 @@ function FileInputGallery() {
                         }}
                     />
                 </div>
+            </Section>
+        </div>
+    );
+}
+
+/**
+ * FileDropzone showcase. Net-new mithril component (no Blueprint baseline) built on
+ * react-dropzone's headless `useDropzone` hook with token-styled markup. Demonstrates
+ * the uncontrolled list, a controlled list with simulated upload progress, constraints
+ * (accept/maxSize/maxFiles → rejection rows), and size + disabled variants.
+ */
+function FileDropzoneGallery() {
+    // Controlled list with a faked upload progress driver, to show row progress UI.
+    const [files, setFiles] = useState<FileDropzoneFile[]>([]);
+    useEffect(() => {
+        if (!files.some((f) => f.status === "uploading")) return;
+        const t = setInterval(() => {
+            setFiles((prev) =>
+                prev.map((f) => {
+                    if (f.status !== "uploading") return f;
+                    const next = Math.min((f.progress ?? 0) + 0.12, 1);
+                    return next >= 1
+                        ? { ...f, progress: 1, status: "success" as const }
+                        : { ...f, progress: next };
+                }),
+            );
+        }, 350);
+        return () => clearInterval(t);
+    }, [files]);
+
+    return (
+        <div className="flex flex-col gap-6">
+            <Section title="Uncontrolled (default)">
+                <FileDropzone />
+            </Section>
+
+            <Section title="Controlled with upload progress">
+                <FileDropzone
+                    files={files}
+                    onFilesChange={setFiles}
+                    onDropAccepted={() =>
+                        // Mark freshly-added pending files as uploading to kick off the driver.
+                        setFiles((prev) =>
+                            prev.map((f) =>
+                                f.status === "pending" ? { ...f, status: "uploading", progress: 0 } : f,
+                            ),
+                        )
+                    }
+                />
+            </Section>
+
+            <Section title="Constraints (images & PDF, ≤ 2 MB, max 3)">
+                <FileDropzone
+                    accept={{ "image/*": [], "application/pdf": [".pdf"] }}
+                    maxSize={2 * 1024 * 1024}
+                    maxFiles={3}
+                />
+            </Section>
+
+            <Section title="Small (single file)">
+                <FileDropzone size="small" multiple={false} />
+            </Section>
+
+            <Section title="Disabled">
+                <FileDropzone disabled />
             </Section>
         </div>
     );
@@ -5258,6 +5324,7 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
     { id: "control-group", title: "ControlGroup", render: () => <ControlGroupGallery /> },
     { id: "html-select", title: "HTMLSelect", render: () => <HTMLSelectGallery /> },
     { id: "file-input", title: "FileInput", render: () => <FileInputGallery /> },
+    { id: "file-dropzone", title: "FileDropzone", render: () => <FileDropzoneGallery /> },
     { id: "numeric-input", title: "NumericInput", render: () => <NumericInputGallery /> },
     { id: "segmented-control", title: "SegmentedControl", render: () => <SegmentedControlGallery /> },
     { id: "control-card", title: "ControlCard", render: () => <ControlCardGallery /> },
@@ -5346,9 +5413,9 @@ function OverlaySpecimen({ title, children }: { title: string; children: React.R
  * dropped from the overview (a guard against this list drifting from COMPONENTS).
  */
 const CATEGORIES: { label: string; ids: string[] }[] = [
-    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
     { label: "AI", ids: ["ai-explainability"] },
-    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "numeric-input", "segmented-control", "control-card"] },
+    { label: "Buttons & display", ids: ["button", "card", "icon", "text", "divider", "spinner", "progress-bar", "skeleton", "tag", "callout"] },
+    { label: "Form controls", ids: ["input-group", "text-area", "checkbox", "radio", "switch", "form-group", "control-group", "html-select", "file-input", "file-dropzone", "numeric-input", "segmented-control", "control-card"] },
     { label: "Overlays", ids: ["dialog", "multistep-dialog", "alert", "drawer", "popover", "tooltip", "toast", "menu", "context-menu"] },
     { label: "Navigation & structure", ids: ["navbar", "tabs", "collapse", "section", "card-list", "breadcrumbs", "tree", "panel-stack", "html-table", "editable-text", "entity-title", "non-ideal-state", "link", "slider", "hotkeys"] },
     { label: "Composite selects", ids: ["tag-input", "select", "suggest", "multi-select", "omnibar"] },
@@ -5397,6 +5464,7 @@ const COMPONENT_ICONS: Record<string, IconName> = {
     "control-group": "group-objects",
     "html-select": "chevron-down",
     "file-input": "document-open",
+    "file-dropzone": "cloud-upload",
     "numeric-input": "numerical",
     "segmented-control": "segmented-control",
     "control-card": "control",

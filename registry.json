@@ -585,6 +585,28 @@
             ]
         },
         {
+            "name": "file-dropzone",
+            "type": "registry:ui",
+            "title": "FileDropzone",
+            "description": "FileDropzone — Blueprint-faithful, built on CVA.",
+            "files": [
+                {
+                    "path": "src/components/ui/file-dropzone.tsx",
+                    "type": "registry:ui",
+                    "target": "components/ui/file-dropzone.tsx"
+                }
+            ],
+            "dependencies": [
+                "react-dropzone"
+            ],
+            "registryDependencies": [
+                "icon",
+                "progress-bar",
+                "utils",
+                "tokens"
+            ]
+        },
+        {
             "name": "file-input",
             "type": "registry:ui",
             "title": "FileInput",

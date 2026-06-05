@@ -65,6 +65,23 @@ off the text baseline. Reach for **`inline`** when placing these in a horizontal
 toolbar) — it swaps the default `block mb-2` for `inline-block` so adjacent toggles sit flush.
 Style the caption by passing styled content to `label` (the control sets the base text size).
 
+## File upload: FileInput vs FileDropzone
+
+Two file controls, different jobs:
+
+- **`FileInput`** — the Blueprint-faithful single-line "Choose file… / Browse" box. Purely
+  presentational about the selection: *you* drive the displayed `text` + `hasSelection`; it does
+  not render the chosen file name. Wire the native input via `inputProps`/`onInputChange`.
+- **`FileDropzone`** — a token-styled drag-and-drop surface + file list, built on
+  `react-dropzone`'s headless `useDropzone` hook (we own all the markup). Controlled
+  (`files` + `onFilesChange`) or uncontrolled; attach upload `progress`/`status` per file to get
+  the row ProgressBar / success / error states. Imperative `ref.open()` / `ref.clear()`.
+
+**Gotcha — `getInputProps()` does not forward `disabled`.** react-dropzone gates interaction at
+the *root* (no click-to-open, drag ignored) but leaves the hidden `<input type="file">` itself
+un-disabled. If you want the native input to actually report disabled (assistive tech, form
+semantics), pass it yourself: `getInputProps({ disabled })`. FileDropzone already does this.
+
 ## Accessibility note
 
 Several hand-rolled controls have documented keyboard/ARIA gaps vs a fully-accessible baseline

@@ -22,7 +22,7 @@ const UI_DIR = join(ROOT, "src/components/ui");
 // npm packages a component may import. react/react-dom are peer deps (assumed,
 // never listed); clsx + tailwind-merge belong to the `utils` lib item, not to
 // individual components.
-const NPM_PREFIXES = ["@radix-ui/", "@tanstack/", "react-day-picker", "class-variance-authority"];
+const NPM_PREFIXES = ["@radix-ui/", "@tanstack/", "react-day-picker", "react-dropzone", "class-variance-authority"];
 
 /** Pretty titles for the registry item `title` field. Falls back to PascalCase. */
 const TITLES = {

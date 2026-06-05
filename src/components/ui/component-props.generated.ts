@@ -256,6 +256,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled alert into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the alert's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -795,6 +802,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Called when the open state changes. Note: Radix ContextMenu is uncontrolled — it opens on right-click events only. Use this callback to track open state externally."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled menu into this element instead of `document.body`. Forwarded to Radix `ContextMenu.Portal`'s `container`. Used by the showcase to confine the menu to its playground stage (give that stage a CSS containing block so the menu's positioning resolves against it)."
                 }
             ]
         }
@@ -1924,6 +1938,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled dialog into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the dialog's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -2083,6 +2104,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled drawer into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the drawer's `fixed` backdrop/panel resolve against it)."
                 },
                 {
                     "name": "position",
@@ -2363,6 +2391,161 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "If specified, wraps the title in an anchor (`<a>`) pointing to this URL. Opens in a new tab."
+                }
+            ]
+        }
+    ],
+    "file-dropzone": [
+        {
+            "name": "FileDropzone",
+            "description": "",
+            "props": [
+                {
+                    "name": "accept",
+                    "type": "Accept",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Accepted file types, e.g. `{ \"image/*\": [], \"application/pdf\": [\".pdf\"] }`."
+                },
+                {
+                    "name": "browseText",
+                    "type": "string",
+                    "required": false,
+                    "defaultValue": "browse",
+                    "description": "Inline browse affordance text."
+                },
+                {
+                    "name": "className",
+                    "type": "string",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Additional class on the outer wrapper."
+                },
+                {
+                    "name": "defaultFiles",
+                    "type": "FileDropzoneFile[]",
+                    "required": false,
+                    "defaultValue": "[]",
+                    "description": "Initial files for uncontrolled mode."
+                },
+                {
+                    "name": "description",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Secondary hint line under the title. Defaults to a hint derived from constraints."
+                },
+                {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "false",
+                    "description": "Disable the dropzone (no clicks, no drag, muted styling)."
+                },
+                {
+                    "name": "files",
+                    "type": "FileDropzoneFile[]",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Controlled file list. Omit for uncontrolled (the component owns the list)."
+                },
+                {
+                    "name": "fill",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Stretch to fill the container width."
+                },
+                {
+                    "name": "icon",
+                    "type": "IconProp",
+                    "required": false,
+                    "defaultValue": "{ 16: [\"M8.71 7.29C8.53 7.11 8.28 7 8 …",
+                    "description": "Icon shown on the surface."
+                },
+                {
+                    "name": "maxFiles",
+                    "type": "number",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Maximum number of files. Drops beyond this are rejected."
+                },
+                {
+                    "name": "maxSize",
+                    "type": "number",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Maximum accepted file size in bytes. Larger files are rejected."
+                },
+                {
+                    "name": "minSize",
+                    "type": "number",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Minimum accepted file size in bytes."
+                },
+                {
+                    "name": "multiple",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Allow selecting more than one file."
+                },
+                {
+                    "name": "noClick",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "false",
+                    "description": "Disable opening the picker on click (drag-only)."
+                },
+                {
+                    "name": "onDropAccepted",
+                    "type": "((files: File[]) => void)",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Called with the files that passed validation on this drop/selection."
+                },
+                {
+                    "name": "onDropRejected",
+                    "type": "((rejections: FileRejection[]) => void)",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Called with the rejections (with reasons) for files that failed validation."
+                },
+                {
+                    "name": "onFilesChange",
+                    "type": "((files: FileDropzoneFile[]) => void)",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Called whenever the list changes (add or remove), in both modes."
+                },
+                {
+                    "name": "renderFile",
+                    "type": "((file: FileDropzoneFile, remove: () => void) => ReactNode)",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Custom renderer for a file row. Receives the file and a `remove` callback."
+                },
+                {
+                    "name": "showFileList",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Render the file list below the surface."
+                },
+                {
+                    "name": "size",
+                    "type": "\"small\" | \"medium\" | \"large\"",
+                    "required": false,
+                    "defaultValue": "medium",
+                    "description": "Surface size — controls padding and icon scale."
+                },
+                {
+                    "name": "title",
+                    "type": "ReactNode",
+                    "required": false,
+                    "defaultValue": "Drag & drop files here",
+                    "description": "Primary prompt line on the surface."
                 }
             ]
         }
@@ -3350,6 +3533,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled dialog into this element instead of `document.body`. Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to confine the overlay to its playground stage (the stage must establish a CSS containing block so the dialog's `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "style",
                     "type": "CSSProperties",
                     "required": false,
@@ -3700,6 +3890,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Additional props passed to the portal overlay wrapper. Use `portalClassName` to pass `Classes.DARK` in dark theme (Blueprint reference gallery pattern)."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": "document.body",
+                    "description": "Render the portaled overlay into this element instead of `document.body`. Used by the showcase to confine the omnibar to its playground stage (give that stage a CSS containing block so the `fixed` backdrop/panel resolve against it)."
+                },
+                {
                     "name": "query",
                     "type": "string",
                     "required": false,
@@ -4032,6 +4229,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Controlled open state."
                 },
                 {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled panel into this element instead of `document.body`. Forwarded to Radix `Popover.Portal`'s `container`. Used by the component showcase to confine an overlay to its playground stage (give that stage a CSS containing block so the panel's positioning resolves against it)."
+                },
+                {
                     "name": "side",
                     "type": "\"left\" | \"right\" | \"top\" | \"bottom\"",
                     "required": false,
@@ -4211,6 +4415,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled panel into this element instead of `document.body`. Forwarded to Radix `Popover.Portal`'s `container`. Used by the component showcase to confine an overlay to its playground stage (give that stage a CSS containing block so the panel's positioning resolves against it)."
                 },
                 {
                     "name": "side",
@@ -6178,6 +6389,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Controlled open state."
+                },
+                {
+                    "name": "portalContainer",
+                    "type": "HTMLElement",
+                    "required": false,
+                    "defaultValue": null,
+                    "description": "Render the portaled tooltip into this element instead of `document.body`. Forwarded to Radix `Tooltip.Portal`'s `container`. Used by the showcase to confine the bubble to its playground stage (give that stage a CSS containing block so the bubble's positioning resolves against it)."
                 },
                 {
                     "name": "side",

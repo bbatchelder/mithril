@@ -124,6 +124,14 @@ export interface ContextMenuProps {
      */
     canEscapeKeyClose?: boolean;
 
+    /**
+     * Render the portaled menu into this element instead of `document.body`.
+     * Forwarded to Radix `ContextMenu.Portal`'s `container`. Used by the showcase
+     * to confine the menu to its playground stage (give that stage a CSS containing
+     * block so the menu's positioning resolves against it).
+     */
+    portalContainer?: HTMLElement | null;
+
     /** Additional class on the popover surface element. */
     className?: string;
 }
@@ -157,6 +165,7 @@ export function ContextMenu({
     disabled = false,
     onOpenChange,
     canEscapeKeyClose = true,
+    portalContainer,
     className,
 }: ContextMenuProps) {
     return (
@@ -171,7 +180,7 @@ export function ContextMenu({
                 {children}
             </RadixContextMenu.Trigger>
 
-            <RadixContextMenu.Portal>
+            <RadixContextMenu.Portal container={portalContainer}>
                 {/* Portal + dark-mode wrapper (Rule 1):
                     Wrap in .dark div so dark utilities apply to portaled content.
                     pointer-events:none prevents the wrapper from intercepting clicks;

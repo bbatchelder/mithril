@@ -108,6 +108,13 @@ export interface DialogProps {
      * so we wrap portal children in a div with dark class when this is true.
      */
     dark?: boolean;
+    /**
+     * Render the portaled dialog into this element instead of `document.body`.
+     * Forwarded to Radix `Dialog.Portal`'s `container`. Used by the showcase to
+     * confine the overlay to its playground stage (the stage must establish a CSS
+     * containing block so the dialog's `fixed` backdrop/panel resolve against it).
+     */
+    portalContainer?: HTMLElement | null;
     /** Additional class on the dialog panel element. */
     className?: string;
     /** Inline styles on the dialog panel element. */
@@ -141,13 +148,14 @@ export function Dialog({
     canEscapeKeyClose = true,
     canOutsideClickClose = true,
     dark = false,
+    portalContainer,
     className,
     style,
     children,
 }: DialogProps) {
     return (
         <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
-            <RadixDialog.Portal>
+            <RadixDialog.Portal container={portalContainer}>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                     The portal renders at document.body (outside the app's .dark ancestor),
                     so dark utilities wouldn't apply without this wrapper. The wrapper is

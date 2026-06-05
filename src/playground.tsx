@@ -48,6 +48,7 @@ import { Text } from "@/components/ui/text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { FileInput } from "@/components/ui/file-input";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { FormGroup } from "@/components/ui/form-group";
 import { ControlGroup } from "@/components/ui/control-group";
 import { KeyCombo } from "@/components/ui/hotkeys";
@@ -102,13 +103,49 @@ export interface PlaygroundContext {
     dark: boolean;
     open: boolean;
     setOpen: (open: boolean) => void;
+    /**
+     * The stage element, handed to overlay configs (`contained: true`) so they can
+     * portal *into* the stage instead of `document.body`. Thread it into the overlay
+     * as `portalContainer={ctx.portalContainer}` (or `popoverProps={{ portalContainer }}`).
+     * `null` until the stage mounts — Radix portals fall back to `document.body` then.
+     */
+    portalContainer: HTMLElement | null;
 }
+
+/** Trigger placement within a contained stage (named for where the *trigger* sits). */
+export type ContainedAlign = "center" | "top" | "bottom" | "left" | "right";
+
+/** Flex alignment + edge padding for each trigger placement inside a contained stage. */
+const CONTAINED_ALIGN_CLASS: Record<ContainedAlign, string> = {
+    center: "items-center justify-center",
+    top: "items-start justify-center pt-10",
+    bottom: "items-end justify-center pb-10",
+    left: "items-center justify-start pl-10",
+    right: "items-center justify-end pr-10",
+};
 
 export interface PlaygroundConfig {
     /** Starting prop values (also the "Custom…" reset target). */
     initial: Record<string, unknown>;
     controls: Control[];
     presets?: Preset[];
+    /**
+     * Mark an *overlay* config: the stage becomes a CSS containing block (so the
+     * overlay's portaled `fixed`/anchored panel resolves against the stage, not the
+     * page) with `overflow:hidden`, confining the overlay to the playground. The
+     * render must thread `ctx.portalContainer` into the component. @default false
+     */
+    contained?: boolean;
+    /** Stage height (px) for a `contained` overlay, sized to fit its panel. @default 440 */
+    containedHeight?: number;
+    /**
+     * Where to pin the trigger inside a `contained` stage, so its overlay opens into
+     * the stage rather than off the edge: pin the trigger on the side *opposite* the
+     * overlay (e.g. `"top"` → dropdown opens down; `"right"` → popover opens left).
+     * `"center"` (default) suits modals and small popovers that fit either way. Pass a
+     * function to derive it from live props — e.g. follow a `side` control. @default "center"
+     */
+    containedAlign?: ContainedAlign | ((props: Record<string, never>) => ContainedAlign);
     /** Render the live instance from the current prop state (+ overlay `ctx`). */
     render: (props: Record<string, never>, ctx: PlaygroundContext) => React.ReactNode;
     /** Produce the code snippet for the current prop state. */
@@ -312,6 +349,10 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
     // trigger-driven overlays (Dialog/Drawer/Alert/MultistepDialog/Omnibar).
     const dark = useDark();
     const [open, setOpen] = useState(false);
+    // Overlay configs portal into the stage so the overlay stays inside the playground.
+    // Track the stage element in state (not a ref) so the first mount triggers a re-render
+    // and the portal moves from its document.body fallback into the stage.
+    const [stageEl, setStageEl] = useState<HTMLDivElement | null>(null);
     const set = (prop: string, value: unknown) => {
         setProps((p) => ({ ...p, [prop]: value }));
         setPreset("");
@@ -330,11 +371,41 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
         }
     };
     const live = props as Record<string, never>;
-    const ctx: PlaygroundContext = { dark, open, setOpen };
+    const contained = !!config.contained;
+    const ctx: PlaygroundContext = { dark, open, setOpen, portalContainer: contained ? stageEl : null };
+    // Trigger placement inside a contained stage — may depend on live props (e.g. a
+    // `side` control), so resolve it each render.
+    const alignClass =
+        CONTAINED_ALIGN_CLASS[
+            typeof config.containedAlign === "function"
+                ? config.containedAlign(live)
+                : config.containedAlign ?? "center"
+        ];
     return (
         <div className="flex flex-col gap-3">
-            {/* Stage */}
-            <div className="flex min-h-[160px] flex-wrap items-center justify-center gap-4 rounded-bp border border-border bg-surface p-8">
+            {/* Stage. For overlay configs (`contained`), the stage establishes a CSS
+                containing block (transform) + clips overflow, so a portaled overlay's
+                `fixed`/anchored panel resolves against the stage and stays inside it —
+                "as if the stage were the viewport". */}
+            <div
+                ref={setStageEl}
+                className={cn(
+                    "flex flex-wrap gap-4 rounded-bp border border-border bg-surface",
+                    contained
+                        ? cn(
+                              // Pin the trigger opposite the overlay so it opens into the
+                              // stage (alignClass also sets justify-*).
+                              "relative overflow-hidden p-0",
+                              alignClass,
+                          )
+                        : "min-h-[160px] items-center justify-center p-8",
+                )}
+                style={
+                    contained
+                        ? { height: config.containedHeight ?? 440, transform: "translateZ(0)" }
+                        : undefined
+                }
+            >
                 {config.render(live, ctx)}
             </div>
             {/* Controls — omitted entirely for interaction-only configs (no controls + no presets) */}
@@ -434,7 +505,7 @@ function ToasterButton({ intent, icon, message, action }: { intent: string; icon
 const PG_FRUITS = ["Apple", "Banana", "Cherry", "Durian", "Elderberry", "Fig", "Grape", "Honeydew"];
 const fruitMatch = (query: string, item: string) => item.toLowerCase().includes(query.toLowerCase());
 
-function SelectDemo({ dark, filterable, disabled, fill }: { dark: boolean; filterable: boolean; disabled: boolean; fill: boolean }) {
+function SelectDemo({ dark, filterable, disabled, fill, portalContainer }: { dark: boolean; filterable: boolean; disabled: boolean; fill: boolean; portalContainer: HTMLElement | null }) {
     const [selected, setSelected] = useState<string | null>("Cherry");
     return (
         <div style={{ width: 260 }}>
@@ -450,6 +521,7 @@ function SelectDemo({ dark, filterable, disabled, fill }: { dark: boolean; filte
                 )}
                 onItemSelect={(item) => setSelected(item)}
                 noResults={<MenuItem disabled text="No results." />}
+                popoverProps={{ portalContainer }}
                 dark={dark}
             >
                 <Button variant="solid" endIcon="caret-down" disabled={disabled} fill={fill}>
@@ -460,7 +532,7 @@ function SelectDemo({ dark, filterable, disabled, fill }: { dark: boolean; filte
     );
 }
 
-function SuggestDemo({ dark, disabled, fill, placeholder }: { dark: boolean; disabled: boolean; fill: boolean; placeholder: string }) {
+function SuggestDemo({ dark, disabled, fill, placeholder, portalContainer }: { dark: boolean; disabled: boolean; fill: boolean; placeholder: string; portalContainer: HTMLElement | null }) {
     const [selected, setSelected] = useState<string | null>(null);
     return (
         <div style={{ width: 260 }}>
@@ -475,6 +547,7 @@ function SuggestDemo({ dark, disabled, fill, placeholder }: { dark: boolean; dis
                 onItemSelect={(item) => setSelected(item)}
                 noResults={<MenuItem disabled text="No results." />}
                 inputProps={{ placeholder }}
+                popoverProps={{ portalContainer }}
                 disabled={disabled}
                 fill={fill}
                 dark={dark}
@@ -483,7 +556,7 @@ function SuggestDemo({ dark, disabled, fill, placeholder }: { dark: boolean; dis
     );
 }
 
-function MultiSelectDemo({ dark, intent, leftIcon, disabled, fill, placeholder }: { dark: boolean; intent: string; leftIcon: string; disabled: boolean; fill: boolean; placeholder: string }) {
+function MultiSelectDemo({ dark, intent, leftIcon, disabled, fill, placeholder, portalContainer }: { dark: boolean; intent: string; leftIcon: string; disabled: boolean; fill: boolean; placeholder: string; portalContainer: HTMLElement | null }) {
     const [selected, setSelected] = useState<string[]>(["Banana", "Cherry"]);
     return (
         <div style={{ width: 340 }}>
@@ -501,6 +574,7 @@ function MultiSelectDemo({ dark, intent, leftIcon, disabled, fill, placeholder }
                 placeholder={placeholder}
                 intent={intent as never}
                 leftIcon={(leftIcon || undefined) as never}
+                popoverProps={{ portalContainer }}
                 disabled={disabled}
                 fill={fill}
                 dark={dark}
@@ -685,7 +759,7 @@ function DateRangePickerDemo({ singleMonthOnly, contiguousCalendarMonths, allowS
     );
 }
 
-function DateInputDemo({ dark, placeholder, timePrecision, closeOnSelection, fill, disabled }: { dark: boolean; placeholder: string; timePrecision: string; closeOnSelection: boolean; fill: boolean; disabled: boolean }) {
+function DateInputDemo({ dark, placeholder, timePrecision, closeOnSelection, fill, disabled, portalContainer }: { dark: boolean; placeholder: string; timePrecision: string; closeOnSelection: boolean; fill: boolean; disabled: boolean; portalContainer: HTMLElement | null }) {
     const [value, setValue] = useState<Date | null>(PG_DATE);
     return (
         <div style={{ width: 240 }}>
@@ -697,13 +771,14 @@ function DateInputDemo({ dark, placeholder, timePrecision, closeOnSelection, fil
                 closeOnSelection={closeOnSelection}
                 fill={fill}
                 disabled={disabled}
+                popoverProps={{ portalContainer }}
                 dark={dark}
             />
         </div>
     );
 }
 
-function DateRangeInputDemo({ dark, allowSingleDayRange, contiguousCalendarMonths, closeOnSelection, fill, disabled }: { dark: boolean; allowSingleDayRange: boolean; contiguousCalendarMonths: boolean; closeOnSelection: boolean; fill: boolean; disabled: boolean }) {
+function DateRangeInputDemo({ dark, allowSingleDayRange, contiguousCalendarMonths, closeOnSelection, fill, disabled, portalContainer }: { dark: boolean; allowSingleDayRange: boolean; contiguousCalendarMonths: boolean; closeOnSelection: boolean; fill: boolean; disabled: boolean; portalContainer: HTMLElement | null }) {
     const [value, setValue] = useState<DateRangePickerValue>(PG_RANGE);
     return (
         <div style={{ width: 340 }}>
@@ -715,13 +790,14 @@ function DateRangeInputDemo({ dark, allowSingleDayRange, contiguousCalendarMonth
                 closeOnSelection={closeOnSelection}
                 fill={fill}
                 disabled={disabled}
+                popoverProps={{ portalContainer }}
                 dark={dark}
             />
         </div>
     );
 }
 
-function TimezoneSelectDemo({ dark, showLocalTimezone, filterable, fill, disabled, placeholder }: { dark: boolean; showLocalTimezone: boolean; filterable: boolean; fill: boolean; disabled: boolean; placeholder: string }) {
+function TimezoneSelectDemo({ dark, showLocalTimezone, filterable, fill, disabled, placeholder, portalContainer }: { dark: boolean; showLocalTimezone: boolean; filterable: boolean; fill: boolean; disabled: boolean; placeholder: string; portalContainer: HTMLElement | null }) {
     const [value, setValue] = useState<string>("America/Los_Angeles");
     return (
         <div style={{ width: 320 }}>
@@ -733,6 +809,7 @@ function TimezoneSelectDemo({ dark, showLocalTimezone, filterable, fill, disable
                 fill={fill}
                 disabled={disabled}
                 placeholder={placeholder}
+                popoverProps={{ portalContainer }}
                 dark={dark}
             />
         </div>
@@ -870,6 +947,14 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "ai-explainability": {
+        contained: true,
+        // The provenance popover is tall (~330px), so pin the chip on the side opposite
+        // the popover (driven by the `side` control) so it always opens into the stage.
+        containedAlign: (p) =>
+            (({ bottom: "top", top: "bottom", left: "right", right: "left" }) as const)[
+                p.side as "top" | "right" | "bottom" | "left"
+            ] ?? "top",
+        containedHeight: 440,
         initial: { intent: "primary", variant: "minimal", size: "medium", label: "AI", side: "bottom", showIcon: true, interactive: true },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -893,7 +978,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 icon={p.showIcon ? undefined : false}
                 ariaLabel={p.label ? undefined : "AI generated"}
                 dark={ctx.dark}
-                popoverProps={{ side: p.side }}
+                popoverProps={{ side: p.side, portalContainer: ctx.portalContainer }}
                 popover={p.interactive ? <AIExplainabilityDemoDetails /> : undefined}
             />
         ),
@@ -1583,6 +1668,43 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         code: (p) => jsx("FileInput", { size: p.size === "medium" ? undefined : p.size, text: p.text === "Choose file..." ? undefined : p.text, buttonText: p.buttonText === "Browse" ? undefined : p.buttonText, hasSelection: p.hasSelection, fill: p.fill, disabled: p.disabled }),
     },
 
+    "file-dropzone": {
+        initial: { size: "medium", title: "Drag & drop files here", browseText: "browse", multiple: true, showFileList: true, disabled: false },
+        controls: [
+            { kind: "enum", prop: "size", options: SIZES },
+            { kind: "text", prop: "title" },
+            { kind: "text", prop: "browseText", label: "browse" },
+            { kind: "boolean", prop: "multiple" },
+            { kind: "boolean", prop: "showFileList", label: "file list" },
+            { kind: "boolean", prop: "disabled" },
+        ],
+        presets: [
+            { name: "Single file", props: { multiple: false, title: "Drop a file" } },
+            { name: "Drag-only", props: { browseText: "" } },
+        ],
+        render: (p) => (
+            <FileDropzone
+                size={p.size}
+                title={p.title}
+                browseText={p.browseText || undefined}
+                noClick={!p.browseText}
+                multiple={p.multiple}
+                showFileList={p.showFileList}
+                disabled={p.disabled}
+            />
+        ),
+        code: (p) =>
+            jsx("FileDropzone", {
+                size: p.size === "medium" ? undefined : p.size,
+                title: p.title === "Drag & drop files here" ? undefined : p.title,
+                browseText: p.browseText === "browse" ? undefined : p.browseText || undefined,
+                noClick: !p.browseText || undefined,
+                multiple: p.multiple ? undefined : false,
+                showFileList: p.showFileList ? undefined : false,
+                disabled: p.disabled,
+            }),
+    },
+
     "form-group": {
         initial: { label: "Email address", helperText: "We'll never share it.", subLabel: "", intent: "none", inline: false, disabled: false, fill: false },
         controls: [
@@ -1711,6 +1833,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
 
     // ── Batch 5: overlays (portal to <body> → thread `dark`; trigger-driven via ctx) ──
     tooltip: {
+        contained: true,
+        containedHeight: 240,
         initial: { content: "Tooltip content", side: "bottom", align: "center", intent: "none" },
         controls: [
             { kind: "enum", prop: "side", options: SIDES },
@@ -1719,7 +1843,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             { kind: "text", prop: "content" },
         ],
         render: (p, ctx) => (
-            <Tooltip content={p.content} side={p.side} align={p.align} intent={p.intent} dark={ctx.dark}>
+            <Tooltip content={p.content} side={p.side} align={p.align} intent={p.intent} dark={ctx.dark} portalContainer={ctx.portalContainer}>
                 <Button intent={p.intent === "none" ? "primary" : p.intent}>Hover me</Button>
             </Tooltip>
         ),
@@ -1732,6 +1856,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     popover: {
+        contained: true,
+        containedHeight: 320,
         initial: { side: "bottom", align: "center", hasContentPadding: true },
         controls: [
             { kind: "enum", prop: "side", options: SIDES },
@@ -1743,6 +1869,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 side={p.side}
                 align={p.align}
                 hasContentPadding={p.hasContentPadding}
+                portalContainer={ctx.portalContainer}
                 dark={ctx.dark}
                 content={
                     <div style={{ width: 220 }} className="text-body text-foreground">
@@ -1765,6 +1892,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     dialog: {
+        contained: true,
+        containedHeight: 380,
         initial: { title: "Dialog title", closeButton: true },
         controls: [
             { kind: "text", prop: "title" },
@@ -1775,7 +1904,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 <Button intent="primary" onClick={() => ctx.setOpen(true)}>
                     Open dialog
                 </Button>
-                <Dialog open={ctx.open} onOpenChange={ctx.setOpen} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} dark={ctx.dark}>
+                <Dialog open={ctx.open} onOpenChange={ctx.setOpen} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} dark={ctx.dark}>
                     <DialogBody>
                         <p className="m-0 text-body text-foreground">
                             This is the dialog body. It can hold forms, messages, or any layout.
@@ -1809,6 +1938,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     drawer: {
+        contained: true,
+        containedHeight: 460,
         initial: { position: "right", size: 360, title: "Drawer title", closeButton: true },
         controls: [
             { kind: "enum", prop: "position", options: DRAWER_POSITIONS },
@@ -1821,7 +1952,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 <Button intent="primary" onClick={() => ctx.setOpen(true)}>
                     Open drawer
                 </Button>
-                <Drawer open={ctx.open} onOpenChange={ctx.setOpen} position={p.position} size={p.size} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} dark={ctx.dark}>
+                <Drawer open={ctx.open} onOpenChange={ctx.setOpen} position={p.position} size={p.size} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} dark={ctx.dark}>
                     <DrawerBody className="p-5">
                         <p className="m-0 text-body text-foreground">
                             Drawer body content. Slides in from the chosen edge; the backdrop locks page scroll.
@@ -1851,6 +1982,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     alert: {
+        contained: true,
+        containedHeight: 300,
         initial: { intent: "danger", confirmButtonText: "Delete", cancelButtonText: "Cancel" },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -1871,6 +2004,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     cancelButtonText={p.cancelButtonText}
                     onConfirm={() => ctx.setOpen(false)}
                     onCancel={() => ctx.setOpen(false)}
+                    portalContainer={ctx.portalContainer}
                     dark={ctx.dark}
                 >
                     Are you sure? This action cannot be undone.
@@ -1891,6 +2025,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "multistep-dialog": {
+        contained: true,
+        containedHeight: 480,
         initial: { title: "Create project", initialStepIndex: 0 },
         controls: [
             { kind: "text", prop: "title" },
@@ -1909,6 +2045,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     title={p.title}
                     icon={<Icon icon="projects" />}
                     initialStepIndex={p.initialStepIndex}
+                    portalContainer={ctx.portalContainer}
                     dark={ctx.dark}
                     finalButtonProps={{ children: "Create", onClick: () => ctx.setOpen(false) }}
                 >
@@ -1957,6 +2094,10 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     toast: {
+        // No portalContainer needed: Radix Toast.Viewport renders in place (inside the
+        // stage subtree), so its `fixed` position resolves against the contained stage.
+        contained: true,
+        containedHeight: 320,
         initial: { intent: "success", icon: "tick-circle", message: "Changes saved.", action: false },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -1980,6 +2121,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "context-menu": {
+        contained: true,
+        containedHeight: 360,
         initial: { icons: true, danger: true },
         controls: [
             { kind: "boolean", prop: "icons" },
@@ -1987,6 +2130,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         ],
         render: (p, ctx) => (
             <ContextMenu
+                portalContainer={ctx.portalContainer}
                 dark={ctx.dark}
                 content={
                     <Menu>
@@ -2028,6 +2172,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     omnibar: {
+        contained: true,
+        containedHeight: 420,
         initial: { placeholder: "Search fruit…" },
         controls: [{ kind: "text", prop: "placeholder" }],
         render: (p, ctx) => (
@@ -2038,6 +2184,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 <Omnibar<string>
                     isOpen={ctx.open}
                     onClose={() => ctx.setOpen(false)}
+                    portalContainer={ctx.portalContainer}
                     items={OMNIBAR_ITEMS}
                     inputProps={{ placeholder: String(p.placeholder) || "Search…" }}
                     itemPredicate={(query, item) => item.toLowerCase().includes(query.toLowerCase())}
@@ -2068,13 +2215,16 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
 
     // ── Batch 6: Select / Suggest / MultiSelect / TagInput (stateful + portaled) ──
     select: {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 380,
         initial: { filterable: true, fill: false, disabled: false },
         controls: [
             { kind: "boolean", prop: "filterable" },
             { kind: "boolean", prop: "fill" },
             { kind: "boolean", prop: "disabled" },
         ],
-        render: (p, ctx) => <SelectDemo dark={ctx.dark} filterable={p.filterable} fill={p.fill} disabled={p.disabled} />,
+        render: (p, ctx) => <SelectDemo dark={ctx.dark} filterable={p.filterable} fill={p.fill} disabled={p.disabled} portalContainer={ctx.portalContainer} />,
         code: (p) =>
             [
                 `const [selected, setSelected] = useState<string | null>("Cherry");`,
@@ -2093,13 +2243,16 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     suggest: {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 380,
         initial: { placeholder: "Search fruit…", fill: false, disabled: false },
         controls: [
             { kind: "text", prop: "placeholder" },
             { kind: "boolean", prop: "fill" },
             { kind: "boolean", prop: "disabled" },
         ],
-        render: (p, ctx) => <SuggestDemo dark={ctx.dark} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} />,
+        render: (p, ctx) => <SuggestDemo dark={ctx.dark} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} portalContainer={ctx.portalContainer} />,
         code: (p) =>
             [
                 `const [selected, setSelected] = useState<string | null>(null);`,
@@ -2118,6 +2271,9 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "multi-select": {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 400,
         initial: { placeholder: "Add fruit…", intent: "none", leftIcon: "", fill: true, disabled: false },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -2127,7 +2283,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             { kind: "boolean", prop: "disabled" },
         ],
         render: (p, ctx) => (
-            <MultiSelectDemo dark={ctx.dark} intent={p.intent} leftIcon={p.leftIcon} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} />
+            <MultiSelectDemo dark={ctx.dark} intent={p.intent} leftIcon={p.leftIcon} placeholder={String(p.placeholder)} fill={p.fill} disabled={p.disabled} portalContainer={ctx.portalContainer} />
         ),
         code: (p) =>
             [
@@ -2320,6 +2476,9 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "date-input": {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 380,
         initial: { placeholder: "M/d/yyyy", timePrecision: "", closeOnSelection: true, fill: false, disabled: false },
         controls: [
             { kind: "text", prop: "placeholder" },
@@ -2329,7 +2488,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             { kind: "boolean", prop: "disabled" },
         ],
         render: (p, ctx) => (
-            <DateInputDemo dark={ctx.dark} placeholder={String(p.placeholder)} timePrecision={p.timePrecision} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} />
+            <DateInputDemo dark={ctx.dark} placeholder={String(p.placeholder)} timePrecision={p.timePrecision} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} portalContainer={ctx.portalContainer} />
         ),
         code: (p) =>
             [
@@ -2349,6 +2508,9 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "date-range-input": {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 400,
         initial: { allowSingleDayRange: false, contiguousCalendarMonths: true, closeOnSelection: true, fill: false, disabled: false },
         controls: [
             { kind: "boolean", prop: "allowSingleDayRange" },
@@ -2358,7 +2520,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             { kind: "boolean", prop: "disabled" },
         ],
         render: (p, ctx) => (
-            <DateRangeInputDemo dark={ctx.dark} allowSingleDayRange={p.allowSingleDayRange} contiguousCalendarMonths={p.contiguousCalendarMonths} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} />
+            <DateRangeInputDemo dark={ctx.dark} allowSingleDayRange={p.allowSingleDayRange} contiguousCalendarMonths={p.contiguousCalendarMonths} closeOnSelection={p.closeOnSelection} fill={p.fill} disabled={p.disabled} portalContainer={ctx.portalContainer} />
         ),
         code: (p) =>
             [
@@ -2380,6 +2542,9 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     },
 
     "timezone-select": {
+        contained: true,
+        containedAlign: "top",
+        containedHeight: 400,
         initial: { showLocalTimezone: true, filterable: true, fill: false, disabled: false, placeholder: "Select timezone…" },
         controls: [
             { kind: "boolean", prop: "showLocalTimezone" },
@@ -2389,7 +2554,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
             { kind: "text", prop: "placeholder" },
         ],
         render: (p, ctx) => (
-            <TimezoneSelectDemo dark={ctx.dark} showLocalTimezone={p.showLocalTimezone} filterable={p.filterable} fill={p.fill} disabled={p.disabled} placeholder={String(p.placeholder)} />
+            <TimezoneSelectDemo dark={ctx.dark} showLocalTimezone={p.showLocalTimezone} filterable={p.filterable} fill={p.fill} disabled={p.disabled} placeholder={String(p.placeholder)} portalContainer={ctx.portalContainer} />
         ),
         code: (p) =>
             [

@@ -148,6 +148,8 @@ export interface DateRangeInputProps {
         side?: "top" | "right" | "bottom" | "left";
         align?: "start" | "center" | "end";
         sideOffset?: number;
+        /** Portal the calendar into this element instead of `document.body` (showcase use). */
+        portalContainer?: HTMLElement | null;
     };
     /**
      * Pass the app-level dark state so the portaled popover inherits dark mode.
@@ -537,6 +539,7 @@ export function DateRangeInput({
             side={popoverProps.side ?? "bottom"}
             align={popoverProps.align ?? "start"}
             sideOffset={popoverProps.sideOffset ?? 4}
+            portalContainer={popoverProps.portalContainer}
             arrow={true}
             minimal={false}
             hasContentPadding={false}
