@@ -3,23 +3,29 @@ import { createContext, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Tooltip } from "@/components/ui/tooltip";
-
-/** The seed palettes the gallery ships. `default` plus the bundled `datex` theme. */
-export type Palette = "default" | "datex";
+import { HTMLSelect } from "@/components/ui/html-select";
 
 /**
- * Per-app chrome: a way back to the landing app gallery plus the app's own theme
- * chooser. Each app (the showcase and every demo) owns its palette + light/dark
- * independently, so there is no persistent global sidebar — every app gets its
- * full width back and carries its own controls in its own header.
+ * Per-app chrome: a way back to the landing app gallery plus the shared theme controls —
+ * a named-theme picker and a toggle for the Theme Builder editor panel. The theme itself is
+ * global (the builder applies seed overrides to the document root), so the picker/editor are
+ * the same everywhere; only light/dark is owned per-app.
  */
 export interface AppChrome {
     /** Return to the landing app gallery. */
     exit: () => void;
-    palette: Palette;
     dark: boolean;
-    setPalette: (p: Palette) => void;
     toggleDark: () => void;
+    /** Named themes available in the picker (built-ins + saved custom). */
+    themeNames: string[];
+    /** Currently-selected theme name. */
+    selectedTheme: string;
+    /** Load a theme by name. */
+    selectTheme: (name: string) => void;
+    /** Whether the Theme Builder editor panel is open. */
+    editorOpen: boolean;
+    /** Toggle the Theme Builder editor panel. */
+    toggleEditor: () => void;
 }
 
 const AppChromeContext = createContext<AppChrome | null>(null);
@@ -40,8 +46,8 @@ export function useAppChrome(): AppChrome {
  * off, since there's nowhere "back" to go from the gallery itself.
  */
 export function AppChromeControls({ showExit = true }: { showExit?: boolean } = {}) {
-    const { exit, palette, dark, setPalette, toggleDark } = useAppChrome();
-    const datex = palette === "datex";
+    const { exit, dark, toggleDark, themeNames, selectedTheme, selectTheme, editorOpen, toggleEditor } =
+        useAppChrome();
     return (
         <div className="flex items-center gap-1">
             {showExit && (
@@ -55,15 +61,24 @@ export function AppChromeControls({ showExit = true }: { showExit?: boolean } = 
                     />
                 </Tooltip>
             )}
-            <Button
-                size="small"
-                variant="minimal"
-                intent={datex ? "primary" : "none"}
-                aria-label={datex ? "Switch to default theme" : "Switch to datex theme"}
-                aria-pressed={datex}
-                icon={<Icon icon="tint" className="!text-current" />}
-                onClick={() => setPalette(datex ? "default" : "datex")}
+            <HTMLSelect
+                minimal
+                aria-label="Theme"
+                value={selectedTheme}
+                options={themeNames}
+                onChange={(e) => selectTheme(e.target.value)}
             />
+            <Tooltip content="Theme editor" dark={dark}>
+                <Button
+                    size="small"
+                    variant="minimal"
+                    intent={editorOpen ? "primary" : "none"}
+                    aria-label="Theme editor"
+                    aria-pressed={editorOpen}
+                    icon={<Icon icon="style" className="!text-current" />}
+                    onClick={toggleEditor}
+                />
+            </Tooltip>
             <Button
                 size="small"
                 variant="minimal"

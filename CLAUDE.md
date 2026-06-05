@@ -52,8 +52,8 @@ the ongoing goal:
   into one of: the **Component Showcase** (`#showcase` / `#showcase/<id>`, a top app bar over an
   IBM-Carbon-style tiled overview grouped by category, each tile deep-linking to a component page) or a
   demo app (`#soc`, `#board`, `#mission`). There is **no persistent global sidebar** — each app owns its
-  full width and carries its own chrome (back-to-gallery + theme chooser) via `<AppChromeControls>` from
-  `src/lib/app-chrome.tsx`. Each overview tile carries badges (test count + a11y/keyboard/behavior split,
+  full width and carries its own chrome (back-to-gallery + a named-theme picker + a Theme Builder
+  toggle + light/dark) via `<AppChromeControls>` from `src/lib/app-chrome.tsx`. Each overview tile carries badges (test count + a11y/keyboard/behavior split,
   axe-audited, server-renderable vs client, portals/Radix/asChild traits, compound-export count) sourced
   from `src/components/ui/component-meta.generated.ts` — re-run `pnpm gen:meta`
   (`tools/gen-component-meta.mjs`) after adding components or tests. A component's page also shows a
@@ -61,9 +61,14 @@ the ongoing goal:
   and — for components with a curated config in `src/playground.tsx` — an interactive playground (a
   single live instance + controls + presets + live code); others fall back to their Examples gallery.
   Remaining playground work + the how‑to is in [`docs/component-pages-handoff.md`](docs/component-pages-handoff.md).
-  Each app keeps its **own** palette +
-  light/dark independently. Isolated harness mode (`?component=<id>`) is unchanged. Demo apps live under
-  `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an `icon` for its card).
+  The **theme is global** — the **Theme Builder** (`src/theme-builder.tsx`, opened from the chrome's
+  paintbrush toggle) edits the `tokens.css` seed colors live (intents + neutral ramp incl. white/black,
+  an auto text-color threshold), applying them as inline overrides on the document root so every app +
+  portaled overlay re-tints together. It ships named built-in themes (Blueprint · Datex · Anthropic),
+  lets you save custom ones to localStorage, and exports a `[data-theme="…"]` block; the picker lists
+  them all. Only **light/dark is per-app**. Isolated harness mode (`?component=<id>`) is unchanged. Demo
+  apps live under `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an
+  `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).
   Visual fidelity is verified via the harness, not unit tests.
 - `tools/compare.sh` + `tools/comparison/` — the comparison harness: screenshots **and** computed-style

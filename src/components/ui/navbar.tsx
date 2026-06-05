@@ -52,6 +52,11 @@ import { cn } from "@/lib/utils";
 export interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
     /** Whether this navbar should be fixed to the top of the viewport. @default false */
     fixedTop?: boolean;
+    /**
+     * Whether this navbar should stick to the top of its scroll container (stays in flow,
+     * unlike `fixedTop`, so no content offset is needed). @default false
+     */
+    sticky?: boolean;
     children?: React.ReactNode;
     className?: string;
 }
@@ -73,7 +78,7 @@ export interface NavbarProps extends React.HTMLAttributes<HTMLDivElement> {
  * ```
  */
 export const Navbar = forwardRef<HTMLDivElement, NavbarProps>(function Navbar(
-    { fixedTop = false, className, children, ...htmlProps },
+    { fixedTop = false, sticky = false, className, children, ...htmlProps },
     ref,
 ) {
     return (
@@ -88,10 +93,13 @@ export const Navbar = forwardRef<HTMLDivElement, NavbarProps>(function Navbar(
                 "px-4",
                 // Flex layout: left group left, right group right
                 "flex items-center justify-between",
-                // Position
-                "relative z-content",
-                // Fixed-top variant
-                fixedTop && "fixed left-0 right-0 top-0",
+                // Position: exactly one of fixed / sticky / relative (mutually exclusive so the
+                // generated `position` utility is unambiguous — no relative/sticky class clash).
+                fixedTop
+                    ? "fixed left-0 right-0 top-0 z-content"
+                    : sticky
+                      ? "sticky left-0 right-0 top-0 z-content"
+                      : "relative z-content",
                 className,
             )}
             {...htmlProps}

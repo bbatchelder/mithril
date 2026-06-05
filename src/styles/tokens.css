@@ -598,6 +598,34 @@
     --color-danger-disabled: #fd6265;
 }
 
+/* Anthropic — warm terracotta primary over a cream/clay neutral base. Unlike datex, this
+ * theme also re-seeds the neutral extremes (white → cream, black → clay-brown) and the
+ * top of the light ramp, so surfaces and body text pick up the warmth too. Warning keeps
+ * the default amber. Mirrors BUILTIN_THEMES.Anthropic in src/theme-builder.tsx. */
+[data-theme="anthropic"] {
+    --color-primary: #db7759;
+    --color-primary-hover: #c76547;
+    --color-primary-active: #b25235;
+    --color-primary-disabled: #fe9677;
+    --color-primary-foreground: #ffffff;
+
+    --color-success: #c4d3e1;
+    --color-success-hover: #b1c0cd;
+    --color-success-active: #9eadba;
+    --color-success-disabled: #e7f3ff;
+    --color-success-foreground: #111418;
+
+    --color-danger: #c46686;
+    --color-danger-hover: #b05474;
+    --color-danger-active: #9c4263;
+    --color-danger-disabled: #e684a4;
+    --color-danger-foreground: #ffffff;
+
+    --color-white: #e6e6dd;
+    --color-black: #593025;
+    --color-light-gray-5: #efeee6;
+}
+
 /* =============================================================================
  * Map semantic vars onto Tailwind tokens so utilities resolve them.
  * `@theme inline` keeps the var() reference live (so .dark overrides apply).
