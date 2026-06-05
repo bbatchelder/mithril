@@ -61,6 +61,14 @@ import { NonIdealState } from "@/components/ui/non-ideal-state";
 import { Link } from "@/components/ui/link";
 import { Slider } from "@/components/ui/slider";
 import { KeyCombo } from "@/components/ui/hotkeys";
+import { TagInput } from "@/components/ui/tag-input";
+import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { TimePicker } from "@/components/ui/time-picker";
+import { DatePicker } from "@/components/ui/date-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateInput } from "@/components/ui/date-input";
+import { DateRangeInput } from "@/components/ui/date-range-input";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 
 /**
  * Shared surface for overlays. The real overlay components portal to `document.body`
@@ -69,6 +77,32 @@ import { KeyCombo } from "@/components/ui/hotkeys";
  * standalone: DialogBody/DialogFooter, Menu, Toast), styled to match the portaled look.
  */
 const OVERLAY_PANEL = "overflow-hidden rounded-bp bg-surface shadow-overlay-3";
+
+/**
+ * Fixed seed dates so the date/time previews render deterministically (and don't
+ * depend on "today"). Mirror the playground's seeds (Jan 2026).
+ */
+const PREVIEW_DATE = new Date(2026, 0, 15); // Jan 15, 2026
+const PREVIEW_TIME = new Date(2026, 0, 15, 14, 30); // 2:30 PM
+const PREVIEW_RANGE = { start: new Date(2026, 0, 8), end: new Date(2026, 0, 20) };
+
+/** A tiny static row set for the DataTable preview. */
+interface PreviewPerson {
+    name: string;
+    role: string;
+    location: string;
+}
+const PREVIEW_TABLE_ROWS: PreviewPerson[] = [
+    { name: "Alice Hancock", role: "Engineer", location: "London" },
+    { name: "Bob Liu", role: "Designer", location: "Seattle" },
+    { name: "Carol Reyes", role: "Manager", location: "Austin" },
+    { name: "Dan Okafor", role: "Analyst", location: "Lagos" },
+];
+const PREVIEW_TABLE_COLUMNS: DataTableColumn<PreviewPerson>[] = [
+    { id: "name", header: "Name", accessor: "name", width: 150 },
+    { id: "role", header: "Role", accessor: "role", width: 110 },
+    { id: "location", header: "Location", accessor: "location", width: 120 },
+];
 
 interface PreviewEntry {
     /** A representative, non-interactive composition of the real component. */
@@ -787,6 +821,160 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
                     <span className="w-16 text-foreground-muted">Command</span>
                     <KeyCombo combo="mod+shift+p" />
                 </div>
+            </div>
+        ),
+    },
+
+    // ── Composite selects ──────────────────────────────────────────────────────
+    // These portal their dropdown to document.body, so they can't live in a tile.
+    // Preview the *open surface* inline: the real closed control (Button / InputGroup /
+    // TagInput) over a static results Menu (the same panel the popover would host).
+    select: {
+        scale: 0.9,
+        align: "top",
+        render: () => (
+            <div style={{ width: 190 }} className="flex flex-col gap-1">
+                <Button variant="solid" endIcon="caret-down" fill>
+                    Cherry
+                </Button>
+                <Menu className={cn("w-full", OVERLAY_PANEL)}>
+                    <MenuItem text="Apple" />
+                    <MenuItem text="Banana" />
+                    <MenuItem text="Cherry" icon="tick" active />
+                    <MenuItem text="Mango" />
+                </Menu>
+            </div>
+        ),
+    },
+
+    suggest: {
+        scale: 0.9,
+        align: "top",
+        render: () => (
+            <div style={{ width: 190 }} className="flex flex-col gap-1">
+                <InputGroup defaultValue="Ba" placeholder="Search fruit…" />
+                <Menu className={cn("w-full", OVERLAY_PANEL)}>
+                    <MenuItem text="Banana" active />
+                    <MenuItem text="Blackberry" />
+                    <MenuItem text="Blueberry" />
+                </Menu>
+            </div>
+        ),
+    },
+
+    "multi-select": {
+        scale: 0.86,
+        align: "top",
+        render: () => (
+            <div style={{ width: 220 }} className="flex flex-col gap-1">
+                <TagInput
+                    values={["Banana", "Cherry"]}
+                    onChange={() => {}}
+                    placeholder="Add fruit…"
+                    inputProps={{ "aria-label": "Fruit" }}
+                    fill
+                />
+                <Menu className={cn("w-full", OVERLAY_PANEL)}>
+                    <MenuItem text="Apple" />
+                    <MenuItem text="Banana" icon="tick" active />
+                    <MenuItem text="Cherry" icon="tick" />
+                    <MenuItem text="Mango" />
+                </Menu>
+            </div>
+        ),
+    },
+
+    // Omnibar is a portaled command-palette panel — mock its surface: a large search
+    // field over a results Menu, styled like the real top-pinned panel.
+    omnibar: {
+        scale: 0.78,
+        align: "top",
+        render: () => (
+            <div className={cn("w-[300px]", OVERLAY_PANEL)}>
+                <InputGroup
+                    leftIcon="search"
+                    size="large"
+                    defaultValue=""
+                    placeholder="Search fruit…"
+                    className="!rounded-none !bg-transparent !shadow-none"
+                />
+                <Menu className="rounded-none shadow-[inset_0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+                    <MenuItem text="Apple" active />
+                    <MenuItem text="Banana" />
+                    <MenuItem text="Cherry" />
+                    <MenuItem text="Mango" />
+                </Menu>
+            </div>
+        ),
+    },
+
+    // TagInput renders inline (no portal) → use the real component with static values.
+    "tag-input": {
+        render: () => (
+            <div style={{ width: 260 }}>
+                <TagInput
+                    values={["design", "ui", "ux"]}
+                    onChange={() => {}}
+                    placeholder="Add a tag…"
+                    inputProps={{ "aria-label": "Tags" }}
+                    fill
+                />
+            </div>
+        ),
+    },
+
+    // ── Data ───────────────────────────────────────────────────────────────────
+    "data-table": {
+        scale: 0.82,
+        align: "top",
+        render: () => (
+            <div style={{ width: 380 }}>
+                <DataTable<PreviewPerson> data={PREVIEW_TABLE_ROWS} columns={PREVIEW_TABLE_COLUMNS} selectionMode="none" />
+            </div>
+        ),
+    },
+
+    // ── Date & time ────────────────────────────────────────────────────────────
+    // The calendars / time picker render inline → use the real component with a fixed
+    // `defaultValue` (uncontrolled, no onChange needed; the inert frame blocks interaction).
+    "time-picker": {
+        render: () => <TimePicker defaultValue={PREVIEW_TIME} showArrowButtons />,
+    },
+
+    "date-picker": {
+        scale: 0.62,
+        align: "top",
+        render: () => <DatePicker defaultValue={PREVIEW_DATE} />,
+    },
+
+    "date-range-picker": {
+        scale: 0.58,
+        align: "top",
+        render: () => <DateRangePicker defaultValue={PREVIEW_RANGE} singleMonthOnly />,
+    },
+
+    // The *-input + timezone-select variants portal a popover → show the closed field.
+    "date-input": {
+        render: () => (
+            <div style={{ width: 240 }}>
+                <DateInput defaultValue={PREVIEW_DATE} placeholder="M/d/yyyy" />
+            </div>
+        ),
+    },
+
+    "date-range-input": {
+        scale: 0.92,
+        render: () => (
+            <div style={{ width: 300 }}>
+                <DateRangeInput defaultValue={PREVIEW_RANGE} />
+            </div>
+        ),
+    },
+
+    "timezone-select": {
+        render: () => (
+            <div style={{ width: 240 }}>
+                <TimezoneSelect defaultValue="America/Los_Angeles" placeholder="Select timezone…" />
             </div>
         ),
     },
