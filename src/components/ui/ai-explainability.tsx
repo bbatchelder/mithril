@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * AILabel — a mithril-native marker for AI-generated / AI-assisted content.
+ * AIExplainability — a mithril-native marker for AI-generated / AI-assisted content.
  *
  * Inspired by IBM Carbon's "AI Label" (the marker formerly called the AI slug): a small chip that
  * flags AI involvement and, when interactive, reveals an "explainability" popover describing what the
@@ -45,21 +45,21 @@ import { Popover, type PopoverProps } from "./popover";
 import { Tag } from "./tag";
 import { Link } from "./link";
 
-export type AILabelIntent = Intent;
-export type AILabelVariant = "minimal" | "solid";
-export type AILabelSize = "small" | "medium" | "large";
+export type AIExplainabilityIntent = Intent;
+export type AIExplainabilityVariant = "minimal" | "solid";
+export type AIExplainabilitySize = "small" | "medium" | "large";
 
 // ── Intent colors (mirrors Tag) ──────────────────────────────────────────────
 // Minimal: translucent intent-tinted bg + intent-colored text. Reuses the shared
 // `--tag-minimal-*` tokens so the marker matches a minimal Tag exactly.
-const MINIMAL: Record<AILabelIntent, string> = {
+const MINIMAL: Record<AIExplainabilityIntent, string> = {
     none: "bg-tag-minimal-bg text-tag-minimal-none-text",
     primary: "bg-primary/10 dark:bg-primary/20 text-tag-minimal-primary-text",
     success: "bg-success/10 dark:bg-success/20 text-tag-minimal-success-text",
     warning: "bg-warning/10 dark:bg-warning/20 text-tag-minimal-warning-text",
     danger: "bg-danger/10 dark:bg-danger/20 text-tag-minimal-danger-text",
 };
-const MINIMAL_HOVER: Record<AILabelIntent, string> = {
+const MINIMAL_HOVER: Record<AIExplainabilityIntent, string> = {
     none: "hover:bg-interactive-active",
     primary: "hover:bg-primary/20 dark:hover:bg-primary/30",
     success: "hover:bg-success/20 dark:hover:bg-success/30",
@@ -67,14 +67,14 @@ const MINIMAL_HOVER: Record<AILabelIntent, string> = {
     danger: "hover:bg-danger/20 dark:hover:bg-danger/30",
 };
 // Solid: filled intent bg + intent-foreground text (warning uses the lifted token, as in Tag).
-const SOLID: Record<AILabelIntent, string> = {
+const SOLID: Record<AIExplainabilityIntent, string> = {
     none: "bg-gray-1 text-white",
     primary: "bg-primary text-primary-foreground",
     success: "bg-success text-success-foreground",
     warning: "bg-tag-solid-warning-bg text-tag-solid-warning-text",
     danger: "bg-danger text-danger-foreground",
 };
-const SOLID_HOVER: Record<AILabelIntent, string> = {
+const SOLID_HOVER: Record<AIExplainabilityIntent, string> = {
     none: "hover:bg-dark-gray-5",
     primary: "hover:bg-primary-hover",
     success: "hover:bg-success-hover",
@@ -83,27 +83,27 @@ const SOLID_HOVER: Record<AILabelIntent, string> = {
 };
 
 // Per-size geometry. Heights echo Tag (small≈20, large≈30) with a medium step between.
-const SIZE: Record<AILabelSize, { box: string; text: string; icon: number }> = {
+const SIZE: Record<AIExplainabilitySize, { box: string; text: string; icon: number }> = {
     small: { box: "h-5 px-1.5 gap-1", text: "text-body-sm leading-none", icon: 14 },
     medium: { box: "h-6 px-2 gap-1", text: "text-body-sm leading-none", icon: 16 },
     large: { box: "h-7.5 px-2.5 gap-1.5", text: "text-body leading-none", icon: 18 },
 };
 
-export interface AILabelProps
+export interface AIExplainabilityProps
     extends Omit<React.HTMLAttributes<HTMLElement>, "color" | "popover"> {
     /** Visual intent / color scheme (same set as Tag). @default "primary" */
-    intent?: AILabelIntent;
+    intent?: AIExplainabilityIntent;
     /** "minimal" translucent tint or "solid" filled chip. @default "minimal" */
-    variant?: AILabelVariant;
+    variant?: AIExplainabilityVariant;
     /** Size of the marker. @default "medium" */
-    size?: AILabelSize;
+    size?: AIExplainabilitySize;
     /** Chip text. Defaults to the letters "AI". Pass null/false/"" for an icon-only marker. */
     label?: React.ReactNode;
     /** Leading glyph. Defaults to the `clean` sparkle. Pass `false` to hide. */
     icon?: IconProp;
     /**
      * Explainability callout content. When provided the marker becomes an interactive button that
-     * opens a `Popover`; pair with {@link AILabelExplanation} for the standard layout.
+     * opens a `Popover`; pair with {@link AIExplainabilityDetails} for the standard layout.
      */
     popover?: React.ReactNode;
     /**
@@ -121,7 +121,7 @@ export interface AILabelProps
 
 // Inner chip markup shared by the interactive (button) and static (span) renderings.
 // `Root` selects the element so the button can carry the Popover trigger ref/props.
-const Chip = forwardRef<HTMLElement, AILabelProps & { interactive: boolean }>(function Chip(
+const Chip = forwardRef<HTMLElement, AIExplainabilityProps & { interactive: boolean }>(function Chip(
     {
         className,
         intent = "primary",
@@ -159,7 +159,7 @@ const Chip = forwardRef<HTMLElement, AILabelProps & { interactive: boolean }>(fu
             ref={ref as any}
             {...(interactive ? { type: "button" as const } : {})}
             aria-label={hasLabel ? ariaLabel : accessibleName}
-            data-ai-label=""
+            data-ai-explainability=""
             data-intent={intent}
             data-variant={variant}
             className={cn(
@@ -183,10 +183,10 @@ const Chip = forwardRef<HTMLElement, AILabelProps & { interactive: boolean }>(fu
 });
 
 /**
- * AILabel — see the module header. Renders a static marker, or (when `popover` is set) an interactive
+ * AIExplainability — see the module header. Renders a static marker, or (when `popover` is set) an interactive
  * button that opens an explainability `Popover`. Control placement via `popoverProps={{ side, align }}`.
  */
-export const AILabel = forwardRef<HTMLElement, AILabelProps>(function AILabel(props, ref) {
+export const AIExplainability = forwardRef<HTMLElement, AIExplainabilityProps>(function AIExplainability(props, ref) {
     const { popover, popoverProps, dark = false } = props;
 
     if (popover == null) {
@@ -206,7 +206,7 @@ export const AILabel = forwardRef<HTMLElement, AILabelProps>(function AILabel(pr
     );
 });
 
-AILabel.displayName = "AILabel";
+AIExplainability.displayName = "AIExplainability";
 
 // ── Explainability / provenance callout ──────────────────────────────────────
 //
@@ -227,7 +227,7 @@ const TONE_TEXT: Record<AIProvenanceTone, string> = {
     positive: "text-tag-minimal-success-text",
     caution: "text-tag-minimal-warning-text",
 };
-const TONE_INTENT: Record<AIProvenanceTone, AILabelIntent> = {
+const TONE_INTENT: Record<AIProvenanceTone, AIExplainabilityIntent> = {
     neutral: "none",
     info: "primary",
     positive: "success",
@@ -285,7 +285,7 @@ export interface AIModelContext {
     tools?: React.ReactNode;
 }
 
-export interface AILabelExplanationProps {
+export interface AIExplainabilityDetailsProps {
     /** The stacked provenance headline (states coexist). */
     states?: AIProvenanceState[];
     /** Optional one-line summary under the headline. */
@@ -328,12 +328,12 @@ function Field({
 }
 
 /**
- * Provenance / explainability callout for an {@link AILabel} popover. Surfaces where AI content came
+ * Provenance / explainability callout for an {@link AIExplainability} popover. Surfaces where AI content came
  * from and how much to trust it: a stacked provenance headline, confidence (with its source), grounding
- * sources (or an explicit "no sources" state), and the model + context. Pass to `AILabel`'s `popover`
+ * sources (or an explicit "no sources" state), and the model + context. Pass to `AIExplainability`'s `popover`
  * prop, or skip it and pass arbitrary content for full control.
  */
-export function AILabelExplanation({
+export function AIExplainabilityDetails({
     states,
     children,
     confidence,
@@ -341,7 +341,7 @@ export function AILabelExplanation({
     model,
     actions,
     className,
-}: AILabelExplanationProps) {
+}: AIExplainabilityDetailsProps) {
     return (
         <div className={cn("flex w-80 flex-col gap-3", className)}>
             {/* 1. Provenance headline */}
@@ -466,4 +466,4 @@ export function AILabelExplanation({
     );
 }
 
-AILabelExplanation.displayName = "AILabelExplanation";
+AIExplainabilityDetails.displayName = "AIExplainabilityDetails";

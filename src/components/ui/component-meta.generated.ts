@@ -30,9 +30,9 @@ export interface ComponentMeta {
 }
 
 export const COMPONENT_META: Record<string, ComponentMeta> = {
-    "ai-label": {
-        "title": "AILabel",
-        "description": "AILabel — Blueprint-faithful, built on CVA.",
+    "ai-explainability": {
+        "title": "",
+        "description": "",
         "tests": {
             "total": 10,
             "a11y": 1,
@@ -43,21 +43,13 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "portal": false,
         "radix": false,
         "polymorphic": false,
-        "registry": true,
+        "registry": false,
         "axe": true,
         "exports": [
-            "AILabelExplanation",
-            "AILabel"
+            "AIExplainabilityDetails",
+            "AIExplainability"
         ],
-        "registryDependencies": [
-            "icon",
-            "link",
-            "popover",
-            "tag",
-            "types",
-            "utils",
-            "tokens"
-        ],
+        "registryDependencies": [],
         "dependencies": []
     },
     "alert": {

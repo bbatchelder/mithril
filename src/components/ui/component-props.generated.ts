@@ -19,10 +19,10 @@ export interface ComponentApiDoc {
 
 /** Props reference per showcase component id (array = the compound-component family). */
 export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
-    "ai-label": [
+    "ai-explainability": [
         {
-            "name": "AILabelExplanation",
-            "description": "Provenance / explainability callout for an {@link AILabel} popover. Surfaces where AI content came from and how much to trust it: a stacked provenance headline, confidence (with its source), grounding sources (or an explicit \"no sources\" state), and the model + context. Pass to `AILabel`'s `popover` prop, or skip it and pass arbitrary content for full control.",
+            "name": "AIExplainabilityDetails",
+            "description": "Provenance / explainability callout for an {@link AIExplainability} popover. Surfaces where AI content came from and how much to trust it: a stacked provenance headline, confidence (with its source), grounding sources (or an explicit \"no sources\" state), and the model + context. Pass to `AIExplainability`'s `popover` prop, or skip it and pass arbitrary content for full control.",
             "props": [
                 {
                     "name": "actions",
@@ -76,8 +76,8 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
             ]
         },
         {
-            "name": "AILabel",
-            "description": "AILabel — see the module header. Renders a static marker, or (when `popover` is set) an interactive button that opens an explainability `Popover`. Control placement via `popoverProps={{ side, align }}`.",
+            "name": "AIExplainability",
+            "description": "AIExplainability — see the module header. Renders a static marker, or (when `popover` is set) an interactive button that opens an explainability `Popover`. Control placement via `popoverProps={{ side, align }}`.",
             "props": [
                 {
                     "name": "ariaLabel",
@@ -126,7 +126,7 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "type": "ReactNode",
                     "required": false,
                     "defaultValue": null,
-                    "description": "Explainability callout content. When provided the marker becomes an interactive button that opens a `Popover`; pair with {@link AILabelExplanation} for the standard layout."
+                    "description": "Explainability callout content. When provided the marker becomes an interactive button that opens a `Popover`; pair with {@link AIExplainabilityDetails} for the standard layout."
                 },
                 {
                     "name": "popoverProps",
@@ -3384,6 +3384,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": "false",
                     "description": "Whether this navbar should be fixed to the top of the viewport."
+                },
+                {
+                    "name": "sticky",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "false",
+                    "description": "Whether this navbar should stick to the top of its scroll container (stays in flow, unlike `fixedTop`, so no content offset is needed)."
                 }
             ]
         },
