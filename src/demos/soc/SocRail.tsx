@@ -91,12 +91,19 @@ export function RailNav({ items, footerItems, activeId, onSelect }: RailNavProps
 /**
  * Dark left rail — the universal shell element on md+ screens. Stays dark
  * regardless of the app's light/dark mode by wrapping its subtree in `.dark`
- * (class-based dark mode swaps the semantic surface tokens). On small screens the
- * rail is hidden; its nav moves into a hamburger drawer (see SocConsole).
+ * (class-based dark mode swaps the semantic surface tokens). Collapsible on md+ via
+ * `open` (a hamburger toggle hands the width back to the content); on small screens
+ * the rail is always hidden inline and its nav moves into a hamburger drawer (see
+ * SocConsole).
  */
-export function SocRail(props: RailNavProps) {
+export function SocRail({ open = true, ...props }: RailNavProps & { open?: boolean }) {
     return (
-        <div className="dark hidden w-[230px] shrink-0 border-r border-border-strong md:block">
+        <div
+            className={
+                "dark hidden w-[230px] shrink-0 border-r border-border-strong " +
+                (open ? "md:block" : "")
+            }
+        >
             <RailNav {...props} />
         </div>
     );
