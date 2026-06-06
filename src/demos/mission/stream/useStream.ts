@@ -24,6 +24,7 @@ import {
     emptyHistory,
     makeFleet,
 } from "../data";
+import { type Target, makeTargets, upgradeTarget } from "../targets";
 
 const SEED = 0x5ca1ab1e;
 const TICK_MS = 1000;
@@ -34,6 +35,7 @@ export type StreamSpeed = 1 | 2 | 5;
 export interface StreamState {
     tick: number;
     drones: Drone[];
+    targets: Target[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     playing: boolean;
@@ -42,6 +44,8 @@ export interface StreamState {
     pause: () => void;
     toggle: () => void;
     setSpeed: (s: StreamSpeed) => void;
+    /** Task the nearest free drone to investigate a target; raises its confidence on arrival. */
+    investigate: (targetId: string) => void;
 }
 
 // ─── Geo helpers (planar approximation — fine at city scale) ─────────────────
@@ -79,6 +83,7 @@ function clamp(v: number, lo: number, hi: number): number {
 interface Sim {
     tick: number;
     drones: Drone[];
+    targets: Target[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     rng: Rng;
@@ -91,11 +96,39 @@ function makeSim(): Sim {
     const drones = makeFleet();
     const history: Record<string, TelemetryHistory> = {};
     for (const d of drones) history[d.id] = emptyHistory();
-    return { tick: 0, drones, events: [], history, rng: new Rng(SEED), eventId: 1, anomalyTimer: {} };
+    return { tick: 0, drones, targets: makeTargets(), events: [], history, rng: new Rng(SEED), eventId: 1, anomalyTimer: {} };
 }
 
 const CRUISE = 0.0024; // degrees/tick for active drones
 const RETURN_SPEED = 0.0032;
+// Loiter orbit while investigating: a tight ellipse (x scaled by ORBIT_ASPECT to
+// match the patrol loops — so it reads as a circle on screen) that the drone
+// circles, advancing ORBIT_STEP radians per tick.
+const ORBIT_RADIUS = 0.005;
+const ORBIT_ASPECT = 1.3;
+const ORBIT_STEP = 0.45;
+
+/** Point on the loiter orbit at center-angle `angle` (radians, CCW). */
+function ringPoint(center: [number, number], angle: number): [number, number] {
+    return [center[0] + Math.cos(angle) * ORBIT_RADIUS * ORBIT_ASPECT, center[1] + Math.sin(angle) * ORBIT_RADIUS];
+}
+
+/**
+ * Center-angle of the orbit point a drone at `from` should aim for so it joins the
+ * ring *tangentially* (flying straight there arrives with velocity already tangent
+ * to the orbit — no overflight of the target). Computed in the orbit's normalized
+ * space, where the ellipse is a circle, then used to advance CCW (+angle) to match
+ * the loiter direction.
+ */
+function joinAngle(from: [number, number], center: [number, number]): number {
+    const u = (from[0] - center[0]) / ORBIT_ASPECT; // normalize x → unit-aspect circle
+    const v = from[1] - center[1];
+    const d = Math.hypot(u, v);
+    const beta = Math.atan2(v, u); // bearing of the drone from the orbit center
+    if (d <= ORBIT_RADIUS) return beta; // already inside: head out to the nearest ring point
+    // Tangent point sits γ = acos(R/d) off the center→drone bearing; +γ is the CCW one.
+    return beta + Math.acos(ORBIT_RADIUS / d);
+}
 
 function emit(
     sim: Sim,
@@ -135,6 +168,56 @@ function step(sim: Sim): void {
     const base = GROUND_STATION.position;
 
     for (const d of sim.drones) {
+        // ── Tasked investigation overrides the patrol entirely ──────────
+        if (d.assignment) {
+            const tgt = sim.targets.find((t) => t.id === d.assignment!.targetId);
+            if (!tgt) {
+                d.assignment = null;
+            } else if (d.assignment.phase === "enroute") {
+                // Fly straight to the tangent entry point on the orbit (orbitAngle was
+                // fixed at dispatch). A straight run to it arrives tangent to the ring,
+                // so the drone rolls into the loiter without crossing the target.
+                const from = d.position;
+                const entry = ringPoint(tgt.position, d.assignment.orbitAngle);
+                const [pos, reached] = moveToward(from, entry, RETURN_SPEED);
+                d.heading = bearing(from, entry);
+                d.position = pos;
+                d.battery = clamp(d.battery - rng.range(0.04, 0.1), 0, 100);
+                d.signal = clamp(d.signal + rng.range(-2, 2), 40, 100);
+                d.speed = clamp(d.speed + rng.range(-1, 1), 14, 26);
+                d.altitude = clamp(d.altitude + rng.range(-3, 3), 60, 150);
+                if (reached) {
+                    d.assignment.phase = "investigating";
+                    d.assignment.ticksLeft = rng.int(12, 18);
+                    tgt.investigation.status = "investigating";
+                    emit(sim, d, "info", "geosearch", `${d.callsign} on station over ${tgt.designation} — collecting`);
+                }
+                pushHistory(sim, d);
+                continue;
+            } else {
+                // Loiter: continue CCW around the orbit from the tangent entry point.
+                d.assignment.orbitAngle += ORBIT_STEP;
+                const prev = d.position;
+                const next = ringPoint(tgt.position, d.assignment.orbitAngle);
+                d.heading = bearing(prev, next);
+                d.position = next;
+                d.speed = clamp(d.speed + rng.range(-1, 1), 11, 18);
+                d.signal = clamp(d.signal + rng.range(-1, 2), 60, 100);
+                d.battery = clamp(d.battery - rng.range(0.03, 0.07), 0, 100);
+                d.altitude = clamp(d.altitude + rng.range(-2, 2), 60, 150);
+                d.assignment.ticksLeft -= 1;
+                if (d.assignment.ticksLeft <= 0) {
+                    upgradeTarget(tgt, rng);
+                    tgt.investigation.status = "complete";
+                    d.task = d.assignment.prevTask;
+                    d.assignment = null;
+                    emit(sim, d, "success", "predictive-analysis", `${d.callsign} finished ${tgt.designation} — intelligence updated, confidence raised`);
+                }
+                pushHistory(sim, d);
+                continue;
+            }
+        }
+
         // ── Status machine ──────────────────────────────────────────────
         if (d.status === "anomaly") {
             const left = (sim.anomalyTimer[d.id] ?? 0) - 1;
@@ -239,13 +322,50 @@ export function useStream(): StreamState {
     const toggle = useCallback(() => setPlaying((p) => !p), []);
     const setSpeed = useCallback((s: StreamSpeed) => setSpeedState(s), []);
 
-    return { ...snapshot, playing, speed, play, pause, toggle, setSpeed };
+    // Task the nearest free, airborne-capable drone to investigate a target. Runs
+    // outside the tick: mutate the sim and commit immediately so the UI reflects the
+    // dispatch even while paused (the drone then moves once the stream is playing).
+    const investigate = useCallback((targetId: string) => {
+        const sim = simRef.current;
+        const tgt = sim.targets.find((t) => t.id === targetId);
+        if (!tgt || tgt.investigation.status !== "idle") return;
+
+        const free = sim.drones.filter((d) => !d.assignment && d.status !== "charging");
+        const actives = free.filter((d) => d.status === "active");
+        const pool = actives.length > 0 ? actives : free;
+        if (pool.length === 0) return;
+
+        let best = pool[0];
+        let bestDist = Infinity;
+        for (const d of pool) {
+            const dd = dist(d.position, tgt.position);
+            if (dd < bestDist) {
+                bestDist = dd;
+                best = d;
+            }
+        }
+
+        best.status = "active";
+        if (best.speed < 14) best.speed = 16;
+        if (best.altitude < 60) best.altitude = 95;
+        // Lock the tangent entry angle now (from where the drone starts), so the whole
+        // enroute leg is a straight line onto the orbit.
+        const entryAngle = joinAngle(best.position, tgt.position);
+        best.assignment = { targetId, phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: best.task };
+        best.task = `Investigating ${tgt.designation}`;
+        tgt.investigation = { status: "enroute", droneId: best.id, droneCallsign: best.callsign };
+        emit(sim, best, "info", "locate", `${best.callsign} tasked to investigate ${tgt.designation}`);
+        setSnapshot(commit(sim));
+    }, []);
+
+    return { ...snapshot, playing, speed, play, pause, toggle, setSpeed, investigate };
 }
 
 /** Build an immutable render snapshot from the mutable sim (new references). */
 function commit(sim: Sim): {
     tick: number;
     drones: Drone[];
+    targets: Target[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
 } {
@@ -261,7 +381,17 @@ function commit(sim: Sim): {
     }
     return {
         tick: sim.tick,
-        drones: sim.drones.map((d) => ({ ...d, position: [d.position[0], d.position[1]] as [number, number] })),
+        drones: sim.drones.map((d) => ({
+            ...d,
+            position: [d.position[0], d.position[1]] as [number, number],
+            assignment: d.assignment ? { ...d.assignment } : null,
+        })),
+        targets: sim.targets.map((t) => ({
+            ...t,
+            position: [t.position[0], t.position[1]] as [number, number],
+            investigation: { ...t.investigation },
+            facts: t.facts.map((f) => ({ ...f, sources: f.sources.slice() })),
+        })),
         events: sim.events.slice(),
         history,
     };

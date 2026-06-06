@@ -13,6 +13,7 @@ import maplibregl, { type GeoJSONSource, type Map as MlMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, STATUS_META } from "./data";
+import { type Target, type TargetPriority, PRIORITY_META } from "./targets";
 
 const STYLE = {
     light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -20,11 +21,15 @@ const STYLE = {
 };
 
 const STATUSES = ["active", "returning", "charging", "idle", "anomaly"] as const;
+const PRIORITIES = ["critical", "elevated", "routine"] as const;
 
 interface MissionMapProps {
     drones: Drone[];
+    targets: Target[];
     selectedId: string | null;
+    selectedTargetId: string | null;
     onSelect: (id: string | null) => void;
+    onSelectTarget: (id: string | null) => void;
     autoFollow: boolean;
     /** Rotate the map so the selected drone always faces up (its heading = "up"). */
     matchOrientation: boolean;
@@ -81,6 +86,36 @@ function trailsFC(trails: Record<string, [number, number][]>, drones: Drone[]): 
     };
 }
 
+function targetsFC(targets: Target[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: targets.map((t) => ({
+            type: "Feature",
+            properties: { id: t.id, designation: t.designation, priority: t.priority },
+            geometry: { type: "Point", coordinates: t.position },
+        })),
+    };
+}
+
+/** Lines from each tasked drone to the target it's investigating. */
+function taskingFC(drones: Drone[], targets: Target[]): GeoJSON.FeatureCollection {
+    const byId: Record<string, Target> = {};
+    for (const t of targets) byId[t.id] = t;
+    return {
+        type: "FeatureCollection",
+        features: drones
+            .filter((d) => d.assignment && byId[d.assignment.targetId])
+            .map((d) => ({
+                type: "Feature",
+                properties: { phase: d.assignment!.phase },
+                geometry: {
+                    type: "LineString",
+                    coordinates: [d.position, byId[d.assignment!.targetId].position],
+                },
+            })),
+    };
+}
+
 const statusColorExpr: maplibregl.ExpressionSpecification = [
     "match",
     ["get", "status"],
@@ -116,17 +151,65 @@ function makeArrowIcon(color: string): ImageData {
     return ctx.getImageData(0, 0, s, s);
 }
 
+// A targeting reticle: four corner brackets + a center dot, in the priority color.
+// The bracket shape reads unmistakably as "target" so it can't be confused with the
+// drone arrows. Drawn with a white halo first for contrast on either basemap.
+function makeTargetIcon(color: string): ImageData {
+    const s = 30;
+    const c = document.createElement("canvas");
+    c.width = s;
+    c.height = s;
+    const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, s, s);
+    const m = 4; // margin
+    const len = 8; // bracket arm length
+    const corners: [number, number, number, number][] = [
+        [m, m, 1, 1], // top-left  (dx, dy direction)
+        [s - m, m, -1, 1], // top-right
+        [m, s - m, 1, -1], // bottom-left
+        [s - m, s - m, -1, -1], // bottom-right
+    ];
+    const drawBrackets = (stroke: string, width: number) => {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = width;
+        ctx.lineCap = "round";
+        for (const [x, y, dx, dy] of corners) {
+            ctx.beginPath();
+            ctx.moveTo(x + dx * len, y);
+            ctx.lineTo(x, y);
+            ctx.lineTo(x, y + dy * len);
+            ctx.stroke();
+        }
+    };
+    drawBrackets("rgba(255,255,255,0.9)", 4.5);
+    drawBrackets(color, 2.5);
+    // Center dot (haloed).
+    ctx.beginPath();
+    ctx.arc(s / 2, s / 2, 3, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.stroke();
+    return ctx.getImageData(0, 0, s, s);
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrientation, dark, className }: MissionMapProps) {
+export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSelect, onSelectTarget, autoFollow, matchOrientation, dark, className }: MissionMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MlMap | null>(null);
     const readyRef = useRef(false);
     const trailsRef = useRef<Record<string, [number, number][]>>({});
+    // Targets are static; keep the latest in a ref so the load handler can seed them.
+    const targetsRef = useRef(targets);
+    targetsRef.current = targets;
 
     // Latest props for the once-bound interaction handlers.
     const onSelectRef = useRef(onSelect);
     onSelectRef.current = onSelect;
+    const onSelectTargetRef = useRef(onSelectTarget);
+    onSelectTargetRef.current = onSelectTarget;
 
     // ── Mount / unmount ───────────────────────────────────────────────────
     useEffect(() => {
@@ -144,7 +227,7 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
         const onLoad = () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current);
         };
         map.on("load", onLoad);
 
@@ -152,6 +235,10 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
         map.on("click", "drone-arrow", (e) => {
             const f = e.features?.[0];
             if (f) onSelectRef.current(String(f.properties?.id));
+        });
+        map.on("click", "target-marker", (e) => {
+            const f = e.features?.[0];
+            if (f) onSelectTargetRef.current(String(f.properties?.id));
         });
         map.on("click", "clusters", (e) => {
             const f = e.features?.[0];
@@ -163,10 +250,15 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
             });
         });
         map.on("click", (e) => {
-            const hits = map.queryRenderedFeatures(e.point, { layers: ["drone-arrow", "clusters"] });
-            if (hits.length === 0) onSelectRef.current(null);
+            const hits = map.queryRenderedFeatures(e.point, {
+                layers: ["drone-arrow", "clusters", "target-marker"],
+            });
+            if (hits.length === 0) {
+                onSelectRef.current(null);
+                onSelectTargetRef.current(null);
+            }
         });
-        for (const layer of ["drone-arrow", "clusters"]) {
+        for (const layer of ["drone-arrow", "clusters", "target-marker"]) {
             map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
             map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
         }
@@ -200,7 +292,7 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
         map.once("styledata", () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dark]);
@@ -220,11 +312,14 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
 
         const map = mapRef.current;
         if (!map || !readyRef.current) return;
-        updateData(map, drones, trails);
+        updateData(map, drones, trails, targets);
 
-        // Selected ring filter.
+        // Selected ring filters.
         if (map.getLayer("drone-selected")) {
             map.setFilter("drone-selected", ["==", ["get", "id"], selectedId ?? "__none__"]);
+        }
+        if (map.getLayer("target-selected")) {
+            map.setFilter("target-selected", ["==", ["get", "id"], selectedTargetId ?? "__none__"]);
         }
 
         // Auto-follow and/or rotate the map to the selected drone. Both target the
@@ -237,7 +332,7 @@ export function MissionMap({ drones, selectedId, onSelect, autoFollow, matchOrie
             if (matchOrientation) camera.bearing = sel.heading;
             map.easeTo(camera);
         }
-    }, [drones, selectedId, autoFollow, matchOrientation]);
+    }, [drones, targets, selectedId, selectedTargetId, autoFollow, matchOrientation]);
 
     // ── Match-orientation toggled off → straighten the map back to north-up ──
     const prevMatch = useRef(matchOrientation);
@@ -260,6 +355,11 @@ function installLayers(map: MlMap) {
         const name = `arrow-${s}`;
         if (!map.hasImage(name)) map.addImage(name, makeArrowIcon(STATUS_META[s].color));
     }
+    // Register target reticle icons (per priority).
+    for (const p of PRIORITIES) {
+        const name = `target-${p}`;
+        if (!map.hasImage(name)) map.addImage(name, makeTargetIcon(PRIORITY_META[p as TargetPriority].color));
+    }
 
     if (!map.getSource("trails")) {
         map.addSource("trails", { type: "geojson", data: emptyFC() });
@@ -279,6 +379,12 @@ function installLayers(map: MlMap) {
     if (!map.getSource("drones")) {
         map.addSource("drones", { type: "geojson", data: emptyFC(), cluster: true, clusterRadius: 40, clusterMaxZoom: 10 });
     }
+    if (!map.getSource("targets")) {
+        map.addSource("targets", { type: "geojson", data: emptyFC() });
+    }
+    if (!map.getSource("tasking")) {
+        map.addSource("tasking", { type: "geojson", data: emptyFC() });
+    }
 
     if (!map.getLayer("trail-line")) {
         map.addLayer({
@@ -295,6 +401,20 @@ function installLayers(map: MlMap) {
             type: "line",
             source: "uplinks",
             paint: { "line-color": "#5f6b7c", "line-width": 1, "line-opacity": 0.4, "line-dasharray": [2, 2] },
+        });
+    }
+    if (!map.getLayer("tasking-line")) {
+        map.addLayer({
+            id: "tasking-line",
+            type: "line",
+            source: "tasking",
+            paint: {
+                "line-color": "#2d72d2",
+                "line-width": 2.5,
+                "line-opacity": 0.9,
+                "line-dasharray": [1.5, 1.2],
+            },
+            layout: { "line-cap": "round" },
         });
     }
     if (!map.getLayer("base-dot")) {
@@ -390,12 +510,63 @@ function installLayers(map: MlMap) {
             },
         });
     }
+
+    // ── Targets (reticles) — drawn above drones so they read as the focus layer ──
+    if (!map.getLayer("target-selected")) {
+        map.addLayer({
+            id: "target-selected",
+            type: "circle",
+            source: "targets",
+            filter: ["==", ["get", "id"], "__none__"],
+            paint: {
+                "circle-radius": 18,
+                "circle-color": "rgba(45,114,210,0.14)",
+                "circle-stroke-color": "#2d72d2",
+                "circle-stroke-width": 2,
+            },
+        });
+    }
+    if (!map.getLayer("target-marker")) {
+        map.addLayer({
+            id: "target-marker",
+            type: "symbol",
+            source: "targets",
+            layout: {
+                "icon-image": ["concat", "target-", ["get", "priority"]],
+                "icon-allow-overlap": true,
+                "icon-size": 0.85,
+            },
+        });
+    }
+    if (!map.getLayer("target-label")) {
+        map.addLayer({
+            id: "target-label",
+            type: "symbol",
+            source: "targets",
+            minzoom: 11.5,
+            layout: {
+                "text-field": ["get", "designation"],
+                "text-font": ["Open Sans Semibold"],
+                "text-size": 10,
+                "text-offset": [0, 1.5],
+                "text-anchor": "top",
+                "text-allow-overlap": false,
+            },
+            paint: {
+                "text-color": "#404854",
+                "text-halo-color": "rgba(255,255,255,0.9)",
+                "text-halo-width": 1.2,
+            },
+        });
+    }
 }
 
-function updateData(map: MlMap, drones: Drone[], trails: Record<string, [number, number][]>) {
+function updateData(map: MlMap, drones: Drone[], trails: Record<string, [number, number][]>, targets: Target[]) {
     (map.getSource("drones") as GeoJSONSource | undefined)?.setData(dronesFC(drones));
     (map.getSource("uplinks") as GeoJSONSource | undefined)?.setData(uplinksFC(drones));
     (map.getSource("trails") as GeoJSONSource | undefined)?.setData(trailsFC(trails, drones));
+    (map.getSource("targets") as GeoJSONSource | undefined)?.setData(targetsFC(targets));
+    (map.getSource("tasking") as GeoJSONSource | undefined)?.setData(taskingFC(drones, targets));
 }
 
 function emptyFC(): GeoJSON.FeatureCollection {

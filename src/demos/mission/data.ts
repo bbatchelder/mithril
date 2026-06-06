@@ -52,6 +52,23 @@ export const STATUS_META: Record<DroneStatus, StatusMeta> = {
     anomaly: { label: "Anomaly", intent: "danger", color: "#cd4246", dot: "bg-red-3", icon: "warning-sign" },
 };
 
+/**
+ * A drone tasked to investigate a {@link Target}. While set, the stream engine
+ * overrides the drone's patrol: it flies to the target (`enroute`), loiters and
+ * collects (`investigating`), then upgrades the target's intelligence and clears
+ * the assignment — restoring `prevTask`.
+ */
+export interface DroneAssignment {
+    targetId: string;
+    phase: "enroute" | "investigating";
+    /** Ticks remaining in the `investigating` phase. */
+    ticksLeft: number;
+    /** Current angle (radians) along the loiter orbit, advanced each tick. */
+    orbitAngle: number;
+    /** The task to restore once the investigation completes. */
+    prevTask: string;
+}
+
 export interface Drone {
     id: string;
     callsign: string;
@@ -60,6 +77,8 @@ export interface Drone {
     task: string;
     payload: string;
     status: DroneStatus;
+    /** Set when the drone is tasked to investigate a target; otherwise null. */
+    assignment: DroneAssignment | null;
     /** 0–100 */
     battery: number;
     /** metres */
@@ -145,6 +164,7 @@ export function makeFleet(): Drone[] {
             task: s.task,
             payload: s.payload,
             status: s.status,
+            assignment: null,
             battery: s.battery,
             altitude: 90 + (s.legs % 4) * 12,
             speed: s.status === "active" ? 14 + (s.legs % 3) * 2 : 0,
