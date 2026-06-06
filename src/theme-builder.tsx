@@ -174,8 +174,8 @@ const ANTHROPIC: Overrides = {
     "--color-danger-disabled": "#e684a4",
     "--color-danger-foreground": "#ffffff",
     "--color-white": "#f5f4ec",
-    "--color-black": "#593025",
-    "--color-light-gray-5": "#faf9f5",
+    "--color-black": "#000000",
+    "--color-light-gray-5": "#f0eee9",
 };
 
 const BUILTIN_THEMES: Record<string, Overrides> = {
