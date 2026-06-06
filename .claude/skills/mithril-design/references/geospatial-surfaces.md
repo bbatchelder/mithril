@@ -23,6 +23,13 @@ A map fills the surface; a side panel controls it.
   set a window.
 - **Hover tooltips** and **brushing** — hovering shows a field readout; filters and the time window link
   across the surface.
+- **Mobile / responsive** — the map *is* the surface, so on small screens give it the whole viewport:
+  collapse the side panel into a hamburger drawer and float detail/telemetry as a **non-modal bottom
+  sheet over the map** (the map stays visible above it), not a full-screen takeover. Anchor the sheet to
+  the map container's own `relative` stacking context and keep the map-GL controls confined (`z-0` on the
+  map wrapper) so they can't paint over portaled overlays. Use `lg` (not `md`) as the seam — a map
+  flanked by rails has no room at 768. Full reflow rules + the one-toggle/`matchMedia` rail pattern:
+  [mobile.md](mobile.md).
 
 ## 2. Theme tokens (verified — dark)
 
