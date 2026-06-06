@@ -10,6 +10,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerBody } from "@/components/ui/drawer";
 import {
     HotkeysContext,
     HotkeysProvider,
@@ -20,7 +21,7 @@ import { Icon } from "@/components/ui/icon";
 import { InputGroup } from "@/components/ui/input-group";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { Navbar, NavbarGroup, NavbarHeading, NavbarDivider } from "@/components/ui/navbar";
-import { MenuPopover } from "@/components/ui/popover";
+import { MenuPopover, Popover } from "@/components/ui/popover";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Section } from "@/components/ui/section";
 import { Switch } from "@/components/ui/switch";
@@ -38,6 +39,12 @@ import { TelemetryPanel } from "./TelemetryPanel";
 import { type StreamSpeed, useStream } from "./stream/useStream";
 import { GROUND_STATION, STATUS_META, formatMissionClock } from "./data";
 
+const SPEED_OPTIONS = [
+    { label: "1×", value: "1" },
+    { label: "2×", value: "2" },
+    { label: "5×", value: "5" },
+];
+
 function MissionControlInner() {
     const dark = useDark();
     const toaster = useToaster();
@@ -48,6 +55,19 @@ function MissionControlInner() {
     const [matchOrientation, setMatchOrientation] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [query, setQuery] = useState("");
+    // Fleet roster visibility. On lg+ the rail is inline and `railOpen` collapses it;
+    // below lg it's an overlay drawer driven by `navOpen` (the rail is always hidden
+    // inline there). The event feed starts collapsed at every width.
+    const [railOpen, setRailOpen] = useState(true);
+    const [navOpen, setNavOpen] = useState(false);
+    const [feedOpen, setFeedOpen] = useState(false);
+
+    // One menu button drives both: collapse the inline rail on desktop, or summon the
+    // overlay drawer on small screens. Resolved at click time so no resize listener.
+    const toggleFleet = () => {
+        if (window.matchMedia("(min-width: 1024px)").matches) setRailOpen((v) => !v);
+        else setNavOpen(true);
+    };
 
     // Brief "connecting" phase so the telemetry panel shows Skeletons on first paint.
     const [connecting, setConnecting] = useState(true);
@@ -72,7 +92,12 @@ function MissionControlInner() {
     const activeCount = stream.drones.filter((d) => d.status === "active" || d.status === "anomaly").length;
     const anomalyCount = stream.drones.filter((d) => d.status === "anomaly").length;
 
-    const handleSelect = (id: string | null) => setSelectedId(id);
+    const handleSelect = (id: string | null) => {
+        setSelectedId(id);
+        // Picking a drone from the hamburger roster dismisses the drawer so the
+        // map (and the mobile telemetry sheet) come forward.
+        if (id) setNavOpen(false);
+    };
     const openDetail = () => {
         if (selectedId) setDetailOpen(true);
     };
@@ -142,36 +167,47 @@ function MissionControlInner() {
         <div className="flex h-screen flex-col bg-background text-foreground">
             {/* ── Navbar ──────────────────────────────────────────────────── */}
             <Navbar className="shrink-0">
-                <NavbarGroup align="left">
-                    <span className="mr-2 inline-flex items-center justify-center">
+                <NavbarGroup align="left" className="min-w-0">
+                    {/* Toggle the fleet roster — collapses the inline rail (lg+) or
+                        opens the overlay drawer (below lg). */}
+                    <Tooltip content="Toggle fleet roster" dark={dark}>
+                        <Button
+                            variant="minimal"
+                            aria-label="Toggle fleet roster"
+                            icon={<Icon icon="menu" className="!text-current" />}
+                            onClick={toggleFleet}
+                        />
+                    </Tooltip>
+                    <span className="mr-2 hidden items-center justify-center sm:inline-flex">
                         <Icon icon="airplane" size={20} className="text-intent-primary-text" />
                     </span>
-                    <NavbarHeading className="font-semibold">Skylark</NavbarHeading>
-                    <Tag minimal intent="primary">
+                    <NavbarHeading className="truncate whitespace-nowrap font-semibold">Skylark</NavbarHeading>
+                    <Tag minimal intent="primary" className="hidden sm:inline-flex">
                         Swarm Ops
                     </Tag>
                     <Tag
                         minimal
                         intent={stream.playing ? "success" : "none"}
+                        className="shrink-0"
                         icon={<Icon icon={stream.playing ? "pulse" : "pause"} size={12} className="!text-current" />}
                     >
                         {stream.playing ? "LIVE" : "PAUSED"}
                     </Tag>
-                    <NavbarDivider />
-                    <div className="hidden md:block">
+                    <NavbarDivider className="hidden lg:block" />
+                    <div className="hidden w-40 lg:block xl:w-56">
                         <InputGroup
                             ref={searchRef}
+                            fill
                             leftIcon="search"
                             placeholder="Search drones…  ( / )"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            style={{ width: 220 }}
                         />
                     </div>
                 </NavbarGroup>
 
                 <NavbarGroup align="right">
-                    <span className="mr-1 font-mono text-body-sm tabular-nums text-foreground-muted">
+                    <span className="mr-1 hidden font-mono text-body-sm tabular-nums text-foreground-muted sm:inline-block">
                         {formatMissionClock(stream.tick)}
                     </span>
                     <Tooltip content={stream.playing ? "Pause stream" : "Resume stream"} dark={dark}>
@@ -182,30 +218,57 @@ function MissionControlInner() {
                             onClick={stream.toggle}
                         />
                     </Tooltip>
-                    <SegmentedControl
-                        options={[
-                            { label: "1×", value: "1" },
-                            { label: "2×", value: "2" },
-                            { label: "5×", value: "5" },
-                        ]}
-                        value={String(stream.speed)}
-                        onValueChange={(v) => stream.setSpeed(Number(v) as StreamSpeed)}
-                    />
-                    <NavbarDivider />
-                    <Switch
-                        inline
-                        checked={autoFollow}
-                        onChange={(e) => setAutoFollow(e.target.checked)}
-                        label={<span className="text-body-sm text-foreground-muted">Follow</span>}
-                    />
-                    <Switch
-                        inline
-                        checked={matchOrientation}
-                        onChange={(e) => setMatchOrientation(e.target.checked)}
-                        label={<span className="text-body-sm text-foreground-muted">Match orientation</span>}
-                    />
-                    <NavbarDivider />
-                    <HotkeysHelpButton dark={dark} />
+
+                    {/* Map-view controls inline on xl+; folded into a popover below xl
+                        (so the lg three-column navbar stays uncrowded). */}
+                    <div className="hidden items-center gap-2 xl:flex">
+                        <SegmentedControl
+                            options={SPEED_OPTIONS}
+                            value={String(stream.speed)}
+                            onValueChange={(v) => stream.setSpeed(Number(v) as StreamSpeed)}
+                        />
+                        <NavbarDivider />
+                        <Switch
+                            inline
+                            checked={autoFollow}
+                            onChange={(e) => setAutoFollow(e.target.checked)}
+                            label={<span className="text-body-sm text-foreground-muted">Follow</span>}
+                        />
+                        <Switch
+                            inline
+                            checked={matchOrientation}
+                            onChange={(e) => setMatchOrientation(e.target.checked)}
+                            label={<span className="text-body-sm text-foreground-muted">Match orientation</span>}
+                        />
+                    </div>
+                    <div className="xl:hidden">
+                        <Popover
+                            side="bottom"
+                            align="end"
+                            dark={dark}
+                            content={
+                                <ViewControls
+                                    speed={stream.speed}
+                                    onSpeed={stream.setSpeed}
+                                    follow={autoFollow}
+                                    onFollow={setAutoFollow}
+                                    match={matchOrientation}
+                                    onMatch={setMatchOrientation}
+                                />
+                            }
+                        >
+                            <Button
+                                variant="minimal"
+                                aria-label="View options"
+                                icon={<Icon icon="settings" className="!text-current" />}
+                            />
+                        </Popover>
+                    </div>
+
+                    <NavbarDivider className="hidden lg:block" />
+                    <div className="hidden lg:block">
+                        <HotkeysHelpButton dark={dark} />
+                    </div>
                     <NavbarDivider />
                     <MenuPopover
                         side="bottom"
@@ -224,10 +287,11 @@ function MissionControlInner() {
                     >
                         <Button
                             variant="minimal"
+                            aria-label="Flight director menu"
                             icon={<Icon icon="person" className="!text-current" />}
                             endIcon={<Icon icon="caret-down" className="!text-current" />}
                         >
-                            Reyes
+                            <span className="hidden sm:inline">Reyes</span>
                         </Button>
                     </MenuPopover>
                     <NavbarDivider />
@@ -237,8 +301,14 @@ function MissionControlInner() {
 
             {/* ── Body ────────────────────────────────────────────────────── */}
             <div className="flex min-h-0 flex-1">
-                {/* Left rail — fleet roster */}
-                <aside className="flex w-72 shrink-0 flex-col overflow-auto border-r border-divider bg-surface">
+                {/* Left rail — fleet roster (inline on lg+ when railOpen; below lg it's
+                    the overlay drawer). Collapsing it hands the width back to the map. */}
+                <aside
+                    className={
+                        "hidden w-72 shrink-0 flex-col overflow-auto border-r border-divider bg-surface " +
+                        (railOpen ? "lg:flex" : "")
+                    }
+                >
                     <Section
                         title="Fleet"
                         icon="layers"
@@ -258,7 +328,8 @@ function MissionControlInner() {
                 {/* Center — map + event feed */}
                 <main className="flex min-w-0 flex-1 flex-col">
                     {/* z-0 confines MapLibre's controls (z-index:2) to the map's own
-                        stacking context, so they can't paint over the portaled Drawer. */}
+                        stacking context, so they can't paint over the portaled Drawer
+                        or the mobile telemetry sheet anchored to this container. */}
                     <div className="relative z-0 min-h-0 flex-1">
                         <MissionMap
                             drones={stream.drones}
@@ -289,31 +360,92 @@ function MissionControlInner() {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Mobile telemetry — a non-modal bottom sheet over the map (lg+
+                            uses the pinned right rail). The map stays visible above it. */}
+                        {selected && (
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-bp border-t border-divider bg-background shadow-overlay-3 lg:hidden">
+                                <div className="relative shrink-0 pt-2">
+                                    <div className="mx-auto h-1 w-9 rounded-full bg-divider" />
+                                    <Button
+                                        variant="minimal"
+                                        size="small"
+                                        aria-label="Close telemetry"
+                                        className="absolute right-1 top-1"
+                                        icon={<Icon icon="cross" className="!text-current" />}
+                                        onClick={() => setSelectedId(null)}
+                                    />
+                                </div>
+                                <div className="min-h-0 flex-1 overflow-auto">
+                                    <TelemetryPanel
+                                        drone={selected}
+                                        history={selectedId ? stream.history[selectedId] : undefined}
+                                        drones={stream.drones}
+                                        connecting={connecting}
+                                        onOpenDetail={openDetail}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Event feed strip */}
-                    <div className="h-48 shrink-0 border-t border-divider bg-surface">
+                    {/* Event feed — collapsible at every width, collapsed by default so
+                        the map leads. Expanding it opens a fixed-height scroll area. */}
+                    <div className="shrink-0 border-t border-divider bg-surface">
                         <EventFeed
                             events={stream.events}
                             selectedId={selectedId}
                             follow={stream.playing}
                             dark={dark}
+                            collapsed={!feedOpen}
+                            onToggle={() => setFeedOpen((o) => !o)}
                             onSelect={handleSelect}
                         />
                     </div>
                 </main>
 
-                {/* Right rail — telemetry */}
-                <aside className="w-80 shrink-0 overflow-auto border-l border-divider bg-background">
+                {/* Right rail — telemetry inspector. Only present once a drone is
+                    selected (lg+; below lg the bottom sheet above stands in); close it
+                    to deselect and reclaim the width for the map. */}
+                {selected && (
+                <aside className="hidden w-80 shrink-0 overflow-auto border-l border-divider bg-background lg:block">
                     <TelemetryPanel
                         drone={selected}
                         history={selectedId ? stream.history[selectedId] : undefined}
                         drones={stream.drones}
                         connecting={connecting}
+                        onClose={() => setSelectedId(null)}
                         onOpenDetail={openDetail}
                     />
                 </aside>
+                )}
             </div>
+
+            {/* ── Mobile fleet roster drawer (hamburger) ──────────────────── */}
+            <Drawer
+                open={navOpen}
+                onOpenChange={setNavOpen}
+                position="left"
+                size={288}
+                title="Fleet"
+                icon={<Icon icon="layers" />}
+                dark={dark}
+            >
+                <DrawerBody className="p-0">
+                    <div className="border-b border-divider p-2">
+                        <InputGroup
+                            fill
+                            leftIcon="search"
+                            placeholder="Search drones…"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                        />
+                    </div>
+                    <div className="px-1 py-1">
+                        <FleetTree drones={stream.drones} selectedId={selectedId} query={query} onSelect={handleSelect} />
+                    </div>
+                </DrawerBody>
+            </Drawer>
 
             {/* ── Drill-in drawer ─────────────────────────────────────────── */}
             <DroneDetail
@@ -324,6 +456,42 @@ function MissionControlInner() {
                 dark={dark}
                 onClose={() => setDetailOpen(false)}
             />
+        </div>
+    );
+}
+
+/**
+ * Map-view controls (stream speed + Follow + Match orientation), stacked for the
+ * compact "View options" popover. On xl+ these render inline in the navbar instead.
+ */
+function ViewControls({
+    speed,
+    onSpeed,
+    follow,
+    onFollow,
+    match,
+    onMatch,
+}: {
+    speed: StreamSpeed;
+    onSpeed: (s: StreamSpeed) => void;
+    follow: boolean;
+    onFollow: (v: boolean) => void;
+    match: boolean;
+    onMatch: (v: boolean) => void;
+}) {
+    return (
+        <div className="flex w-52 flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+                <span className="text-body-sm font-medium text-foreground-muted">Stream speed</span>
+                <SegmentedControl
+                    fill
+                    options={SPEED_OPTIONS}
+                    value={String(speed)}
+                    onValueChange={(v) => onSpeed(Number(v) as StreamSpeed)}
+                />
+            </div>
+            <Switch checked={follow} onChange={(e) => onFollow(e.target.checked)} label="Follow selected" />
+            <Switch checked={match} onChange={(e) => onMatch(e.target.checked)} label="Match orientation" />
         </div>
     );
 }

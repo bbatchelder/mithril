@@ -296,7 +296,7 @@ export function DroneDetail({ drone, history, events, open, dark, onClose }: Dro
             open={open}
             onOpenChange={(next) => !next && onClose()}
             position="right"
-            size={560}
+            size="min(560px, 100vw)"
             title={`${drone.callsign} · ${drone.model}`}
             icon={<Icon icon="airplane" />}
             dark={dark}
