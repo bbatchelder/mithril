@@ -146,6 +146,14 @@ export interface PlaygroundConfig {
      * function to derive it from live props — e.g. follow a `side` control. @default "center"
      */
     containedAlign?: ContainedAlign | ((props: Record<string, never>) => ContainedAlign);
+    /**
+     * Call-to-action hint shown above the stage for components whose live instance is
+     * hidden until you interact with it — modals/drawers/alerts behind a trigger button,
+     * the AIExplainability popover, a right-click context menu, a hover tooltip. Tells the
+     * viewer how to reveal the component so the stage doesn't read as "just a button".
+     * Omit for components that are fully visible at rest. `icon` defaults to `hand-up`.
+     */
+    cta?: { text: string; icon?: IconName };
     /** Render the live instance from the current prop state (+ overlay `ctx`). */
     render: (props: Record<string, never>, ctx: PlaygroundContext) => React.ReactNode;
     /** Produce the code snippet for the current prop state. */
@@ -383,6 +391,15 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
         ];
     return (
         <div className="flex flex-col gap-3">
+            {/* Call-to-action: for components whose live instance is hidden until you act
+                (a modal behind a trigger, a hover tooltip, a right-click menu), nudge the
+                viewer so the stage doesn't read as empty. */}
+            {config.cta && (
+                <div className="flex items-center gap-2 self-start rounded-bp border border-border bg-[var(--interactive-hover)] py-1.5 pl-2.5 pr-3.5 text-body-sm text-foreground">
+                    <Icon icon={config.cta.icon ?? "hand-up"} size={15} className="text-intent-primary-text" />
+                    <span>{config.cta.text}</span>
+                </div>
+            )}
             {/* Stage. For overlay configs (`contained`), the stage establishes a CSS
                 containing block (transform) + clips overflow, so a portaled overlay's
                 `fixed`/anchored panel resolves against the stage and stays inside it —
@@ -390,15 +407,18 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
             <div
                 ref={setStageEl}
                 className={cn(
-                    "flex flex-wrap gap-4 rounded-bp border border-border bg-surface",
+                    "flex flex-wrap rounded-bp border border-border bg-surface",
                     contained
                         ? cn(
                               // Pin the trigger opposite the overlay so it opens into the
-                              // stage (alignClass also sets justify-*).
+                              // stage (alignClass also sets justify-*). No `gap` here: an open
+                              // overlay portals a (0-width) wrapper div into the stage as a 2nd
+                              // flex child, and a gap between it and the trigger would shift the
+                              // `justify-center`'d trigger sideways by gap/2 the moment it opens.
                               "relative overflow-hidden p-0",
                               alignClass,
                           )
-                        : "min-h-[160px] items-center justify-center p-8",
+                        : "min-h-[160px] items-center justify-center gap-4 p-8",
                 )}
                 style={
                     contained
@@ -779,7 +799,11 @@ function DateInputDemo({ dark, placeholder, timePrecision, closeOnSelection, fil
 }
 
 function DateRangeInputDemo({ dark, allowSingleDayRange, contiguousCalendarMonths, closeOnSelection, fill, disabled, portalContainer }: { dark: boolean; allowSingleDayRange: boolean; contiguousCalendarMonths: boolean; closeOnSelection: boolean; fill: boolean; disabled: boolean; portalContainer: HTMLElement | null }) {
-    const [value, setValue] = useState<DateRangePickerValue>(PG_RANGE);
+    // Start empty so the playground shows the two-click build flow (pick start → popover
+    // stays open, focus moves to end → pick end → closes). Seeding a complete range would
+    // make every click merely adjust a boundary and immediately close (Blueprint-faithful,
+    // but it reads as "closes for no reason" in the demo).
+    const [value, setValue] = useState<DateRangePickerValue>({ start: null, end: null });
     return (
         <div style={{ width: 340 }}>
             <DateRangeInput
@@ -955,6 +979,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 p.side as "top" | "right" | "bottom" | "left"
             ] ?? "top",
         containedHeight: 440,
+        cta: { text: "Click the AI chip to open its explainability popover." },
         initial: { intent: "primary", variant: "minimal", size: "medium", label: "AI", side: "bottom", showIcon: true, interactive: true },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -1835,6 +1860,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     tooltip: {
         contained: true,
         containedHeight: 240,
+        cta: { text: "Hover the button to reveal the tooltip.", icon: "highlight" },
         initial: { content: "Tooltip content", side: "bottom", align: "center", intent: "none" },
         controls: [
             { kind: "enum", prop: "side", options: SIDES },
@@ -1858,6 +1884,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     popover: {
         contained: true,
         containedHeight: 320,
+        cta: { text: "Click the trigger to open the popover." },
         initial: { side: "bottom", align: "center", hasContentPadding: true },
         controls: [
             { kind: "enum", prop: "side", options: SIDES },
@@ -1894,6 +1921,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     dialog: {
         contained: true,
         containedHeight: 380,
+        cta: { text: "Click “Open dialog” to launch the modal." },
         initial: { title: "Dialog title", closeButton: true },
         controls: [
             { kind: "text", prop: "title" },
@@ -1940,6 +1968,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     drawer: {
         contained: true,
         containedHeight: 460,
+        cta: { text: "Click “Open drawer” to slide it in from the edge." },
         initial: { position: "right", size: 360, title: "Drawer title", closeButton: true },
         controls: [
             { kind: "enum", prop: "position", options: DRAWER_POSITIONS },
@@ -1984,6 +2013,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     alert: {
         contained: true,
         containedHeight: 300,
+        cta: { text: "Click “Open alert” to launch the confirmation dialog." },
         initial: { intent: "danger", confirmButtonText: "Delete", cancelButtonText: "Cancel" },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -2026,7 +2056,8 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
 
     "multistep-dialog": {
         contained: true,
-        containedHeight: 480,
+        cta: { text: "Click “Open wizard” to step through the dialog." },
+        containedHeight: 560,
         initial: { title: "Create project", initialStepIndex: 0 },
         controls: [
             { kind: "text", prop: "title" },
@@ -2047,15 +2078,32 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     initialStepIndex={p.initialStepIndex}
                     portalContainer={ctx.portalContainer}
                     dark={ctx.dark}
+                    // The component's intrinsic width is 800px — wider than the contained stage,
+                    // so it'd bleed to both edges here. Narrow it so the stage frames it with margin.
+                    className="!w-[640px] !min-w-0"
                     finalButtonProps={{ children: "Create", onClick: () => ctx.setOpen(false) }}
                 >
                     <DialogStep
                         id="info"
                         title="Project info"
                         panel={
-                            <div className="flex flex-col gap-4 p-5">
+                            // Distinct key per step: the active panel renders at the same tree
+                            // position, so without keys React reuses the uncontrolled <input> DOM
+                            // nodes and values bleed between steps (e.g. the name into the email field).
+                            <div key="info" className="flex flex-col gap-4 p-5">
                                 <FormGroup label="Project name" labelFor="pg-ms-name">
                                     <InputGroup id="pg-ms-name" leftIcon="projects" defaultValue="Apollo Initiative" fill />
+                                </FormGroup>
+                                <FormGroup label="Description" labelFor="pg-ms-desc">
+                                    <TextArea
+                                        id="pg-ms-desc"
+                                        rows={3}
+                                        fill
+                                        defaultValue="Mission planning and telemetry review workspace for the Apollo team."
+                                    />
+                                </FormGroup>
+                                <FormGroup label="Visibility" labelFor="pg-ms-vis">
+                                    <HTMLSelect id="pg-ms-vis" fill defaultValue="Team" options={["Private", "Team", "Public"]} />
                                 </FormGroup>
                             </div>
                         }
@@ -2063,13 +2111,42 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     <DialogStep
                         id="members"
                         title="Members"
-                        panel={<div className="p-5 text-body text-foreground">Invite teammates by email to collaborate.</div>}
+                        panel={
+                            <div key="members" className="flex flex-col gap-4 p-5">
+                                <FormGroup label="Invite by email" labelFor="pg-ms-email">
+                                    <InputGroup id="pg-ms-email" leftIcon="envelope" placeholder="name@company.com" fill />
+                                </FormGroup>
+                                <FormGroup label="Role" labelFor="pg-ms-role">
+                                    <HTMLSelect id="pg-ms-role" fill defaultValue="Editor" options={["Viewer", "Editor", "Admin"]} />
+                                </FormGroup>
+                                <div className="flex flex-col gap-2 pt-1">
+                                    <Switch label="Notify members by email" defaultChecked />
+                                    <Checkbox label="Allow members to invite others" />
+                                </div>
+                            </div>
+                        }
                     />
                     <DialogStep
                         id="review"
                         title="Review"
                         panel={
-                            <div className="p-5">
+                            <div key="review" className="flex flex-col gap-4 p-5">
+                                <div className="flex flex-col gap-2 text-body text-foreground">
+                                    <div className="flex justify-between">
+                                        <span className="text-foreground-muted">Project</span>
+                                        <span className="font-medium">Apollo Initiative</span>
+                                    </div>
+                                    <Divider className="!m-0" />
+                                    <div className="flex justify-between">
+                                        <span className="text-foreground-muted">Visibility</span>
+                                        <span className="font-medium">Team</span>
+                                    </div>
+                                    <Divider className="!m-0" />
+                                    <div className="flex justify-between">
+                                        <span className="text-foreground-muted">Members</span>
+                                        <span className="font-medium">3 invited</span>
+                                    </div>
+                                </div>
                                 <Callout intent="primary" title="Ready to create">
                                     Review the summary, then choose Create.
                                 </Callout>
@@ -2098,6 +2175,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         // stage subtree), so its `fixed` position resolves against the contained stage.
         contained: true,
         containedHeight: 320,
+        cta: { text: "Click “Show toast” to fire a notification." },
         initial: { intent: "success", icon: "tick-circle", message: "Changes saved.", action: false },
         controls: [
             { kind: "enum", prop: "intent", options: INTENTS },
@@ -2123,6 +2201,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     "context-menu": {
         contained: true,
         containedHeight: 360,
+        cta: { text: "Right-click inside the area to open the menu.", icon: "menu-open" },
         initial: { icons: true, danger: true },
         controls: [
             { kind: "boolean", prop: "icons" },
@@ -2174,6 +2253,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
     omnibar: {
         contained: true,
         containedHeight: 420,
+        cta: { text: "Click “Open omnibar” to launch the command palette." },
         initial: { placeholder: "Search fruit…" },
         controls: [{ kind: "text", prop: "placeholder" }],
         render: (p, ctx) => (

@@ -50,7 +50,7 @@
             "name": "ai-explainability",
             "type": "registry:ui",
             "title": "AiExplainability",
-            "description": "AiExplainability — Blueprint-faithful, built on CVA.",
+            "description": "A marker chip that flags AI-generated or AI-assisted content and reveals an explainability popover describing what the AI did.",
             "files": [
                 {
                     "path": "src/components/ui/ai-explainability.tsx",
@@ -72,7 +72,7 @@
             "name": "alert",
             "type": "registry:ui",
             "title": "Alert",
-            "description": "Alert — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A modal confirm dialog — large icon, message, and confirm/cancel actions — for destructive or irreversible choices.",
             "files": [
                 {
                     "path": "src/components/ui/alert.tsx",
@@ -95,7 +95,7 @@
             "name": "anchor-button",
             "type": "registry:ui",
             "title": "AnchorButton",
-            "description": "AnchorButton — Blueprint-faithful, built on CVA.",
+            "description": "An `<a>` styled exactly like Button, with anchor navigation semantics and proper disabled handling.",
             "files": [
                 {
                     "path": "src/components/ui/anchor-button.tsx",
@@ -118,7 +118,7 @@
             "name": "breadcrumbs",
             "type": "registry:ui",
             "title": "Breadcrumbs",
-            "description": "Breadcrumbs — Blueprint-faithful, built on CVA.",
+            "description": "A navigational trail of links that collapses into an overflow menu when the path is too long to fit.",
             "files": [
                 {
                     "path": "src/components/ui/breadcrumbs.tsx",
@@ -136,7 +136,7 @@
             "name": "button-group",
             "type": "registry:ui",
             "title": "ButtonGroup",
-            "description": "ButtonGroup — Blueprint-faithful, built on CVA.",
+            "description": "Attaches a row or column of Buttons into one segmented control, collapsing the inner radii and shared borders.",
             "files": [
                 {
                     "path": "src/components/ui/button-group.tsx",
@@ -157,7 +157,7 @@
             "name": "button",
             "type": "registry:ui",
             "title": "Button",
-            "description": "Button — Blueprint-faithful, built on CVA + Radix.",
+            "description": "The core action control — five intents, fill/outlined/minimal variants, sizes, icons, and a loading state.",
             "files": [
                 {
                     "path": "src/components/ui/button.tsx",
@@ -181,7 +181,7 @@
             "name": "callout",
             "type": "registry:ui",
             "title": "Callout",
-            "description": "Callout — Blueprint-faithful, built on CVA.",
+            "description": "A boxed inline message with an intent color, leading icon, and optional heading for page-level notices.",
             "files": [
                 {
                     "path": "src/components/ui/callout.tsx",
@@ -200,7 +200,7 @@
             "name": "card-list",
             "type": "registry:ui",
             "title": "CardList",
-            "description": "CardList — Blueprint-faithful, built on CVA.",
+            "description": "A bordered, flush-stacked list of Cards with hover and interactive states for selectable rows.",
             "files": [
                 {
                     "path": "src/components/ui/card-list.tsx",
@@ -218,7 +218,7 @@
             "name": "card",
             "type": "registry:ui",
             "title": "Card",
-            "description": "Card — Blueprint-faithful, built on CVA.",
+            "description": "An elevated surface container with selectable elevation and an optional interactive hover lift.",
             "files": [
                 {
                     "path": "src/components/ui/card.tsx",
@@ -238,7 +238,7 @@
             "name": "checkbox",
             "type": "registry:ui",
             "title": "Checkbox",
-            "description": "Checkbox — Blueprint-faithful, built on CVA.",
+            "description": "A labeled checkbox with indeterminate state, sizes, and inline or block layout.",
             "files": [
                 {
                     "path": "src/components/ui/checkbox.tsx",
@@ -256,7 +256,7 @@
             "name": "collapse",
             "type": "registry:ui",
             "title": "Collapse",
-            "description": "Collapse — Blueprint-faithful, built on CVA.",
+            "description": "An animated height transition that smoothly expands and collapses its content region.",
             "files": [
                 {
                     "path": "src/components/ui/collapse.tsx",
@@ -273,7 +273,7 @@
             "name": "context-menu",
             "type": "registry:ui",
             "title": "ContextMenu",
-            "description": "ContextMenu — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A right-click popup menu — a Radix context-menu trigger wrapping mithril's Menu surface.",
             "files": [
                 {
                     "path": "src/components/ui/context-menu.tsx",
@@ -294,7 +294,7 @@
             "name": "control-base",
             "type": "registry:ui",
             "title": "ControlBase",
-            "description": "ControlBase — Blueprint-faithful, built on CVA.",
+            "description": "The shared label / hidden-input / indicator primitive behind Checkbox, Radio, and Switch.",
             "files": [
                 {
                     "path": "src/components/ui/control-base.tsx",
@@ -311,7 +311,7 @@
             "name": "control-card",
             "type": "registry:ui",
             "title": "ControlCard",
-            "description": "ControlCard — Blueprint-faithful, built on CVA.",
+            "description": "A Card whose entire surface is a selectable Checkbox, Radio, or Switch label.",
             "files": [
                 {
                     "path": "src/components/ui/control-card.tsx",
@@ -332,7 +332,7 @@
             "name": "control-group",
             "type": "registry:ui",
             "title": "ControlGroup",
-            "description": "ControlGroup — Blueprint-faithful, built on CVA.",
+            "description": "A flex layout wrapper that attaches form controls — inputs, selects, buttons — into one row or column.",
             "files": [
                 {
                     "path": "src/components/ui/control-group.tsx",
@@ -352,7 +352,7 @@
             "name": "data-table",
             "type": "registry:ui",
             "title": "DataTable",
-            "description": "DataTable — Blueprint-faithful, built on CVA.",
+            "description": "A virtualized data grid with sortable, resizable columns and row selection, built on TanStack Table.",
             "files": [
                 {
                     "path": "src/components/ui/data-table.tsx",
@@ -400,7 +400,7 @@
             "name": "date-input",
             "type": "registry:ui",
             "title": "DateInput",
-            "description": "DateInput — Blueprint-faithful, built on CVA.",
+            "description": "A text field that opens a DatePicker popover for typing or picking a single date.",
             "files": [
                 {
                     "path": "src/components/ui/date-input.tsx",
@@ -422,7 +422,7 @@
             "name": "date-picker",
             "type": "registry:ui",
             "title": "DatePicker",
-            "description": "DatePicker — Blueprint-faithful, built on CVA.",
+            "description": "A single-date calendar with month/year navigation and optional time selection, on react-day-picker.",
             "files": [
                 {
                     "path": "src/components/ui/date-picker.tsx",
@@ -445,7 +445,7 @@
             "name": "date-range-input",
             "type": "registry:ui",
             "title": "DateRangeInput",
-            "description": "DateRangeInput — Blueprint-faithful, built on CVA.",
+            "description": "Two linked text fields sharing one DateRangePicker popover to capture a start-and-end range.",
             "files": [
                 {
                     "path": "src/components/ui/date-range-input.tsx",
@@ -465,7 +465,7 @@
             "name": "date-range-picker",
             "type": "registry:ui",
             "title": "DateRangePicker",
-            "description": "DateRangePicker — Blueprint-faithful, built on CVA.",
+            "description": "Two side-by-side month calendars for selecting a start-to-end date range.",
             "files": [
                 {
                     "path": "src/components/ui/date-range-picker.tsx",
@@ -487,7 +487,7 @@
             "name": "dialog",
             "type": "registry:ui",
             "title": "Dialog",
-            "description": "Dialog — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A modal overlay with header, body, and footer — focus-trapped and scroll-locked, on Radix Dialog.",
             "files": [
                 {
                     "path": "src/components/ui/dialog.tsx",
@@ -509,7 +509,7 @@
             "name": "divider",
             "type": "registry:ui",
             "title": "Divider",
-            "description": "Divider — Blueprint-faithful, built on CVA.",
+            "description": "A thin rule that separates content horizontally or vertically.",
             "files": [
                 {
                     "path": "src/components/ui/divider.tsx",
@@ -529,7 +529,7 @@
             "name": "drawer",
             "type": "registry:ui",
             "title": "Drawer",
-            "description": "Drawer — Blueprint-faithful, built on CVA + Radix.",
+            "description": "An overlay panel anchored to a screen edge, focus-trapped and scroll-locked, on Radix Dialog.",
             "files": [
                 {
                     "path": "src/components/ui/drawer.tsx",
@@ -551,7 +551,7 @@
             "name": "editable-text",
             "type": "registry:ui",
             "title": "EditableText",
-            "description": "EditableText — Blueprint-faithful, built on CVA.",
+            "description": "Text that turns into an inline input on click and commits on blur or Enter.",
             "files": [
                 {
                     "path": "src/components/ui/editable-text.tsx",
@@ -569,7 +569,7 @@
             "name": "entity-title",
             "type": "registry:ui",
             "title": "EntityTitle",
-            "description": "EntityTitle — Blueprint-faithful, built on CVA.",
+            "description": "A title block pairing an icon or avatar with a heading, subtitle, and optional tags.",
             "files": [
                 {
                     "path": "src/components/ui/entity-title.tsx",
@@ -588,7 +588,7 @@
             "name": "file-dropzone",
             "type": "registry:ui",
             "title": "FileDropzone",
-            "description": "FileDropzone — Blueprint-faithful, built on CVA.",
+            "description": "A drag-and-drop surface for multi-file uploads, with previews and validation, built on react-dropzone.",
             "files": [
                 {
                     "path": "src/components/ui/file-dropzone.tsx",
@@ -610,7 +610,7 @@
             "name": "file-input",
             "type": "registry:ui",
             "title": "FileInput",
-            "description": "FileInput — Blueprint-faithful, built on CVA.",
+            "description": "A styled file picker showing a Browse button and the selected file's name.",
             "files": [
                 {
                     "path": "src/components/ui/file-input.tsx",
@@ -627,7 +627,7 @@
             "name": "form-group",
             "type": "registry:ui",
             "title": "FormGroup",
-            "description": "FormGroup — Blueprint-faithful, built on CVA.",
+            "description": "Wraps a label, helper text, and a control into one labeled — and optionally inline — form field.",
             "files": [
                 {
                     "path": "src/components/ui/form-group.tsx",
@@ -645,7 +645,7 @@
             "name": "hotkeys",
             "type": "registry:ui",
             "title": "Hotkeys",
-            "description": "Hotkeys — Blueprint-faithful, built on CVA.",
+            "description": "A keyboard-shortcut system — KeyCombo key-cap rendering plus a global shortcuts help dialog.",
             "files": [
                 {
                     "path": "src/components/ui/hotkeys.tsx",
@@ -664,7 +664,7 @@
             "name": "html-select",
             "type": "registry:ui",
             "title": "HTMLSelect",
-            "description": "HTMLSelect — Blueprint-faithful, built on CVA.",
+            "description": "A native `<select>` restyled to the system, with a chevron affordance and matching sizes.",
             "files": [
                 {
                     "path": "src/components/ui/html-select.tsx",
@@ -682,7 +682,7 @@
             "name": "html-table",
             "type": "registry:ui",
             "title": "HTMLTable",
-            "description": "HTMLTable — Blueprint-faithful, built on CVA.",
+            "description": "A styled wrapper for native `<table>` markup — striped, bordered, and compact variants.",
             "files": [
                 {
                     "path": "src/components/ui/html-table.tsx",
@@ -702,7 +702,7 @@
             "name": "icon",
             "type": "registry:ui",
             "title": "Icon",
-            "description": "Icon — Blueprint-faithful, built on CVA.",
+            "description": "Renders any of the 706 vendored Blueprint glyphs by name or imported object, at a given size and color.",
             "files": [
                 {
                     "path": "src/components/ui/icon.tsx",
@@ -735,7 +735,7 @@
             "name": "input-group",
             "type": "registry:ui",
             "title": "InputGroup",
-            "description": "InputGroup — Blueprint-faithful, built on CVA.",
+            "description": "A text input with leading or trailing icons, buttons, or spinners placed inside the field.",
             "files": [
                 {
                     "path": "src/components/ui/input-group.tsx",
@@ -757,7 +757,7 @@
             "name": "link",
             "type": "registry:ui",
             "title": "Link",
-            "description": "Link — Blueprint-faithful, built on CVA.",
+            "description": "An inline anchor with the system's link styling, focus ring, and optional icon.",
             "files": [
                 {
                     "path": "src/components/ui/link.tsx",
@@ -777,7 +777,7 @@
             "name": "menu",
             "type": "registry:ui",
             "title": "Menu",
-            "description": "Menu — Blueprint-faithful, built on CVA.",
+            "description": "A standalone styled list of items, dividers, and submenus — compose inside a Popover for a dropdown.",
             "files": [
                 {
                     "path": "src/components/ui/menu.tsx",
@@ -796,7 +796,7 @@
             "name": "multi-select",
             "type": "registry:ui",
             "title": "MultiSelect",
-            "description": "MultiSelect — Blueprint-faithful, built on CVA.",
+            "description": "A tag-chip input that filters a dropdown and accumulates multiple selected items.",
             "files": [
                 {
                     "path": "src/components/ui/multi-select.tsx",
@@ -819,7 +819,7 @@
             "name": "multistep-dialog",
             "type": "registry:ui",
             "title": "MultistepDialog",
-            "description": "MultistepDialog — Blueprint-faithful, built on CVA.",
+            "description": "A wizard Dialog with a numbered step rail and back/next navigation across ordered steps.",
             "files": [
                 {
                     "path": "src/components/ui/multistep-dialog.tsx",
@@ -838,7 +838,7 @@
             "name": "navbar",
             "type": "registry:ui",
             "title": "Navbar",
-            "description": "Navbar — Blueprint-faithful, built on CVA.",
+            "description": "A fixed-height top bar with left and right groups, headings, and dividers for app chrome.",
             "files": [
                 {
                     "path": "src/components/ui/navbar.tsx",
@@ -855,7 +855,7 @@
             "name": "non-ideal-state",
             "type": "registry:ui",
             "title": "NonIdealState",
-            "description": "NonIdealState — Blueprint-faithful, built on CVA.",
+            "description": "An empty / error / loading placeholder that centers an icon, title, description, and action.",
             "files": [
                 {
                     "path": "src/components/ui/non-ideal-state.tsx",
@@ -876,7 +876,7 @@
             "name": "numeric-input",
             "type": "registry:ui",
             "title": "NumericInput",
-            "description": "NumericInput — Blueprint-faithful, built on CVA.",
+            "description": "A number field with increment/decrement steppers, clamping, and keyboard adjustment.",
             "files": [
                 {
                     "path": "src/components/ui/numeric-input.tsx",
@@ -895,7 +895,7 @@
             "name": "omnibar",
             "type": "registry:ui",
             "title": "Omnibar",
-            "description": "Omnibar — Blueprint-faithful, built on CVA.",
+            "description": "A command-palette overlay — a top-pinned search field over a filtered result menu.",
             "files": [
                 {
                     "path": "src/components/ui/omnibar.tsx",
@@ -916,7 +916,7 @@
             "name": "overflow-list",
             "type": "registry:ui",
             "title": "OverflowList",
-            "description": "OverflowList — Blueprint-faithful, built on CVA.",
+            "description": "A horizontal list that collapses the items that don't fit into a trailing overflow renderer.",
             "files": [
                 {
                     "path": "src/components/ui/overflow-list.tsx",
@@ -934,7 +934,7 @@
             "name": "panel-stack",
             "type": "registry:ui",
             "title": "PanelStack",
-            "description": "PanelStack — Blueprint-faithful, built on CVA.",
+            "description": "An animated stack of panels with push/pop navigation and a back-to-previous header.",
             "files": [
                 {
                     "path": "src/components/ui/panel-stack.tsx",
@@ -953,7 +953,7 @@
             "name": "popover",
             "type": "registry:ui",
             "title": "Popover",
-            "description": "Popover — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A floating panel anchored to a trigger, with arrow, placement, and dismissal, on Radix Popover.",
             "files": [
                 {
                     "path": "src/components/ui/popover.tsx",
@@ -973,7 +973,7 @@
             "name": "portal",
             "type": "registry:ui",
             "title": "Portal",
-            "description": "Portal — Blueprint-faithful, built on CVA.",
+            "description": "Renders children into a detached DOM node to escape `overflow` and `z-index` stacking.",
             "files": [
                 {
                     "path": "src/components/ui/portal.tsx",
@@ -990,7 +990,7 @@
             "name": "progress-bar",
             "type": "registry:ui",
             "title": "ProgressBar",
-            "description": "ProgressBar — Blueprint-faithful, built on CVA.",
+            "description": "A horizontal track with a determinate fill or indeterminate animation, colored per intent.",
             "files": [
                 {
                     "path": "src/components/ui/progress-bar.tsx",
@@ -1008,7 +1008,7 @@
             "name": "radio",
             "type": "registry:ui",
             "title": "Radio",
-            "description": "Radio — Blueprint-faithful, built on CVA.",
+            "description": "A labeled radio control, plus RadioGroup for single-choice selection.",
             "files": [
                 {
                     "path": "src/components/ui/radio.tsx",
@@ -1025,7 +1025,7 @@
             "name": "resize-sensor",
             "type": "registry:ui",
             "title": "ResizeSensor",
-            "description": "ResizeSensor — Blueprint-faithful, built on CVA.",
+            "description": "A headless helper that observes an element's size and fires a callback whenever it changes.",
             "files": [
                 {
                     "path": "src/components/ui/resize-sensor.tsx",
@@ -1041,7 +1041,7 @@
             "name": "section",
             "type": "registry:ui",
             "title": "Section",
-            "description": "Section — Blueprint-faithful, built on CVA.",
+            "description": "A titled content container with a header, optional right-side controls, and a collapsible body.",
             "files": [
                 {
                     "path": "src/components/ui/section.tsx",
@@ -1062,7 +1062,7 @@
             "name": "segmented-control",
             "type": "registry:ui",
             "title": "SegmentedControl",
-            "description": "SegmentedControl — Blueprint-faithful, built on CVA.",
+            "description": "A pill-track toggle of mutually exclusive options — tabs styled as a single control.",
             "files": [
                 {
                     "path": "src/components/ui/segmented-control.tsx",
@@ -1085,7 +1085,7 @@
             "name": "select",
             "type": "registry:ui",
             "title": "Select",
-            "description": "Select — Blueprint-faithful, built on CVA.",
+            "description": "A filterable dropdown — type to search, arrow-key navigate, and pick a single item.",
             "files": [
                 {
                     "path": "src/components/ui/select.tsx",
@@ -1106,7 +1106,7 @@
             "name": "skeleton",
             "type": "registry:ui",
             "title": "Skeleton",
-            "description": "Skeleton — Blueprint-faithful, built on CVA.",
+            "description": "A shimmering placeholder modifier that stands in for content while it loads.",
             "files": [
                 {
                     "path": "src/components/ui/skeleton.tsx",
@@ -1124,7 +1124,7 @@
             "name": "slider",
             "type": "registry:ui",
             "title": "Slider",
-            "description": "Slider — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A draggable track for choosing a numeric value or range, with labels and tick marks.",
             "files": [
                 {
                     "path": "src/components/ui/slider.tsx",
@@ -1145,7 +1145,7 @@
             "name": "spinner",
             "type": "registry:ui",
             "title": "Spinner",
-            "description": "Spinner — Blueprint-faithful, built on CVA.",
+            "description": "An indeterminate circular loading indicator, sized and intent-colored.",
             "files": [
                 {
                     "path": "src/components/ui/spinner.tsx",
@@ -1163,7 +1163,7 @@
             "name": "suggest",
             "type": "registry:ui",
             "title": "Suggest",
-            "description": "Suggest — Blueprint-faithful, built on CVA.",
+            "description": "A typeahead where the input itself filters a dropdown and fills with the chosen item.",
             "files": [
                 {
                     "path": "src/components/ui/suggest.tsx",
@@ -1184,7 +1184,7 @@
             "name": "switch",
             "type": "registry:ui",
             "title": "Switch",
-            "description": "Switch — Blueprint-faithful, built on CVA.",
+            "description": "A toggle switch for on/off state, with labels and sizes — a Checkbox alternative.",
             "files": [
                 {
                     "path": "src/components/ui/switch.tsx",
@@ -1201,7 +1201,7 @@
             "name": "tabs",
             "type": "registry:ui",
             "title": "Tabs",
-            "description": "Tabs — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A tabbed panel switcher with an animated active indicator, on Radix Tabs.",
             "files": [
                 {
                     "path": "src/components/ui/tabs.tsx",
@@ -1222,7 +1222,7 @@
             "name": "tag-input",
             "type": "registry:ui",
             "title": "TagInput",
-            "description": "TagInput — Blueprint-faithful, built on CVA.",
+            "description": "A field that collects free-text values as removable Tag chips.",
             "files": [
                 {
                     "path": "src/components/ui/tag-input.tsx",
@@ -1242,7 +1242,7 @@
             "name": "tag",
             "type": "registry:ui",
             "title": "Tag",
-            "description": "Tag — Blueprint-faithful, built on CVA.",
+            "description": "A compact label chip with intents, solid or minimal styles, an icon, and an optional remove button.",
             "files": [
                 {
                     "path": "src/components/ui/tag.tsx",
@@ -1261,7 +1261,7 @@
             "name": "text-area",
             "type": "registry:ui",
             "title": "TextArea",
-            "description": "TextArea — Blueprint-faithful, built on CVA.",
+            "description": "A multi-line text field with sizes, fill, and auto-resize support.",
             "files": [
                 {
                     "path": "src/components/ui/text-area.tsx",
@@ -1282,7 +1282,7 @@
             "name": "text",
             "type": "registry:ui",
             "title": "Text",
-            "description": "Text — Blueprint-faithful, built on CVA.",
+            "description": "Typographic text tiers — headings, body, muted — mapped to the system's type scale.",
             "files": [
                 {
                     "path": "src/components/ui/text.tsx",
@@ -1302,7 +1302,7 @@
             "name": "time-picker",
             "type": "registry:ui",
             "title": "TimePicker",
-            "description": "TimePicker — Blueprint-faithful, built on CVA.",
+            "description": "A time field with hour/minute/second steppers and optional AM/PM, to a set precision.",
             "files": [
                 {
                     "path": "src/components/ui/time-picker.tsx",
@@ -1321,7 +1321,7 @@
             "name": "timezone-select",
             "type": "registry:ui",
             "title": "TimezoneSelect",
-            "description": "TimezoneSelect — Blueprint-faithful, built on CVA.",
+            "description": "A Select specialized for IANA timezones, searchable by city and UTC offset.",
             "files": [
                 {
                     "path": "src/components/ui/timezone-select.tsx",
@@ -1341,7 +1341,7 @@
             "name": "toast",
             "type": "registry:ui",
             "title": "Toast",
-            "description": "Toast — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A transient notification card plus a Toaster that stacks and auto-dismisses them, on Radix Toast.",
             "files": [
                 {
                     "path": "src/components/ui/toast.tsx",
@@ -1363,7 +1363,7 @@
             "name": "tooltip",
             "type": "registry:ui",
             "title": "Tooltip",
-            "description": "Tooltip — Blueprint-faithful, built on CVA + Radix.",
+            "description": "A small inverted hover/focus label anchored to its trigger, on Radix Tooltip.",
             "files": [
                 {
                     "path": "src/components/ui/tooltip.tsx",
@@ -1384,7 +1384,7 @@
             "name": "tree",
             "type": "registry:ui",
             "title": "Tree",
-            "description": "Tree — Blueprint-faithful, built on CVA.",
+            "description": "A nested, expandable tree of nodes with icons, selection, and caret toggles.",
             "files": [
                 {
                     "path": "src/components/ui/tree.tsx",

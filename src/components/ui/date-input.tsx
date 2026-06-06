@@ -232,6 +232,13 @@ export function DateInput({
     const [isError, setIsError] = useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
+    // The Popover renders the input as a Radix Trigger, so closing the popover restores
+    // focus to the input (Radix `onCloseAutoFocus`). After a date selection that close is
+    // final — but the restored focus fires `onFocus`, which would reopen the calendar
+    // (the close→reopen flicker). Set this when closing on selection; `handleFocus`
+    // consumes it once so the restore is a no-op for opening, while a later genuine focus
+    // still opens normally.
+    const suppressReopenRef = useRef(false);
 
     // ---- Calendar day selection (from DatePicker) ----
     const handleDateChange = useCallback(
@@ -247,6 +254,7 @@ export function DateInput({
 
             // Close on selection unless timePrecision keeps it open
             if (closeOnSelection && !timePrecision) {
+                suppressReopenRef.current = true;
                 setIsOpen(false);
                 setIsInputFocused(false);
             }
@@ -258,7 +266,13 @@ export function DateInput({
     const handleFocus = useCallback(
         (e: React.FocusEvent<HTMLInputElement>) => {
             setIsInputFocused(true);
-            setIsOpen(true);
+            // Skip reopening if this focus is Radix restoring focus to the input after a
+            // selection closed the popover; open on any genuine focus.
+            if (suppressReopenRef.current) {
+                suppressReopenRef.current = false;
+            } else {
+                setIsOpen(true);
+            }
             // Show formatted string when focusing so user can edit it
             setInputText(
                 currentDate && isValidDate(currentDate) ? formatDate(currentDate) : "",
