@@ -17,30 +17,62 @@ interface EventFeedProps {
     selectedId: string | null;
     follow: boolean;
     dark: boolean;
+    /**
+     * Compact-layout only: when `onToggle` is supplied the header becomes a toggle
+     * and the list is hidden below `lg` while `collapsed`. On `lg+` the list is always
+     * shown (the fixed strip), so this only governs the phone/tablet layout.
+     */
+    collapsed?: boolean;
+    onToggle?: () => void;
     onSelect: (id: string) => void;
 }
 
-export function EventFeed({ events, selectedId, follow, dark, onSelect }: EventFeedProps) {
+export function EventFeed({ events, selectedId, follow, dark, collapsed = false, onToggle, onSelect }: EventFeedProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (follow && scrollRef.current) scrollRef.current.scrollTop = 0;
     }, [events, follow]);
 
+    const header = (
+        <>
+            <Icon icon="feed" size={14} className="text-foreground-muted" />
+            <span className="text-body-sm font-semibold uppercase tracking-wide text-foreground-muted">
+                Event stream
+            </span>
+            <Tag minimal round className="tabular-nums">
+                {events.length}
+            </Tag>
+            {onToggle && (
+                <Icon
+                    icon={collapsed ? "chevron-up" : "chevron-down"}
+                    size={16}
+                    className="ml-auto text-foreground-muted lg:hidden"
+                />
+            )}
+        </>
+    );
+
     return (
         <div className="flex h-full flex-col">
-            <div className="flex shrink-0 items-center gap-2 border-b border-divider px-4 py-2">
-                <Icon icon="feed" size={14} className="text-foreground-muted" />
-                <span className="text-body-sm font-semibold uppercase tracking-wide text-foreground-muted">
-                    Event stream
-                </span>
-                <Tag minimal round className="tabular-nums">
-                    {events.length}
-                </Tag>
-            </div>
-            <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
+            {onToggle ? (
+                <button
+                    type="button"
+                    onClick={onToggle}
+                    aria-expanded={!collapsed}
+                    className="flex min-h-11 shrink-0 items-center gap-2 border-b border-divider px-4 py-2 text-left lg:min-h-0 lg:cursor-default"
+                >
+                    {header}
+                </button>
+            ) : (
+                <div className="flex shrink-0 items-center gap-2 border-b border-divider px-4 py-2">{header}</div>
+            )}
+            <div
+                ref={scrollRef}
+                className={`min-h-0 flex-1 overflow-auto lg:block ${collapsed ? "hidden" : "max-h-60 lg:max-h-none"}`}
+            >
                 {events.length === 0 ? (
-                    <div className="flex h-full items-center justify-center text-body-sm text-foreground-muted">
+                    <div className="flex h-full items-center justify-center py-6 text-body-sm text-foreground-muted">
                         Awaiting telemetry…
                     </div>
                 ) : (
@@ -49,7 +81,7 @@ export function EventFeed({ events, selectedId, follow, dark, onSelect }: EventF
                             <li
                                 key={e.id}
                                 onClick={() => onSelect(e.droneId)}
-                                className={`flex cursor-pointer items-center gap-3 px-4 py-1.5 text-body-sm hover:bg-[var(--interactive-hover)] ${
+                                className={`flex min-h-11 cursor-pointer items-center gap-3 px-4 py-1.5 text-body-sm hover:bg-[var(--interactive-hover)] lg:min-h-0 ${
                                     e.droneId === selectedId ? "bg-[var(--interactive-hover)]" : ""
                                 }`}
                             >
