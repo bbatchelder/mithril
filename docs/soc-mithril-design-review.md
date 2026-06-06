@@ -2,8 +2,13 @@
 
 A test-drive of the `mithril-design` skill applied to the Sentinel SOC demo
 (`src/demos/soc/`: `SocConsole.tsx`, `AlertTable.tsx`, `AlertDetail.tsx`, `StatBar.tsx`).
-These are **suggestions, not yet applied** — a punch list for moving the demo further into
-mithril's dense operator/analyst register.
+
+> **Status: implemented.** This punch list has since been applied — flat KPI cards with sparklines,
+> green create CTA, `border-border` tokens, dark left rail, edge-to-edge tighter layout, command
+> palette + single-key grammar, and a pinned (dockable) inspector. The demo is also now responsive
+> (rail → hamburger drawer, inspector → full-screen, table → stacked cards, KPI 2-up on mobile); the
+> reusable patterns were folded back into the skill (`references/mobile.md`). The notes below are kept
+> as the original review record.
 
 ## Already on-register
 

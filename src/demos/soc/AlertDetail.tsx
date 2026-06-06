@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Card } from "@/components/ui/card";
 import { Divider } from "@/components/ui/divider";
-import { Drawer, DrawerBody, DrawerSize } from "@/components/ui/drawer";
 import { EntityTitle } from "@/components/ui/entity-title";
 import { Icon } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuDivider } from "@/components/ui/menu";
 import { MenuPopover } from "@/components/ui/popover";
 import { Tabs, Tab } from "@/components/ui/tabs";
 import { Tag } from "@/components/ui/tag";
+import { Tooltip } from "@/components/ui/tooltip";
+import { KeyCombo } from "@/components/ui/hotkeys";
 
 import {
     type Alert,
@@ -24,7 +25,6 @@ import {
 
 interface AlertDetailProps {
     alert: Alert | null;
-    isOpen: boolean;
     dark: boolean;
     onClose: () => void;
     onAcknowledge: (alert: Alert) => void;
@@ -125,7 +125,7 @@ function IocTab({ alert, onCopy }: { alert: Alert; onCopy: (value: string) => vo
             {alert.iocs.map((ioc, i) => (
                 <div
                     key={i}
-                    className="flex items-center justify-between gap-3 rounded-bp border border-divider bg-surface px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-bp border border-border bg-surface px-3 py-2"
                 >
                     <div className="flex min-w-0 items-center gap-2.5">
                         <Tag minimal icon={<Icon icon={IOC_ICON[ioc.type]} size={12} className="!text-current" />}>
@@ -158,7 +158,6 @@ function RawEventTab({ alert }: { alert: Alert }) {
 
 export function AlertDetail({
     alert,
-    isOpen,
     dark,
     onClose,
     onAcknowledge,
@@ -167,133 +166,142 @@ export function AlertDetail({
     onCloseIncident,
     onCopyIoc,
 }: AlertDetailProps) {
+    if (alert == null) return null;
+
     return (
-        <Drawer
-            open={isOpen}
-            onOpenChange={(next) => {
-                if (!next) onClose();
-            }}
-            size={DrawerSize.LARGE}
-            position="right"
-            closeButton={false}
-            dark={dark}
-        >
-            {alert != null && (
-                <>
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-3 border-b border-divider px-5 py-4">
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                            <div className="flex items-center gap-2">
-                                <Tag intent={SEVERITY_INTENT[alert.severity]}>
-                                    {SEVERITY_LABEL[alert.severity]}
-                                </Tag>
-                                <Tag minimal intent={STATUS_META[alert.status].intent}>
-                                    {STATUS_META[alert.status].label}
-                                </Tag>
-                                <span className="font-mono text-body-sm text-foreground-muted">{alert.id}</span>
-                            </div>
-                            <h2 className="text-heading-sm font-semibold text-foreground">{alert.title}</h2>
-                        </div>
-                        <Button
-                            variant="minimal"
-                            aria-label="Close drawer"
-                            icon={<Icon icon="cross" className="!text-current" />}
-                            onClick={onClose}
-                        />
+        // Dockable pinned inspector — a flat bordered panel, not a floating overlay,
+        // so an operator can scan the queue and read a row at the same time.
+        <aside className="flex h-full w-full shrink-0 flex-col overflow-hidden border-l border-border bg-surface md:w-[400px]">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                        <Tag intent={SEVERITY_INTENT[alert.severity]}>
+                            {SEVERITY_LABEL[alert.severity]}
+                        </Tag>
+                        <Tag minimal intent={STATUS_META[alert.status].intent}>
+                            {STATUS_META[alert.status].label}
+                        </Tag>
+                        <span className="font-mono text-body-sm text-foreground-muted">{alert.id}</span>
                     </div>
+                    <h2 className="text-heading-sm font-semibold text-foreground">{alert.title}</h2>
+                </div>
+                <Button
+                    variant="minimal"
+                    aria-label="Close inspector"
+                    icon={<Icon icon="cross" className="!text-current" />}
+                    onClick={onClose}
+                />
+            </div>
 
-                    {/* Action bar */}
-                    <div className="flex flex-wrap items-center gap-2 border-b border-divider bg-background px-5 py-3">
-                        <Button
-                            icon={<Icon icon="endorsed" className="!text-current" />}
-                            onClick={() => onAcknowledge(alert)}
-                        >
-                            Acknowledge
-                        </Button>
-                        <Button
-                            intent="warning"
-                            icon={<Icon icon="arrow-up" className="!text-current" />}
-                            onClick={() => onEscalate(alert)}
-                        >
-                            Escalate
-                        </Button>
-                        <MenuPopover
-                            side="bottom"
-                            align="start"
-                            dark={dark}
-                            content={
-                                <Menu>
-                                    <MenuDivider title="Assign to" />
-                                    {ANALYSTS.filter((a) => a !== "Unassigned").map((analyst) => (
-                                        <MenuItem
-                                            key={analyst}
-                                            icon="person"
-                                            text={analyst}
-                                            active={analyst === alert.assignee}
-                                            onClick={() => onAssign(alert, analyst)}
-                                        />
-                                    ))}
-                                    <MenuDivider />
-                                    <MenuItem
-                                        icon="disable"
-                                        text="Unassign"
-                                        onClick={() => onAssign(alert, "Unassigned")}
-                                    />
-                                </Menu>
-                            }
-                        >
-                            <Button
-                                variant="outlined"
-                                icon={<Icon icon="person" className="!text-current" />}
-                                endIcon={<Icon icon="caret-down" className="!text-current" />}
-                            >
-                                Assign
-                            </Button>
-                        </MenuPopover>
-                        <div className="grow" />
-                        <Button
-                            intent="danger"
-                            variant="outlined"
-                            icon={<Icon icon="cross" className="!text-current" />}
-                            onClick={() => onCloseIncident(alert)}
-                        >
-                            Close incident
-                        </Button>
-                    </div>
-
-                    <DrawerBody className="px-5 pb-5">
-                        <Tabs id={`alert-tabs-${alert.id}`} defaultSelectedTabId="overview">
-                            <Tab id="overview" title="Overview" panel={<OverviewTab alert={alert} />} />
-                            <Tab id="timeline" title="Timeline" panel={<TimelineTab alert={alert} />} />
-                            <Tab
-                                id="iocs"
-                                title={
-                                    <span className="inline-flex items-center gap-1.5">
-                                        Indicators
-                                        <Tag minimal round>
-                                            {alert.iocs.length}
-                                        </Tag>
-                                    </span>
-                                }
-                                panel={<IocTab alert={alert} onCopy={onCopyIoc} />}
-                            />
-                            <Tab id="raw" title="Raw Event" panel={<RawEventTab alert={alert} />} />
-                        </Tabs>
-                    </DrawerBody>
-
-                    <div className="flex items-center justify-between gap-2 border-t border-divider px-5 py-3">
-                        <span className="text-body-sm text-foreground-muted">
-                            Detected {alert.age} · {alert.detector}
+            {/* Action bar */}
+            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-background px-5 py-3">
+                <Tooltip
+                    dark={dark}
+                    content={
+                        <span className="inline-flex items-center gap-1.5">
+                            Acknowledge <KeyCombo combo="a" minimal />
                         </span>
-                        <div className="flex items-center gap-2">
-                            <Divider />
-                            <Button variant="minimal" onClick={onClose}>
-                                Close
-                            </Button>
-                        </div>
-                    </div>
-                </>
-            )}
-        </Drawer>
+                    }
+                >
+                    <Button
+                        icon={<Icon icon="endorsed" className="!text-current" />}
+                        onClick={() => onAcknowledge(alert)}
+                    >
+                        Acknowledge
+                    </Button>
+                </Tooltip>
+                <Tooltip
+                    dark={dark}
+                    content={
+                        <span className="inline-flex items-center gap-1.5">
+                            Escalate <KeyCombo combo="e" minimal />
+                        </span>
+                    }
+                >
+                    <Button
+                        intent="warning"
+                        icon={<Icon icon="arrow-up" className="!text-current" />}
+                        onClick={() => onEscalate(alert)}
+                    >
+                        Escalate
+                    </Button>
+                </Tooltip>
+                <MenuPopover
+                    side="bottom"
+                    align="start"
+                    dark={dark}
+                    content={
+                        <Menu>
+                            <MenuDivider title="Assign to" />
+                            {ANALYSTS.filter((a) => a !== "Unassigned").map((analyst) => (
+                                <MenuItem
+                                    key={analyst}
+                                    icon="person"
+                                    text={analyst}
+                                    active={analyst === alert.assignee}
+                                    onClick={() => onAssign(alert, analyst)}
+                                />
+                            ))}
+                            <MenuDivider />
+                            <MenuItem
+                                icon="disable"
+                                text="Unassign"
+                                onClick={() => onAssign(alert, "Unassigned")}
+                            />
+                        </Menu>
+                    }
+                >
+                    <Button
+                        variant="outlined"
+                        icon={<Icon icon="person" className="!text-current" />}
+                        endIcon={<Icon icon="caret-down" className="!text-current" />}
+                    >
+                        Assign
+                    </Button>
+                </MenuPopover>
+                <div className="grow" />
+                <Button
+                    intent="danger"
+                    variant="outlined"
+                    icon={<Icon icon="cross" className="!text-current" />}
+                    onClick={() => onCloseIncident(alert)}
+                >
+                    Close incident
+                </Button>
+            </div>
+
+            <div className="flex-1 overflow-auto px-5 pb-5">
+                <Tabs id={`alert-tabs-${alert.id}`} defaultSelectedTabId="overview">
+                    <Tab id="overview" title="Overview" panel={<OverviewTab alert={alert} />} />
+                    <Tab id="timeline" title="Timeline" panel={<TimelineTab alert={alert} />} />
+                    <Tab
+                        id="iocs"
+                        title={
+                            <span className="inline-flex items-center gap-1.5">
+                                Indicators
+                                <Tag minimal round>
+                                    {alert.iocs.length}
+                                </Tag>
+                            </span>
+                        }
+                        panel={<IocTab alert={alert} onCopy={onCopyIoc} />}
+                    />
+                    <Tab id="raw" title="Raw Event" panel={<RawEventTab alert={alert} />} />
+                </Tabs>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-3">
+                <span className="text-body-sm text-foreground-muted">
+                    Detected {alert.age} · {alert.detector}
+                </span>
+                <div className="flex items-center gap-2">
+                    <Divider />
+                    <Button variant="minimal" onClick={onClose}>
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </aside>
     );
 }
