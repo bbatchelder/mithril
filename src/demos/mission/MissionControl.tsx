@@ -55,9 +55,19 @@ function MissionControlInner() {
     const [matchOrientation, setMatchOrientation] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [query, setQuery] = useState("");
-    // Compact-layout chrome (below lg): the hamburger fleet drawer + collapsible feed.
+    // Fleet roster visibility. On lg+ the rail is inline and `railOpen` collapses it;
+    // below lg it's an overlay drawer driven by `navOpen` (the rail is always hidden
+    // inline there). The event feed starts collapsed at every width.
+    const [railOpen, setRailOpen] = useState(true);
     const [navOpen, setNavOpen] = useState(false);
     const [feedOpen, setFeedOpen] = useState(false);
+
+    // One menu button drives both: collapse the inline rail on desktop, or summon the
+    // overlay drawer on small screens. Resolved at click time so no resize listener.
+    const toggleFleet = () => {
+        if (window.matchMedia("(min-width: 1024px)").matches) setRailOpen((v) => !v);
+        else setNavOpen(true);
+    };
 
     // Brief "connecting" phase so the telemetry panel shows Skeletons on first paint.
     const [connecting, setConnecting] = useState(true);
@@ -158,14 +168,16 @@ function MissionControlInner() {
             {/* ── Navbar ──────────────────────────────────────────────────── */}
             <Navbar className="shrink-0">
                 <NavbarGroup align="left" className="min-w-0">
-                    {/* Hamburger → fleet roster drawer (mobile only) */}
-                    <Button
-                        variant="minimal"
-                        aria-label="Open fleet roster"
-                        className="lg:hidden"
-                        icon={<Icon icon="menu" className="!text-current" />}
-                        onClick={() => setNavOpen(true)}
-                    />
+                    {/* Toggle the fleet roster — collapses the inline rail (lg+) or
+                        opens the overlay drawer (below lg). */}
+                    <Tooltip content="Toggle fleet roster" dark={dark}>
+                        <Button
+                            variant="minimal"
+                            aria-label="Toggle fleet roster"
+                            icon={<Icon icon="menu" className="!text-current" />}
+                            onClick={toggleFleet}
+                        />
+                    </Tooltip>
                     <span className="mr-2 hidden items-center justify-center sm:inline-flex">
                         <Icon icon="airplane" size={20} className="text-intent-primary-text" />
                     </span>
@@ -289,8 +301,14 @@ function MissionControlInner() {
 
             {/* ── Body ────────────────────────────────────────────────────── */}
             <div className="flex min-h-0 flex-1">
-                {/* Left rail — fleet roster (lg+; below lg the hamburger drawer) */}
-                <aside className="hidden w-72 shrink-0 flex-col overflow-auto border-r border-divider bg-surface lg:flex">
+                {/* Left rail — fleet roster (inline on lg+ when railOpen; below lg it's
+                    the overlay drawer). Collapsing it hands the width back to the map. */}
+                <aside
+                    className={
+                        "hidden w-72 shrink-0 flex-col overflow-auto border-r border-divider bg-surface " +
+                        (railOpen ? "lg:flex" : "")
+                    }
+                >
                     <Section
                         title="Fleet"
                         icon="layers"
@@ -371,8 +389,9 @@ function MissionControlInner() {
                         )}
                     </div>
 
-                    {/* Event feed strip — fixed on lg+, collapsible below lg. */}
-                    <div className="shrink-0 border-t border-divider bg-surface lg:h-48">
+                    {/* Event feed — collapsible at every width, collapsed by default so
+                        the map leads. Expanding it opens a fixed-height scroll area. */}
+                    <div className="shrink-0 border-t border-divider bg-surface">
                         <EventFeed
                             events={stream.events}
                             selectedId={selectedId}
@@ -385,16 +404,21 @@ function MissionControlInner() {
                     </div>
                 </main>
 
-                {/* Right rail — telemetry (lg+; below lg the bottom sheet above) */}
+                {/* Right rail — telemetry inspector. Only present once a drone is
+                    selected (lg+; below lg the bottom sheet above stands in); close it
+                    to deselect and reclaim the width for the map. */}
+                {selected && (
                 <aside className="hidden w-80 shrink-0 overflow-auto border-l border-divider bg-background lg:block">
                     <TelemetryPanel
                         drone={selected}
                         history={selectedId ? stream.history[selectedId] : undefined}
                         drones={stream.drones}
                         connecting={connecting}
+                        onClose={() => setSelectedId(null)}
                         onOpenDetail={openDetail}
                     />
                 </aside>
+                )}
             </div>
 
             {/* ── Mobile fleet roster drawer (hamburger) ──────────────────── */}

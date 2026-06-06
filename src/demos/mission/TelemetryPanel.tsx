@@ -28,6 +28,8 @@ interface TelemetryPanelProps {
     history: TelemetryHistory | undefined;
     drones: Drone[];
     connecting: boolean;
+    /** When provided, renders a close button in the header (the pinned desktop rail). */
+    onClose?: () => void;
     onOpenDetail: () => void;
 }
 
@@ -116,7 +118,7 @@ function FleetSummary({ drones }: { drones: Drone[] }) {
     );
 }
 
-export function TelemetryPanel({ drone, history, drones, connecting, onOpenDetail }: TelemetryPanelProps) {
+export function TelemetryPanel({ drone, history, drones, connecting, onClose, onOpenDetail }: TelemetryPanelProps) {
     if (connecting) return <SkeletonBody />;
     if (!drone) return <FleetSummary drones={drones} />;
 
@@ -134,9 +136,20 @@ export function TelemetryPanel({ drone, history, drones, connecting, onOpenDetai
                         {drone.model} · {drone.payload}
                     </span>
                 </div>
-                <Tag intent={meta.intent} icon={<Icon icon={meta.icon} size={12} className="!text-current" />}>
-                    {meta.label}
-                </Tag>
+                <div className="flex shrink-0 items-center gap-1.5">
+                    <Tag intent={meta.intent} icon={<Icon icon={meta.icon} size={12} className="!text-current" />}>
+                        {meta.label}
+                    </Tag>
+                    {onClose && (
+                        <Button
+                            variant="minimal"
+                            size="small"
+                            aria-label="Close telemetry"
+                            icon={<Icon icon="cross" className="!text-current" />}
+                            onClick={onClose}
+                        />
+                    )}
+                </div>
             </div>
 
             {drone.status === "anomaly" && (
