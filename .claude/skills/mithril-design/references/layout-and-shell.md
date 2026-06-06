@@ -137,3 +137,10 @@ multi-exploration work areas.
   shimmer.
 - **Inline migration / outdated-config callouts** with a right-aligned upgrade CTA — surface upgrade
   paths without a modal interruption.
+
+## 5. Responsive adaptation (dense desktop → mobile)
+
+Each of the five shell elements above has a canonical mobile form — rail → hamburger drawer, pinned
+inspector → full-screen, top bar → condense + secondary toolbar, dense table → stacked cards, KPI row
+→ 2-up. The density **reflows; it is not thrown away.** Full guidance (plus touch targets and where
+breakpoints live) is in [mobile.md](mobile.md).
