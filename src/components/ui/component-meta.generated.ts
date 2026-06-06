@@ -32,7 +32,7 @@ export interface ComponentMeta {
 export const COMPONENT_META: Record<string, ComponentMeta> = {
     "ai-explainability": {
         "title": "AiExplainability",
-        "description": "AiExplainability — Blueprint-faithful, built on CVA.",
+        "description": "A marker chip that flags AI-generated or AI-assisted content and reveals an explainability popover describing what the AI did.",
         "tests": {
             "total": 10,
             "a11y": 1,
@@ -62,7 +62,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "alert": {
         "title": "Alert",
-        "description": "Alert — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A modal confirm dialog — large icon, message, and confirm/cancel actions — for destructive or irreversible choices.",
         "tests": {
             "total": 2,
             "a11y": 1,
@@ -91,7 +91,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "anchor-button": {
         "title": "AnchorButton",
-        "description": "AnchorButton — Blueprint-faithful, built on CVA.",
+        "description": "An `<a>` styled exactly like Button, with anchor navigation semantics and proper disabled handling.",
         "tests": {
             "total": 13,
             "a11y": 4,
@@ -120,7 +120,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "breadcrumbs": {
         "title": "Breadcrumbs",
-        "description": "Breadcrumbs — Blueprint-faithful, built on CVA.",
+        "description": "A navigational trail of links that collapses into an overflow menu when the path is too long to fit.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -146,7 +146,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "button": {
         "title": "Button",
-        "description": "Button — Blueprint-faithful, built on CVA + Radix.",
+        "description": "The core action control — five intents, fill/outlined/minimal variants, sizes, icons, and a loading state.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -176,7 +176,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "button-group": {
         "title": "ButtonGroup",
-        "description": "ButtonGroup — Blueprint-faithful, built on CVA.",
+        "description": "Attaches a row or column of Buttons into one segmented control, collapsing the inner radii and shared borders.",
         "tests": {
             "total": 9,
             "a11y": 1,
@@ -203,7 +203,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "callout": {
         "title": "Callout",
-        "description": "Callout — Blueprint-faithful, built on CVA.",
+        "description": "A boxed inline message with an intent color, leading icon, and optional heading for page-level notices.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -229,7 +229,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "card": {
         "title": "Card",
-        "description": "Card — Blueprint-faithful, built on CVA.",
+        "description": "An elevated surface container with selectable elevation and an optional interactive hover lift.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -255,7 +255,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "card-list": {
         "title": "CardList",
-        "description": "CardList — Blueprint-faithful, built on CVA.",
+        "description": "A bordered, flush-stacked list of Cards with hover and interactive states for selectable rows.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -280,7 +280,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "checkbox": {
         "title": "Checkbox",
-        "description": "Checkbox — Blueprint-faithful, built on CVA.",
+        "description": "A labeled checkbox with indeterminate state, sizes, and inline or block layout.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -305,7 +305,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "collapse": {
         "title": "Collapse",
-        "description": "Collapse — Blueprint-faithful, built on CVA.",
+        "description": "An animated height transition that smoothly expands and collapses its content region.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -329,7 +329,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "context-menu": {
         "title": "ContextMenu",
-        "description": "ContextMenu — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A right-click popup menu — a Radix context-menu trigger wrapping mithril's Menu surface.",
         "tests": {
             "total": 3,
             "a11y": 1,
@@ -356,7 +356,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "control-base": {
         "title": "ControlBase",
-        "description": "ControlBase — Blueprint-faithful, built on CVA.",
+        "description": "The shared label / hidden-input / indicator primitive behind Checkbox, Radio, and Switch.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -380,7 +380,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "control-card": {
         "title": "ControlCard",
-        "description": "ControlCard — Blueprint-faithful, built on CVA.",
+        "description": "A Card whose entire surface is a selectable Checkbox, Radio, or Switch label.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -410,7 +410,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "control-group": {
         "title": "ControlGroup",
-        "description": "ControlGroup — Blueprint-faithful, built on CVA.",
+        "description": "A flex layout wrapper that attaches form controls — inputs, selects, buttons — into one row or column.",
         "tests": {
             "total": 12,
             "a11y": 1,
@@ -436,7 +436,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "data-table": {
         "title": "DataTable",
-        "description": "DataTable — Blueprint-faithful, built on CVA.",
+        "description": "A virtualized data grid with sortable, resizable columns and row selection, built on TanStack Table.",
         "tests": {
             "total": 76,
             "a11y": 3,
@@ -465,7 +465,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "date-input": {
         "title": "DateInput",
-        "description": "DateInput — Blueprint-faithful, built on CVA.",
+        "description": "A text field that opens a DatePicker popover for typing or picking a single date.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -494,7 +494,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "date-picker": {
         "title": "DatePicker",
-        "description": "DatePicker — Blueprint-faithful, built on CVA.",
+        "description": "A single-date calendar with month/year navigation and optional time selection, on react-day-picker.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -523,7 +523,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "date-range-input": {
         "title": "DateRangeInput",
-        "description": "DateRangeInput — Blueprint-faithful, built on CVA.",
+        "description": "Two linked text fields sharing one DateRangePicker popover to capture a start-and-end range.",
         "tests": {
             "total": 8,
             "a11y": 2,
@@ -550,7 +550,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "date-range-picker": {
         "title": "DateRangePicker",
-        "description": "DateRangePicker — Blueprint-faithful, built on CVA.",
+        "description": "Two side-by-side month calendars for selecting a start-to-end date range.",
         "tests": {
             "total": 8,
             "a11y": 1,
@@ -578,7 +578,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "dialog": {
         "title": "Dialog",
-        "description": "Dialog — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A modal overlay with header, body, and footer — focus-trapped and scroll-locked, on Radix Dialog.",
         "tests": {
             "total": 11,
             "a11y": 0,
@@ -608,7 +608,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "divider": {
         "title": "Divider",
-        "description": "Divider — Blueprint-faithful, built on CVA.",
+        "description": "A thin rule that separates content horizontally or vertically.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -634,7 +634,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "drawer": {
         "title": "Drawer",
-        "description": "Drawer — Blueprint-faithful, built on CVA + Radix.",
+        "description": "An overlay panel anchored to a screen edge, focus-trapped and scroll-locked, on Radix Dialog.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -664,7 +664,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "editable-text": {
         "title": "EditableText",
-        "description": "EditableText — Blueprint-faithful, built on CVA.",
+        "description": "Text that turns into an inline input on click and commits on blur or Enter.",
         "tests": {
             "total": 10,
             "a11y": 0,
@@ -689,7 +689,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "entity-title": {
         "title": "EntityTitle",
-        "description": "EntityTitle — Blueprint-faithful, built on CVA.",
+        "description": "A title block pairing an icon or avatar with a heading, subtitle, and optional tags.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -715,7 +715,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "file-dropzone": {
         "title": "FileDropzone",
-        "description": "FileDropzone — Blueprint-faithful, built on CVA.",
+        "description": "A drag-and-drop surface for multi-file uploads, with previews and validation, built on react-dropzone.",
         "tests": {
             "total": 9,
             "a11y": 1,
@@ -743,7 +743,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "file-input": {
         "title": "FileInput",
-        "description": "FileInput — Blueprint-faithful, built on CVA.",
+        "description": "A styled file picker showing a Browse button and the selected file's name.",
         "tests": {
             "total": 9,
             "a11y": 4,
@@ -767,7 +767,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "form-group": {
         "title": "FormGroup",
-        "description": "FormGroup — Blueprint-faithful, built on CVA.",
+        "description": "Wraps a label, helper text, and a control into one labeled — and optionally inline — form field.",
         "tests": {
             "total": 8,
             "a11y": 4,
@@ -793,7 +793,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "hotkeys": {
         "title": "Hotkeys",
-        "description": "Hotkeys — Blueprint-faithful, built on CVA.",
+        "description": "A keyboard-shortcut system — KeyCombo key-cap rendering plus a global shortcuts help dialog.",
         "tests": {
             "total": 16,
             "a11y": 0,
@@ -821,7 +821,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "html-select": {
         "title": "HTMLSelect",
-        "description": "HTMLSelect — Blueprint-faithful, built on CVA.",
+        "description": "A native `<select>` restyled to the system, with a chevron affordance and matching sizes.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -846,7 +846,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "html-table": {
         "title": "HTMLTable",
-        "description": "HTMLTable — Blueprint-faithful, built on CVA.",
+        "description": "A styled wrapper for native `<table>` markup — striped, bordered, and compact variants.",
         "tests": {
             "total": 10,
             "a11y": 1,
@@ -872,7 +872,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "icon": {
         "title": "Icon",
-        "description": "Icon — Blueprint-faithful, built on CVA.",
+        "description": "Renders any of the 706 vendored Blueprint glyphs by name or imported object, at a given size and color.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -897,7 +897,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "input-group": {
         "title": "InputGroup",
-        "description": "InputGroup — Blueprint-faithful, built on CVA.",
+        "description": "A text input with leading or trailing icons, buttons, or spinners placed inside the field.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -925,7 +925,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "link": {
         "title": "Link",
-        "description": "Link — Blueprint-faithful, built on CVA.",
+        "description": "An inline anchor with the system's link styling, focus ring, and optional icon.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -951,7 +951,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "menu": {
         "title": "Menu",
-        "description": "Menu — Blueprint-faithful, built on CVA.",
+        "description": "A standalone styled list of items, dividers, and submenus — compose inside a Popover for a dropdown.",
         "tests": {
             "total": 6,
             "a11y": 6,
@@ -979,7 +979,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "multi-select": {
         "title": "MultiSelect",
-        "description": "MultiSelect — Blueprint-faithful, built on CVA.",
+        "description": "A tag-chip input that filters a dropdown and accumulates multiple selected items.",
         "tests": {
             "total": 3,
             "a11y": 2,
@@ -1009,7 +1009,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "multistep-dialog": {
         "title": "MultistepDialog",
-        "description": "MultistepDialog — Blueprint-faithful, built on CVA.",
+        "description": "A wizard Dialog with a numbered step rail and back/next navigation across ordered steps.",
         "tests": {
             "total": 12,
             "a11y": 1,
@@ -1036,7 +1036,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "navbar": {
         "title": "Navbar",
-        "description": "Navbar — Blueprint-faithful, built on CVA.",
+        "description": "A fixed-height top bar with left and right groups, headings, and dividers for app chrome.",
         "tests": {
             "total": 9,
             "a11y": 1,
@@ -1063,7 +1063,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "non-ideal-state": {
         "title": "NonIdealState",
-        "description": "NonIdealState — Blueprint-faithful, built on CVA.",
+        "description": "An empty / error / loading placeholder that centers an icon, title, description, and action.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1090,7 +1090,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "numeric-input": {
         "title": "NumericInput",
-        "description": "NumericInput — Blueprint-faithful, built on CVA.",
+        "description": "A number field with increment/decrement steppers, clamping, and keyboard adjustment.",
         "tests": {
             "total": 4,
             "a11y": 2,
@@ -1116,7 +1116,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "omnibar": {
         "title": "Omnibar",
-        "description": "Omnibar — Blueprint-faithful, built on CVA.",
+        "description": "A command-palette overlay — a top-pinned search field over a filtered result menu.",
         "tests": {
             "total": 4,
             "a11y": 1,
@@ -1144,7 +1144,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "overflow-list": {
         "title": "OverflowList",
-        "description": "OverflowList — Blueprint-faithful, built on CVA.",
+        "description": "A horizontal list that collapses the items that don't fit into a trailing overflow renderer.",
         "tests": {
             "total": 7,
             "a11y": 1,
@@ -1169,7 +1169,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "panel-stack": {
         "title": "PanelStack",
-        "description": "PanelStack — Blueprint-faithful, built on CVA.",
+        "description": "An animated stack of panels with push/pop navigation and a back-to-previous header.",
         "tests": {
             "total": 9,
             "a11y": 0,
@@ -1195,7 +1195,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "popover": {
         "title": "Popover",
-        "description": "Popover — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A floating panel anchored to a trigger, with arrow, placement, and dismissal, on Radix Popover.",
         "tests": {
             "total": 3,
             "a11y": 0,
@@ -1222,7 +1222,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "portal": {
         "title": "Portal",
-        "description": "Portal — Blueprint-faithful, built on CVA.",
+        "description": "Renders children into a detached DOM node to escape `overflow` and `z-index` stacking.",
         "tests": {
             "total": 8,
             "a11y": 1,
@@ -1247,7 +1247,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "progress-bar": {
         "title": "ProgressBar",
-        "description": "ProgressBar — Blueprint-faithful, built on CVA.",
+        "description": "A horizontal track with a determinate fill or indeterminate animation, colored per intent.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1272,7 +1272,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "radio": {
         "title": "Radio",
-        "description": "Radio — Blueprint-faithful, built on CVA.",
+        "description": "A labeled radio control, plus RadioGroup for single-choice selection.",
         "tests": {
             "total": 10,
             "a11y": 2,
@@ -1297,7 +1297,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "resize-sensor": {
         "title": "ResizeSensor",
-        "description": "ResizeSensor — Blueprint-faithful, built on CVA.",
+        "description": "A headless helper that observes an element's size and fires a callback whenever it changes.",
         "tests": {
             "total": 6,
             "a11y": 0,
@@ -1320,7 +1320,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "section": {
         "title": "Section",
-        "description": "Section — Blueprint-faithful, built on CVA.",
+        "description": "A titled content container with a header, optional right-side controls, and a collapsible body.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1349,7 +1349,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "segmented-control": {
         "title": "SegmentedControl",
-        "description": "SegmentedControl — Blueprint-faithful, built on CVA.",
+        "description": "A pill-track toggle of mutually exclusive options — tabs styled as a single control.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1378,7 +1378,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "select": {
         "title": "Select",
-        "description": "Select — Blueprint-faithful, built on CVA.",
+        "description": "A filterable dropdown — type to search, arrow-key navigate, and pick a single item.",
         "tests": {
             "total": 7,
             "a11y": 4,
@@ -1406,7 +1406,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "skeleton": {
         "title": "Skeleton",
-        "description": "Skeleton — Blueprint-faithful, built on CVA.",
+        "description": "A shimmering placeholder modifier that stands in for content while it loads.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1431,7 +1431,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "slider": {
         "title": "Slider",
-        "description": "Slider — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A draggable track for choosing a numeric value or range, with labels and tick marks.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1458,7 +1458,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "spinner": {
         "title": "Spinner",
-        "description": "Spinner — Blueprint-faithful, built on CVA.",
+        "description": "An indeterminate circular loading indicator, sized and intent-colored.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1483,7 +1483,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "suggest": {
         "title": "Suggest",
-        "description": "Suggest — Blueprint-faithful, built on CVA.",
+        "description": "A typeahead where the input itself filters a dropdown and fills with the chosen item.",
         "tests": {
             "total": 4,
             "a11y": 2,
@@ -1511,7 +1511,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "switch": {
         "title": "Switch",
-        "description": "Switch — Blueprint-faithful, built on CVA.",
+        "description": "A toggle switch for on/off state, with labels and sizes — a Checkbox alternative.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1535,7 +1535,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "tabs": {
         "title": "Tabs",
-        "description": "Tabs — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A tabbed panel switcher with an animated active indicator, on Radix Tabs.",
         "tests": {
             "total": 17,
             "a11y": 2,
@@ -1563,7 +1563,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "tag": {
         "title": "Tag",
-        "description": "Tag — Blueprint-faithful, built on CVA.",
+        "description": "A compact label chip with intents, solid or minimal styles, an icon, and an optional remove button.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1589,7 +1589,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "tag-input": {
         "title": "TagInput",
-        "description": "TagInput — Blueprint-faithful, built on CVA.",
+        "description": "A field that collects free-text values as removable Tag chips.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1616,7 +1616,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "text": {
         "title": "Text",
-        "description": "Text — Blueprint-faithful, built on CVA.",
+        "description": "Typographic text tiers — headings, body, muted — mapped to the system's type scale.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1642,7 +1642,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "text-area": {
         "title": "TextArea",
-        "description": "TextArea — Blueprint-faithful, built on CVA.",
+        "description": "A multi-line text field with sizes, fill, and auto-resize support.",
         "tests": {
             "total": 9,
             "a11y": 1,
@@ -1669,7 +1669,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "time-picker": {
         "title": "TimePicker",
-        "description": "TimePicker — Blueprint-faithful, built on CVA.",
+        "description": "A time field with hour/minute/second steppers and optional AM/PM, to a set precision.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1695,7 +1695,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "timezone-select": {
         "title": "TimezoneSelect",
-        "description": "TimezoneSelect — Blueprint-faithful, built on CVA.",
+        "description": "A Select specialized for IANA timezones, searchable by city and UTC offset.",
         "tests": {
             "total": 8,
             "a11y": 2,
@@ -1723,7 +1723,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "toast": {
         "title": "Toast",
-        "description": "Toast — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A transient notification card plus a Toaster that stacks and auto-dismisses them, on Radix Toast.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1753,7 +1753,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "tooltip": {
         "title": "Tooltip",
-        "description": "Tooltip — Blueprint-faithful, built on CVA + Radix.",
+        "description": "A small inverted hover/focus label anchored to its trigger, on Radix Tooltip.",
         "tests": {
             "total": 0,
             "a11y": 0,
@@ -1781,7 +1781,7 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
     },
     "tree": {
         "title": "Tree",
-        "description": "Tree — Blueprint-faithful, built on CVA.",
+        "description": "A nested, expandable tree of nodes with icons, selection, and caret toggles.",
         "tests": {
             "total": 0,
             "a11y": 0,

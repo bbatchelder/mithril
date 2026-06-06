@@ -249,6 +249,19 @@ export function DateRangeInput({
 
     const startInputRef = useRef<HTMLInputElement>(null);
     const endInputRef = useRef<HTMLInputElement>(null);
+    // Wraps both inputs (the popover anchor). Selecting a start date programmatically moves
+    // focus to the end input; because the popover is anchored (not triggered), Radix's
+    // dismissable layer treats that focus leaving the content as an "outside" interaction
+    // and closes the popover. Guarding interactions that land back inside our own inputs
+    // keeps the focus-driven flow alive (same pattern as Suggest/MultiSelect). See popover.tsx.
+    const rootRef = useRef<HTMLDivElement>(null);
+    const handleInteractOutside = useCallback(
+        (e: Event & { detail?: { originalEvent?: Event } }) => {
+            const target = (e.detail?.originalEvent?.target ?? e.target) as Node | null;
+            if (target && rootRef.current?.contains(target)) e.preventDefault();
+        },
+        [],
+    );
 
     // ---- Calendar range selection ----
     const handleRangeChange = useCallback(
@@ -550,6 +563,8 @@ export function DateRangeInput({
                click (the popover only survived while the mouse was held). Use an
                anchor instead so focus-driven open survives. See popover.tsx anchorOnly. */
             anchorOnly
+            /* Keep the popover open when start-selection moves focus to the end input. */
+            onInteractOutside={handleInteractOutside}
         >
             {/*
              * Blueprint wraps both inputs in a .bp6-control-group div (flex row, align-items:stretch).
@@ -560,6 +575,7 @@ export function DateRangeInput({
              * but individual input focus is handled by the focus handlers above.
              */}
             <div
+                ref={rootRef}
                 className={cn(
                     "inline-flex flex-row",
                     "items-stretch",

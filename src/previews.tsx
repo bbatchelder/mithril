@@ -466,37 +466,91 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
     },
 
     "multistep-dialog": {
-        scale: 0.52,
-        render: () => (
-            <div className={cn("w-[300px]", OVERLAY_PANEL)}>
-                <div className="flex items-center justify-between px-4 py-2.5 shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
-                    <span className="text-body font-semibold text-foreground">Create project</span>
-                    <Icon icon="small-cross" size={16} className="text-foreground-muted" />
+        // Mirrors the real component's structure (header + left step rail + right content +
+        // footer), not a horizontal breadcrumb. "Members" is the active step so both footer
+        // buttons and a form show. Keep in sync with the playground config in playground.tsx.
+        scale: 0.5,
+        // Taller than the frame — anchor to the top so the header/rail show and the footer
+        // clips, instead of centering with dead space above the dialog.
+        align: "top",
+        render: () => {
+            const STEPS = [
+                { n: 1, label: "Project info", state: "viewed" as const },
+                { n: 2, label: "Members", state: "active" as const },
+                { n: 3, label: "Review", state: "upcoming" as const },
+            ];
+            return (
+                <div className={cn("flex w-[380px] flex-col", OVERLAY_PANEL)}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-2.5 shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]">
+                        <span className="flex items-center gap-2 text-body font-semibold text-foreground">
+                            <Icon icon="projects" size={16} className="text-foreground-muted" />
+                            Create project
+                        </span>
+                        <Icon icon="small-cross" size={16} className="text-foreground-muted" />
+                    </div>
+                    {/* Body: left step rail + right content panel */}
+                    <div className="flex">
+                        <div className="flex w-[128px] flex-none flex-col">
+                            {STEPS.map((s) => (
+                                <div
+                                    key={s.n}
+                                    className={cn(
+                                        "flex items-center gap-2 border-b border-[rgba(17,20,24,0.15)] px-3 py-2 text-body-sm dark:border-[rgba(255,255,255,0.2)]",
+                                        s.state === "upcoming" ? "bg-[#f6f7f9] dark:bg-[#2f343c]" : "bg-white dark:bg-[#383e47]",
+                                    )}
+                                >
+                                    <span
+                                        className={cn(
+                                            "flex h-6 w-6 flex-none items-center justify-center rounded-full text-body-sm text-white",
+                                            s.state === "active" ? "bg-primary" : s.state === "viewed" ? "bg-[#8f99a8]" : "bg-[rgba(95,107,124,0.6)]",
+                                        )}
+                                    >
+                                        {s.n}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            "truncate",
+                                            s.state === "active"
+                                                ? "font-medium text-primary dark:text-intent-primary-text"
+                                                : s.state === "viewed"
+                                                  ? "text-foreground"
+                                                  : "text-[rgba(95,107,124,0.6)] dark:text-[rgba(171,179,191,0.6)]",
+                                        )}
+                                    >
+                                        {s.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex min-w-0 flex-1 flex-col border-l border-[rgba(17,20,24,0.15)] bg-[#f6f7f9] dark:border-[rgba(255,255,255,0.2)] dark:bg-[#2f343c]">
+                            <div className="flex flex-col gap-3 p-4">
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-body-sm font-medium text-foreground">Invite by email</span>
+                                    <InputGroup leftIcon="envelope" placeholder="name@company.com" fill />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-body-sm font-medium text-foreground">Role</span>
+                                    <HTMLSelect fill defaultValue="Editor" options={["Viewer", "Editor", "Admin"]} />
+                                </div>
+                            </div>
+                            <DialogFooter
+                                actions={
+                                    <>
+                                        <Button variant="minimal" size="small">
+                                            Back
+                                        </Button>
+                                        <Button intent="primary" size="small" endIcon="chevron-right">
+                                            Next
+                                        </Button>
+                                    </>
+                                }
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-1.5 px-4 py-2 text-body-sm">
-                    <span className="text-foreground-muted">Details</span>
-                    <Icon icon="chevron-right" size={12} className="text-foreground-muted" />
-                    <span className="font-semibold text-intent-primary-text">Members</span>
-                    <Icon icon="chevron-right" size={12} className="text-foreground-muted" />
-                    <span className="text-foreground-muted">Review</span>
-                </div>
-                <DialogBody>
-                    <p className="m-0 text-body-sm text-foreground">Invite teammates to this project.</p>
-                </DialogBody>
-                <DialogFooter
-                    actions={
-                        <>
-                            <Button variant="minimal" size="small">
-                                Back
-                            </Button>
-                            <Button intent="primary" size="small" endIcon="chevron-right">
-                                Next
-                            </Button>
-                        </>
-                    }
-                />
-            </div>
-        ),
+            );
+        },
     },
 
     alert: {
