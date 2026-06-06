@@ -35,6 +35,7 @@ import { DroneDetail } from "./DroneDetail";
 import { EventFeed } from "./EventFeed";
 import { FleetTree } from "./FleetTree";
 import { MissionMap } from "./MissionMap";
+import { TargetDetail } from "./TargetDetail";
 import { TelemetryPanel } from "./TelemetryPanel";
 import { type StreamSpeed, useStream } from "./stream/useStream";
 import { GROUND_STATION, STATUS_META, formatMissionClock } from "./data";
@@ -51,6 +52,7 @@ function MissionControlInner() {
     const stream = useStream();
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
     const [autoFollow, setAutoFollow] = useState(false);
     const [matchOrientation, setMatchOrientation] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -88,15 +90,32 @@ function MissionControlInner() {
         }
     }, [stream.events, toaster]);
 
+    // Detected map targets — owned by the stream engine so tasking a drone to
+    // investigate (and the resulting confidence upgrades) flows through the sim tick.
+    const targets = stream.targets;
+
     const selected = stream.drones.find((d) => d.id === selectedId) ?? null;
+    const selectedTarget = targets.find((t) => t.id === selectedTargetId) ?? null;
     const activeCount = stream.drones.filter((d) => d.status === "active" || d.status === "anomaly").length;
     const anomalyCount = stream.drones.filter((d) => d.status === "anomaly").length;
 
+    // Drones and targets share the single right rail / mobile sheet, so selecting
+    // one clears the other.
     const handleSelect = (id: string | null) => {
         setSelectedId(id);
-        // Picking a drone from the hamburger roster dismisses the drawer so the
-        // map (and the mobile telemetry sheet) come forward.
-        if (id) setNavOpen(false);
+        if (id) {
+            setSelectedTargetId(null);
+            // Picking a drone from the hamburger roster dismisses the drawer so the
+            // map (and the mobile telemetry sheet) come forward.
+            setNavOpen(false);
+        }
+    };
+    const handleSelectTarget = (id: string | null) => {
+        setSelectedTargetId(id);
+        if (id) {
+            setSelectedId(null);
+            setNavOpen(false);
+        }
     };
     const openDetail = () => {
         if (selectedId) setDetailOpen(true);
@@ -134,7 +153,10 @@ function MissionControlInner() {
             // Esc clears the selection only when the drawer is closed; when it's open
             // we leave it to the Drawer's own Escape handling (no double-action).
             dismiss: () => {
-                if (!hotkeyState.current.detailOpen) setSelectedId(null);
+                if (!hotkeyState.current.detailOpen) {
+                    setSelectedId(null);
+                    setSelectedTargetId(null);
+                }
             },
         }),
         // stream.toggle/setSpeed are stable across renders; cycleSelection reads via ref.
@@ -333,8 +355,11 @@ function MissionControlInner() {
                     <div className="relative z-0 min-h-0 flex-1">
                         <MissionMap
                             drones={stream.drones}
+                            targets={targets}
                             selectedId={selectedId}
+                            selectedTargetId={selectedTargetId}
                             onSelect={handleSelect}
+                            onSelectTarget={handleSelectTarget}
                             autoFollow={autoFollow}
                             matchOrientation={matchOrientation}
                             dark={dark}
@@ -353,6 +378,11 @@ function MissionControlInner() {
                                         {anomalyCount} anomaly
                                     </span>
                                 )}
+                                <span className="text-body-sm text-foreground-muted">·</span>
+                                <span className="inline-flex items-center gap-1.5 text-body-sm text-foreground-muted">
+                                    <Icon icon="target" size={12} className="!text-current" />
+                                    {targets.length} targets
+                                </span>
                                 <span className="text-body-sm text-foreground-muted">·</span>
                                 <span className="inline-flex items-center gap-1.5 text-body-sm text-foreground-muted">
                                     <Icon icon="cell-tower" size={12} className="!text-current" />
@@ -387,6 +417,31 @@ function MissionControlInner() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Mobile target sheet — same bottom-sheet treatment for a
+                            selected map target (lg+ uses the pinned right rail). */}
+                        {selectedTarget && (
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-bp border-t border-divider bg-background shadow-overlay-3 lg:hidden">
+                                <div className="relative shrink-0 pt-2">
+                                    <div className="mx-auto h-1 w-9 rounded-full bg-divider" />
+                                    <Button
+                                        variant="minimal"
+                                        size="small"
+                                        aria-label="Close target details"
+                                        className="absolute right-1 top-1"
+                                        icon={<Icon icon="cross" className="!text-current" />}
+                                        onClick={() => setSelectedTargetId(null)}
+                                    />
+                                </div>
+                                <div className="min-h-0 flex-1 overflow-auto">
+                                    <TargetDetail
+                                        target={selectedTarget}
+                                        dark={dark}
+                                        onTask={() => stream.investigate(selectedTarget.id)}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Event feed — collapsible at every width, collapsed by default so
@@ -404,19 +459,29 @@ function MissionControlInner() {
                     </div>
                 </main>
 
-                {/* Right rail — telemetry inspector. Only present once a drone is
-                    selected (lg+; below lg the bottom sheet above stands in); close it
-                    to deselect and reclaim the width for the map. */}
-                {selected && (
+                {/* Right rail — inspector. Present once a drone OR a target is selected
+                    (lg+; below lg the bottom sheets above stand in); close it to deselect
+                    and reclaim the width for the map. A target takes precedence (selecting
+                    one clears any drone). */}
+                {(selected || selectedTarget) && (
                 <aside className="hidden w-80 shrink-0 overflow-auto border-l border-divider bg-background lg:block">
-                    <TelemetryPanel
-                        drone={selected}
-                        history={selectedId ? stream.history[selectedId] : undefined}
-                        drones={stream.drones}
-                        connecting={connecting}
-                        onClose={() => setSelectedId(null)}
-                        onOpenDetail={openDetail}
-                    />
+                    {selectedTarget ? (
+                        <TargetDetail
+                            target={selectedTarget}
+                            dark={dark}
+                            onClose={() => setSelectedTargetId(null)}
+                            onTask={() => stream.investigate(selectedTarget.id)}
+                        />
+                    ) : (
+                        <TelemetryPanel
+                            drone={selected}
+                            history={selectedId ? stream.history[selectedId] : undefined}
+                            drones={stream.drones}
+                            connecting={connecting}
+                            onClose={() => setSelectedId(null)}
+                            onOpenDetail={openDetail}
+                        />
+                    )}
                 </aside>
                 )}
             </div>
