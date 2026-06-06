@@ -73,8 +73,17 @@ export function SocConsole() {
         el?.focus();
     };
 
-    // Mobile rail drawer
+    // Rail visibility. On md+ the dark rail is inline and `railOpen` collapses it;
+    // below md it's an overlay drawer driven by `navOpen` (rail always hidden inline).
+    const [railOpen, setRailOpen] = useState(true);
     const [navOpen, setNavOpen] = useState(false);
+
+    // One menu button drives both: collapse the inline rail on desktop, or summon the
+    // overlay drawer on mobile. Resolved at click time so there's no resize listener.
+    const toggleRail = () => {
+        if (window.matchMedia("(min-width: 768px)").matches) setRailOpen((v) => !v);
+        else setNavOpen(true);
+    };
 
     // Inspector (pinned, not an overlay)
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -358,6 +367,7 @@ export function SocConsole() {
         <div className="flex h-screen bg-background text-foreground">
             {/* ── Dark left rail ─────────────────────────────────────────── */}
             <SocRail
+                open={railOpen}
                 items={railItems}
                 footerItems={railFooter}
                 activeId={activeView}
@@ -369,14 +379,16 @@ export function SocConsole() {
                 {/* App top bar */}
                 <Navbar className="shrink-0">
                     <NavbarGroup align="left" className="min-w-0">
-                        {/* Hamburger → rail drawer (mobile only) */}
-                        <Button
-                            variant="minimal"
-                            aria-label="Open navigation"
-                            className="md:hidden"
-                            icon={<Icon icon="menu" className="!text-current" />}
-                            onClick={() => setNavOpen(true)}
-                        />
+                        {/* Toggle navigation — collapses the inline rail (md+) or opens
+                            the overlay drawer (below md). */}
+                        <Tooltip content="Toggle navigation" dark={dark}>
+                            <Button
+                                variant="minimal"
+                                aria-label="Toggle navigation"
+                                icon={<Icon icon="menu" className="!text-current" />}
+                                onClick={toggleRail}
+                            />
+                        </Tooltip>
                         <NavbarHeading className="truncate whitespace-nowrap font-semibold">
                             {activeRailLabel}
                         </NavbarHeading>
