@@ -49,6 +49,33 @@ Toast) renders *outside* that ancestor, so you **must pass `dark={dark}`** (from
 portaled panel renders light-on-dark. This is the #1 shell mistake — see the
 [`mithril`](../../mithril/SKILL.md) skill, overlays recipe.
 
+**Building the always-dark rail (greenfield recipe).** Wrap the rail region in `.dark`, and write *one*
+`RailNav` you can reuse in both the static rail and the mobile drawer ([mobile.md](mobile.md)). On an
+always-dark rail, hover/active use **white-alpha overlays** — *not* the semantic `interactive-*` tokens,
+which assume the surrounding mode and wash out on the forced-dark surface:
+
+```tsx
+// Static rail — `.dark` flips the tokens; hidden below the seam (drawer takes over).
+function AppRail(props: RailNavProps) {
+  return (
+    <div className="dark hidden w-[230px] shrink-0 border-r border-border-strong md:block">
+      <RailNav {...props} />
+    </div>
+  );
+}
+
+// Rail row — white-alpha hover/active on the forced-dark surface, ~32px tall.
+<button className={
+  "flex h-8 w-full items-center gap-2.5 rounded-bp px-3 text-left text-body-sm transition-colors " +
+  (active ? "bg-white/10 font-medium text-foreground"
+          : "text-foreground-muted hover:bg-white/[0.06] hover:text-foreground")
+}>
+  <Icon icon={item.icon} size={16} className="shrink-0 !text-current" />
+  <span className="min-w-0 grow truncate">{item.label}</span>
+  {item.count != null && <span className="shrink-0 tabular-nums text-body-sm text-foreground-muted">{item.count}</span>}
+</button>
+```
+
 ## 2. Panel anatomy
 
 ```

@@ -85,6 +85,66 @@ let the **canvas lead at every width** — make the chrome summonable on the des
 - **Overlays.** A right `Drawer`/side popover on desktop can become a **bottom sheet** on mobile;
   full-screen is the right move for the primary detail view (see the inspector reflow above).
 
+## Reference recipes (copy-ready)
+
+Greenfield-safe skeletons for the reflows above — the parts that are easy to get subtly wrong without
+an existing app to copy. (For the always-dark `RailNav` itself, see [layout-and-shell.md](layout-and-shell.md) §1.)
+
+**Rail → hamburger drawer.** Reuse the same `RailNav`; force the drawer dark only for *nav chrome*.
+
+```tsx
+<Button className="md:hidden" variant="minimal" aria-label="Open navigation"
+  icon={<Icon icon="menu" className="!text-current" />} onClick={() => setNavOpen(true)} />
+
+<Drawer open={navOpen} onOpenChange={setNavOpen} position="left" size={240} closeButton={false} dark>
+  <RailNav {...railProps} onSelect={(id) => { setView(id); setNavOpen(false); }} />
+</Drawer>
+```
+
+**Master list ↔ pinned inspector** (full-width on phone, pinned on `md+`). Hide the master once a row is
+selected so the detail owns the viewport; mount the inspector only when selected.
+
+```tsx
+<div className="flex min-h-0 flex-1">
+  <div className={"min-w-0 flex-1 overflow-auto " + (selected ? "hidden md:block" : "")}>
+    {/* the table / list */}
+  </div>
+  {selected && (
+    <aside className="flex h-full w-full shrink-0 flex-col border-l border-border bg-surface md:w-[400px]">
+      {/* detail — owns its own header + close → setSelected(null) */}
+    </aside>
+  )}
+</div>
+```
+
+**Secondary toolbar + dual search.** One value, two inputs (navbar on `md+`, strip on mobile); focus
+whichever is *visible* — a hidden input's `offsetParent` is `null`.
+
+```tsx
+const focusSearch = () => {
+  const m = searchMobileRef.current;
+  (m && m.offsetParent !== null ? m : searchRef.current)?.focus();
+};
+
+{selected == null && (
+  <div className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2 md:hidden">
+    <InputGroup ref={searchMobileRef} fill leftIcon="search" value={q} onChange={onQ} />
+    <Button intent="success" aria-label="New" icon={<Icon icon="plus" className="!text-current" />} onClick={onNew} />
+  </div>
+)}
+```
+
+**Dense table ↔ stacked cards.** Render both; the `min-w-[…]` keeps the desktop table honest.
+
+```tsx
+<div className="flex flex-col gap-2 md:hidden">
+  {rows.map((r) => <RowCard key={r.id} row={r} /* tags+kebab · title+subtitle · meta row */ />)}
+</div>
+<div className="hidden overflow-x-auto rounded-bp border border-border bg-surface md:block">
+  <HTMLTable interactive striped className="w-full min-w-[920px]">{/* … */}</HTMLTable>
+</div>
+```
+
 ## Verifying responsive work
 
 Check new/divergent surfaces at **~390 (phone), 768 (`md` seam), 1440 (desktop)** — in **both light and
