@@ -31,7 +31,9 @@ The default register is **dense desktop**, but mithril is evolving toward genuin
 mobile-friendliness (a deliberate departure from the desktop-only systems this look descends from) —
 so "this is for mobile too" is in-scope, not a reason to redirect. Where a pattern is desktop-dense
 by nature (a 24-column dashboard grid, a multi-pane terminal), say so and offer the responsive
-adaptation rather than refusing.
+adaptation rather than refusing. For the canonical desktop→mobile reflow of each shell element
+(rail → hamburger drawer, pinned inspector → full-screen, table → stacked cards, KPI row → 2-up) plus
+touch targets and where breakpoints live, see [mobile.md](references/mobile.md).
 
 > Mental model: **Bloomberg Terminal × modern web app**, with a mission-control inflection.
 
@@ -123,6 +125,7 @@ This skill is split into reference files. Read the one(s) that match the task �
 | Understand the inspirations behind this aesthetic and what each contributes | [inspirations.md](references/inspirations.md) |
 | Pick typography, spacing, color, icons, motion, elevation, data-viz ramps — the token vocabulary | [visual-foundations.md](references/visual-foundations.md) |
 | Compose a whole page (left rail, top bar, panel layout, object-detail view, builder/canvas surfaces) | [layout-and-shell.md](references/layout-and-shell.md) |
+| Adapt a dense desktop surface to mobile/responsive (rail→drawer, inspector→full-screen, table→cards, KPI 2-up, touch targets) | [mobile.md](references/mobile.md) |
 | Build an AI surface (chat side-panel, tool-call traces, streaming, citations, eval/observability) | [ai-surfaces.md](references/ai-surfaces.md) |
 | Build a data-table-heavy or maximally-austere "IBM/enterprise" variant, or use flat layering instead of shadows | [carbon.md](references/carbon.md) |
 | Build an observability/monitoring dashboard (panel grid, time-range, thresholds, alert states) — Grafana-style | [observability-surfaces.md](references/observability-surfaces.md) |
@@ -148,8 +151,12 @@ When the user describes what they're building:
    governs the *wiring*.
 5. **For any data-density question, default to "more compact than feels right."** Consumer-app
    instincts will mislead you here.
-6. **Verify the way the repo verifies.** Eyeball new/divergent surfaces in the gallery (`pnpm dev` →
-   :5173) in **both** themes; `pnpm build` + `pnpm test` stay green.
+6. **Verify the way the repo verifies.** Eyeball new/divergent surfaces in the gallery in **both**
+   themes **and at desktop + mobile widths** (~390 / 768 / 1440 — see [mobile.md](references/mobile.md));
+   `pnpm build` + `pnpm test` stay green. Run the dev server with `pnpm dev` → :5173, or under
+   [`tap`](https://www.npmjs.com/package/@cerebralutopia/tap) for queryable logs + restart-on-demand
+   (`npm i -g @cerebralutopia/tap`; `tap run mithril pnpm dev`, then `tap observe mithril` /
+   `tap restart mithril`).
 
 ## Durable gotcha
 
