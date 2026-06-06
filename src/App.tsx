@@ -74,7 +74,7 @@ import { OverflowList } from "@/components/ui/overflow-list";
 import { Portal } from "@/components/ui/portal";
 
 import { DarkContext } from "@/lib/dark-context";
-import { AppChromeProvider, AppChromeControls, type AppChrome } from "@/lib/app-chrome";
+import { AppChromeProvider, AppChromeControls, type AppChrome, type ThemeMode } from "@/lib/app-chrome";
 import { ICON_GLYPHS, registerIcons } from "@/components/ui/icons/all";
 
 // The gallery and demos render icons by name (`<… icon="cog" />`), the dynamic
@@ -6250,15 +6250,31 @@ export default function App() {
         );
     }
 
-    // Light/dark is owned per app; the theme (seed colors) is global — driven by the Theme
-    // Builder and applied as document-root overrides, so it's shared across every app.
-    const [darkByApp, setDarkByApp] = useState<Record<ChromeAppId, boolean>>(
-        () => Object.fromEntries(CHROME_APP_IDS.map((id) => [id, INITIAL_DARK])) as Record<ChromeAppId, boolean>,
+    // Appearance mode is owned per app; the theme (seed colors) is global — driven by the
+    // Theme Builder and applied as document-root overrides, so it's shared across every app.
+    // `?theme=dark` forces an explicit dark start; otherwise apps follow the OS preference.
+    const [modeByApp, setModeByApp] = useState<Record<ChromeAppId, ThemeMode>>(
+        () =>
+            Object.fromEntries(
+                CHROME_APP_IDS.map((id) => [id, INITIAL_DARK ? "dark" : "system"]),
+            ) as Record<ChromeAppId, ThemeMode>,
     );
+    // Track the OS preference so `mode === "system"` resolves live.
+    const [systemDark, setSystemDark] = useState(
+        () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
+    );
+    useEffect(() => {
+        const mq = window.matchMedia("(prefers-color-scheme: dark)");
+        const onChange = () => setSystemDark(mq.matches);
+        mq.addEventListener("change", onChange);
+        return () => mq.removeEventListener("change", onChange);
+    }, []);
+
     const hash = useHash();
     const route = parseRoute(hash);
     const activeId = route.appId;
-    const dark = darkByApp[activeId];
+    const mode = modeByApp[activeId];
+    const dark = mode === "dark" || (mode === "system" && systemDark);
 
     // The global Theme Builder: its seed overrides live on the document root, so every app
     // (landing, showcase, demos) and all portaled content re-tint together. The editor panel
@@ -6271,7 +6287,9 @@ export default function App() {
             window.location.hash = "";
         },
         dark,
-        toggleDark: () => setDarkByApp((d) => ({ ...d, [activeId]: !d[activeId] })),
+        mode,
+        setMode: (m) => setModeByApp((s) => ({ ...s, [activeId]: m })),
+        toggleDark: () => setModeByApp((s) => ({ ...s, [activeId]: dark ? "light" : "dark" })),
         themeNames: builder.themeNames,
         selectedTheme: builder.selectedName,
         selectTheme: builder.selectTheme,
