@@ -1011,10 +1011,10 @@ export const COMPONENT_META: Record<string, ComponentMeta> = {
         "title": "MultistepDialog",
         "description": "A wizard Dialog with a numbered step rail and back/next navigation across ordered steps.",
         "tests": {
-            "total": 12,
+            "total": 16,
             "a11y": 1,
             "keyboard": 1,
-            "behavior": 10
+            "behavior": 14
         },
         "rsc": false,
         "portal": false,
