@@ -111,6 +111,14 @@ export interface AlertProps {
      * containing block so the alert's `fixed` backdrop/panel resolve against it).
      */
     portalContainer?: HTMLElement | null;
+    /**
+     * Whether the alert is modal. Forwarded to Radix `Dialog.Root`. When true
+     * (default), Radix traps focus and locks `<body>` scroll while open. Set false
+     * for an embedded/preview alert (e.g. confined to a stage via `portalContainer`)
+     * so the rest of the page stays scrollable and interactive.
+     * @default true
+     */
+    modal?: boolean;
     /** Additional class on the alert panel element. */
     className?: string;
     /** Inline styles on the alert panel element. */
@@ -156,6 +164,7 @@ export function Alert({
     canOutsideClickCancel = false,
     dark = false,
     portalContainer,
+    modal = true,
     className,
     style,
     children,
@@ -189,7 +198,7 @@ export function Alert({
     const hasIcon = icon != null && icon !== false;
 
     return (
-        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={modal}>
             <RadixDialog.Portal container={portalContainer}>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                     See dialog.tsx for full explanation. Same pattern required for all portaled

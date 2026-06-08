@@ -228,6 +228,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Intent applied to the confirm button and icon color."
                 },
                 {
+                    "name": "modal",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Whether the alert is modal. Forwarded to Radix `Dialog.Root`. When true (default), Radix traps focus and locks `<body>` scroll while open. Set false for an embedded/preview alert (e.g. confined to a stage via `portalContainer`) so the rest of the page stays scrollable and interactive."
+                },
+                {
                     "name": "onCancel",
                     "type": "((event?: SyntheticEvent<HTMLElement, Event>) => void)",
                     "required": false,
@@ -1924,6 +1931,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "description": "Icon rendered in the header before the title. An icon-name string (e.g. `\"cog\"`) or a custom element."
                 },
                 {
+                    "name": "modal",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Whether the dialog is modal. Forwarded to Radix `Dialog.Root`. When true (default), Radix traps focus and locks `<body>` scroll while open. Set false for an embedded/preview dialog (e.g. confined to a stage via `portalContainer`) so the rest of the page stays scrollable and interactive."
+                },
+                {
                     "name": "onOpenChange",
                     "type": "((open: boolean) => void)",
                     "required": false,
@@ -2090,6 +2104,13 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": null,
                     "description": "Icon rendered in the header before the title. An icon-name string (e.g. `\"cog\"`) or a custom element."
+                },
+                {
+                    "name": "modal",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Whether the drawer is modal. Forwarded to Radix `Dialog.Root`. When true (default), Radix traps focus and locks `<body>` scroll while open. Set false for an embedded/preview drawer (e.g. confined to a stage via `portalContainer`) so the rest of the page stays scrollable and interactive."
                 },
                 {
                     "name": "onOpenChange",
@@ -3503,6 +3524,20 @@ export const COMPONENT_PROPS: Record<string, ComponentApiDoc[]> = {
                     "required": false,
                     "defaultValue": "0",
                     "description": "Initial active step index (uncontrolled)."
+                },
+                {
+                    "name": "modal",
+                    "type": "boolean",
+                    "required": false,
+                    "defaultValue": "true",
+                    "description": "Whether the dialog is modal. Forwarded to Radix `Dialog.Root`. When true (default), Radix traps focus and locks `<body>` scroll while open. Set false for an embedded/preview dialog (e.g. confined to a stage via `portalContainer`) so the rest of the page stays scrollable and interactive."
+                },
+                {
+                    "name": "navigationPosition",
+                    "type": "\"left\" | \"top\"",
+                    "required": false,
+                    "defaultValue": "left",
+                    "description": "Where the step navigation sits relative to the content. - `\"left\"` (default): a vertical rail beside the content on tablet+, collapsing to a horizontal step strip above the content on narrow / mobile screens. - `\"top\"`: a horizontal step strip above the content at every width."
                 },
                 {
                     "name": "nextButtonProps",

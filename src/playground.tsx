@@ -252,6 +252,30 @@ const SKELETON_CLASS: Record<string, string> = {
 const SIDES: EnumOption[] = [{ value: "top" }, { value: "right" }, { value: "bottom" }, { value: "left" }];
 const ALIGNS: EnumOption[] = [{ value: "start" }, { value: "center" }, { value: "end" }];
 const DRAWER_POSITIONS: EnumOption[] = [{ value: "left" }, { value: "right" }, { value: "top" }, { value: "bottom" }];
+const MULTISTEP_STEP_COUNTS: EnumOption[] = [
+    { value: "3" },
+    { value: "5" },
+    { value: "7" },
+    { value: "10" },
+    { value: "15" },
+];
+// Generic wizard steps inserted between "Members" and "Review" so the MultistepDialog
+// playground can show larger step counts (5/7/10/15) — handy for exercising step overflow.
+// Up to 12 entries → 2 curated leading steps + 12 + the Review finale = 15 max.
+const MULTISTEP_EXTRA_STEPS = [
+    { id: "resources", title: "Resources" },
+    { id: "schedule", title: "Schedule" },
+    { id: "integrations", title: "Integrations" },
+    { id: "permissions", title: "Permissions" },
+    { id: "notifications", title: "Notifications" },
+    { id: "automation", title: "Automation" },
+    { id: "advanced", title: "Advanced settings" },
+    { id: "billing", title: "Billing" },
+    { id: "security", title: "Security" },
+    { id: "compliance", title: "Compliance" },
+    { id: "monitoring", title: "Monitoring" },
+    { id: "webhooks", title: "Webhooks" },
+];
 const OMNIBAR_ITEMS = ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape", "Honeydew"];
 const TOAST_ICONS: EnumOption[] = [
     { value: "", label: "none" },
@@ -1932,7 +1956,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 <Button intent="primary" onClick={() => ctx.setOpen(true)}>
                     Open dialog
                 </Button>
-                <Dialog open={ctx.open} onOpenChange={ctx.setOpen} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} dark={ctx.dark}>
+                <Dialog open={ctx.open} onOpenChange={ctx.setOpen} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} modal={false} dark={ctx.dark}>
                     <DialogBody>
                         <p className="m-0 text-body text-foreground">
                             This is the dialog body. It can hold forms, messages, or any layout.
@@ -1981,7 +2005,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 <Button intent="primary" onClick={() => ctx.setOpen(true)}>
                     Open drawer
                 </Button>
-                <Drawer open={ctx.open} onOpenChange={ctx.setOpen} position={p.position} size={p.size} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} dark={ctx.dark}>
+                <Drawer open={ctx.open} onOpenChange={ctx.setOpen} position={p.position} size={p.size} title={p.title} icon={<Icon icon="info-sign" />} closeButton={p.closeButton} portalContainer={ctx.portalContainer} modal={false} dark={ctx.dark}>
                     <DrawerBody className="p-5">
                         <p className="m-0 text-body text-foreground">
                             Drawer body content. Slides in from the chosen edge; the backdrop locks page scroll.
@@ -2035,6 +2059,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     onConfirm={() => ctx.setOpen(false)}
                     onCancel={() => ctx.setOpen(false)}
                     portalContainer={ctx.portalContainer}
+                    modal={false}
                     dark={ctx.dark}
                 >
                     Are you sure? This action cannot be undone.
@@ -2058,29 +2083,47 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
         contained: true,
         cta: { text: "Click “Open wizard” to step through the dialog." },
         containedHeight: 560,
-        initial: { title: "Create project", initialStepIndex: 0 },
+        initial: { title: "Create project", initialStepIndex: 0, navigationPosition: "left", stepCount: "3" },
         controls: [
             { kind: "text", prop: "title" },
             { kind: "number", prop: "initialStepIndex", label: "start step", min: 0, max: 2, stepSize: 1 },
+            { kind: "enum", prop: "stepCount", label: "steps", options: MULTISTEP_STEP_COUNTS },
+            {
+                kind: "enum",
+                prop: "navigationPosition",
+                label: "nav position",
+                options: [{ value: "left" }, { value: "top" }],
+            },
         ],
-        render: (p, ctx) => (
+        render: (p, ctx) => {
+            // "3" reproduces the original demo (Project info · Members · Review). Larger
+            // counts pad the middle with generic steps so the wizard can show overflow.
+            const middleSteps = MULTISTEP_EXTRA_STEPS.slice(0, Math.max(0, (Number(p.stepCount) || 3) - 3));
+            return (
             <>
                 <Button intent="primary" onClick={() => ctx.setOpen(true)}>
                     Open wizard
                 </Button>
                 <MultistepDialog
-                    // initialStepIndex only applies on mount; remount when it changes so the control works.
-                    key={String(p.initialStepIndex)}
+                    // initialStepIndex/stepCount only apply on mount; remount when either
+                    // changes so the controls take effect and the wizard resets cleanly.
+                    key={`${p.stepCount}-${p.initialStepIndex}`}
                     open={ctx.open}
                     onOpenChange={ctx.setOpen}
                     title={p.title}
                     icon={<Icon icon="projects" />}
                     initialStepIndex={p.initialStepIndex}
+                    navigationPosition={p.navigationPosition}
                     portalContainer={ctx.portalContainer}
+                    // Non-modal in the contained stage so the page (controls + code
+                    // below) stays scrollable while the preview dialog is open.
+                    modal={false}
                     dark={ctx.dark}
                     // The component's intrinsic width is 800px — wider than the contained stage,
                     // so it'd bleed to both edges here. Narrow it so the stage frames it with margin.
-                    className="!w-[640px] !min-w-0"
+                    // The component sets its 800px at the `sm` breakpoint, so the override must
+                    // also target `sm` to win (an unprefixed override loses to the sm media query).
+                    className="!w-[640px] !min-w-0 sm:!w-[640px]"
                     finalButtonProps={{ children: "Create", onClick: () => ctx.setOpen(false) }}
                 >
                     <DialogStep
@@ -2126,6 +2169,23 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                             </div>
                         }
                     />
+                    {middleSteps.map((s) => (
+                        <DialogStep
+                            key={s.id}
+                            id={s.id}
+                            title={s.title}
+                            panel={
+                                <div key={s.id} className="flex flex-col gap-4 p-5">
+                                    <FormGroup label={`${s.title} option`} labelFor={`pg-ms-${s.id}`}>
+                                        <InputGroup id={`pg-ms-${s.id}`} placeholder={`Configure ${s.title.toLowerCase()}…`} fill />
+                                    </FormGroup>
+                                    <FormGroup label="Notes" labelFor={`pg-ms-${s.id}-notes`}>
+                                        <TextArea id={`pg-ms-${s.id}-notes`} rows={2} fill placeholder="Optional notes" />
+                                    </FormGroup>
+                                </div>
+                            }
+                        />
+                    ))}
                     <DialogStep
                         id="review"
                         title="Review"
@@ -2155,16 +2215,20 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                     />
                 </MultistepDialog>
             </>
-        ),
+            );
+        },
         code: (p) =>
             [
                 `const [open, setOpen] = useState(false);`,
                 ``,
                 `<Button onClick={() => setOpen(true)}>Open wizard</Button>`,
-                `<MultistepDialog open={open} onOpenChange={setOpen} title="${p.title}"${p.initialStepIndex ? ` initialStepIndex={${p.initialStepIndex}}` : ""} dark={dark}`,
+                `<MultistepDialog open={open} onOpenChange={setOpen} title="${p.title}"${p.initialStepIndex ? ` initialStepIndex={${p.initialStepIndex}}` : ""}${p.navigationPosition && p.navigationPosition !== "left" ? ` navigationPosition="${p.navigationPosition}"` : ""} dark={dark}`,
                 `  finalButtonProps={{ children: "Create" }}>`,
                 `  <DialogStep id="info" title="Project info" panel={…} />`,
                 `  <DialogStep id="members" title="Members" panel={…} />`,
+                ...MULTISTEP_EXTRA_STEPS.slice(0, Math.max(0, (Number(p.stepCount) || 3) - 3)).map(
+                    (s) => `  <DialogStep id="${s.id}" title="${s.title}" panel={…} />`,
+                ),
                 `  <DialogStep id="review" title="Review" panel={…} />`,
                 `</MultistepDialog>`,
             ].join("\n"),

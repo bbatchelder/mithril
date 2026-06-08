@@ -115,6 +115,14 @@ export interface DialogProps {
      * containing block so the dialog's `fixed` backdrop/panel resolve against it).
      */
     portalContainer?: HTMLElement | null;
+    /**
+     * Whether the dialog is modal. Forwarded to Radix `Dialog.Root`. When true
+     * (default), Radix traps focus and locks `<body>` scroll while open. Set false
+     * for an embedded/preview dialog (e.g. confined to a stage via `portalContainer`)
+     * so the rest of the page stays scrollable and interactive.
+     * @default true
+     */
+    modal?: boolean;
     /** Additional class on the dialog panel element. */
     className?: string;
     /** Inline styles on the dialog panel element. */
@@ -149,12 +157,13 @@ export function Dialog({
     canOutsideClickClose = true,
     dark = false,
     portalContainer,
+    modal = true,
     className,
     style,
     children,
 }: DialogProps) {
     return (
-        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={modal}>
             <RadixDialog.Portal container={portalContainer}>
                 {/* Dark-mode portal fix: wrap portal children in a div with the dark class.
                     The portal renders at document.body (outside the app's .dark ancestor),
@@ -189,8 +198,10 @@ export function Dialog({
                                 // overlay-3: rgba(20,20,20) hairline ring (light) + reordered
                                 // dark drop/highlight layers to match Blueprint exactly.
                                 "shadow-overlay-3",
-                                // Blueprint: width = $pt-spacing * 125 = 500px
-                                "w-[500px]",
+                                // Blueprint: width = $pt-spacing * 125 = 500px.
+                                // Cap to the viewport (less a 16px margin each side) so the
+                                // panel never overflows on narrow / mobile screens.
+                                "w-[500px] max-w-[calc(100vw-2rem)]",
                                 // Blueprint: margin = ($pt-spacing * 8) 0 = 32px top/bottom
                                 "my-8",
                                 // Restore pointer events (parent container disables them)

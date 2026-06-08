@@ -124,6 +124,14 @@ export interface DrawerProps {
      * containing block so the drawer's `fixed` backdrop/panel resolve against it).
      */
     portalContainer?: HTMLElement | null;
+    /**
+     * Whether the drawer is modal. Forwarded to Radix `Dialog.Root`. When true
+     * (default), Radix traps focus and locks `<body>` scroll while open. Set false
+     * for an embedded/preview drawer (e.g. confined to a stage via `portalContainer`)
+     * so the rest of the page stays scrollable and interactive.
+     * @default true
+     */
+    modal?: boolean;
     /** Additional class on the drawer panel element. */
     className?: string;
     /** Inline styles on the drawer panel element (merged with position/size styles). */
@@ -164,6 +172,7 @@ export function Drawer({
     canOutsideClickClose = true,
     dark = false,
     portalContainer,
+    modal = true,
     className,
     style,
     children,
@@ -198,7 +207,7 @@ export function Drawer({
     };
 
     return (
-        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+        <RadixDialog.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={modal}>
             <RadixDialog.Portal container={portalContainer}>
                 {/* No wrapper div here. RadixDialog.Portal wraps EACH of its direct children in
                     its own <Presence present={open}>; a plain wrapper would be that Presence child

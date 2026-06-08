@@ -36,7 +36,7 @@
  *   completed steps tinted; titles use the standard text color.
  */
 
-import { Children, isValidElement, useState } from "react";
+import { Children, isValidElement, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "./button";
 import { Dialog, DialogFooter, type DialogProps } from "./dialog";
@@ -85,6 +85,14 @@ export interface MultistepDialogProps
     nextButtonProps?: StepButtonProps;
     /** Props for the final/submit button shown on the last step. */
     finalButtonProps?: StepButtonProps;
+    /**
+     * Where the step navigation sits relative to the content.
+     * - `"left"` (default): a vertical rail beside the content on tablet+, collapsing
+     *   to a horizontal step strip above the content on narrow / mobile screens.
+     * - `"top"`: a horizontal step strip above the content at every width.
+     * @default "left"
+     */
+    navigationPosition?: "left" | "top";
 }
 
 function readSteps(children: React.ReactNode): DialogStepProps[] {
@@ -104,9 +112,13 @@ export function MultistepDialog({
     backButtonProps,
     nextButtonProps,
     finalButtonProps,
+    navigationPosition = "left",
     className,
     ...dialogProps
 }: MultistepDialogProps) {
+    // `"top"` forces the horizontal step strip at every width; `"left"` is the classic
+    // vertical rail that only collapses to the strip on narrow / mobile screens.
+    const horizontal = navigationPosition === "top";
     const steps = readSteps(children);
     const lastIndex = Math.max(0, steps.length - 1);
     const clamp = (i: number) => Math.min(Math.max(i, 0), lastIndex);
@@ -128,6 +140,13 @@ export function MultistepDialog({
     const activeStep = steps[current];
     const isLast = current === lastIndex;
 
+    // Keep the active step visible when the rail scrolls — with many steps the rail/strip
+    // overflows, so jumping or stepping to an off-screen step scrolls it back into view.
+    const activeTabRef = useRef<HTMLButtonElement>(null);
+    useEffect(() => {
+        activeTabRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }, [current]);
+
     // Merge top-level footer button props with any per-step overrides.
     const { children: backLabel, ...backRest } = { ...backButtonProps, ...activeStep?.backButtonProps };
     const { children: nextLabel, ...nextRest } = { ...nextButtonProps, ...activeStep?.nextButtonProps };
@@ -136,22 +155,51 @@ export function MultistepDialog({
     return (
         <Dialog
             {...dialogProps}
-            // Blueprint multistep dialog: min-width 800px (vs a plain Dialog's 500px).
-            className={cn("!w-[800px] !min-w-[800px]", className)}
+            // Blueprint multistep dialog: 800px wide (vs a plain Dialog's 500px) on
+            // tablet+ screens. On narrow / mobile viewports it falls back to full width
+            // (capped to the viewport by the base Dialog's max-width) so it never
+            // overflows horizontally — paired with the rail/panel stacking below. The
+            // height cap + scrollable step content keep the footer nav reachable on
+            // short screens.
+            className={cn("w-full max-h-[calc(100dvh-4rem)] sm:!w-[800px]", className)}
         >
-            {/* Panels row: left step rail (flex 1) + right content panel (flex 3). */}
-            <div data-compare="multistep-panels" className="flex min-h-0 flex-1">
+            {/* Panels: a horizontal step strip over the content (always, when
+                navigationPosition="top"; on narrow screens otherwise); the classic
+                left rail (flex 1) + right content panel (flex 3) on tablet+. */}
+            <div
+                data-compare="multistep-panels"
+                className={cn("flex min-h-0 flex-1 flex-col", !horizontal && "sm:flex-row")}
+            >
                 {/* ── Step rail ─────────────────────────────────────────────── */}
                 <div
-                    role="tablist"
-                    aria-label="steps"
                     data-compare="multistep-rail"
                     className={cn(
-                        "flex flex-1 flex-col",
-                        // Dark rail backdrop + bottom-left rounding to follow the dialog radius.
-                        "dark:rounded-bl-mithril dark:border-b dark:border-l dark:border-[rgba(255,255,255,0.2)] dark:bg-[#252a31]",
+                        // Visual rail container. As a strip it sizes to its one row; as the
+                        // vertical rail it's the positioning context (sm:relative) for the
+                        // scroll area and contributes no intrinsic height — so the panel, not
+                        // the step count, drives the dialog height.
+                        "flex flex-none",
+                        // Dark rail backdrop (border color shared; sides toggled below).
+                        "dark:border-[rgba(255,255,255,0.2)] dark:bg-[#252a31]",
+                        // "left": become the vertical rail on tablet+. The left + bottom
+                        // borders and bottom-left rounding only apply to that rail; strip
+                        // separation comes from the panel's top border instead.
+                        !horizontal &&
+                            "sm:relative sm:flex-1 sm:dark:rounded-bl-mithril sm:dark:border-b sm:dark:border-l",
                     )}
                 >
+                    {/* Scroll area (also the tablist). Strip: scrolls horizontally. Vertical
+                        rail: absolutely fills the container and scrolls vertically, so a long
+                        list of steps scrolls within the dialog instead of stretching it. */}
+                    <div
+                        role="tablist"
+                        aria-label="steps"
+                        className={cn(
+                            "flex w-full flex-row overflow-x-auto",
+                            !horizontal &&
+                                "sm:absolute sm:inset-0 sm:w-auto sm:flex-col sm:overflow-x-visible sm:overflow-y-auto",
+                        )}
+                    >
                     {steps.map((step, i) => {
                         const isActive = i === current;
                         const isViewed = i <= maxVisited; // viewed ⇒ navigable
@@ -165,8 +213,12 @@ export function MultistepDialog({
                                 role="presentation"
                                 data-compare={isActive ? "multistep-step-active" : undefined}
                                 className={cn(
-                                    // Step container: bg keyed on viewed; divider between steps.
-                                    "border-b border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
+                                    // Step container: bg keyed on viewed; divider between steps —
+                                    // between columns on the strip (border-r), between rows on the
+                                    // vertical rail (border-b). Never shrink the items: in either
+                                    // orientation they keep their natural size and the rail scrolls.
+                                    "shrink-0 border-r border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
+                                    !horizontal && "sm:border-r-0 sm:border-b",
                                     isViewed
                                         ? "bg-white dark:bg-[#383e47]"
                                         : "bg-[#f6f7f9] dark:bg-[#2f343c]",
@@ -174,6 +226,7 @@ export function MultistepDialog({
                             >
                                 {/* Inner step row (Blueprint `.dialog-step`): margin 4px, padding 6/14. */}
                                 <button
+                                    ref={isActive ? activeTabRef : undefined}
                                     type="button"
                                     role="tab"
                                     aria-selected={isActive}
@@ -181,7 +234,8 @@ export function MultistepDialog({
                                     disabled={!isViewed}
                                     onClick={(e) => goTo(i, e)}
                                     className={cn(
-                                        "m-1 flex w-[calc(100%-8px)] items-center rounded-mithril bg-transparent px-[14px] py-[6px] text-left text-[14px]",
+                                        "m-1 flex w-auto items-center rounded-mithril bg-transparent px-[14px] py-[6px] text-left text-[14px]",
+                                        !horizontal && "sm:w-[calc(100%-8px)]",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         "enabled:cursor-pointer enabled:hover:bg-[#f6f7f9] dark:enabled:hover:bg-[#2f343c]",
                                         "disabled:cursor-not-allowed",
@@ -218,18 +272,27 @@ export function MultistepDialog({
                             </div>
                         );
                     })}
+                    </div>
                 </div>
 
                 {/* ── Right panel: active step content + footer ─────────────── */}
                 <div
                     data-compare="multistep-panel"
                     className={cn(
-                        "min-w-0 flex-[3] rounded-br-mithril",
+                        "flex min-h-0 min-w-0 flex-1 flex-col rounded-br-mithril",
                         "bg-[#f6f7f9] dark:bg-[#2f343c]",
-                        "border-l border-[rgba(17,20,24,0.15)] dark:border-b dark:border-r dark:border-[rgba(255,255,255,0.2)]",
+                        // Divider from the rail: a top border when the strip is stacked
+                        // above, a left border beside the vertical rail (tablet+, "left").
+                        "border-t border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
+                        !horizontal && "sm:flex-[3] sm:border-t-0 sm:border-l",
+                        "dark:border-b dark:border-r",
                     )}
                 >
-                    {activeStep?.panel}
+                    {/* Step content scrolls when it outgrows the (height-capped) dialog,
+                        keeping the footer nav visible — essential on short/mobile screens.
+                        The `sm` min-height gives the vertical rail a comfortable floor so a
+                        short step's panel doesn't collapse the dialog (and the rail) too far. */}
+                    <div className="min-h-0 flex-1 overflow-y-auto sm:min-h-[16rem]">{activeStep?.panel}</div>
                     <DialogFooter
                         actions={
                             <>
