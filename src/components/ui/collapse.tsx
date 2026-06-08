@@ -226,11 +226,11 @@ export function Collapse({
         Tag,
         {
             ...rest,
-            className: cn("bp6-collapse", className),
+            className: cn("mithril-collapse", className),
             style: containerStyle,
         },
         <div
-            className="bp6-collapse-body"
+            className="mithril-collapse-body"
             ref={bodyRefCallback}
             style={bodyStyle}
             aria-hidden={!isVisible}

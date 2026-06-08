@@ -2880,8 +2880,8 @@ function TabsGallery() {
  * Collapse showcase. Inline (no portal) — dark via .dark ancestor.
  *
  * data-compare keys (must match blueprint-reference CollapseGallery exactly):
- *   collapse-open  — the open .bp6-collapse outer container (overflowY, height)
- *   collapse-body  — the .bp6-collapse-body inner element (transform)
+ *   collapse-open  — the open .mithril-collapse outer container (overflowY, height)
+ *   collapse-body  — the .mithril-collapse-body inner element (transform)
  *
  * We use an open Collapse containing identical content on both sides so the
  * measured height matches. The open state is the meaningful comparison: Blueprint
@@ -2893,8 +2893,8 @@ function TabsGallery() {
  */
 function CollapseGallery() {
     useEffect(() => {
-        // Tag the .bp6-collapse-body inside the open collapse specimen.
-        const body = document.querySelector('[data-compare="collapse-open"] .bp6-collapse-body');
+        // Tag the .mithril-collapse-body inside the open collapse specimen.
+        const body = document.querySelector('[data-compare="collapse-open"] .mithril-collapse-body');
         if (body) body.setAttribute("data-compare", "collapse-body");
     }, []);
 
@@ -3191,7 +3191,7 @@ function TreeGallery() {
 
     useEffect(() => {
         if (!treeRef.current) return;
-        // mithril Tree renders .bp6-tree-node-content divs for each node row.
+        // mithril Tree renders .mithril-tree-node-content divs for each node row.
         // DOM order matches Blueprint reference exactly (pre-order traversal).
         // 0: Documents (depth 0, expanded, has caret)
         // 1: Annual Report 2025 (depth 1, has icon + secondaryLabel) → tree-node-content
@@ -3200,21 +3200,21 @@ function TreeGallery() {
         // 4: blueprint-ref (depth 2, leaf)
         // 5: Drafts (depth 0, collapsed)
         // 6: Trash (depth 0, disabled)
-        const rows = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-content");
+        const rows = treeRef.current.querySelectorAll<HTMLElement>(".mithril-tree-node-content");
         if (rows[1]) rows[1].setAttribute("data-compare", "tree-node-content");
         if (rows[3]) rows[3].setAttribute("data-compare", "tree-node-selected");
 
         // Caret spans (expandable nodes): Documents (0), Projects (2)
-        const carets = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret");
+        const carets = treeRef.current.querySelectorAll<HTMLElement>(".mithril-tree-node-caret");
         if (carets[0]) carets[0].setAttribute("data-compare", "tree-node-caret");
 
         // Caret-none spans (leaf nodes): Annual Report 2025 is first leaf at depth 1
-        const caretNones = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-caret-none");
+        const caretNones = treeRef.current.querySelectorAll<HTMLElement>(".mithril-tree-node-caret-none");
         if (caretNones[0]) caretNones[0].setAttribute("data-compare", "tree-node-caret-none");
 
         // Icon span on "Annual Report 2025" (second node in DOM order):
-        // .bp6-tree-node-icon is the class on icon spans within that content row.
-        const icons = treeRef.current.querySelectorAll<HTMLElement>(".bp6-tree-node-icon");
+        // .mithril-tree-node-icon is the class on icon spans within that content row.
+        const icons = treeRef.current.querySelectorAll<HTMLElement>(".mithril-tree-node-icon");
         if (icons[1]) icons[1].setAttribute("data-compare", "tree-node-icon");
     }, []);
 

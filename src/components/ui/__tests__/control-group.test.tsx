@@ -90,9 +90,9 @@ describe("ControlGroup", () => {
     // Intent tiers key off data-intent; :not(:disabled)/:where() keep ties off Tailwind emit order.
     expect(cls).toContain("[&_input[data-intent]:not(:disabled)]:z-[7]");
     expect(cls).toContain("[&_input[data-intent]:not(:disabled):focus]:z-[9]");
-    // Button tiers match :where(button, .bp6-button) so they reach <a>-rendered buttons too.
-    expect(cls).toContain("[&_:where(button,.bp6-button)[data-intent]:not(:disabled)]:z-[6]");
-    expect(cls).toContain("[&_:where(button,.bp6-button)]:z-[4]");
+    // Button tiers match :where(button, .mithril-button) so they reach <a>-rendered buttons too.
+    expect(cls).toContain("[&_:where(button,.mithril-button)[data-intent]:not(:disabled)]:z-[6]");
+    expect(cls).toContain("[&_:where(button,.mithril-button)]:z-[4]");
     expect(cls).toContain("[&_[data-select-caret]]:z-[11]");
   });
 
@@ -110,7 +110,7 @@ describe("ControlGroup", () => {
     expect(screen.getByRole("button", { name: "Plain" })).not.toHaveAttribute("data-intent");
   });
 
-  it("makes <a>-rendered buttons (asChild / AnchorButton) targetable via the .bp6-button marker", () => {
+  it("makes <a>-rendered buttons (asChild / AnchorButton) targetable via the .mithril-button marker", () => {
     render(
       <ControlGroup>
         <AnchorButton href="#" intent="success">
@@ -121,17 +121,17 @@ describe("ControlGroup", () => {
         </Button>
       </ControlGroup>,
     );
-    // Both render <a>, so the `button` element selector can't reach them — the .bp6-button
+    // Both render <a>, so the `button` element selector can't reach them — the .mithril-button
     // marker (from buttonVariants) + data-intent are what let ControlGroup's tiers apply.
     // (The enabled AnchorButton with an href is a real link, hence the `link` role.)
     const anchorBtn = screen.getByRole("link", { name: "Link" });
     expect(anchorBtn.tagName).toBe("A");
-    expect(anchorBtn).toHaveClass("bp6-button");
+    expect(anchorBtn).toHaveClass("mithril-button");
     expect(anchorBtn).toHaveAttribute("data-intent", "success");
 
     const asChild = screen.getByRole("link", { name: "As child" });
     expect(asChild.tagName).toBe("A");
-    expect(asChild).toHaveClass("bp6-button");
+    expect(asChild).toHaveClass("mithril-button");
     expect(asChild).toHaveAttribute("data-intent", "warning");
   });
 

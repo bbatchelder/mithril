@@ -216,7 +216,7 @@ export const PanelStack = forwardRef<HTMLDivElement, PanelStackProps>(function P
                 // .bp6-panel-stack2: position:relative, overflow:hidden
                 "relative overflow-hidden",
                 // Direction class mirrors Blueprint's push/pop class for CSS targeting
-                direction === "push" ? "bp6-panel-stack2-push" : "bp6-panel-stack2-pop",
+                direction === "push" ? "mithril-panel-stack2-push" : "mithril-panel-stack2-pop",
                 className,
             )}
             {...htmlProps}
@@ -397,7 +397,7 @@ function PanelContent({
 // Blueprint's transition: 400ms ease, push = enter from right, exit to left;
 // pop = enter from left, exit to right. We implement this with a global style
 // block injected once. The parent container gets a direction class
-// (.bp6-panel-stack2-push / .bp6-panel-stack2-pop) and the panels animate in/out.
+// (.mithril-panel-stack2-push / .mithril-panel-stack2-pop) and the panels animate in/out.
 //
 // For the static gallery specimen (pre-pushed stack of 2), no animation fires —
 // the computed-style diff sees only the resting state (transform: none, opacity: 1).

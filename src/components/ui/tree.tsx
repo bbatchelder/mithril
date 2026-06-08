@@ -161,7 +161,7 @@ export const Tree = forwardRef<HTMLDivElement, TreeProps>(function Tree(
             className={cn(
                 // .bp6-tree: position:relative so hover/selection can extend full width
                 "relative cursor-default",
-                compact && "bp6-compact",
+                compact && "mithril-compact",
                 className,
             )}
             {...htmlProps}
@@ -309,7 +309,7 @@ function TreeNodeItem({
                 // .bp6-tree-node base
                 "list-none",
                 isDisabled && "cursor-not-allowed",
-                isSelected && "bp6-tree-node-selected",
+                isSelected && "mithril-tree-node-selected",
                 node.className,
             )}
         >
@@ -317,7 +317,7 @@ function TreeNodeItem({
             <div
                 className={cn(
                     // Identifiable class for DOM queries / harness tagging
-                    "bp6-tree-node-content",
+                    "mithril-tree-node-content",
                     // Base layout
                     "flex items-center w-full",
                     // Height: 30px standard / 24px compact
@@ -349,7 +349,7 @@ function TreeNodeItem({
                     <span
                         className={cn(
                             // Identifiable class for DOM queries
-                            "bp6-tree-node-caret",
+                            "mithril-tree-node-caret",
                             // .bp6-tree-node-caret: min-width: 30px; padding: 8px; cursor: pointer
                             // compact: min-width: 24px; padding: 4px; margin-right: 3px
                             compact ? "min-w-[24px] p-[4px]" : "min-w-[30px] p-[8px]",
@@ -387,7 +387,7 @@ function TreeNodeItem({
                     <span
                         className={cn(
                             // Identifiable class for DOM queries
-                            "bp6-tree-node-caret-none",
+                            "mithril-tree-node-caret-none",
                             // .bp6-tree-node-caret-none: same min-width as caret, no glyph
                             compact ? "min-w-[24px]" : "min-w-[30px]",
                             "inline-block shrink-0",
@@ -403,7 +403,7 @@ function TreeNodeItem({
                         tabIndex={-1}
                         className={cn(
                             // Identifiable class for DOM queries
-                            "bp6-tree-node-icon",
+                            "mithril-tree-node-icon",
                             // .bp6-tree-node-icon: margin-right: $tree-icon-spacing = 8px
                             "mr-2 relative shrink-0",
                             isSelected
