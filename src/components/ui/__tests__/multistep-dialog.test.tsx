@@ -125,4 +125,43 @@ describe("MultistepDialog", () => {
         renderWizard({ open: false });
         expect(screen.queryByText("Panel one content")).not.toBeInTheDocument();
     });
+
+    it("defaults to the responsive left rail (vertical on tablet+)", () => {
+        renderWizard();
+        const panels = document.querySelector('[data-compare="multistep-panels"]');
+        expect(panels?.className).toContain("sm:flex-row");
+        // The rail switches to a vertical column at the sm breakpoint.
+        expect(screen.getByRole("tablist", { name: "steps" }).className).toContain("sm:flex-col");
+    });
+
+    it("navigationPosition='top' keeps the step strip horizontal at all widths", () => {
+        renderWizard({ navigationPosition: "top" });
+        const panels = document.querySelector('[data-compare="multistep-panels"]');
+        // Content always stacks below the strip — no horizontal split at sm+.
+        expect(panels?.className).toContain("flex-col");
+        expect(panels?.className).not.toContain("sm:flex-row");
+        // The rail never switches to the vertical column layout.
+        expect(screen.getByRole("tablist", { name: "steps" }).className).not.toContain("sm:flex-col");
+    });
+
+    it("the rail is an independent scroll region so many steps don't grow the dialog", () => {
+        renderWizard();
+        // Strip scrolls horizontally; the vertical rail fills its container (absolute)
+        // and scrolls vertically rather than inflating the dialog height.
+        const rail = screen.getByRole("tablist", { name: "steps" });
+        expect(rail.className).toContain("overflow-x-auto");
+        expect(rail.className).toContain("sm:absolute");
+        expect(rail.className).toContain("sm:overflow-y-auto");
+    });
+
+    it("scrolls the active step into view when the step changes", () => {
+        const scrollIntoView = vi
+            .spyOn(HTMLElement.prototype, "scrollIntoView")
+            .mockImplementation(() => {});
+        renderWizard();
+        scrollIntoView.mockClear();
+        fireEvent.click(next()!);
+        expect(scrollIntoView).toHaveBeenCalled();
+        scrollIntoView.mockRestore();
+    });
 });
