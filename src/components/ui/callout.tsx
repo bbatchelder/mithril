@@ -174,7 +174,7 @@ export const Callout = forwardRef<HTMLDivElement, CalloutProps>(function Callout
             {...divProps}
             className={cn(
                 // Base structure — mirrors .bp6-callout running-typography
-                "relative w-full rounded-bp",
+                "relative w-full rounded-mithril",
                 // running-typography: font-size:14px, line-height:1.5
                 "text-[14px] leading-[1.5]",
                 // Non-minimal background: rgba(gray3, 0.15) light / rgba(gray3, 0.2) dark

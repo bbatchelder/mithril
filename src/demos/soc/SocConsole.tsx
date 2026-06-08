@@ -599,7 +599,7 @@ export function SocConsole() {
 
                                 {/* Alerts queue */}
                                 {filtered.length === 0 ? (
-                                    <div className="rounded-bp border border-border bg-surface">
+                                    <div className="rounded-mithril border border-border bg-surface">
                                         <NonIdealState
                                             icon="search"
                                             title="No alerts match your filters"
@@ -628,7 +628,7 @@ export function SocConsole() {
                         </div>
                     ) : (
                         <div className="min-w-0 flex-1 overflow-auto p-4">
-                            <div className="rounded-bp border border-border bg-surface">
+                            <div className="rounded-mithril border border-border bg-surface">
                                 <NonIdealState
                                     icon="dashboard"
                                     title={`${activeRailLabel} view`}

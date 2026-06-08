@@ -7,7 +7,7 @@
  *
  * Key metrics (from Blueprint SCSS, $pt-spacing = 4px):
  *   - Container:   white-space:nowrap, inline component
- *   - Input row:   h=30px, inner h=28px, bg=white/rgba(black,0.3), shadow=input-shadow, rounded-bp
+ *   - Input row:   h=30px, inner h=28px, bg=white/rgba(black,0.3), shadow=input-shadow, rounded-mithril
  *   - Divider:     w=8px, text-foreground-muted, font-size=16px (body-lg), text-center
  *   - Segment:     w=32px, h=28px, bg=transparent, no border, text-center, color=foreground
  *   - Arrow btn:   w=32px, padding=4px 0, chevron icon, text-foreground-muted with hover
@@ -230,9 +230,9 @@ function SegmentInput({
                 //   box-shadow: input-transition-shadow (transparent at rest)
                 //   color: $pt-text-color; height: 28px (inner); outline: 0; padding: 0
                 //   text-align: center; width: 32px ($timepicker-control-width)
-                "w-8 h-7 p-0 bg-transparent border-0 outline-none rounded-bp",
+                "w-8 h-7 p-0 bg-transparent border-0 outline-none rounded-mithril",
                 "text-center text-body text-foreground",
-                "transition-shadow duration-100 ease-bp",
+                "transition-shadow duration-100 ease-mithril",
                 "shadow-none focus:shadow-input-focus",
                 // Remove spinners
                 "[appearance:textfield]",
@@ -452,7 +452,7 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
             {/* ── Input row ──────────────────────────────────────── */}
             <div
                 className={cn(
-                    "inline-block align-middle rounded-bp h-7.5 px-px",
+                    "inline-block align-middle rounded-mithril h-7.5 px-px",
                     "bg-white dark:bg-black/30 shadow-input",
                     disabled && "bg-[rgba(211,216,222,0.5)] dark:bg-[rgba(64,72,84,0.5)] shadow-none",
                 )}

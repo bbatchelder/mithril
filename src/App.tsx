@@ -2694,8 +2694,8 @@ function ContextMenuGallery() {
             {/* Always-visible specimen: Menu wrapped in popover surface styling.
                 This matches what ContextMenu renders portaled — same bg/shadow/radius.
                 We render it inline so data-compare targets are always in the DOM. */}
-            <div className="self-start rounded-bp shadow-card-3 dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]">
-                <div className="bg-white dark:bg-dark-gray-3 rounded-bp text-foreground">
+            <div className="self-start rounded-mithril shadow-card-3 dark:[box-shadow:rgb(94,95,97)_0px_0px_0px_1px,inset_rgba(255,255,255,0.2)_0px_0px_0px_1px,rgba(0,0,0,0.302)_0px_20px_25px_-5px,rgba(0,0,0,0.302)_0px_10px_30px_-5px,inset_rgba(255,255,255,0.302)_0px_0px_0.5px_0px,inset_rgba(255,255,255,0.078)_0px_0.5px_0px_0px]">
+                <div className="bg-white dark:bg-dark-gray-3 rounded-mithril text-foreground">
                     <Menu data-compare="context-menu-surface">
                         <MenuDivider title="Actions" />
                         <MenuItem
@@ -5248,7 +5248,7 @@ function DataTableGallery() {
 function DataTableUsage() {
     return (
         <Section title="Usage">
-            <pre className="overflow-auto rounded-bp bg-[#f6f7f9] p-4 text-[12px] leading-5 text-foreground dark:bg-[#2f343c]">
+            <pre className="overflow-auto rounded-mithril bg-[#f6f7f9] p-4 text-[12px] leading-5 text-foreground dark:bg-[#2f343c]">
                 {`import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
 interface Person { name: string; age: number; role: string }
@@ -5602,10 +5602,10 @@ function LandingPage() {
                         <a
                             key={app.hash}
                             href={`#${app.hash}`}
-                            className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                            className="rounded-mithril outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                         >
                             <Card interactive elevation={1} className="flex h-full items-start gap-4">
-                                <span className="flex size-11 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                <span className="flex size-11 shrink-0 items-center justify-center rounded-mithril bg-[var(--interactive-hover)] text-intent-primary-text">
                                     <Icon icon={app.icon} size={22} className="!text-current" />
                                 </span>
                                 <div className="flex flex-col gap-1">
@@ -5638,7 +5638,7 @@ function CodeBlock({ label, code }: { label: string; code: string }) {
     return (
         <div className="flex flex-col gap-1">
             <span className="text-body-xs font-medium uppercase tracking-wide text-foreground-muted">{label}</span>
-            <div className="flex items-center gap-2 rounded-bp border border-border bg-surface py-1.5 pl-3 pr-1.5">
+            <div className="flex items-center gap-2 rounded-mithril border border-border bg-surface py-1.5 pl-3 pr-1.5">
                 <pre className="flex-1 overflow-x-auto text-body-sm text-foreground">
                     <code className="font-mono">{code}</code>
                 </pre>
@@ -5794,7 +5794,7 @@ function ComponentView({ component }: { component: ComponentEntry }) {
                             </span>
                             <div className="flex flex-wrap items-center gap-1.5">
                                 {componentDeps.map((d) => (
-                                    <a key={d} href={`#showcase/${d}`} className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                                    <a key={d} href={`#showcase/${d}`} className="rounded-mithril outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                                         <MetaBadge icon="cube" intent="primary" title={`Go to ${COMPONENT_META[d]?.title ?? d}`}>
                                             {COMPONENT_META[d]?.title ?? d}
                                         </MetaBadge>
@@ -5871,7 +5871,7 @@ function MetaBadge({
         <span
             title={title}
             className={cn(
-                "inline-flex items-center gap-1 rounded-bp px-1.5 py-0.5 text-body-xs font-medium leading-none",
+                "inline-flex items-center gap-1 rounded-mithril px-1.5 py-0.5 text-body-xs font-medium leading-none",
                 colors[intent],
             )}
         >
@@ -5986,7 +5986,7 @@ function FilterChip({
             onClick={onClick}
             aria-pressed={active}
             className={cn(
-                "inline-flex items-center gap-1 rounded-bp px-2 py-1 text-body-xs font-medium leading-none outline-none transition-colors",
+                "inline-flex items-center gap-1 rounded-mithril px-2 py-1 text-body-xs font-medium leading-none outline-none transition-colors",
                 "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
                 active
                     ? "bg-primary text-primary-foreground hover:bg-primary-hover"
@@ -6089,7 +6089,7 @@ function ShowcaseOverview() {
                         <button
                             type="button"
                             onClick={clearAll}
-                            className="ml-0.5 inline-flex items-center gap-1 rounded-bp px-1.5 py-1 text-body-xs font-medium leading-none text-intent-primary-text outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
+                            className="ml-0.5 inline-flex items-center gap-1 rounded-mithril px-1.5 py-1 text-body-xs font-medium leading-none text-intent-primary-text outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring"
                         >
                             <Icon icon="small-cross" size={12} className="!text-current" />
                             Clear
@@ -6131,14 +6131,14 @@ function ShowcaseOverview() {
                                     <a
                                         key={c.id}
                                         href={`#showcase/${c.id}`}
-                                        className="rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                                        className="rounded-mithril outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                                     >
                                         <Card interactive className="flex h-full flex-col gap-2.5 !p-4">
                                             {hasPreview(c.id) ? (
                                                 <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
                                             ) : (
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-bp bg-[var(--interactive-hover)] text-intent-primary-text">
+                                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-mithril bg-[var(--interactive-hover)] text-intent-primary-text">
                                                         <Icon icon={COMPONENT_ICONS[c.id] ?? "widget"} size={18} className="!text-current" />
                                                     </span>
                                                     <span className="truncate text-body-sm font-medium text-foreground">{c.title}</span>
@@ -6172,7 +6172,7 @@ function ShowcaseApp({ componentId }: { componentId: string }) {
                 <NavbarGroup align="left">
                     <a
                         href="#showcase"
-                        className="flex items-center gap-2 rounded-bp outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        className="flex items-center gap-2 rounded-mithril outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                     >
                         <Icon icon="layout-grid" size={20} className="text-intent-primary-text" />
                         <NavbarHeading className="font-semibold">mithril</NavbarHeading>

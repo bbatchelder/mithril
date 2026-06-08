@@ -16,7 +16,7 @@ choice; the constant is "a dark side panel with a composer pinned at the bottom.
 assistant-selection cards (each: name + one-line capability blurb, with a "Default" pill on the
 primary one), above a minimal-button entry point to a custom assistant.
 
-**Composer (footer)**: a `<textarea>` (~40px tall, `rounded-bp`) with placeholder "Ask a question…",
+**Composer (footer)**: a `<textarea>` (~40px tall, `rounded-mithril`) with placeholder "Ask a question…",
 a recessed background relative to the panel (e.g. `bg-[var(--code-background)]` or a ~30% black overlay
 in dark), and affordances on the right edge (send, optionally mic / attach).
 

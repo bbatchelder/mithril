@@ -21,7 +21,7 @@ describe("AnchorButton — element & styling", () => {
         const el = screen.getByRole("link", { name: "Link" });
         expect(el.tagName).toBe("A");
         // shares Button's base + default solid look.
-        expect(el).toHaveClass("inline-flex", "rounded-bp", "shadow-button");
+        expect(el).toHaveClass("inline-flex", "rounded-mithril", "shadow-button");
         expect(el).toHaveAttribute("href", "/x");
     });
 

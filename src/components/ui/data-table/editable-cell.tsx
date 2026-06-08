@@ -107,7 +107,7 @@ export function EditableCell({ value, align = "left", onCommit, onCancel }: Edit
                 // Cell surface so the editor reads as the cell itself (white / dark-gray-3).
                 "bg-white text-[12px] text-foreground dark:bg-[#2f343c]",
                 // The editing focus ring (== InputGroup focus shadow), both themes via token.
-                "rounded-bp shadow-input-focus",
+                "rounded-mithril shadow-input-focus",
                 alignClass(align),
             )}
         />

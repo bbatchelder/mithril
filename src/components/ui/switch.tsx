@@ -241,7 +241,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                     // No box-shadow (Blueprint: box-shadow: none !important)
                     "shadow-none",
                     // transition: background-color
-                    "transition-colors duration-[100ms] ease-bp",
+                    "transition-colors duration-[100ms] ease-mithril",
                     // Vertical offset: -3px left-aligned, 1px right-aligned
                     !alignRight && "-mt-[3px]",
                     alignRight && "mt-px float-right",
@@ -303,7 +303,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                         // Circle
                         "[border-radius:50%]",
                         // Transition: left
-                        "transition-[left] duration-[100ms] ease-bp",
+                        "transition-[left] duration-[100ms] ease-mithril",
                         // Position: left = 2px unchecked, right end checked
                         // checked: left = calc(2px + 100% - 1em) = calc(2px + 100% - 16px/20px)
                         !effectiveChecked && "left-[2px]",

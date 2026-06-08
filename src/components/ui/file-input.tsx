@@ -182,7 +182,7 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                     // Fill the label area
                     "absolute inset-0",
                     // Input-like appearance
-                    "rounded-bp",
+                    "rounded-mithril",
                     "font-sans font-normal",
                     // Font size: matches Blueprint's input size (same as InputGroup)
                     // small=12px(text-body-sm), medium=14px(text-body), large=16px(text-body-lg)
@@ -197,7 +197,7 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                     // User-select: none (Blueprint: user-select: none on .bp6-file-upload-input)
                     "select-none",
                     // Transition (mirrors InputGroup)
-                    "transition-shadow duration-100 ease-bp",
+                    "transition-shadow duration-100 ease-mithril",
                     // Background + input shadow (same as InputGroup/TextArea)
                     "bg-white dark:bg-black/30",
                     "shadow-input",
@@ -252,7 +252,7 @@ export const FileInput = forwardRef<HTMLLabelElement, FileInputProps>(function F
                         "absolute right-0 top-0",
                         "flex items-center justify-center",
                         "whitespace-nowrap overflow-hidden text-ellipsis",
-                        "rounded-bp",
+                        "rounded-mithril",
                         "text-center leading-none",
                         // Font: inherit font-size from parent box span (which is size-appropriate)
                         "font-sans font-normal",

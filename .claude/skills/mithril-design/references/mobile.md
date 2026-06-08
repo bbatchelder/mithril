@@ -140,7 +140,7 @@ const focusSearch = () => {
 <div className="flex flex-col gap-2 md:hidden">
   {rows.map((r) => <RowCard key={r.id} row={r} /* tags+kebab · title+subtitle · meta row */ />)}
 </div>
-<div className="hidden overflow-x-auto rounded-bp border border-border bg-surface md:block">
+<div className="hidden overflow-x-auto rounded-mithril border border-border bg-surface md:block">
   <HTMLTable interactive striped className="w-full min-w-[920px]">{/* … */}</HTMLTable>
 </div>
 ```

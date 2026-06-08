@@ -80,9 +80,9 @@ export const inputVariants = cva(
         "bg-white dark:bg-black/30",
         "text-foreground",
         "placeholder:text-foreground-muted placeholder:opacity-100",
-        // Border-radius is handled per-variant: round:false → rounded-bp (4px); round:true → compound per size
+        // Border-radius is handled per-variant: round:false → rounded-mithril (4px); round:true → compound per size
         // Transition (Blueprint: box-shadow 100ms ease)
-        "transition-shadow duration-100 ease-bp",
+        "transition-shadow duration-100 ease-mithril",
         // Disabled
         "disabled:bg-[rgba(211,216,222,0.5)] dark:disabled:bg-[rgba(64,72,84,0.5)]",
         "disabled:text-foreground-disabled disabled:shadow-none disabled:cursor-not-allowed",
@@ -102,7 +102,7 @@ export const inputVariants = cva(
                 // Tailwind rounded-full = 9999px which doesn't match. Per-size values via compound variants.
                 // round:false → standard 4px border-radius.
                 true: "",
-                false: "rounded-bp",
+                false: "rounded-mithril",
             },
             intent: {
                 none: "",

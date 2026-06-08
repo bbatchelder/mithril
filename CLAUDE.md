@@ -125,7 +125,7 @@ Ordinary engineering — the autonomous loop is over:
 ## Durable gotchas
 
 - **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
-  (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), **not** runtime `var()` in inline styles — those get
+  (`bg-blue-3`, `shadow-elevation-2`, `ease-mithril`), **not** runtime `var()` in inline styles — those get
   dropped. Tokens declared in plain `:root {}` (e.g. `--elevation-0..4`) are always emitted.
 - **Icons:** keep `ICON_GLYPHS` typed as `Record<IconName, IconGlyph>` (never `as const`) to avoid TS2590.
   Names that camelCase to JS reserved words get an `Icon` suffix (`delete`→`deleteIcon`, also

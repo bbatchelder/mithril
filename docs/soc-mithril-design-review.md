@@ -18,7 +18,7 @@ The demo is broadly correct and this is tuning, not a rebuild:
 - Intent-typed tags (severity / status), `minimal` variants.
 - Monospace for system identifiers — alert IDs, asset names, source IPs, timeline timestamps.
 - `tabular-nums` on KPI values.
-- `rounded-bp` radius throughout.
+- `rounded-mithril` radius throughout.
 - Portaled overlays (Drawer, Menu, Select, Tooltip) correctly receive `dark={dark}` from `useDark()`.
 - Compact striped, interactive table with muted semibold headers.
 

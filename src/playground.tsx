@@ -328,7 +328,7 @@ function ControlField({
 function PlaygroundCode({ code }: { code: string }) {
     const [copied, setCopied] = useState(false);
     return (
-        <div className="flex items-center gap-2 rounded-bp border border-border bg-surface py-1.5 pl-3 pr-1.5">
+        <div className="flex items-center gap-2 rounded-mithril border border-border bg-surface py-1.5 pl-3 pr-1.5">
             <pre className="flex-1 overflow-x-auto text-body-sm text-foreground">
                 <code className="font-mono">{code}</code>
             </pre>
@@ -395,7 +395,7 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
                 (a modal behind a trigger, a hover tooltip, a right-click menu), nudge the
                 viewer so the stage doesn't read as empty. */}
             {config.cta && (
-                <div className="flex items-center gap-2 self-start rounded-bp border border-border bg-[var(--interactive-hover)] py-1.5 pl-2.5 pr-3.5 text-body-sm text-foreground">
+                <div className="flex items-center gap-2 self-start rounded-mithril border border-border bg-[var(--interactive-hover)] py-1.5 pl-2.5 pr-3.5 text-body-sm text-foreground">
                     <Icon icon={config.cta.icon ?? "hand-up"} size={15} className="text-intent-primary-text" />
                     <span>{config.cta.text}</span>
                 </div>
@@ -407,7 +407,7 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
             <div
                 ref={setStageEl}
                 className={cn(
-                    "flex flex-wrap rounded-bp border border-border bg-surface",
+                    "flex flex-wrap rounded-mithril border border-border bg-surface",
                     contained
                         ? cn(
                               // Pin the trigger opposite the overlay so it opens into the
@@ -430,7 +430,7 @@ export function Playground({ config }: { config: PlaygroundConfig }) {
             </div>
             {/* Controls — omitted entirely for interaction-only configs (no controls + no presets) */}
             {(config.controls.length > 0 || presetNames.length > 0) && (
-                <div className="flex flex-col gap-4 rounded-bp border border-border bg-surface p-4">
+                <div className="flex flex-col gap-4 rounded-mithril border border-border bg-surface p-4">
                     {presetNames.length > 0 && (
                         <div className="flex items-center gap-3">
                             <span className="w-24 shrink-0 text-body-sm text-foreground-muted">Preset</span>
@@ -2226,7 +2226,7 @@ export const PLAYGROUNDS: Record<string, PlaygroundConfig> = {
                 }
             >
                 <div
-                    className="flex items-center justify-center rounded-bp border border-dashed border-foreground-muted p-10 text-body text-foreground-muted"
+                    className="flex items-center justify-center rounded-mithril border border-dashed border-foreground-muted p-10 text-body text-foreground-muted"
                     style={{ width: 320, cursor: "context-menu" }}
                 >
                     Right-click anywhere in this area

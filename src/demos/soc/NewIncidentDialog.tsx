@@ -203,7 +203,7 @@ export function NewIncidentDialog({ isOpen, dark, onClose, onCreate }: NewIncide
                                 onChange={(e) => set("description", e.target.value)}
                             />
                         </FormGroup>
-                        <div className="flex flex-col gap-2 rounded-bp border border-divider bg-surface p-3">
+                        <div className="flex flex-col gap-2 rounded-mithril border border-divider bg-surface p-3">
                             <div className="flex items-center gap-2">
                                 <Tag intent={SEVERITY_INTENT[draft.severity]} minimal>
                                     {SEVERITY_LABEL[draft.severity]}

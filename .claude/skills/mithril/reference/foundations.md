@@ -8,7 +8,7 @@ re-tint, or icons don't render.
 Tailwind v4 **tree-shakes unused `@theme` variables**. The practical consequences:
 
 - **Style with literal utility classes.** `bg-blue-3`, `text-intent-primary-text`,
-  `shadow-elevation-2`, `ease-bp`, `rounded-bp`. These keep the underlying token alive *and*
+  `shadow-elevation-2`, `ease-mithril`, `rounded-mithril`. These keep the underlying token alive *and*
   apply it.
 - **Never put a `@theme` token in an inline `style`.** `style={{ background: "var(--blue-3)" }}`
   fails — nothing references `--blue-3` as a class, so Tailwind drops it and the var is undefined

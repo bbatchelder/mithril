@@ -356,7 +356,7 @@ function TreeNodeItem({
                             "inline-flex items-center justify-center cursor-pointer",
                             // Rotate: 0deg closed → 90deg open
                             // transition: transform 200ms $pt-transition-ease
-                            "transition-transform duration-200 ease-bp",
+                            "transition-transform duration-200 ease-mithril",
                             isExpanded ? "rotate-90" : "rotate-0",
                             // Icon color: foreground-muted (Blueprint's $pt-icon-color)
                             // On selected: rgba(white, 0.7) normal, white on hover

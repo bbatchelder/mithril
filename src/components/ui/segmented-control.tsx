@@ -65,11 +65,11 @@ export interface SegmentedControlProps extends Omit<React.HTMLAttributes<HTMLDiv
  * inline and fill are layout variants; the rest are modifiers.
  */
 const trackVariants = cva(
-    // Base: display flex, gap 2px = 0.5, padding 2px = 0.5, rounded-bp = 4px
+    // Base: display flex, gap 2px = 0.5, padding 2px = 0.5, rounded-mithril = 4px
     // NOTE: do NOT pin the track's min-width to quiet the harness sc-default flag. min-width:auto
     // resolves per-specimen (flex-item-ness depends on each gallery container), so Blueprint's
     // track computes 0px in one specimen and auto in others — forcing a value is whack-a-mole.
-    "flex gap-0.5 p-0.5 rounded-bp bg-light-gray-5 dark:bg-dark-gray-2",
+    "flex gap-0.5 p-0.5 rounded-mithril bg-light-gray-5 dark:bg-dark-gray-2",
     {
         variants: {
             inline: { true: "inline-flex", false: "flex" },

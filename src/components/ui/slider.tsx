@@ -269,7 +269,7 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                     {...(_tagInternals ? { "data-compare": "slider-track" } : {})}
                     className={cn(
                         // Blueprint: border-radius:4px, overflow:hidden, NO background-color
-                        "relative overflow-hidden rounded-bp min-w-0",
+                        "relative overflow-hidden rounded-mithril min-w-0",
                         // Horizontal: height=6px
                         !vertical && "h-[6px] w-full",
                         vertical && "w-[6px] h-full",
@@ -314,7 +314,7 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                     className={cn(
                         // 16×16px, border-radius:4px (Blueprint .bp6-slider-handle), position:absolute
                         // overflow:visible so the value badge can show outside the handle bounds
-                        "block h-4 w-4 rounded-bp overflow-visible",
+                        "block h-4 w-4 rounded-mithril overflow-visible",
                         // Light: button-like bg + handle box-shadow
                         // Blueprint computed: rgba(18,20,24,0.502) 0 0 0 1px, rgba(18,20,24,0.502) 0 1px 1px 0
                         "bg-[#f6f7f9]",
@@ -352,7 +352,7 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(function Slider(
                                 // font-size:12px, line-height:1, padding:2px 4px
                                 "text-[12px] leading-[1] px-1 py-0.5",
                                 // border-radius:4px (Blueprint $pt-border-radius)
-                                "rounded-bp",
+                                "rounded-mithril",
                                 // whitespace-nowrap
                                 "whitespace-nowrap",
                                 // vertical-align:top

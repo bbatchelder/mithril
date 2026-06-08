@@ -70,7 +70,7 @@ export const textAreaVariants = cva(
         "text-foreground",
         "placeholder:text-foreground-muted placeholder:opacity-100",
         // Transition (Blueprint: box-shadow 100ms ease)
-        "transition-shadow duration-100 ease-bp",
+        "transition-shadow duration-100 ease-mithril",
         // Disabled
         "disabled:bg-[rgba(211,216,222,0.5)] dark:disabled:bg-[rgba(64,72,84,0.5)]",
         "disabled:text-foreground-disabled disabled:shadow-none disabled:cursor-not-allowed",
@@ -87,9 +87,9 @@ export const textAreaVariants = cva(
                 // All sizes: p-2 (8px all sides).
                 // Font sizes: small=12px, medium=14px, large=16px (Blueprint font scale).
                 // Border-radius: always 4px (no round variant for textarea — Blueprint doesn't add one).
-                small: "p-2 text-body-sm rounded-bp",
-                medium: "p-2 text-body rounded-bp",
-                large: "p-2 text-body-lg rounded-bp",
+                small: "p-2 text-body-sm rounded-mithril",
+                medium: "p-2 text-body rounded-mithril",
+                large: "p-2 text-body-lg rounded-mithril",
             },
             fill: {
                 true: "w-full",

@@ -427,7 +427,7 @@ export function Popover({
                             // Panel base: display inline-block (Blueprint: inline-block)
                             "inline-block",
                             // Blueprint: border-radius 4px ($pt-border-radius)
-                            "rounded-bp",
+                            "rounded-mithril",
                             // Blueprint: box-shadow = elevation-3 = shadow-card-3
                             // (same as Dialog — same $pt-elevation-shadow-3 source).
                             // In light mode: shadow-card-3 provides the elevation shadow.
@@ -486,7 +486,7 @@ export function Popover({
                                 // Set own text color (portaled content, same rule as Dialog/Card)
                                 "text-foreground",
                                 // Blueprint: border-radius 4px (matches panel)
-                                "rounded-bp",
+                                "rounded-mithril",
                                 // Content padding: 20px when hasContentPadding + not minimal
                                 hasContentPadding && !minimal && "p-5",
                             )}

@@ -367,7 +367,7 @@ function MissionControlInner() {
                         />
                         {/* Status overlay */}
                         <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2">
-                            <div className="pointer-events-auto flex items-center gap-3 rounded-bp border border-divider bg-surface/95 px-3 py-2 shadow-card-1 backdrop-blur">
+                            <div className="pointer-events-auto flex items-center gap-3 rounded-mithril border border-divider bg-surface/95 px-3 py-2 shadow-card-1 backdrop-blur">
                                 <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-foreground">
                                     <span className={`inline-block size-2 rounded-full ${STATUS_META.active.dot}`} />
                                     {activeCount} airborne
@@ -394,7 +394,7 @@ function MissionControlInner() {
                         {/* Mobile telemetry — a non-modal bottom sheet over the map (lg+
                             uses the pinned right rail). The map stays visible above it. */}
                         {selected && (
-                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-bp border-t border-divider bg-background shadow-overlay-3 lg:hidden">
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-mithril border-t border-divider bg-background shadow-overlay-3 lg:hidden">
                                 <div className="relative shrink-0 pt-2">
                                     <div className="mx-auto h-1 w-9 rounded-full bg-divider" />
                                     <Button
@@ -421,7 +421,7 @@ function MissionControlInner() {
                         {/* Mobile target sheet — same bottom-sheet treatment for a
                             selected map target (lg+ uses the pinned right rail). */}
                         {selectedTarget && (
-                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-bp border-t border-divider bg-background shadow-overlay-3 lg:hidden">
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-mithril border-t border-divider bg-background shadow-overlay-3 lg:hidden">
                                 <div className="relative shrink-0 pt-2">
                                     <div className="mx-auto h-1 w-9 rounded-full bg-divider" />
                                     <Button

@@ -6,7 +6,7 @@
  * A right-click-triggered popup menu. Composes:
  *   - @radix-ui/react-context-menu for right-click trigger, portal, and cursor-position
  *   - Our Menu / MenuItem / MenuDivider components for the menu content
- *   - The same popover-surface styling as Popover (shadow-card-3, rounded-bp, bg-white)
+ *   - The same popover-surface styling as Popover (shadow-card-3, rounded-mithril, bg-white)
  *
  * ## Architecture
  * ContextMenu uses Radix's ContextMenu primitive which handles:
@@ -194,7 +194,7 @@ export function ContextMenu({
                             // Background: white (light) / dark-gray3 (dark)
                             // Applied on inner content div, not here — same as Popover
                             // border-radius: 4px ($pt-border-radius)
-                            "rounded-bp",
+                            "rounded-mithril",
                             // box-shadow: $pt-popover-box-shadow = $pt-elevation-shadow-3
                             // Use shadow-overlay-3 (same as Popover/Dialog — rgba(20,20,20) light
                             // hairline ring + Blueprint dark drop/highlight layer order).
@@ -216,7 +216,7 @@ export function ContextMenu({
                         }
                     >
                         {/* Surface background + border-radius (matches Popover content div).
-                            Blueprint: .bp6-popover-content has bg-white dark:bg-dark-gray-3 and rounded-bp.
+                            Blueprint: .bp6-popover-content has bg-white dark:bg-dark-gray-3 and rounded-mithril.
                             text-foreground again here so any text inside the surface gets the right color. */}
                         <div
                             className={cn(
@@ -225,7 +225,7 @@ export function ContextMenu({
                                 // Rule 2 (redundant belt+suspenders): text-foreground on the surface
                                 "text-foreground",
                                 // border-radius: 4px
-                                "rounded-bp",
+                                "rounded-mithril",
                             )}
                         >
                             {/* Inject the Radix item slot so the consumer's MenuItems

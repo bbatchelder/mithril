@@ -149,7 +149,7 @@ export function MultistepDialog({
                     className={cn(
                         "flex flex-1 flex-col",
                         // Dark rail backdrop + bottom-left rounding to follow the dialog radius.
-                        "dark:rounded-bl-bp dark:border-b dark:border-l dark:border-[rgba(255,255,255,0.2)] dark:bg-[#252a31]",
+                        "dark:rounded-bl-mithril dark:border-b dark:border-l dark:border-[rgba(255,255,255,0.2)] dark:bg-[#252a31]",
                     )}
                 >
                     {steps.map((step, i) => {
@@ -181,7 +181,7 @@ export function MultistepDialog({
                                     disabled={!isViewed}
                                     onClick={(e) => goTo(i, e)}
                                     className={cn(
-                                        "m-1 flex w-[calc(100%-8px)] items-center rounded-bp bg-transparent px-[14px] py-[6px] text-left text-[14px]",
+                                        "m-1 flex w-[calc(100%-8px)] items-center rounded-mithril bg-transparent px-[14px] py-[6px] text-left text-[14px]",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         "enabled:cursor-pointer enabled:hover:bg-[#f6f7f9] dark:enabled:hover:bg-[#2f343c]",
                                         "disabled:cursor-not-allowed",
@@ -224,7 +224,7 @@ export function MultistepDialog({
                 <div
                     data-compare="multistep-panel"
                     className={cn(
-                        "min-w-0 flex-[3] rounded-br-bp",
+                        "min-w-0 flex-[3] rounded-br-mithril",
                         "bg-[#f6f7f9] dark:bg-[#2f343c]",
                         "border-l border-[rgba(17,20,24,0.15)] dark:border-b dark:border-r dark:border-[rgba(255,255,255,0.2)]",
                     )}

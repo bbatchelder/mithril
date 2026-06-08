@@ -65,7 +65,7 @@ const TREND_TEXT_CLASS: Record<NonNullable<Kpi["trendIntent"]>, string> = {
 
 function KpiCard({ kpi }: { kpi: Kpi }) {
     return (
-        <div className="flex flex-col gap-2 rounded-bp border border-border bg-surface p-4">
+        <div className="flex flex-col gap-2 rounded-mithril border border-border bg-surface p-4">
             <div className="flex items-start justify-between">
                 <span className="text-body-sm text-foreground-muted">{kpi.label}</span>
                 {/* Icons mute to gray — the trend chip is the only spot of color. */}

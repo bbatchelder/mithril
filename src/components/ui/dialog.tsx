@@ -181,7 +181,7 @@ export function Dialog({
                                 // text-foreground resolves to the dark foreground). Same rule as Card.
                                 "text-foreground",
                                 // Blueprint: border-radius 4px
-                                "rounded-bp",
+                                "rounded-mithril",
                                 // Blueprint: box-shadow = elevation-3. Use the card-3 token (not
                                 // elevation-3): Card already tuned it to Blueprint's exact shadow
                                 // base color (#111418, not pure black) AND the dark-mode white inset
@@ -216,7 +216,7 @@ export function Dialog({
                                         // Blueprint: background white (light) / dark-gray3 (dark)
                                         "bg-white dark:bg-dark-gray-3",
                                         // Blueprint: border-radius 4px 4px 0 0
-                                        "rounded-t-bp",
+                                        "rounded-t-mithril",
                                         // Light: 0 1px 0 rgba(17,20,24,0.15) = $pt-divider-black
                                         // Dark: inset 0 0 0 1px rgba(255,255,255,0.2) = $pt-dark-divider-white
                                         "shadow-[0_1px_0_rgba(17,20,24,0.15)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)]",
@@ -366,7 +366,7 @@ export const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(functi
                           // border-top: 1px solid $pt-divider-black (light) / $pt-dark-divider-white (dark)
                           "border-t border-t-[rgba(17,20,24,0.15)] dark:border-t-[rgba(255,255,255,0.2)]",
                           // border-radius: 0 0 4px 4px
-                          "rounded-b-bp",
+                          "rounded-b-mithril",
                           // padding: 8px 8px 8px 16px
                           "pt-2 pr-2 pb-2 pl-4",
                       ].join(" "),

@@ -229,7 +229,7 @@ function ToastContent({
                         <button
                             onClick={handleAction}
                             className={cn(
-                                "inline-flex items-center justify-center rounded-bp px-[10px] h-[30px]",
+                                "inline-flex items-center justify-center rounded-mithril px-[10px] h-[30px]",
                                 "text-[14px] font-normal cursor-pointer border-0 outline-none",
                                 "transition-colors",
                                 !hasIntent && [
@@ -252,7 +252,7 @@ function ToastContent({
                             onClick={handleDismiss}
                             aria-label="Close"
                             className={cn(
-                                "inline-flex items-center justify-center rounded-bp w-[30px] h-[30px]",
+                                "inline-flex items-center justify-center rounded-mithril w-[30px] h-[30px]",
                                 "cursor-pointer border-0 outline-none transition-colors",
                                 !hasIntent && [
                                     "bg-transparent",
@@ -339,7 +339,7 @@ export function Toast({
                 // to the drawer beneath). The bang beats the inline none so toasts stay interactive.
                 "!pointer-events-auto",
                 // Blueprint: border-radius 4px ($pt-border-radius)
-                "rounded-bp",
+                "rounded-mithril",
                 // Blueprint: min-width min(300px,100%), max-width min(500px,100%)
                 "min-w-[min(300px,100%)] max-w-[min(500px,100%)]",
                 // Blueprint: margin-top 20px (margin between stacked toasts)

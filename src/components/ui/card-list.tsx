@@ -171,12 +171,12 @@ export const CardList = forwardRef<HTMLDivElement, CardListProps>(function CardL
                 // ── Bordered vs flush ────────────────────────────────────────────────────
                 // bordered=true (default): Card's own border-radius + shadow ring apply.
                 // First/last child Cards restore the outer container's border-radius (clipped by overflow-hidden).
-                // We use rounded-bp on the container via Card, and overflow is "auto" not "hidden",
+                // We use rounded-mithril on the container via Card, and overflow is "auto" not "hidden",
                 // so we need first/last-child to have their own radius.
                 bordered && [
                     // First child restores top corners; last child restores bottom corners.
-                    "[&>div:first-child]:rounded-t-bp",
-                    "[&>div:last-child]:rounded-b-bp",
+                    "[&>div:first-child]:rounded-t-mithril",
+                    "[&>div:last-child]:rounded-b-mithril",
                     // In dark theme, Blueprint adds 1px padding so items don't overlap the inset border ring.
                     "dark:p-[1px]",
                 ],

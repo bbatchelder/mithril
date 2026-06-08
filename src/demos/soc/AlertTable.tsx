@@ -109,7 +109,7 @@ function AlertCard({
                 }
             }}
             className={
-                "flex cursor-pointer flex-col gap-2 rounded-bp border border-border bg-surface p-3 " +
+                "flex cursor-pointer flex-col gap-2 rounded-mithril border border-border bg-surface p-3 " +
                 (selected ? "bg-[var(--interactive-hover)] " : "") +
                 (focused ? "outline outline-2 -outline-offset-2 outline-intent-primary-text" : "")
             }
@@ -173,7 +173,7 @@ export function AlertTable({ alerts, selectedId, focusedId, dark, onSelect, onAc
             </div>
 
             {/* md+: full table */}
-            <div className="hidden overflow-x-auto rounded-bp border border-border bg-surface md:block">
+            <div className="hidden overflow-x-auto rounded-mithril border border-border bg-surface md:block">
             <HTMLTable interactive striped className="w-full min-w-[920px]">
                 <thead>
                     <tr className="border-b border-border-strong text-left">

@@ -18,7 +18,7 @@ How to write copy in this register — and the visual mistakes that immediately 
 - Soft drop shadows on inline content. (A 1px ring + tiny offset on buttons via `shadow-button` is
   fine; floaty card-lift shadows on inline panels are not — reserve `shadow-elevation-*` /
   `shadow-overlay-*` for actual overlays.)
-- Rounded corners above 6px on chrome. mithril's canonical radius is `rounded-bp` (4px); never
+- Rounded corners above 6px on chrome. mithril's canonical radius is `rounded-mithril` (4px); never
   `rounded-2xl`. Only pills/avatars (`rounded-full`) round further.
 - Hero illustrations, mascots, emoji in the chrome.
 - Centered marketing-style layouts inside the product. A splash/home may center a hero;
@@ -35,7 +35,7 @@ How to write copy in this register — and the visual mistakes that immediately 
 - Extended colors (indigo, violet, turquoise, …) used in chrome — they're for data viz, categorical
   tags, and object-type icons only.
 - Runtime `var()` tokens in inline styles — Tailwind v4 tree-shakes them and the style silently drops.
-  Use literal utility classes (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`). This is the single most
+  Use literal utility classes (`bg-blue-3`, `shadow-elevation-2`, `ease-mithril`). This is the single most
   common way a "correct" mithril design renders wrong.
 - Mixing light and dark inside one region without threading dark through portals — wrap a *region* in
   `.dark` / `[data-mode="dark"]` and pass `dark={dark}` to any overlay that portals out of it.

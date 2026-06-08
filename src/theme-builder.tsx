@@ -872,7 +872,7 @@ function HexInput({ value, onCommit, label }: { value: string; onCommit: (hex: s
                     e.currentTarget.blur();
                 }
             }}
-            className="w-[72px] shrink-0 rounded-bp border border-border bg-background px-1.5 py-0.5 text-right font-mono text-body-xs text-foreground-muted focus:border-blue-3 focus:text-foreground focus:outline-none"
+            className="w-[72px] shrink-0 rounded-mithril border border-border bg-background px-1.5 py-0.5 text-right font-mono text-body-xs text-foreground-muted focus:border-blue-3 focus:text-foreground focus:outline-none"
         />
     );
 }
@@ -896,7 +896,7 @@ function SwatchRow({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 aria-label={label}
-                className="h-7 w-9 shrink-0 cursor-pointer rounded-bp border border-border bg-transparent p-0.5"
+                className="h-7 w-9 shrink-0 cursor-pointer rounded-mithril border border-border bg-transparent p-0.5"
             />
             <span
                 className={cn(
@@ -917,7 +917,7 @@ function IntentBlock({ intent, builder }: { intent: { key: IntentKey; label: str
     const { key, label } = intent;
     const customized = `--color-${key}` in builder.overrides;
     return (
-        <div className="flex flex-col gap-2 rounded-bp border border-border bg-surface p-3">
+        <div className="flex flex-col gap-2 rounded-mithril border border-border bg-surface p-3">
             <div className="flex items-center justify-between">
                 <span className="text-body-sm font-medium text-foreground">{label}</span>
                 {customized && (
@@ -1032,7 +1032,7 @@ function ThemePicker({ builder }: { builder: ThemeBuilderState }) {
             )}
 
             {saving && (
-                <div className="flex flex-col gap-1.5 rounded-bp border border-border bg-surface p-2.5">
+                <div className="flex flex-col gap-1.5 rounded-mithril border border-border bg-surface p-2.5">
                     <InputGroup
                         size="small"
                         autoFocus
@@ -1089,7 +1089,7 @@ function ExportBlock({ css }: { css: string }) {
                     {copied ? "Copied" : "Copy"}
                 </Button>
             </div>
-            <pre className="max-h-48 overflow-auto rounded-bp border border-border bg-surface p-3 text-body-xs text-foreground">
+            <pre className="max-h-48 overflow-auto rounded-mithril border border-border bg-surface p-3 text-body-xs text-foreground">
                 <code className="font-mono whitespace-pre">{css}</code>
             </pre>
             <p className="text-body-xs text-foreground-muted">
@@ -1137,7 +1137,7 @@ export function ThemeBuilderPanel({
                 aria-hidden={!open}
                 className={cn(
                     "absolute right-0 top-0 bottom-0 flex w-[340px] flex-col border-l border-border bg-background shadow-elevation-3",
-                    "transition-transform duration-200 ease-bp",
+                    "transition-transform duration-200 ease-mithril",
                     open ? "pointer-events-auto translate-x-0" : "translate-x-full",
                 )}
             >
@@ -1185,7 +1185,7 @@ export function ThemeBuilderPanel({
                 <div className="flex-1 overflow-y-auto px-4 py-3">
                     {tab === "intents" ? (
                         <div className="flex flex-col gap-3">
-                            <div className="flex flex-col gap-1.5 rounded-bp border border-border bg-surface p-3">
+                            <div className="flex flex-col gap-1.5 rounded-mithril border border-border bg-surface p-3">
                                 <div className="flex items-center justify-between">
                                     <span className="text-body-sm font-medium text-foreground">
                                         Auto text color

@@ -84,8 +84,8 @@ export const buttonVariants = cva(
         // — so an `asChild` Button or an AnchorButton (both render <a>, not <button>) still get
         // the button z-index tiers. Carried by every consumer of buttonVariants.
         "bp6-button",
-        "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-bp align-middle",
-        "font-normal select-none cursor-pointer transition-colors duration-100 ease-bp",
+        "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-mithril align-middle",
+        "font-normal select-none cursor-pointer transition-colors duration-100 ease-mithril",
         "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
         "[&_svg]:shrink-0 [&_svg]:size-4",

@@ -136,7 +136,7 @@ export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProp
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-2.5">
-                    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-bp border border-divider bg-surface">
+                    <span className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-mithril border border-divider bg-surface">
                         <Icon icon={target.icon} size={18} className="text-foreground-muted" />
                     </span>
                     <div className="flex min-w-0 flex-col gap-0.5">
@@ -187,7 +187,7 @@ export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProp
             </Callout>
 
             {/* Detection meta */}
-            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-bp border border-divider bg-divider">
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-mithril border border-divider bg-divider">
                 <MetaCell label="Category" value={target.category} />
                 <MetaCell label="Priority" value={meta.label} />
                 <MetaCell label="Detected by" value={target.detectedBy} />

@@ -26,7 +26,7 @@ you wire them together.
 
 1. **Tokens, not literals — and not runtime `var()` in inline styles.** Tailwind v4
    tree-shakes unused `@theme` vars. Style with *literal utility classes*
-   (`bg-blue-3`, `text-intent-primary-text`, `shadow-elevation-2`, `ease-bp`). Do **not**
+   (`bg-blue-3`, `text-intent-primary-text`, `shadow-elevation-2`, `ease-mithril`). Do **not**
    write `style={{ background: "var(--blue-3)" }}` — that token gets dropped. Arbitrary-value
    classes that reference always-emitted `:root` vars are fine (`bg-[var(--interactive-hover)]`).
    See [`reference/foundations.md`](reference/foundations.md).

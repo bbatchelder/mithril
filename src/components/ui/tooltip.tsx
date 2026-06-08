@@ -322,7 +322,7 @@ export function Tooltip({
                                 // Blueprint: display inline-block
                                 "inline-block",
                                 // Blueprint: border-radius 4px ($pt-border-radius)
-                                "rounded-bp",
+                                "rounded-mithril",
                                 // Blueprint light: $pt-tooltip-box-shadow = $pt-elevation-shadow-3 → shadow-card-3
                                 // Blueprint dark: $pt-dark-tooltip-box-shadow = 0 2px 4px rgba($black, 0.4), 0 8px 24px rgba($black, 0.4)
                                 // Note: dark tooltip uses a SIMPLER shadow (2 layers, no inset border) unlike dark popover.
@@ -361,7 +361,7 @@ export function Tooltip({
                             <div
                                 className={cn(
                                     // Blueprint: border-radius 4px (matches panel)
-                                    "rounded-bp",
+                                    "rounded-mithril",
                                     // Blueprint tooltip is 14px (body text, the default)
                                     "text-body",
                                     // THE INVERSION: bubble bg + text (explicit, not via --foreground)

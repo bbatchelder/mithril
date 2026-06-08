@@ -163,14 +163,14 @@ const Chip = forwardRef<HTMLElement, AIExplainabilityProps & { interactive: bool
             data-intent={intent}
             data-variant={variant}
             className={cn(
-                "box-border inline-flex items-center justify-center rounded-bp font-semibold tracking-wide",
+                "box-border inline-flex items-center justify-center rounded-mithril font-semibold tracking-wide",
                 inline ? "align-[-0.15em]" : "align-middle",
                 geom.box,
                 geom.text,
                 colorClasses,
                 hoverClasses,
                 interactive &&
-                    "cursor-pointer outline-none transition-colors ease-bp focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
+                    "cursor-pointer outline-none transition-colors ease-mithril focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
                 className,
             )}
             {...domProps}
@@ -432,7 +432,7 @@ export function AIExplainabilityDetails({
 
             {/* 4. Model + context */}
             {model != null && (
-                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-bp bg-tag-minimal-bg px-2.5 py-1.5 text-body-xs text-foreground-muted">
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-mithril bg-tag-minimal-bg px-2.5 py-1.5 text-body-xs text-foreground-muted">
                     {resolveIcon(predictiveAnalysis, {
                         size: 14,
                         className: "!text-foreground-muted shrink-0",

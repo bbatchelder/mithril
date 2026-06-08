@@ -49,7 +49,7 @@ Match the surrounding components (read 2–3 neighbors first). The load-bearing 
 - Start with `"use client";`, use `forwardRef`, export a named component, and write a **JSDoc header
   that explains the design decisions** (not just what — *why*; see file-input/file-dropzone headers).
 - **Style from tokens via literal utility classes** (`bg-blue-3`, `text-foreground-muted`,
-  `shadow-input`, `rounded-bp`, `ease-bp`) — **never** runtime `var()` in inline `style`, which
+  `shadow-input`, `rounded-mithril`, `ease-mithril`) — **never** runtime `var()` in inline `style`, which
   Tailwind v4 tree-shakes away. Use CVA for multi-axis variants, or plain conditional `cn()` for
   simpler components (both idioms exist in the repo). **Verify every utility class actually exists**
   before trusting it — grep the class in `src/components/ui` / `src/styles`; a typo'd token silently

@@ -57,21 +57,21 @@
 }
 .mithril-popover-animated[data-state="open"] {
     animation:
-        mithril-popover-fade-in var(--duration-bp) var(--ease-bp),
-        mithril-popover-scale-in calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+        mithril-popover-fade-in var(--duration-mithril) var(--ease-mithril),
+        mithril-popover-scale-in calc(var(--duration-mithril) * 3) var(--ease-mithril-bounce);
 }
 .mithril-popover-animated[data-state="closed"] {
     animation:
-        mithril-popover-fade-out var(--duration-bp) var(--ease-bp),
-        mithril-popover-scale-out calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+        mithril-popover-fade-out var(--duration-mithril) var(--ease-mithril),
+        mithril-popover-scale-out calc(var(--duration-mithril) * 3) var(--ease-mithril-bounce);
 }
 /* Minimal popovers (menus, selects): fade only, no scale — matches Blueprint's
  * `.bp6-popover-minimal-animation` which sets scale(1) scale(1) over a single 100ms. */
 .mithril-popover-animated-minimal[data-state="open"] {
-    animation: mithril-popover-fade-in var(--duration-bp) var(--ease-bp);
+    animation: mithril-popover-fade-in var(--duration-mithril) var(--ease-mithril);
 }
 .mithril-popover-animated-minimal[data-state="closed"] {
-    animation: mithril-popover-fade-out var(--duration-bp) var(--ease-bp);
+    animation: mithril-popover-fade-out var(--duration-mithril) var(--ease-mithril);
 }
 
 /* Drawer slide + backdrop fade. Radix keeps the panel/overlay mounted on close
@@ -92,17 +92,17 @@
 @keyframes mithril-drawer-in-bottom  { from { transform: translateY(100%); }  to { transform: translateY(0); } }
 @keyframes mithril-drawer-out-bottom { from { transform: translateY(0); }     to { transform: translateY(100%); } }
 
-.mithril-drawer-overlay[data-state="open"]   { animation: mithril-overlay-fade-in  calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-overlay[data-state="closed"] { animation: mithril-overlay-fade-out calc(var(--duration-bp) * 2) var(--ease-bp); }
+.mithril-drawer-overlay[data-state="open"]   { animation: mithril-overlay-fade-in  calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-overlay[data-state="closed"] { animation: mithril-overlay-fade-out calc(var(--duration-mithril) * 2) var(--ease-mithril); }
 
-.mithril-drawer-panel-right[data-state="open"]    { animation: mithril-drawer-in-right   calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-right[data-state="closed"]  { animation: mithril-drawer-out-right  calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-left[data-state="open"]     { animation: mithril-drawer-in-left    calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-left[data-state="closed"]   { animation: mithril-drawer-out-left   calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-top[data-state="open"]      { animation: mithril-drawer-in-top     calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-top[data-state="closed"]    { animation: mithril-drawer-out-top    calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-bottom[data-state="open"]   { animation: mithril-drawer-in-bottom  calc(var(--duration-bp) * 2) var(--ease-bp); }
-.mithril-drawer-panel-bottom[data-state="closed"] { animation: mithril-drawer-out-bottom calc(var(--duration-bp) * 2) var(--ease-bp); }
+.mithril-drawer-panel-right[data-state="open"]    { animation: mithril-drawer-in-right   calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-right[data-state="closed"]  { animation: mithril-drawer-out-right  calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-left[data-state="open"]     { animation: mithril-drawer-in-left    calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-left[data-state="closed"]   { animation: mithril-drawer-out-left   calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-top[data-state="open"]      { animation: mithril-drawer-in-top     calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-top[data-state="closed"]    { animation: mithril-drawer-out-top    calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-bottom[data-state="open"]   { animation: mithril-drawer-in-bottom  calc(var(--duration-mithril) * 2) var(--ease-mithril); }
+.mithril-drawer-panel-bottom[data-state="closed"] { animation: mithril-drawer-out-bottom calc(var(--duration-mithril) * 2) var(--ease-mithril); }
 
 @layer base {
     * {
@@ -121,7 +121,7 @@
         font-family: var(--font-sans);
         font-size: var(--text-body);
         font-weight: var(--font-weight-normal);
-        line-height: var(--leading-bp);
+        line-height: var(--leading-mithril);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }

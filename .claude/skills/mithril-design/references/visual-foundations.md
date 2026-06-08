@@ -109,7 +109,7 @@ The tokens (utilities `text-body`, `text-heading`, `text-code`, etc.):
 | `text-code-sm` / `text-code` / `text-code-lg` | 12 / 13 / 14 |
 
 Weights: `font-normal` (400), `font-bold` (600) — there is no heavier weight, which suits the quiet
-register. Line heights: `leading-bp` (1.28581, the default) and `leading-bp-large` (1.5).
+register. Line heights: `leading-mithril` (1.28581, the default) and `leading-mithril-large` (1.5).
 
 **Default UI text is 14px (`text-body`).** Panel/section headings usually max at `text-heading-sm` (16)
 or `text-heading` (20). Full display sizes (`text-heading-xl`/`-display`) appear only on landing/splash
@@ -165,16 +165,16 @@ row in dense forms. (mithril components already default to this — don't fight 
 
 ### 3.4 Border radius
 
-Small and rectilinear. `--radius-bp` (4px) is the single canonical radius:
+Small and rectilinear. `--radius-mithril` (4px) is the single canonical radius:
 
 | Utility | Px |
 |---|---|
-| `rounded-bp-sm` | 2px |
-| `rounded-bp` (canonical) | **4px** |
-| `rounded-bp-lg` | 6px |
+| `rounded-mithril-sm` | 2px |
+| `rounded-mithril` (canonical) | **4px** |
+| `rounded-mithril-lg` | 6px |
 | `rounded-full` | pills / avatars only |
 
-Every chrome element — button, input, card, dialog, popover — uses `rounded-bp`. Never round more than
+Every chrome element — button, input, card, dialog, popover — uses `rounded-mithril`. Never round more than
 6px on chrome. No `rounded-2xl`.
 
 ### 3.5 Borders and dividers
@@ -263,13 +263,13 @@ let the label stand alone** before you fake it.
 Restrained. Motion conveys state change; it does not perform.
 
 ```
-ease-bp         → cubic-bezier(0.4, 1, 0.75, 0.9)    /* quick start, gentle land — the default */
-ease-bp-bounce  → cubic-bezier(0.54, 1.12, 0.38, 1.11) /* rare */
-duration-bp     → 100ms
+ease-mithril         → cubic-bezier(0.4, 1, 0.75, 0.9)    /* quick start, gentle land — the default */
+ease-mithril-bounce  → cubic-bezier(0.54, 1.12, 0.38, 1.11) /* rare */
+duration-mithril     → 100ms
 ```
 
-- **Default duration 100ms** (`duration-bp`). Faster than most consumer apps — intentional.
-- **Easing `ease-bp`** — not `ease-in-out` or material curves.
+- **Default duration 100ms** (`duration-mithril`). Faster than most consumer apps — intentional.
+- **Easing `ease-mithril`** — not `ease-in-out` or material curves.
 - Hover: instant or 50–100ms tween. Popovers/dialogs: ~150ms fade + small slide.
 - Skeleton loaders: slow shimmer (~1.5s) at low contrast, gray rounded rects shaped like the content.
 - Focus tokens: `--ring` (primary-hover @ 75%), `ring-width` 2px, `ring-offset` 2px — a visible 2px
