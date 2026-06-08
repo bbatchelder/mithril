@@ -63,6 +63,8 @@ jobs:
       # Runs after `pnpm build` because it emits into dist/ (which vite cleans).
       - run: pnpm build:registry
 
-      # Smoke-test that the npm-package build succeeds (barrel → ESM + types + prebuilt CSS).
-      # Outputs into dist-lib/, separate from the gallery's dist/, so order doesn't matter.
-      - run: pnpm build:lib
+      # Build the npm package (barrel → ESM + types + prebuilt CSS into dist-lib/) AND validate
+      # it: publint (package.json/exports correctness) + are-the-types-wrong (types resolve under
+      # node16/nodenext/bundler). Guards the published surface the way the registry/barrel guards
+      # above protect the owned-source surface. dist-lib/ is separate from the gallery's dist/.
+      - run: pnpm check:pkg

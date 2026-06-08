@@ -43,7 +43,10 @@ the ongoing goal:
      every other dep is externalized. Styles ship two ways: a **prebuilt** `dist-lib/mithril.css`
      (`pnpm build:css`, Tailwind CLI over `src/styles/index.css` — turnkey, no consumer Tailwind needed)
      and the **raw** `tokens.css` + `base.css` for consumers running their own Tailwind v4. `exports`,
-     peers, and `files` live in `package.json`; publish is `publish.yml` on a `vX.Y.Z` tag. The shared
+     peers, and `files` live in `package.json`; publish is `publish.yml` on a `vX.Y.Z` tag. The package
+     is **ESM-only** and validated by `pnpm check:pkg` (publint + are-the-types-wrong, gated in CI) — note
+     `tools/fix-dts-extensions.mjs` runs in `build:lib` to add `.js` extensions to the emitted `.d.ts`
+     imports (vite-plugin-dts emits them extensionless, which breaks `node16`/`nodenext` resolution). The shared
      non-token CSS (keyframes, `.mithril-*` animation hooks, base layer) lives in `src/styles/base.css`,
      imported by both `globals.css` (app) and `index.css` (library) so the two stay identical.
 
@@ -164,6 +167,7 @@ pnpm gen:barrel      # regenerate src/index.ts (npm-package entry) from src/comp
 pnpm build:registry  # build the published shadcn registry items into dist/r
 pnpm build:lib       # build the npm package (ESM + .d.ts + prebuilt CSS) into dist-lib
 pnpm build:css       # build just the prebuilt library stylesheet → dist-lib/mithril.css
+pnpm check:pkg       # build:lib + validate the package (publint + are-the-types-wrong)
 
 tools/compare.sh button        # screenshot + computed-style diff vs Blueprint (both themes)
 tools/compare.sh button dark   # ...one theme only (light|dark|both)
