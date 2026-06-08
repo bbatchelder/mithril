@@ -64,11 +64,18 @@ the ongoing goal:
   The **theme is global** — the **Theme Builder** (`src/theme-builder.tsx`, opened from the chrome's
   paintbrush toggle) edits the `tokens.css` seed colors live (intents + neutral ramp incl. white/black,
   an auto text-color threshold), applying them as inline overrides on the document root so every app +
-  portaled overlay re-tints together. It ships named built-in themes (Blueprint · Datex · Anthropic),
-  lets you save custom ones to localStorage, and exports a `[data-theme="…"]` block; the picker lists
-  them all. Only **light/dark is per-app**. Isolated harness mode (`?component=<id>`) is unchanged. Demo
-  apps live under `src/demos/` and are registered in `src/demos/registry.ts` (each entry carries an
-  `icon` for its card).
+  portaled overlay re-tints together. It ships named built-in themes (Blueprint · Anthropic · Purple ·
+  Lagoon · Indigo · Forest · Ember), lets you save custom ones to localStorage, and exports a
+  `[data-theme="…"]` block (mirrored into `tokens.css`); the picker lists
+  them all. Only **light/dark is per-app**. Every swatch row has an **editable hex field** (type/paste a
+  hex — no OS color picker needed). For driving the theme from the console or browser automation, the
+  gallery installs **`window.__mithrilTheme`** (see `useThemeApiBridge` in `src/theme-builder.tsx`):
+  `.setIntent(key, hex)` (derives variants), `.setSeed`/`.merge`/`.apply` (maps), `.select`/`.save`/
+  `.saveTheme`/`.remove` (named themes), `.setMode`/`.toggleDark`, `.state()`, `.help()`. This is the
+  easy path for an agent to author themes and screenshot them — state updates are async, so read
+  `.state()` in a *separate* eval after a mutation. Isolated harness mode (`?component=<id>`) is
+  unchanged. Demo apps live under `src/demos/` and are registered in `src/demos/registry.ts` (each entry
+  carries an `icon` for its card).
 - `src/components/ui/__tests__/` — Vitest + Testing Library behavior/keyboard/ARIA tests (`pnpm test`).
   Visual fidelity is verified via the harness, not unit tests.
 - `tools/compare.sh` + `tools/comparison/` — the comparison harness: screenshots **and** computed-style

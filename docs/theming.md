@@ -71,20 +71,26 @@ light-mode semantic tokens (declared on `:root`) re-resolve against your seeds:
 > the `.dark` block redeclares the semantic tokens there.) For app-wide theming,
 > always use `<html>`.
 
-### Example: the bundled "datex" theme
+### Example: the bundled named themes
 
-`tokens.css` ships one example, `[data-theme="datex"]`, which re-seeds **all four
-intents** to a brand palette — vivid violet primary (`rgb(91, 8, 178)`), mint
-success (`rgb(63, 197, 137)`), amber warning (`rgb(239, 181, 47)`), and a matched
-red danger (`rgb(226, 52, 57)`) — with each intent's hover/active/disabled tiers
-derived from its own color family's Blueprint OKLCH steps. The neutral ramp is left
-at the default grays, so backgrounds/surfaces are identical to the default theme
-(datex re-tints intents only). The gallery
-toggles it (the tint button in the sidebar) or via `?palette=datex` (add
-`&theme=dark` for the dark variant). It's the proof that seed overrides re-tint all
-four light/dark quadrants. (Note: the mint success is light enough that its solid
-fill switches to dark foreground text for AA contrast — set via
-`--color-success-foreground`.)
+`tokens.css` ships several named themes as `[data-theme="…"]` blocks — e.g.
+`anthropic` (warm terracotta primary over a cream/clay neutral base) and `purple`
+(a vivid violet primary with a vivid green and orange/brick-red status colors over a
+faintly lavender-cool base) — alongside `lagoon`, `indigo`, `forest`, and `ember`.
+Each re-seeds the intents (and, where the theme calls for it, a few neutral seeds
+such as white/black or the top of the light ramp), with every intent's
+hover/active/disabled tiers and the on-fill foreground derived from the base color.
+Because the semantic tokens all derive from seeds, one block re-tints both the light
+and dark variants — proof that seed overrides re-tint all four light/dark quadrants.
+
+The gallery switches themes from the Theme menu (and you can author your own with the
+Theme Builder). To force one at initial load, use `?palette=<name>` — e.g.
+`?palette=purple` (add `&theme=dark` for the dark variant). Each block mirrors an
+entry in `BUILTIN_THEMES` in `src/theme-builder.tsx`.
+
+(Note on contrast: a bright fill may need dark on-fill text for AA — e.g. the orange
+warning in `purple` keeps dark text. Each block sets `--color-{intent}-foreground`
+explicitly where the auto choice would be wrong.)
 
 ## Components must consume seeds, not palette literals
 

@@ -17,10 +17,10 @@
  * <body>) inherit it. An inline style also out-specifies the attribute-based `[data-theme]`
  * palette, so the builder composes cleanly on top of the active palette.
  *
- * A **theme** is just an override map (a diff from the Blueprint defaults). Two are built in —
- * "Blueprint" (the defaults, an empty map) and "Datex" (the bundled intent re-tint, mirrored
- * from tokens.css). The user can load one, edit it, and **Save a copy** under a new name; saved
- * themes live in localStorage and appear in the picker.
+ * A **theme** is just an override map (a diff from the Blueprint defaults). Several are built in —
+ * "Blueprint" (the defaults, an empty map) plus brand/aesthetic re-tints (Anthropic, Purple,
+ * Lagoon, …) mirrored from tokens.css. The user can load one, edit it, and **Save a copy** under
+ * a new name; saved themes live in localStorage and appear in the picker.
  *
  * Intent variants (hover/active/disabled/foreground) are auto-derived from the base color
  * (OKLCH lightness offsets + a contrast-picked foreground) so the user edits one swatch per
@@ -29,9 +29,9 @@
  * export — one value, one source of truth, no live/export drift.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { clampChroma, converter, formatHex } from "culori";
+import { clampChroma, converter, formatHex, parse } from "culori";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Slider } from "@/components/ui/slider";
 import { HTMLSelect } from "@/components/ui/html-select";
 import { InputGroup } from "@/components/ui/input-group";
-import { useAppChrome } from "@/lib/app-chrome";
+import { useAppChrome, type ThemeMode } from "@/lib/app-chrome";
 
 const WORKING_KEY = "mithril:theme-builder";
 const CUSTOM_KEY = "mithril:theme-builder:custom";
@@ -135,27 +135,6 @@ const SEED_SET = new Set(SEED_ORDER);
 
 type Overrides = Record<string, string>;
 
-/** Datex: the bundled intent re-tint, mirrored from tokens.css `[data-theme="datex"]`. */
-const DATEX: Overrides = {
-    "--color-primary": "#5b08b2",
-    "--color-primary-hover": "#470092",
-    "--color-primary-active": "#340073",
-    "--color-primary-disabled": "#7339d1",
-    "--color-success": "#3fc589",
-    "--color-success-hover": "#39ac78",
-    "--color-success-active": "#339669",
-    "--color-success-disabled": "#4de6a2",
-    "--color-success-foreground": "#111418",
-    "--color-warning": "#efb52f",
-    "--color-warning-hover": "#bc8f2b",
-    "--color-warning-active": "#a07b29",
-    "--color-warning-disabled": "#ffdc57",
-    "--color-danger": "#e23439",
-    "--color-danger-hover": "#c01d25",
-    "--color-danger-active": "#a21920",
-    "--color-danger-disabled": "#fd6265",
-};
-
 /** Anthropic: warm terracotta primary on a cream/clay neutral base. Mirrors tokens.css. */
 const ANTHROPIC: Overrides = {
     "--color-primary": "#db7759",
@@ -178,17 +157,169 @@ const ANTHROPIC: Overrides = {
     "--color-light-gray-5": "#f0eee9",
 };
 
+/** Lagoon: cool teal primary + clean status colors on a faintly-cooled neutral base.
+ * White text on the teal primary and the bright green success. Mirrors tokens.css. */
+const LAGOON: Overrides = {
+    "--color-primary": "#0d9488",
+    "--color-primary-hover": "#008076",
+    "--color-primary-active": "#006d64",
+    "--color-primary-disabled": "#41b3a7",
+    "--color-primary-foreground": "#ffffff",
+    "--color-success": "#16a34a",
+    "--color-success-hover": "#008f3d",
+    "--color-success-active": "#007a33",
+    "--color-success-disabled": "#46c368",
+    "--color-success-foreground": "#ffffff",
+    "--color-warning": "#d97706",
+    "--color-warning-hover": "#c06800",
+    "--color-warning-active": "#a75900",
+    "--color-warning-disabled": "#fc973c",
+    "--color-warning-foreground": "#111418",
+    "--color-danger": "#dc2626",
+    "--color-danger-hover": "#c50012",
+    "--color-danger-active": "#a7000d",
+    "--color-danger-disabled": "#ff5249",
+    "--color-danger-foreground": "#ffffff",
+    "--color-light-gray-5": "#eef4f4",
+};
+
+/** Indigo: crisp cool indigo primary, emerald success, rose-tinted danger, cool neutrals. */
+const INDIGO: Overrides = {
+    "--color-primary": "#4f46e5",
+    "--color-primary-hover": "#422fd0",
+    "--color-primary-active": "#3611bb",
+    "--color-primary-disabled": "#696cff",
+    "--color-primary-foreground": "#ffffff",
+    "--color-success": "#059669",
+    "--color-success-hover": "#00825a",
+    "--color-success-active": "#006e4c",
+    "--color-success-disabled": "#3eb687",
+    "--color-success-foreground": "#ffffff",
+    "--color-warning": "#d97706",
+    "--color-warning-hover": "#c06800",
+    "--color-warning-active": "#a75900",
+    "--color-warning-disabled": "#fc973c",
+    "--color-warning-foreground": "#111418",
+    "--color-danger": "#e11d48",
+    "--color-danger-hover": "#c7003a",
+    "--color-danger-active": "#a90030",
+    "--color-danger-disabled": "#ff5569",
+    "--color-danger-foreground": "#ffffff",
+    "--color-light-gray-5": "#f3f4f9",
+};
+
+/** Forest: earthy olive/moss primary over a warm parchment base (cream white, warm-brown black).
+ * White text on the moss primary and the green success. Mirrors tokens.css. */
+const FOREST: Overrides = {
+    "--color-primary": "#4d7c0f",
+    "--color-primary-hover": "#3f6900",
+    "--color-primary-active": "#335700",
+    "--color-primary-disabled": "#6a9b37",
+    "--color-primary-foreground": "#f8f7f2",
+    "--color-success": "#16a34a",
+    "--color-success-hover": "#008f3d",
+    "--color-success-active": "#007a33",
+    "--color-success-disabled": "#46c368",
+    "--color-success-foreground": "#f8f7f2",
+    "--color-warning": "#ca8a04",
+    "--color-warning-hover": "#b37900",
+    "--color-warning-active": "#9c6900",
+    "--color-warning-disabled": "#eba93d",
+    "--color-warning-foreground": "#1a1a17",
+    "--color-danger": "#b91c1c",
+    "--color-danger-hover": "#a1000b",
+    "--color-danger-active": "#840007",
+    "--color-danger-disabled": "#dd443c",
+    "--color-danger-foreground": "#f8f7f2",
+    "--color-white": "#f8f7f2",
+    "--color-black": "#1a1a17",
+    "--color-light-gray-4": "#e8e5da",
+    "--color-light-gray-5": "#f1efe7",
+};
+
+/** Ember: punchy orange primary over a warm cream base. Yellow warning keeps its accessible
+ * dark text; white text on the orange primary and the green success. Mirrors tokens.css. */
+const EMBER: Overrides = {
+    "--color-primary": "#ea580c",
+    "--color-primary-hover": "#cf4b00",
+    "--color-primary-active": "#b33f00",
+    "--color-primary-disabled": "#ff8657",
+    "--color-primary-foreground": "#faf8f4",
+    "--color-success": "#16a34a",
+    "--color-success-hover": "#008f3d",
+    "--color-success-active": "#007a33",
+    "--color-success-disabled": "#46c368",
+    "--color-success-foreground": "#faf8f4",
+    "--color-warning": "#eab308",
+    "--color-warning-hover": "#d3a100",
+    "--color-warning-active": "#bc8f00",
+    "--color-warning-disabled": "#ffd77e",
+    "--color-warning-foreground": "#1c1917",
+    "--color-danger": "#dc2626",
+    "--color-danger-hover": "#c50012",
+    "--color-danger-active": "#a7000d",
+    "--color-danger-disabled": "#ff5249",
+    "--color-danger-foreground": "#faf8f4",
+    "--color-white": "#faf8f4",
+    "--color-black": "#1c1917",
+    "--color-light-gray-4": "#eae4da",
+    "--color-light-gray-5": "#f4f0ea",
+};
+
+/** Purple: a vivid violet primary paired with a vivid green and orange/brick-red status colors
+ * over a faintly lavender-cool neutral base. White text on primary/success/danger; dark text on
+ * the orange warning (white fails contrast there). Mirrors tokens.css. */
+const PURPLE: Overrides = {
+    "--color-primary": "#5b08b2",
+    "--color-primary-hover": "#490092",
+    "--color-primary-active": "#370070",
+    "--color-primary-disabled": "#7639d4",
+    "--color-primary-foreground": "#ffffff",
+    "--color-success": "#00a75e",
+    "--color-success-hover": "#009251",
+    "--color-success-active": "#007e45",
+    "--color-success-disabled": "#40c77c",
+    "--color-success-foreground": "#ffffff",
+    "--color-warning": "#eb7425",
+    "--color-warning-hover": "#d66100",
+    "--color-warning-active": "#bb5400",
+    "--color-warning-disabled": "#ff9e68",
+    "--color-warning-foreground": "#111418",
+    "--color-danger": "#c73c3c",
+    "--color-danger-hover": "#b2262b",
+    "--color-danger-active": "#9d0519",
+    "--color-danger-disabled": "#ea5d59",
+    "--color-danger-foreground": "#ffffff",
+    "--color-light-gray-4": "#e6e6ee",
+    "--color-light-gray-5": "#efeff4",
+};
+
 const BUILTIN_THEMES: Record<string, Overrides> = {
     Blueprint: {}, // pure defaults
-    Datex: DATEX,
     Anthropic: ANTHROPIC,
+    Purple: PURPLE,
+    Lagoon: LAGOON,
+    Indigo: INDIGO,
+    Forest: FOREST,
+    Ember: EMBER,
 };
-const BUILTIN_NAMES = ["Blueprint", "Datex", "Anthropic"];
+const BUILTIN_NAMES = ["Blueprint", "Anthropic", "Purple", "Lagoon", "Indigo", "Forest", "Ember"];
 const BUILTIN_SET = new Set(BUILTIN_NAMES);
 
 // ─── Color math (culori) ─────────────────────────────────────────────────────
 
 const toOklch = converter("oklch");
+
+/**
+ * Parse a loose color string (hex with/without `#`, or any CSS color) to a normalized
+ * `#rrggbb`. Returns null if it isn't a valid color — callers revert to the prior value.
+ */
+function normalizeHex(input: string): string | null {
+    const t = input.trim();
+    if (!t) return null;
+    const c = parse(/^[0-9a-fA-F]{3,8}$/.test(t) ? `#${t}` : t);
+    return c ? (formatHex(c) ?? null) : null;
+}
 
 /** Shift a hex color's OKLCH lightness by `dl`, gamut-clamp, return hex. */
 function shiftLightness(hex: string, dl: number): string {
@@ -317,6 +448,10 @@ export interface ThemeBuilderState {
     modified: boolean;
     setIntentBase: (key: IntentKey, hex: string) => void;
     setSeed: (prop: string, hex: string) => void;
+    /** Merge a batch of seed overrides into the working set (keeps existing ones). */
+    mergeSeeds: (map: Overrides) => void;
+    /** Replace the working overrides wholesale (like loading a theme definition). */
+    applyOverrides: (map: Overrides) => void;
     resetIntent: (key: IntentKey) => void;
     /** OKLCH-lightness crossover for auto text color: fills ≥ this get dark text, else white. */
     fgThreshold: number;
@@ -335,6 +470,8 @@ export interface ThemeBuilderState {
     revert: () => void;
     /** Save the working overrides as a custom theme. Returns an error string on failure. */
     saveAs: (name: string) => string | null;
+    /** Save a given override map directly as a custom theme and load it. Returns an error on failure. */
+    saveThemeFrom: (name: string, map: Overrides) => string | null;
     /** Delete a custom theme (built-ins are protected). */
     deleteTheme: (name: string) => void;
 }
@@ -422,6 +559,14 @@ export function useThemeBuilder(): ThemeBuilderState {
         setOverrides((o) => ({ ...o, [prop]: hex }));
     }, []);
 
+    const mergeSeeds = useCallback((map: Overrides) => {
+        setOverrides((o) => ({ ...o, ...sanitize(map) }));
+    }, []);
+
+    const applyOverrides = useCallback((map: Overrides) => {
+        setOverrides(sanitize(map));
+    }, []);
+
     const resetIntent = useCallback((key: IntentKey) => {
         setOverrides((o) => {
             const next = { ...o };
@@ -458,6 +603,18 @@ export function useThemeBuilder(): ThemeBuilderState {
         [overrides],
     );
 
+    const saveThemeFrom = useCallback((rawName: string, map: Overrides): string | null => {
+        const name = rawName.trim();
+        if (!name) return "Enter a name";
+        if (BUILTIN_SET.has(name)) return `"${name}" is a built-in name`;
+        const snapshot = sanitize(map);
+        setCustomThemes((c) => ({ ...c, [name]: snapshot }));
+        setSelectedName(name);
+        setBaseline(snapshot);
+        setOverrides(snapshot);
+        return null;
+    }, []);
+
     const deleteTheme = useCallback(
         (name: string) => {
             if (BUILTIN_SET.has(name)) return;
@@ -493,6 +650,8 @@ export function useThemeBuilder(): ThemeBuilderState {
         modified,
         setIntentBase,
         setSeed,
+        mergeSeeds,
+        applyOverrides,
         resetIntent,
         fgThreshold,
         setFgThreshold,
@@ -503,13 +662,222 @@ export function useThemeBuilder(): ThemeBuilderState {
         selectTheme,
         revert,
         saveAs,
+        saveThemeFrom,
         deleteTheme,
     };
 }
 
+// ─── Agent / programmatic API (window.__mithrilTheme) ─────────────────────────
+
+/**
+ * Normalize a seed name to its canonical custom-property form. Accepts `--color-primary`,
+ * `color-primary`, or the bare `primary` / `gray-1` shorthand so the API is forgiving.
+ */
+function normProp(p: string): string {
+    if (p.startsWith("--")) return p;
+    if (p.startsWith("color-")) return `--${p}`;
+    return `--color-${p}`;
+}
+
+/** Coerce a loose {prop: value} map to canonical seed props with normalized hex values. */
+function normMap(map: Record<string, string>): Overrides {
+    const out: Overrides = {};
+    for (const [k, v] of Object.entries(map)) {
+        const hex = normalizeHex(v);
+        if (hex) out[normProp(k)] = hex;
+    }
+    return out;
+}
+
+/** The shape installed at `window.__mithrilTheme`. */
+export interface ThemeApi {
+    /** Current snapshot: selected theme, mode, override map, fg threshold, export CSS. */
+    state: () => {
+        theme: string;
+        modified: boolean;
+        mode: ThemeMode;
+        dark: boolean;
+        fgThreshold: number;
+        overrides: Overrides;
+        css: string;
+    };
+    /** All available theme names (built-ins + saved custom). */
+    list: () => string[];
+    /** The full default seed map (Blueprint baseline). */
+    defaults: () => Overrides;
+    /** Current export CSS block. */
+    css: () => string;
+    /** Set one intent's base color (auto-derives hover/active/disabled/foreground). */
+    setIntent: (key: IntentKey, hex: string) => void;
+    /** Set one seed (intent variant or neutral). Prop name is forgiving (see normProp). */
+    setSeed: (prop: string, hex: string) => void;
+    /** Merge a batch of seeds into the working overrides. */
+    merge: (map: Record<string, string>) => void;
+    /** Replace the working overrides wholesale (a full theme definition). */
+    apply: (map: Record<string, string>) => void;
+    /** Set the auto-text-color OKLCH-lightness crossover and re-derive foregrounds. */
+    setFgThreshold: (t: number) => void;
+    /** Reset one intent to its Blueprint default. */
+    resetIntent: (key: IntentKey) => void;
+    /** Load a named theme into the working set. */
+    select: (name: string) => void;
+    /** Discard edits back to the loaded theme. */
+    revert: () => void;
+    /** Save the current working overrides as a named custom theme. */
+    save: (name: string) => string | null;
+    /** Apply a map and save it as a named custom theme in one step. */
+    saveTheme: (name: string, map: Record<string, string>) => string | null;
+    /** Delete a custom theme. */
+    remove: (name: string) => void;
+    /** Set the active app's appearance mode. */
+    setMode: (mode: ThemeMode) => void;
+    /** Flip between light and dark. */
+    toggleDark: () => void;
+    /** Open/close the Theme Builder panel. */
+    setPanelOpen: (open: boolean) => void;
+    /** Log a usage cheatsheet to the console. */
+    help: () => void;
+}
+
+interface ThemeApiDeps {
+    builder: ThemeBuilderState;
+    mode: ThemeMode;
+    dark: boolean;
+    setMode: (m: ThemeMode) => void;
+    toggleDark: () => void;
+    setPanelOpen: (open: boolean) => void;
+}
+
+/**
+ * Install a programmatic theme API on `window.__mithrilTheme` for driving the design system
+ * from the console or browser automation — set seeds, apply/merge override maps, switch named
+ * themes, flip light/dark, and save new themes, all without touching the native color pickers
+ * (which open an un-driveable OS dialog). The methods read the latest builder/mode controls via
+ * a ref so the single install stays current across renders. Gallery-only; the distributed
+ * component source never references this.
+ */
+export function useThemeApiBridge(deps: ThemeApiDeps): void {
+    const ref = useRef(deps);
+    ref.current = deps;
+
+    useEffect(() => {
+        const api: ThemeApi = {
+            state: () => {
+                const { builder, mode, dark } = ref.current;
+                return {
+                    theme: builder.selectedName,
+                    modified: builder.modified,
+                    mode,
+                    dark,
+                    fgThreshold: builder.fgThreshold,
+                    overrides: builder.overrides,
+                    css: builder.css,
+                };
+            },
+            list: () => ref.current.builder.themeNames,
+            defaults: () => ({ ...DEFAULTS }),
+            css: () => ref.current.builder.css,
+            setIntent: (key, hex) => {
+                const h = normalizeHex(hex);
+                if (h) ref.current.builder.setIntentBase(key, h);
+            },
+            setSeed: (prop, hex) => {
+                const h = normalizeHex(hex);
+                if (h) ref.current.builder.setSeed(normProp(prop), h);
+            },
+            merge: (map) => ref.current.builder.mergeSeeds(normMap(map)),
+            apply: (map) => ref.current.builder.applyOverrides(normMap(map)),
+            setFgThreshold: (t) => ref.current.builder.setFgThreshold(t),
+            resetIntent: (key) => ref.current.builder.resetIntent(key),
+            select: (name) => ref.current.builder.selectTheme(name),
+            revert: () => ref.current.builder.revert(),
+            save: (name) => ref.current.builder.saveAs(name),
+            saveTheme: (name, map) => ref.current.builder.saveThemeFrom(name, normMap(map)),
+            remove: (name) => ref.current.builder.deleteTheme(name),
+            setMode: (mode) => ref.current.setMode(mode),
+            toggleDark: () => ref.current.toggleDark(),
+            setPanelOpen: (open) => ref.current.setPanelOpen(open),
+            help: () => {
+                // eslint-disable-next-line no-console
+                console.log(
+                    [
+                        "mithril theme API — window.__mithrilTheme",
+                        "  .state()                       current theme/mode/overrides/css",
+                        "  .list()                        available theme names",
+                        "  .defaults()                    Blueprint default seed map",
+                        "  .setIntent(key, hex)           key: primary|success|warning|danger (derives variants)",
+                        "  .setSeed(prop, hex)            prop: 'gray-1' | '--color-gray-1' | 'primary-hover'",
+                        "  .merge({prop: hex, ...})       merge a batch of seeds",
+                        "  .apply({prop: hex, ...})       replace working overrides wholesale",
+                        "  .setFgThreshold(t)             auto text-color crossover (0.3–0.9)",
+                        "  .resetIntent(key)              reset one intent to default",
+                        "  .select(name) / .revert()      load a named theme / discard edits",
+                        "  .save(name)                    save current working as a custom theme",
+                        "  .saveTheme(name, {map})        apply a map and save it in one step",
+                        "  .remove(name)                  delete a custom theme",
+                        "  .setMode('system'|'light'|'dark') / .toggleDark()",
+                        "  .setPanelOpen(true|false)      open/close the Theme Builder panel",
+                    ].join("\n"),
+                );
+            },
+        };
+        (window as unknown as { __mithrilTheme: ThemeApi }).__mithrilTheme = api;
+        // eslint-disable-next-line no-console
+        console.log("mithril theme API ready — window.__mithrilTheme.help()");
+        return () => {
+            delete (window as unknown as { __mithrilTheme?: ThemeApi }).__mithrilTheme;
+        };
+    }, []);
+}
+
 // ─── UI ──────────────────────────────────────────────────────────────────────
 
-/** One color swatch row: native color input + label + hex readout. */
+/**
+ * An editable hex field. Keeps a local draft while focused so typing isn't clobbered by the
+ * live-applied value, commits on Enter/blur (reverting if the text isn't a valid color), and
+ * resyncs to the external value when not being edited. Unlike the native color picker this is
+ * keyboard- and automation-driveable (you can type/paste a hex straight in).
+ */
+function HexInput({ value, onCommit, label }: { value: string; onCommit: (hex: string) => void; label: string }) {
+    const [draft, setDraft] = useState(value);
+    const [focused, setFocused] = useState(false);
+    useEffect(() => {
+        if (!focused) setDraft(value);
+    }, [value, focused]);
+    const commit = () => {
+        const hex = normalizeHex(draft);
+        if (hex) onCommit(hex);
+        else setDraft(value);
+    };
+    return (
+        <input
+            type="text"
+            spellCheck={false}
+            autoComplete="off"
+            aria-label={`${label} hex`}
+            value={draft}
+            onFocus={() => setFocused(true)}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => {
+                setFocused(false);
+                commit();
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    commit();
+                    e.currentTarget.blur();
+                }
+                if (e.key === "Escape") {
+                    setDraft(value);
+                    e.currentTarget.blur();
+                }
+            }}
+            className="w-[72px] shrink-0 rounded-bp border border-border bg-background px-1.5 py-0.5 text-right font-mono text-body-xs text-foreground-muted focus:border-blue-3 focus:text-foreground focus:outline-none"
+        />
+    );
+}
+
+/** One color swatch row: native color input + label + editable hex field. */
 function SwatchRow({
     label,
     value,
@@ -522,7 +890,7 @@ function SwatchRow({
     sub?: boolean;
 }) {
     return (
-        <label className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5">
             <input
                 type="color"
                 value={value}
@@ -538,8 +906,8 @@ function SwatchRow({
             >
                 {label}
             </span>
-            <code className="font-mono text-body-xs text-foreground-muted">{value}</code>
-        </label>
+            <HexInput label={label} value={value} onCommit={onChange} />
+        </div>
     );
 }
 
