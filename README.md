@@ -164,7 +164,7 @@ The registry is just a convenience over copying files — you own the source eit
 
 Palette, intents, type, radius, motion, and elevation shadows are ported **1:1** from Blueprint's DTCG token set and SCSS variables; dark surface colors were verified against Blueprint's OKLCH-derived values.
 
-> **Runtime-derivable & themeable.** Semantic tokens are derived at runtime from a small **seed** set (the four intent vars + the gray ramp) via CSS relative-color `oklch(from …)` / `color-mix()`, mirroring Blueprint's DTCG `derive` offsets — so overriding a seed on `<html>` re-tints the whole theme in both light and dark. Every derived value ships a static-literal `@supports` fallback. A worked example theme (`[data-theme="datex"]`) is wired into the gallery; see [`docs/theming.md`](docs/theming.md).
+> **Runtime-derivable & themeable.** Semantic tokens are derived at runtime from a small **seed** set (the four intent vars + the gray ramp) via CSS relative-color `oklch(from …)` / `color-mix()`, mirroring Blueprint's DTCG `derive` offsets — so overriding a seed on `<html>` re-tints the whole theme in both light and dark. Every derived value ships a static-literal `@supports` fallback. Several named themes ship as worked examples (`[data-theme="anthropic"]`, `"purple"`, …) and are switchable in the gallery; see [`docs/theming.md`](docs/theming.md).
 
 > **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), not runtime `var()` in inline styles — those get dropped.
 

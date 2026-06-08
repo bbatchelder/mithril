@@ -556,49 +556,16 @@
 }
 
 /* =============================================================================
- * Example alternate theme — "datex" (P2.5 themeability proof)
+ * Named alternate themes — `[data-theme="…"]`
  * -----------------------------------------------------------------------------
  * A theme overrides ONLY seeds. Because every semantic token above derives from
- * a seed, this single block re-tints BOTH the light and dark variants. Apply via
- * `[data-theme="datex"]` (combine with `.dark`/`[data-mode]` for dark).
- *
- * All four intents are re-seeded (vivid violet primary + brand status colors);
- * hover/active/disabled tiers mirror each color family's own Blueprint OKLCH
- * steps. The neutral ramp is intentionally LEFT at the default grays so the
- * background/surfaces match the default theme — datex re-tints intents only.
- *
- * NOTE: full runtime theming (a ThemeProvider/API + gallery switcher, option #3
- * from the P2.5 discussion) is planned future work; this is the static proof.
+ * a seed, a single block re-tints BOTH the light and dark variants (combine with
+ * `.dark`/`[data-mode]` for dark). Each block mirrors an entry in BUILTIN_THEMES
+ * in src/theme-builder.tsx — the gallery's Theme Builder applies the same seeds as
+ * inline overrides and exports blocks in this exact shape.
  * ========================================================================== */
-[data-theme="datex"] {
-    /* Primary — vivid violet, rest = rgb(91,8,178). */
-    --color-primary: #5b08b2;
-    --color-primary-hover: #470092;
-    --color-primary-active: #340073;
-    --color-primary-disabled: #7339d1;
 
-    /* Success — brand mint, rest = rgb(63,197,137). Bright enough that solid fills
-     * need dark text for contrast (white-on-mint fails AA). */
-    --color-success: #3fc589;
-    --color-success-hover: #39ac78;
-    --color-success-active: #339669;
-    --color-success-disabled: #4de6a2;
-    --color-success-foreground: #111418;
-
-    /* Warning — brand amber, rest = rgb(239,181,47). Keeps the default dark text. */
-    --color-warning: #efb52f;
-    --color-warning-hover: #bc8f2b;
-    --color-warning-active: #a07b29;
-    --color-warning-disabled: #ffdc57;
-
-    /* Danger — brand red, rest = rgb(226,52,57) (designed to match the palette). */
-    --color-danger: #e23439;
-    --color-danger-hover: #c01d25;
-    --color-danger-active: #a21920;
-    --color-danger-disabled: #fd6265;
-}
-
-/* Anthropic — warm terracotta primary over a cream/clay neutral base. Unlike datex, this
+/* Anthropic — warm terracotta primary over a cream/clay neutral base. Beyond the intents this
  * theme also re-seeds the neutral extremes (white → cream, black → clay-brown) and the
  * top of the light ramp, so surfaces and body text pick up the warmth too. Warning keeps
  * the default amber. Mirrors BUILTIN_THEMES.Anthropic in src/theme-builder.tsx. */
@@ -624,6 +591,148 @@
     --color-white: #f5f4ec;
     --color-black: #000000;
     --color-light-gray-5: #f0eee9;
+}
+
+/* Purple — a vivid violet primary (#5b08b2) paired with a vivid green plus orange warning and
+ * brick-red danger, over a faintly lavender-cool neutral base. White text on primary/success/
+ * danger; the orange warning keeps dark text (white fails contrast on it). Mirrors
+ * BUILTIN_THEMES.Purple in src/theme-builder.tsx. */
+[data-theme="purple"] {
+    --color-primary: #5b08b2;
+    --color-primary-hover: #490092;
+    --color-primary-active: #370070;
+    --color-primary-disabled: #7639d4;
+    --color-primary-foreground: #ffffff;
+    --color-success: #00a75e;
+    --color-success-hover: #009251;
+    --color-success-active: #007e45;
+    --color-success-disabled: #40c77c;
+    --color-success-foreground: #ffffff;
+    --color-warning: #eb7425;
+    --color-warning-hover: #d66100;
+    --color-warning-active: #bb5400;
+    --color-warning-disabled: #ff9e68;
+    --color-warning-foreground: #111418;
+    --color-danger: #c73c3c;
+    --color-danger-hover: #b2262b;
+    --color-danger-active: #9d0519;
+    --color-danger-disabled: #ea5d59;
+    --color-danger-foreground: #ffffff;
+    --color-light-gray-4: #e6e6ee;
+    --color-light-gray-5: #efeff4;
+}
+
+/* Lagoon — cool teal primary with clean green/amber/red status colors on the default neutral
+ * ramp (only the app background is faintly cooled). White text on the teal primary and the
+ * bright green success. Mirrors BUILTIN_THEMES.Lagoon in src/theme-builder.tsx. */
+[data-theme="lagoon"] {
+    --color-primary: #0d9488;
+    --color-primary-hover: #008076;
+    --color-primary-active: #006d64;
+    --color-primary-disabled: #41b3a7;
+    --color-primary-foreground: #ffffff;
+    --color-success: #16a34a;
+    --color-success-hover: #008f3d;
+    --color-success-active: #007a33;
+    --color-success-disabled: #46c368;
+    --color-success-foreground: #ffffff;
+    --color-warning: #d97706;
+    --color-warning-hover: #c06800;
+    --color-warning-active: #a75900;
+    --color-warning-disabled: #fc973c;
+    --color-warning-foreground: #111418;
+    --color-danger: #dc2626;
+    --color-danger-hover: #c50012;
+    --color-danger-active: #a7000d;
+    --color-danger-disabled: #ff5249;
+    --color-danger-foreground: #ffffff;
+    --color-light-gray-5: #eef4f4;
+}
+
+/* Indigo — a crisp, cool indigo primary with emerald success and a rose-tinted danger on a
+ * faintly cool neutral base. Mirrors BUILTIN_THEMES.Indigo in src/theme-builder.tsx. */
+[data-theme="indigo"] {
+    --color-primary: #4f46e5;
+    --color-primary-hover: #422fd0;
+    --color-primary-active: #3611bb;
+    --color-primary-disabled: #696cff;
+    --color-primary-foreground: #ffffff;
+    --color-success: #059669;
+    --color-success-hover: #00825a;
+    --color-success-active: #006e4c;
+    --color-success-disabled: #3eb687;
+    --color-success-foreground: #ffffff;
+    --color-warning: #d97706;
+    --color-warning-hover: #c06800;
+    --color-warning-active: #a75900;
+    --color-warning-disabled: #fc973c;
+    --color-warning-foreground: #111418;
+    --color-danger: #e11d48;
+    --color-danger-hover: #c7003a;
+    --color-danger-active: #a90030;
+    --color-danger-disabled: #ff5569;
+    --color-danger-foreground: #ffffff;
+    --color-light-gray-5: #f3f4f9;
+}
+
+/* Forest — an earthy olive/moss primary over a warm parchment neutral base (cream white,
+ * warm-brown black). Golden warning, brick danger. White text on the moss primary and the
+ * green success. Mirrors BUILTIN_THEMES.Forest in src/theme-builder.tsx. */
+[data-theme="forest"] {
+    --color-primary: #4d7c0f;
+    --color-primary-hover: #3f6900;
+    --color-primary-active: #335700;
+    --color-primary-disabled: #6a9b37;
+    --color-primary-foreground: #f8f7f2;
+    --color-success: #16a34a;
+    --color-success-hover: #008f3d;
+    --color-success-active: #007a33;
+    --color-success-disabled: #46c368;
+    --color-success-foreground: #f8f7f2;
+    --color-warning: #ca8a04;
+    --color-warning-hover: #b37900;
+    --color-warning-active: #9c6900;
+    --color-warning-disabled: #eba93d;
+    --color-warning-foreground: #1a1a17;
+    --color-danger: #b91c1c;
+    --color-danger-hover: #a1000b;
+    --color-danger-active: #840007;
+    --color-danger-disabled: #dd443c;
+    --color-danger-foreground: #f8f7f2;
+    --color-white: #f8f7f2;
+    --color-black: #1a1a17;
+    --color-light-gray-4: #e8e5da;
+    --color-light-gray-5: #f1efe7;
+}
+
+/* Ember — a punchy orange primary over a warm cream neutral base. Yellow warning (keeps its
+ * accessible dark text), clean green success and red danger. White text on the orange primary
+ * and the green success. Mirrors BUILTIN_THEMES.Ember in src/theme-builder.tsx. */
+[data-theme="ember"] {
+    --color-primary: #ea580c;
+    --color-primary-hover: #cf4b00;
+    --color-primary-active: #b33f00;
+    --color-primary-disabled: #ff8657;
+    --color-primary-foreground: #faf8f4;
+    --color-success: #16a34a;
+    --color-success-hover: #008f3d;
+    --color-success-active: #007a33;
+    --color-success-disabled: #46c368;
+    --color-success-foreground: #faf8f4;
+    --color-warning: #eab308;
+    --color-warning-hover: #d3a100;
+    --color-warning-active: #bc8f00;
+    --color-warning-disabled: #ffd77e;
+    --color-warning-foreground: #1c1917;
+    --color-danger: #dc2626;
+    --color-danger-hover: #c50012;
+    --color-danger-active: #a7000d;
+    --color-danger-disabled: #ff5249;
+    --color-danger-foreground: #faf8f4;
+    --color-white: #faf8f4;
+    --color-black: #1c1917;
+    --color-light-gray-4: #eae4da;
+    --color-light-gray-5: #f4f0ea;
 }
 
 /* =============================================================================

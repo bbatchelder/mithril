@@ -67,7 +67,7 @@ import { DEMOS } from "@/demos/registry";
 import { COMPONENT_META, type ComponentMeta } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { Playground, PLAYGROUNDS } from "@/playground";
-import { useThemeBuilder, ThemeBuilderPanel } from "@/theme-builder";
+import { useThemeBuilder, ThemeBuilderPanel, useThemeApiBridge } from "@/theme-builder";
 import { ComponentPreview, hasPreview } from "@/previews";
 import { ResizeSensor } from "@/components/ui/resize-sensor";
 import { OverflowList } from "@/components/ui/overflow-list";
@@ -5374,13 +5374,13 @@ const params = new URLSearchParams(window.location.search);
 const ONLY = params.get("component");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
-/** `?palette=datex` selects the example alternate theme (P2.5 themeability proof). */
-const INITIAL_DATEX = params.get("palette") === "datex";
+/** `?palette=<name>` applies a named alternate theme up front (e.g. `?palette=purple`). */
+const INITIAL_PALETTE = params.get("palette");
 
 // Apply the initial palette to <html> up front so the isolated harness mode
 // (`?component=<id>`, which returns before any palette effect runs) still honors
-// `?palette=datex`. In the interactive app the per-app theme effect manages it after.
-if (INITIAL_DATEX) document.documentElement.setAttribute("data-theme", "datex");
+// `?palette=<name>`. In the interactive app the per-app theme effect manages it after.
+if (INITIAL_PALETTE) document.documentElement.setAttribute("data-theme", INITIAL_PALETTE);
 
 /**
  * Components whose specimens render a portaled/floating overlay OPEN by default (for the
@@ -6296,6 +6296,18 @@ export default function App() {
         editorOpen,
         toggleEditor: () => setEditorOpen((o) => !o),
     };
+
+    // Expose window.__mithrilTheme so the theme can be driven programmatically (console or
+    // browser automation) — set seeds, apply/save named themes, flip light/dark — without the
+    // native color pickers' un-driveable OS dialog.
+    useThemeApiBridge({
+        builder,
+        mode,
+        dark,
+        setMode: chrome.setMode,
+        toggleDark: chrome.toggleDark,
+        setPanelOpen: setEditorOpen,
+    });
 
     return (
         <DarkContext.Provider value={dark}>
