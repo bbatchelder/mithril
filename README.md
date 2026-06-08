@@ -109,11 +109,52 @@ Each demo lives under `src/demos/<slug>/` and is registered in `src/demos/regist
 
 You're welcome to. This was built for the author, but if it's useful to you, please use it, fork it, reshape it — that's what owning the source is for. Just go in with the honest deal above: it's a personal, single-author, no-support project whose design language will diverge from Blueprint over time.
 
-mithril follows the shadcn model: you copy the source into your own project and own it from then on.
+mithril ships **two complementary ways**, and you can mix them:
 
-> **Prerequisite:** the components are styled with Tailwind v4 utility classes and are inert without it — your project must be on **Tailwind v4**.
+- **npm package** (`@bbatchelder/mithril`) — install it like any dependency and upgrade by version bump. Lowest-friction way to try it; you don't vendor any source. Ships a prebuilt stylesheet, so **you don't even need Tailwind** for the turnkey path.
+- **shadcn registry** (owned source) — copy the component source into your project and own it from then on, the way the rest of this README describes. Best when you want to fork and reshape the components in place. Requires **Tailwind v4**.
 
-### Install via the shadcn registry (recommended)
+### Install as an npm package
+
+```
+pnpm add @bbatchelder/mithril            # react + react-dom are peer deps you already have
+```
+
+Import components and the prebuilt stylesheet once, anywhere in your app:
+
+```tsx
+import "@bbatchelder/mithril/styles.css"; // turnkey — all component styles + tokens, no Tailwind needed
+
+import { Button, Dialog } from "@bbatchelder/mithril";
+// or per-component, for the leanest bundle:
+import { Button } from "@bbatchelder/mithril/button";
+```
+
+The package is ESM, fully typed, and tree-shakeable (one module per component). Subpaths:
+
+| Import | What you get |
+| --- | --- |
+| `@bbatchelder/mithril` | barrel — every component + the `cn` helper + `Intent` type |
+| `@bbatchelder/mithril/<name>` | a single component (e.g. `/button`, `/data-table`) |
+| `@bbatchelder/mithril/icons` | the 706 Blueprint glyphs as tree-shakeable named exports (`import { add } from …`) |
+| `@bbatchelder/mithril/icons/all` | `ICON_GLYPHS` — the full map for the string form (`<Icon icon="add" />` after `registerIcons`) |
+| `@bbatchelder/mithril/styles.css` | **prebuilt** stylesheet — all component utilities + tokens + dark mode. The turnkey path. |
+| `@bbatchelder/mithril/tokens.css` · `/base.css` | raw token `@theme` + animation/base layers, for the advanced path below |
+
+**Theming** still works against the prebuilt CSS: the tokens derive at runtime from seed variables, so overriding a seed on `<html>` (or applying a `[data-theme="…"]` block) re-tints everything — see [Design tokens](#design-tokens) and [`docs/theming.md`](docs/theming.md).
+
+**Advanced (own your Tailwind):** if you run Tailwind v4 yourself and want mithril's tokens/utilities available in *your own* markup, skip `styles.css` and instead pull the raw sources into your stylesheet, pointing Tailwind's scanner at the package so component classes are emitted:
+
+```css
+@import "tailwindcss";
+@import "@bbatchelder/mithril/tokens.css"; /* @theme seeds + semantic vars */
+@import "@bbatchelder/mithril/base.css";    /* keyframes + .bp-* animation hooks + base layer */
+@source "../node_modules/@bbatchelder/mithril/dist-lib";
+```
+
+> **Prerequisite (registry / owned-source paths only):** the source components are styled with Tailwind v4 utility classes and are inert without it — your project must be on **Tailwind v4**. The npm `styles.css` path has no such requirement.
+
+### Install via the shadcn registry (own the source)
 
 The registry is hosted at **`https://bbatchelder.github.io/mithril/r/`** — one entry per component, with its npm `dependencies` and cross-component `registryDependencies` (e.g. `Select` pulls in `Popover`, `Menu`, and `InputGroup`; everything pulls in the design tokens + `cn`) resolved automatically.
 

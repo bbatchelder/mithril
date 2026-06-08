@@ -50,6 +50,19 @@ jobs:
           git diff --exit-code registry.json \
             || (echo "::error::registry.json is stale — run 'pnpm gen:registry' and commit the result." && exit 1)
 
+      # Barrel-drift guard: src/index.ts (the npm-package entry) must list every component.
+      # Regenerate it and fail if it changed (someone added a component without running
+      # `pnpm gen:barrel`).
+      - name: Barrel drift guard
+        run: |
+          pnpm gen:barrel
+          git diff --exit-code src/index.ts \
+            || (echo "::error::src/index.ts is stale — run 'pnpm gen:barrel' and commit the result." && exit 1)
+
       # Smoke-test that the installable registry builds (shadcn build + URL rewrite).
       # Runs after `pnpm build` because it emits into dist/ (which vite cleans).
       - run: pnpm build:registry
+
+      # Smoke-test that the npm-package build succeeds (barrel → ESM + types + prebuilt CSS).
+      # Outputs into dist-lib/, separate from the gallery's dist/, so order doesn't matter.
+      - run: pnpm build:lib

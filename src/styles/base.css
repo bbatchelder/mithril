@@ -1,0 +1,153 @@
+/* Component animation keyframes, the `.bp-*` animation hooks, base element styles, and
+ * the reduced-motion reset — everything the components rely on beyond Tailwind utilities
+ * and the design tokens.
+ *
+ * Kept in its own partial (not inlined in globals.css) so it can be shared by both:
+ *   - the app stylesheet (`globals.css`, scanned by Tailwind over the whole project), and
+ *   - the published library stylesheet (`index.css`, scanned via an explicit `@source`).
+ * Both import this file after `tailwindcss` + `tokens.css`, so the two builds stay identical.
+ */
+
+/* Spinner rotation keyframe — 500ms (5 × $pt-transition-duration=100ms), matching Blueprint. */
+@keyframes bp-spinner-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ProgressBar stripe animation — 300ms (3 × $pt-transition-duration=100ms), matching Blueprint.
+ * Animates background-position from 0 → 30px (= $progress-bar-stripes-size = $pt-spacing*7.5).
+ * Blueprint runs this "reverse" on the meter so stripes appear to flow left. */
+@keyframes bp-progress-bar-stripes {
+    from { background-position: 0 0; }
+    to   { background-position: 30px 0; }
+}
+
+/* Skeleton glow animation — 1s (10 × $pt-transition-duration=100ms), matching Blueprint.
+ * Keyframes: skeleton-color-start = rgba(light-gray1, 0.2) = rgba(211,216,222,0.2)
+ *            skeleton-color-end   = rgba(gray1, 0.2)       = rgba(95,107,124,0.2)
+ * Same colors in both light and dark themes (Blueprint has no dark override for skeleton). */
+@keyframes bp-skeleton-glow {
+    from {
+        background: rgba(211, 216, 222, 0.2);
+        border-color: rgba(211, 216, 222, 0.2);
+    }
+    to {
+        background: rgba(95, 107, 124, 0.2);
+        border-color: rgba(95, 107, 124, 0.2);
+    }
+}
+
+/* Popover open/close transition — matches Blueprint's two-part appear animation:
+ *   scale-transition: transform scale(0.3) → scale(1), 300ms (3 × 100ms), bounce easing
+ *   fade-transition:  opacity 0 → 1, 100ms, standard easing
+ * (Blueprint _popover.scss `@include scale-transition` + the transition container's
+ *  `@include fade-transition`.) Minimal popovers drop the scale and keep only the fade.
+ *
+ * transform-origin is Radix's computed anchor point (the arrow position), so the panel
+ * scales out from the trigger — the same effect Blueprint gets from Popper's origin.
+ * Safe to animate `transform` on Content: Radix applies positioning translate to the
+ * wrapper ([data-radix-popper-content-wrapper]), not to Content itself. */
+@keyframes bp-popover-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bp-popover-fade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes bp-popover-scale-in  { from { transform: scale(0.3); } to { transform: scale(1); } }
+@keyframes bp-popover-scale-out { from { transform: scale(1); } to { transform: scale(0.3); } }
+
+.bp-popover-animated {
+    transform-origin: var(--radix-popover-content-transform-origin);
+}
+.bp-popover-animated[data-state="open"] {
+    animation:
+        bp-popover-fade-in var(--duration-bp) var(--ease-bp),
+        bp-popover-scale-in calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+}
+.bp-popover-animated[data-state="closed"] {
+    animation:
+        bp-popover-fade-out var(--duration-bp) var(--ease-bp),
+        bp-popover-scale-out calc(var(--duration-bp) * 3) var(--ease-bp-bounce);
+}
+/* Minimal popovers (menus, selects): fade only, no scale — matches Blueprint's
+ * `.bp6-popover-minimal-animation` which sets scale(1) scale(1) over a single 100ms. */
+.bp-popover-animated-minimal[data-state="open"] {
+    animation: bp-popover-fade-in var(--duration-bp) var(--ease-bp);
+}
+.bp-popover-animated-minimal[data-state="closed"] {
+    animation: bp-popover-fade-out var(--duration-bp) var(--ease-bp);
+}
+
+/* Drawer slide + backdrop fade. Radix keeps the panel/overlay mounted on close
+ * (Presence detects the CSS animation), so both enter and exit animate. The panel
+ * slides in from its anchored edge; the backdrop fades. Duration 200ms
+ * (2 × $pt-transition-duration) with Blueprint's standard ease — matching the
+ * feel of Blueprint's own overlay transitions. Safe to animate `transform` on the
+ * Content: Dialog Content (unlike Popover) carries no positioning translate. */
+@keyframes bp-overlay-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes bp-overlay-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+@keyframes bp-drawer-in-right   { from { transform: translateX(100%); }  to { transform: translateX(0); } }
+@keyframes bp-drawer-out-right  { from { transform: translateX(0); }     to { transform: translateX(100%); } }
+@keyframes bp-drawer-in-left    { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes bp-drawer-out-left   { from { transform: translateX(0); }     to { transform: translateX(-100%); } }
+@keyframes bp-drawer-in-top     { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes bp-drawer-out-top    { from { transform: translateY(0); }     to { transform: translateY(-100%); } }
+@keyframes bp-drawer-in-bottom  { from { transform: translateY(100%); }  to { transform: translateY(0); } }
+@keyframes bp-drawer-out-bottom { from { transform: translateY(0); }     to { transform: translateY(100%); } }
+
+.bp-drawer-overlay[data-state="open"]   { animation: bp-overlay-fade-in  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-overlay[data-state="closed"] { animation: bp-overlay-fade-out calc(var(--duration-bp) * 2) var(--ease-bp); }
+
+.bp-drawer-panel-right[data-state="open"]    { animation: bp-drawer-in-right   calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-right[data-state="closed"]  { animation: bp-drawer-out-right  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-left[data-state="open"]     { animation: bp-drawer-in-left    calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-left[data-state="closed"]   { animation: bp-drawer-out-left   calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-top[data-state="open"]      { animation: bp-drawer-in-top     calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-top[data-state="closed"]    { animation: bp-drawer-out-top    calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-bottom[data-state="open"]   { animation: bp-drawer-in-bottom  calc(var(--duration-bp) * 2) var(--ease-bp); }
+.bp-drawer-panel-bottom[data-state="closed"] { animation: bp-drawer-out-bottom calc(var(--duration-bp) * 2) var(--ease-bp); }
+
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+        font-feature-settings: normal;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        font-size: var(--text-body);
+        font-weight: var(--font-weight-normal);
+        line-height: var(--leading-bp);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+        background-color: var(--selection);
+    }
+}
+
+/* Respect prefers-reduced-motion (WCAG 2.3.3). Neutralize decorative motion —
+ * Popover scale/fade, Skeleton glow, ProgressBar stripes, and every CSS transition.
+ * Animations are applied via Tailwind `[animation:…]` utilities, so a blanket reset
+ * is the maintainable hook. The Spinner is an essential loading-status indicator
+ * (not interaction-triggered), so it's explicitly allowed to keep rotating. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .bp-spinner-animation {
+        animation-duration: 500ms !important;
+        animation-iteration-count: infinite !important;
+    }
+}

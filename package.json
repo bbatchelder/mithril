@@ -1,8 +1,8 @@
 {
     "name": "@bbatchelder/mithril",
     "version": "0.0.0",
-    "private": true,
-    "description": "A modern, pixel-faithful reimplementation of Palantir Blueprint's design language — built on React 19, Radix primitives, Tailwind v4, and CVA. Distributed shadcn-style as owned source.",
+    "private": false,
+    "description": "A modern, pixel-faithful reimplementation of Palantir Blueprint's design language — built on React 19, Radix primitives, Tailwind v4, and CVA. Distributed both as a conventional npm package and shadcn-style as owned source.",
     "type": "module",
     "license": "Apache-2.0",
     "packageManager": "pnpm@11.4.0",
@@ -26,6 +26,42 @@
         "components",
         "ui"
     ],
+    "sideEffects": false,
+    "main": "./dist-lib/index.js",
+    "module": "./dist-lib/index.js",
+    "types": "./dist-lib/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist-lib/index.d.ts",
+            "import": "./dist-lib/index.js"
+        },
+        "./icons": {
+            "types": "./dist-lib/components/ui/icons/index.d.ts",
+            "import": "./dist-lib/components/ui/icons/index.js"
+        },
+        "./icons/all": {
+            "types": "./dist-lib/components/ui/icons/all.d.ts",
+            "import": "./dist-lib/components/ui/icons/all.js"
+        },
+        "./lib/utils": {
+            "types": "./dist-lib/lib/utils.d.ts",
+            "import": "./dist-lib/lib/utils.js"
+        },
+        "./styles.css": "./dist-lib/mithril.css",
+        "./tokens.css": "./dist-lib/tokens.css",
+        "./base.css": "./dist-lib/base.css",
+        "./*": {
+            "types": "./dist-lib/components/ui/*.d.ts",
+            "import": "./dist-lib/components/ui/*.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "files": [
+        "dist-lib"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
@@ -37,8 +73,15 @@
         "gen:icons": "node tools/gen-icons.mjs",
         "gen:meta": "node tools/gen-component-meta.mjs",
         "gen:props": "node tools/gen-component-props.mjs",
+        "gen:barrel": "node tools/gen-barrel.mjs",
         "gen:registry": "node tools/gen-registry.mjs",
-        "build:registry": "pnpm dlx shadcn@4.9.0 build registry.json --output dist/r && node tools/rewrite-registry-urls.mjs"
+        "build:registry": "pnpm dlx shadcn@4.9.0 build registry.json --output dist/r && node tools/rewrite-registry-urls.mjs",
+        "build:css": "tailwindcss -i src/styles/index.css -o dist-lib/mithril.css --minify",
+        "build:lib": "pnpm gen:barrel && vite build --config vite.lib.config.ts && pnpm build:css && node tools/copy-lib-assets.mjs"
+    },
+    "peerDependencies": {
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
     },
     "dependencies": {
         "@radix-ui/react-context-menu": "^2.2.16",
@@ -53,15 +96,12 @@
         "@tanstack/react-virtual": "^3.13.26",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "culori": "^4.0.2",
-        "maplibre-gl": "^5.24.0",
-        "react": "^19.0.0",
         "react-day-picker": "^10.0.1",
-        "react-dom": "^19.0.0",
         "react-dropzone": "^15.0.0",
         "tailwind-merge": "^2.6.0"
     },
     "devDependencies": {
+        "@tailwindcss/cli": "^4.3.0",
         "@tailwindcss/vite": "^4.0.0",
         "@testing-library/dom": "^10.4.1",
         "@testing-library/jest-dom": "^6.9.1",
@@ -73,13 +113,18 @@
         "@types/react-dom": "^19.0.0",
         "@vitejs/plugin-react": "^6.0.0",
         "axe-core": "^4.11.4",
+        "culori": "^4.0.2",
         "jsdom": "^29.1.1",
+        "maplibre-gl": "^5.24.0",
         "pixelmatch": "^7.2.0",
         "pngjs": "^7.0.0",
+        "react": "^19.0.0",
         "react-docgen-typescript": "^2.4.0",
+        "react-dom": "^19.0.0",
         "tailwindcss": "^4.0.0",
         "typescript": "^6.0.0",
         "vite": "^8.0.0",
+        "vite-plugin-dts": "^5.0.2",
         "vitest": "^4.1.0"
     }
 }

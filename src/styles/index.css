@@ -1,0 +1,20 @@
+/* Published library stylesheet — the turnkey, prebuilt CSS a *package* consumer imports:
+ *
+ *   import "@bbatchelder/mithril/styles.css";
+ *
+ * It is the app's `globals.css` made self-contained for an out-of-band Tailwind build:
+ * `source(none)` turns off Tailwind's automatic content detection (there is no consuming
+ * project to scan at build time), and the explicit `@source` points the scanner at the
+ * component sources instead. That guarantees every utility class the components reference
+ * lands in the output — critical because Tailwind v4 tree-shakes unused `@theme` vars, so
+ * a class a component uses must be *seen* during this build or it won't be emitted.
+ *
+ * Built by `pnpm build:css` (Tailwind CLI) → `dist-lib/mithril.css`. Consumers who run
+ * their own Tailwind v4 setup can instead import the raw token source
+ * (`@bbatchelder/mithril/tokens.css`) into their `@theme` — see README "Install".
+ */
+@import "tailwindcss" source(none);
+@source "../components/ui";
+
+@import "./tokens.css";
+@import "./base.css";
