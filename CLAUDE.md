@@ -44,7 +44,7 @@ the ongoing goal:
      (`pnpm build:css`, Tailwind CLI over `src/styles/index.css` — turnkey, no consumer Tailwind needed)
      and the **raw** `tokens.css` + `base.css` for consumers running their own Tailwind v4. `exports`,
      peers, and `files` live in `package.json`; publish is `publish.yml` on a `vX.Y.Z` tag. The shared
-     non-token CSS (keyframes, `.bp-*` animation hooks, base layer) lives in `src/styles/base.css`,
+     non-token CSS (keyframes, `.mithril-*` animation hooks, base layer) lives in `src/styles/base.css`,
      imported by both `globals.css` (app) and `index.css` (library) so the two stay identical.
 
 ## Key locations

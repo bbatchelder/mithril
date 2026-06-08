@@ -85,7 +85,7 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLElement> {
 export const skeletonClass = [
     // Glow animation: 1s linear infinite alternate skeleton-glow
     // (defined in globals.css — animation disabled via animate=false)
-    "[animation:bp-skeleton-glow_1s_linear_infinite_alternate]",
+    "[animation:mithril-skeleton-glow_1s_linear_infinite_alternate]",
     // Base background color (= skeleton-color-start; animation keyframes add the glow)
     // rgba(light-gray1, 0.2) = rgba(211, 216, 222, 0.2)
     "bg-[rgba(211,216,222,0.2)]",

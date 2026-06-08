@@ -445,7 +445,7 @@ export function Popover({
                             // Open/close animation (globals.css). Full scale+fade for normal
                             // popovers (with arrow); fade-only for minimal ones — matches
                             // Blueprint's scale-transition vs minimal-animation split.
-                            showArrow ? "bp-popover-animated" : "bp-popover-animated-minimal",
+                            showArrow ? "mithril-popover-animated" : "mithril-popover-animated-minimal",
                             // Suppress Radix focus outline
                             "outline-none",
                             // Set text color: portaled content needs explicit color.

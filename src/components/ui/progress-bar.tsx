@@ -176,7 +176,7 @@ export const ProgressBar = forwardRef<HTMLDivElement, ProgressBarProps>(function
                         : "",
                     // Animation: only when stripes AND animate
                     showAnimation
-                        ? "[animation:bp-progress-bar-stripes_300ms_linear_infinite_reverse]"
+                        ? "[animation:mithril-progress-bar-stripes_300ms_linear_infinite_reverse]"
                         : "",
                 )}
                 style={{ width }}
