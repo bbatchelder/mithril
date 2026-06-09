@@ -311,15 +311,21 @@ export const TimePicker = forwardRef<HTMLDivElement, TimePickerProps>(function T
     const prevValueRef = useRef(valueProp);
     const prevMinRef = useRef(minTimeProp);
     const prevMaxRef = useRef(maxTimeProp);
+    const prevUseAmPmRef = useRef(useAmPm);
 
     useEffect(() => {
         const valueChanged = valueProp !== prevValueRef.current;
         const boundsChanged = minTimeProp !== prevMinRef.current || maxTimeProp !== prevMaxRef.current;
+        // Toggling 12h/24h must re-derive the segment text from the current value — the same
+        // 14:30 reads "14" in 24h but "2" (PM) in 12h. Without this the hour field shows an
+        // impossible "14" in a 12-hour field until the next edit.
+        const ampmChanged = useAmPm !== prevUseAmPmRef.current;
         prevValueRef.current = valueProp;
         prevMinRef.current = minTimeProp;
         prevMaxRef.current = maxTimeProp;
+        prevUseAmPmRef.current = useAmPm;
 
-        if (boundsChanged || (valueProp != null && valueChanged)) {
+        if (boundsChanged || ampmChanged || (valueProp != null && valueChanged)) {
             setState(stateFromDate(valueProp ?? state.value, useAmPm, minTime, maxTime));
         }
         // state.value intentionally excluded from deps — we only react to prop changes

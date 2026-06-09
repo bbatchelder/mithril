@@ -75,7 +75,11 @@ export interface DateRangePickerProps {
     maxDate?: Date;
     /**
      * Whether the two months are shown contiguously (left+1 = right).
-     * When true (default), navigating the left also moves the right.
+     *
+     * Currently always contiguous: this implementation drives both calendars from a single
+     * shared display month, so the pair is always adjacent and navigation moves it one month
+     * at a time. The prop is retained for API compatibility (and forward-compat with true
+     * independent two-month navigation), but `false` is not yet honored.
      * @default true
      */
     contiguousCalendarMonths?: boolean;
@@ -361,7 +365,8 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
             onChange,
             minDate = DEFAULT_MIN_DATE,
             maxDate = DEFAULT_MAX_DATE,
-            contiguousCalendarMonths = true,
+            // contiguousCalendarMonths is accepted (see its prop doc) but currently always
+            // contiguous, so it isn't read here.
             singleMonthOnly = false,
             allowSingleDayRange = false,
             disabled = false,
@@ -460,8 +465,11 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                     month={displayMonth}
                     onMonthChange={handleMonthChange}
                     numberOfMonths={numMonths}
-                    // In contiguous mode, navigation moves both months together
-                    pagedNavigation={contiguousCalendarMonths && numMonths > 1}
+                    // Contiguous navigation moves the pair by a SINGLE month (Jan/Feb → Feb/Mar),
+                    // keeping the two calendars adjacent. `pagedNavigation` would advance by
+                    // `numberOfMonths` (2), skipping a month entirely (Jan/Feb → Mar/Apr) — the
+                    // opposite of Blueprint's contiguous behavior. So leave it off.
+                    pagedNavigation={false}
                     startMonth={minDate}
                     endMonth={maxDate}
                     // Outside days are hidden in range picker (Blueprint behavior)
@@ -529,6 +537,16 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                             const isOutside = modifiers.outside;
                             const isDisabled = modifiers.disabled;
                             const isToday = modifiers.today;
+                            // A single chosen day with no second endpoint yet (range start picked,
+                            // end pending). react-day-picker marks it `selected` but NOT range_start
+                            // until a complete range exists, so without this it would render as a
+                            // plain unstyled day — the in-progress start would be invisible, making
+                            // it look like the selection cleared when it's actually still held.
+                            const isLoneSelected =
+                                modifiers.selected && !isEndpoint && !isRangeMiddle && !isOutside;
+                            // Filled (solid primary) treatment — both range endpoints and a lone
+                            // in-progress start get it.
+                            const isFilled = isEndpoint || isLoneSelected;
 
                             // Tag strategy for data-compare:
                             // drp-day         → a normal day (Jan 4, 2026 in left calendar)
@@ -560,10 +578,11 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                         "px-2 py-0 m-0",
                                         "transition-colors duration-100",
 
-                                        // Endpoints (range_start / range_end) — filled with the primary seed like selected day
-                                        isEndpoint && "bg-primary text-white cursor-pointer",
-                                        isEndpoint && "hover:bg-primary-hover",
-                                        isEndpoint && "active:bg-primary-active",
+                                        // Endpoints (range_start / range_end) and a lone in-progress
+                                        // start — filled with the primary seed like a selected day.
+                                        isFilled && "bg-primary text-white cursor-pointer",
+                                        isFilled && "hover:bg-primary-hover",
+                                        isFilled && "active:bg-primary-active",
                                         // Start: square right edge (continues into range band)
                                         isRangeStart && !isRangeEnd && "[border-top-right-radius:0px] [border-bottom-right-radius:0px]",
                                         // End: square left edge (continues from range band)
@@ -581,14 +600,14 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                                         // Outside month: hidden (Blueprint hides these in range mode)
                                         isOutside && "invisible",
 
-                                        // Normal day (not endpoint, not range, not outside)
-                                        !isEndpoint && !isRangeMiddle && !isOutside && !isDisabled &&
+                                        // Normal day (not filled, not range, not outside)
+                                        !isFilled && !isRangeMiddle && !isOutside && !isDisabled &&
                                             "cursor-pointer text-foreground bg-transparent",
-                                        !isEndpoint && !isRangeMiddle && !isOutside && !isDisabled &&
+                                        !isFilled && !isRangeMiddle && !isOutside && !isDisabled &&
                                             "hover:bg-[rgba(143,153,168,0.15)] dark:hover:bg-[rgba(143,153,168,0.15)]",
-                                        !isEndpoint && !isRangeMiddle && !isOutside && !isDisabled &&
+                                        !isFilled && !isRangeMiddle && !isOutside && !isDisabled &&
                                             "hover:text-foreground dark:hover:text-white",
-                                        !isEndpoint && !isRangeMiddle && !isOutside && !isDisabled &&
+                                        !isFilled && !isRangeMiddle && !isOutside && !isDisabled &&
                                             "active:bg-[rgba(143,153,168,0.3)]",
 
                                         // Disabled

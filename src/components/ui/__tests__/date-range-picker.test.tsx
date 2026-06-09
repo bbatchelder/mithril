@@ -64,6 +64,18 @@ describe("DateRangePicker — value contract", () => {
         expect(screen.getByRole("button", { name: /January 20th, 2026/ })).toBeInTheDocument();
     });
 
+    it("renders a lone start (no end yet) as a filled day, not an invisible one", () => {
+        // react-day-picker marks an in-progress start `selected` but NOT range_start until a
+        // complete range exists. If the day button only styled range endpoints, the lone start
+        // would render as a plain transparent day — looking like the selection cleared while it's
+        // actually still held, so the next click silently completes a range with the stale start.
+        render(<DateRangePicker value={{ start: new Date(2026, 0, 8), end: null }} onChange={() => {}} />);
+        const startDay = screen.getByRole("button", { name: /January 8th, 2026/ });
+        // Filled with the primary intent (an endpoint look), not a bare transparent cell.
+        expect(startDay.className).toContain("bg-primary");
+        expect(startDay.className).not.toContain("bg-transparent");
+    });
+
     it("fires onChange with a `{ start, end }` payload when a day is clicked", async () => {
         const onChange = vi.fn();
         const user = userEvent.setup();
@@ -131,9 +143,10 @@ describe("DateRangePicker — month navigation", () => {
         const monthSelectsAfter = screen.getAllByRole("combobox", {
             name: /month/i,
         }) as HTMLSelectElement[];
-        // Contiguous two-month paged navigation advances the left calendar by two
-        // months (Jan → Mar), so the right calendar stays adjacent. Just assert the
-        // displayed month moved forward from January.
-        expect(Number(monthSelectsAfter[0].value)).toBeGreaterThan(0);
+        // Contiguous navigation advances the pair by a SINGLE month, keeping the two
+        // calendars adjacent: the left moves January → February (not a 2-month paged jump
+        // that would skip February entirely). The right calendar then shows March.
+        expect(monthSelectsAfter[0].value).toBe("1"); // February
+        expect(monthSelectsAfter[1].value).toBe("2"); // March (right calendar, still adjacent)
     });
 });
