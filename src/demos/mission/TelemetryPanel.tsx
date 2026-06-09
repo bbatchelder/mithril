@@ -31,6 +31,10 @@ interface TelemetryPanelProps {
     /** When provided, renders a close button in the header (the pinned desktop rail). */
     onClose?: () => void;
     onOpenDetail: () => void;
+    /** Operator actions — launch a grounded drone / recall an airborne one / cancel a recall. */
+    onLaunch?: (id: string) => void;
+    onRecall?: (id: string) => void;
+    onResume?: (id: string) => void;
 }
 
 function tone(value: number, warn: number, danger: number): string {
@@ -93,9 +97,9 @@ function FleetSummary({ drones }: { drones: Drone[] }) {
             acc[d.status] += 1;
             return acc;
         },
-        { active: 0, returning: 0, charging: 0, idle: 0, anomaly: 0 },
+        { active: 0, returning: 0, charging: 0, idle: 0, anomaly: 0, lost: 0 },
     );
-    const order: DroneStatus[] = ["active", "anomaly", "returning", "charging", "idle"];
+    const order: DroneStatus[] = ["active", "anomaly", "returning", "charging", "idle", "lost"];
     return (
         <div className="flex flex-col gap-4 p-4">
             <Callout intent="primary" icon={<Icon icon="info-sign" />} title="No drone selected">
@@ -118,7 +122,52 @@ function FleetSummary({ drones }: { drones: Drone[] }) {
     );
 }
 
-export function TelemetryPanel({ drone, history, drones, connecting, onClose, onOpenDetail }: TelemetryPanelProps) {
+/** The status-appropriate operator action (launch / recall / resume patrol). */
+function FleetActions({
+    drone,
+    onLaunch,
+    onRecall,
+    onResume,
+}: Pick<TelemetryPanelProps, "onLaunch" | "onRecall" | "onResume"> & { drone: Drone }) {
+    if ((drone.status === "idle" || drone.status === "charging") && onLaunch) {
+        const low = drone.battery < 25;
+        return (
+            <Button
+                fill
+                intent={low ? "warning" : "primary"}
+                icon={<Icon icon="rocket-slant" className="!text-current" />}
+                onClick={() => onLaunch(drone.id)}
+            >
+                {low ? `Launch at ${Math.round(drone.battery)}% (risky)` : "Launch"}
+            </Button>
+        );
+    }
+    if ((drone.status === "active" || drone.status === "anomaly") && onRecall) {
+        return (
+            <Button
+                fill
+                icon={<Icon icon="undo" className="!text-current" />}
+                onClick={() => onRecall(drone.id)}
+            >
+                Recall to base
+            </Button>
+        );
+    }
+    if (drone.status === "returning" && onResume) {
+        return (
+            <Button
+                fill
+                icon={<Icon icon="play" className="!text-current" />}
+                onClick={() => onResume(drone.id)}
+            >
+                Cancel recall — resume patrol
+            </Button>
+        );
+    }
+    return null;
+}
+
+export function TelemetryPanel({ drone, history, drones, connecting, onClose, onOpenDetail, onLaunch, onRecall, onResume }: TelemetryPanelProps) {
     if (connecting) return <SkeletonBody />;
     if (!drone) return <FleetSummary drones={drones} />;
 
@@ -155,6 +204,13 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
             {drone.status === "anomaly" && (
                 <Callout intent="danger" icon={<Icon icon="warning-sign" />} title="Telemetry anomaly">
                     Signal integrity degraded. Onboard diagnostics running; auto-recovery in progress.
+                </Callout>
+            )}
+
+            {drone.status === "lost" && (
+                <Callout intent="danger" icon={<Icon icon="cross-circle" />} title="Airframe lost">
+                    Battery exhausted mid-flight. {drone.callsign} is down and out of the shift —
+                    recall drones before they run dry.
                 </Callout>
             )}
 
@@ -215,8 +271,11 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
                 />
             </div>
 
+            <FleetActions drone={drone} onLaunch={onLaunch} onRecall={onRecall} onResume={onResume} />
+
             <Button
                 fill
+                variant="outlined"
                 icon={<Icon icon="panel-stats" className="!text-current" />}
                 onClick={onOpenDetail}
             >

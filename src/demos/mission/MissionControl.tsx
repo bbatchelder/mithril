@@ -1,11 +1,13 @@
 /* eslint-disable no-restricted-imports */
 /**
- * Skylark — Drone Swarm Mission Control.
+ * Skylark — Drone Swarm Mission Control, played as a game.
  *
- * A live, streaming demo: a seeded engine (`useStream`) drives a fleet of drones
- * that move across a MapLibre basemap while telemetry and events stream in.
- * Exercises the read-heavy/structural slice of the library that the SOC and Board
- * demos didn't: Tree, Section, Collapse, CardList, Skeleton, Breadcrumbs, PanelStack.
+ * A seeded engine (`stream/engine.ts`, driven by `useStream`) runs one timed
+ * *shift* over a MapLibre basemap: the operator launches and recalls a
+ * battery-limited fleet, tasks investigations, and banks score before the clock
+ * runs out (see docs/skylark-game.md). Exercises the read-heavy/structural slice
+ * of the library that the SOC and Board demos didn't: Tree, Section, CardList,
+ * Skeleton, Dialog, plus the live map.
  */
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 
@@ -35,10 +37,12 @@ import { DroneDetail } from "./DroneDetail";
 import { EventFeed } from "./EventFeed";
 import { FleetTree } from "./FleetTree";
 import { MissionMap } from "./MissionMap";
+import { ShiftDebrief } from "./ShiftDebrief";
 import { TargetDetail } from "./TargetDetail";
 import { TelemetryPanel } from "./TelemetryPanel";
+import { PAD_COUNT, SHIFT_TICKS } from "./stream/engine";
 import { type StreamSpeed, useStream } from "./stream/useStream";
-import { GROUND_STATION, STATUS_META, formatMissionClock } from "./data";
+import { GROUND_STATION, STATUS_META, formatClock, formatMissionClock } from "./data";
 
 const SPEED_OPTIONS = [
     { label: "1×", value: "1" },
@@ -63,6 +67,13 @@ function MissionControlInner() {
     const [railOpen, setRailOpen] = useState(true);
     const [navOpen, setNavOpen] = useState(false);
     const [feedOpen, setFeedOpen] = useState(false);
+    const [debriefOpen, setDebriefOpen] = useState(false);
+
+    // The shift clock ran out → surface the debrief (dismissable; reopenable from the HUD).
+    const ended = stream.phase === "ended";
+    useEffect(() => {
+        if (ended) setDebriefOpen(true);
+    }, [ended]);
 
     // One menu button drives both: collapse the inline rail on desktop, or summon the
     // overlay drawer on small screens. Resolved at click time so no resize listener.
@@ -147,6 +158,20 @@ function MissionControlInner() {
             focusSearch: () => searchRef.current?.focus(),
             next: () => cycleSelection(1),
             prev: () => cycleSelection(-1),
+            launchSelected: () => {
+                const { drones, selectedId: cur } = hotkeyState.current;
+                const d = cur ? drones.find((x) => x.id === cur) : null;
+                if (d && (d.status === "idle" || d.status === "charging")) stream.launch(d.id);
+            },
+            // One key covers both directions: recall an airborne drone, or turn a
+            // returning one back around.
+            recallSelected: () => {
+                const { drones, selectedId: cur } = hotkeyState.current;
+                const d = cur ? drones.find((x) => x.id === cur) : null;
+                if (!d) return;
+                if (d.status === "returning") stream.resumePatrol(d.id);
+                else stream.recall(d.id);
+            },
             openDetail: () => {
                 if (hotkeyState.current.selectedId) setDetailOpen(true);
             },
@@ -175,6 +200,8 @@ function MissionControlInner() {
             { combo: "/", label: "Focus search", group: "View", global: true, preventDefault: true, onKeyDown: hotkeyActions.focusSearch },
             { combo: "j", label: "Select next drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.next },
             { combo: "k", label: "Select previous drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.prev },
+            { combo: "l", label: "Launch selected drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.launchSelected },
+            { combo: "r", label: "Recall / resume selected drone", group: "Fleet", global: true, onKeyDown: hotkeyActions.recallSelected },
             { combo: "o", label: "Open drone details", group: "Fleet", global: true, onKeyDown: hotkeyActions.openDetail },
             { combo: "escape", label: "Clear selection", group: "Fleet", global: true, onKeyDown: hotkeyActions.dismiss },
             // Display-only row: `?` is handled by the provider (opens this dialog) before
@@ -209,11 +236,17 @@ function MissionControlInner() {
                     </Tag>
                     <Tag
                         minimal
-                        intent={stream.playing ? "success" : "none"}
+                        intent={ended ? "warning" : stream.playing ? "success" : "none"}
                         className="shrink-0"
-                        icon={<Icon icon={stream.playing ? "pulse" : "pause"} size={12} className="!text-current" />}
+                        icon={
+                            <Icon
+                                icon={ended ? "time" : stream.playing ? "pulse" : "pause"}
+                                size={12}
+                                className="!text-current"
+                            />
+                        }
                     >
-                        {stream.playing ? "LIVE" : "PAUSED"}
+                        {ended ? "SHIFT OVER" : stream.playing ? "LIVE" : "PAUSED"}
                     </Tag>
                     <NavbarDivider className="hidden lg:block" />
                     <div className="hidden w-40 lg:block xl:w-56">
@@ -232,10 +265,11 @@ function MissionControlInner() {
                     <span className="mr-1 hidden font-mono text-body-sm tabular-nums text-foreground-muted sm:inline-block">
                         {formatMissionClock(stream.tick)}
                     </span>
-                    <Tooltip content={stream.playing ? "Pause stream" : "Resume stream"} dark={dark}>
+                    <Tooltip content={ended ? "Shift over" : stream.playing ? "Pause stream" : "Resume stream"} dark={dark}>
                         <Button
                             variant="minimal"
                             aria-label={stream.playing ? "Pause" : "Play"}
+                            disabled={ended}
                             icon={<Icon icon={stream.playing ? "pause" : "play"} className="!text-current" />}
                             onClick={stream.toggle}
                         />
@@ -362,11 +396,32 @@ function MissionControlInner() {
                             onSelectTarget={handleSelectTarget}
                             autoFollow={autoFollow}
                             matchOrientation={matchOrientation}
+                            epoch={stream.epoch}
                             dark={dark}
                             className="h-full w-full"
                         />
-                        {/* Status overlay */}
-                        <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2">
+                        {/* Status overlay — game HUD row + ops row */}
+                        <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-2">
+                            <div className="pointer-events-auto flex items-center gap-3 rounded-mithril border border-divider bg-surface/95 px-3 py-2 shadow-card-1 backdrop-blur">
+                                <span
+                                    className={`inline-flex items-center gap-1.5 text-body-sm font-semibold tabular-nums ${
+                                        !ended && SHIFT_TICKS - stream.tick < 60 ? "text-intent-danger-text" : "text-foreground"
+                                    }`}
+                                >
+                                    <Icon icon="stopwatch" size={12} className="!text-current" />
+                                    {ended ? "00:00" : formatClock(SHIFT_TICKS - stream.tick)} left
+                                </span>
+                                <span className="text-body-sm text-foreground-muted">·</span>
+                                <span className="inline-flex items-center gap-1.5 text-body-sm font-semibold tabular-nums text-foreground">
+                                    <Icon icon="star" size={12} className="!text-current" />
+                                    {stream.score.total} pts
+                                </span>
+                                <span className="text-body-sm text-foreground-muted">·</span>
+                                <span className="inline-flex items-center gap-1.5 text-body-sm tabular-nums text-foreground-muted">
+                                    <Icon icon="lightning" size={12} className="!text-current" />
+                                    pads {stream.padsUsed}/{PAD_COUNT}
+                                </span>
+                            </div>
                             <div className="pointer-events-auto flex items-center gap-3 rounded-mithril border border-divider bg-surface/95 px-3 py-2 shadow-card-1 backdrop-blur">
                                 <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-foreground">
                                     <span className={`inline-block size-2 rounded-full ${STATUS_META.active.dot}`} />
@@ -389,6 +444,16 @@ function MissionControlInner() {
                                     {GROUND_STATION.callsign}
                                 </span>
                             </div>
+                            {ended && !debriefOpen && (
+                                <Button
+                                    className="pointer-events-auto"
+                                    intent="primary"
+                                    icon={<Icon icon="clipboard" className="!text-current" />}
+                                    onClick={() => setDebriefOpen(true)}
+                                >
+                                    View debrief
+                                </Button>
+                            )}
                         </div>
 
                         {/* Mobile telemetry — a non-modal bottom sheet over the map (lg+
@@ -413,6 +478,9 @@ function MissionControlInner() {
                                         drones={stream.drones}
                                         connecting={connecting}
                                         onOpenDetail={openDetail}
+                                        onLaunch={stream.launch}
+                                        onRecall={stream.recall}
+                                        onResume={stream.resumePatrol}
                                     />
                                 </div>
                             </div>
@@ -480,6 +548,9 @@ function MissionControlInner() {
                             connecting={connecting}
                             onClose={() => setSelectedId(null)}
                             onOpenDetail={openDetail}
+                            onLaunch={stream.launch}
+                            onRecall={stream.recall}
+                            onResume={stream.resumePatrol}
                         />
                     )}
                 </aside>
@@ -520,6 +591,20 @@ function MissionControlInner() {
                 open={detailOpen}
                 dark={dark}
                 onClose={() => setDetailOpen(false)}
+            />
+
+            {/* ── End-of-shift debrief ────────────────────────────────────── */}
+            <ShiftDebrief
+                open={debriefOpen}
+                score={stream.score}
+                stats={stream.stats}
+                fleetSize={stream.drones.length}
+                dark={dark}
+                onClose={() => setDebriefOpen(false)}
+                onRestart={() => {
+                    setDebriefOpen(false);
+                    stream.restart();
+                }}
             />
         </div>
     );

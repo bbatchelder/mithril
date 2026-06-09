@@ -30,10 +30,11 @@ export const MAP_ZOOM = 11.4;
 
 export type DroneStatus =
     | "active" // on task, healthy
-    | "returning" // heading back to base (low battery / recall)
-    | "charging" // docked at base, recharging
-    | "idle" // parked, ready
-    | "anomaly"; // fault detected
+    | "returning" // heading back to base (recalled by the operator)
+    | "charging" // docked on a base pad, recharging
+    | "idle" // at base, ready to launch (or waiting for a free pad)
+    | "anomaly" // fault detected
+    | "lost"; // crashed mid-air (battery ran out) — gone for the shift
 
 export interface StatusMeta {
     label: string;
@@ -50,6 +51,7 @@ export const STATUS_META: Record<DroneStatus, StatusMeta> = {
     charging: { label: "Charging", intent: "primary", color: "#2d72d2", dot: "bg-blue-3", icon: "offline" },
     idle: { label: "Idle", intent: "none", color: "#8f99a8", dot: "bg-gray-3", icon: "pause" },
     anomaly: { label: "Anomaly", intent: "danger", color: "#cd4246", dot: "bg-red-3", icon: "warning-sign" },
+    lost: { label: "Lost", intent: "danger", color: "#5f6b7c", dot: "bg-gray-1", icon: "cross-circle" },
 };
 
 /**
@@ -139,23 +141,26 @@ const SEED: SeedSpec[] = [
     { id: "sk-101", callsign: "SK-101", squadronId: "sq-recon", model: "Falcon X2", task: "Coastline recon", payload: "EO/IR gimbal", status: "active", battery: 82, anchor: [-122.47, 37.81], spread: 0.03, legs: 6 },
     { id: "sk-102", callsign: "SK-102", squadronId: "sq-recon", model: "Falcon X2", task: "Bridge approach watch", payload: "EO/IR gimbal", status: "active", battery: 64, anchor: [-122.45, 37.83], spread: 0.025, legs: 5 },
     { id: "sk-103", callsign: "SK-103", squadronId: "sq-recon", model: "Falcon X1", task: "Perimeter patrol", payload: "EO/IR gimbal", status: "returning", battery: 19, anchor: [-122.43, 37.8], spread: 0.022, legs: 5 },
-    { id: "sk-104", callsign: "SK-104", squadronId: "sq-recon", model: "Falcon X1", task: "Standby", payload: "EO/IR gimbal", status: "idle", battery: 96, anchor: [-122.405, 37.792], spread: 0.008, legs: 4 },
+    { id: "sk-104", callsign: "SK-104", squadronId: "sq-recon", model: "Falcon X1", task: "Standby", payload: "EO/IR gimbal", status: "idle", battery: 96, anchor: [-122.41, 37.815], spread: 0.02, legs: 5 },
     // Survey Grid — city raster
     { id: "sk-201", callsign: "SK-201", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid A-7 mapping", payload: "LiDAR + RGB", status: "active", battery: 73, anchor: [-122.42, 37.76], spread: 0.02, legs: 8 },
     { id: "sk-202", callsign: "SK-202", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid B-2 mapping", payload: "LiDAR + RGB", status: "active", battery: 58, anchor: [-122.4, 37.74], spread: 0.018, legs: 8 },
     { id: "sk-203", callsign: "SK-203", squadronId: "sq-survey", model: "Surveyor S2", task: "Thermal survey", payload: "Thermal array", status: "anomaly", battery: 41, anchor: [-122.44, 37.75], spread: 0.02, legs: 6 },
-    { id: "sk-204", callsign: "SK-204", squadronId: "sq-survey", model: "Surveyor S2", task: "Charging", payload: "LiDAR + RGB", status: "charging", battery: 34, anchor: [-122.404, 37.789], spread: 0.006, legs: 4 },
+    { id: "sk-204", callsign: "SK-204", squadronId: "sq-survey", model: "Surveyor S2", task: "Charging", payload: "LiDAR + RGB", status: "charging", battery: 34, anchor: [-122.43, 37.728], spread: 0.02, legs: 6 },
     // Relay Net — high-altitude comms mesh
     { id: "sk-301", callsign: "SK-301", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", status: "active", battery: 88, anchor: [-122.38, 37.79], spread: 0.035, legs: 5 },
     { id: "sk-302", callsign: "SK-302", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", status: "active", battery: 77, anchor: [-122.36, 37.77], spread: 0.03, legs: 5 },
     { id: "sk-303", callsign: "SK-303", squadronId: "sq-relay", model: "Aether R1", task: "Backhaul link", payload: "Mesh radio", status: "active", battery: 69, anchor: [-122.39, 37.755], spread: 0.028, legs: 6 },
-    { id: "sk-304", callsign: "SK-304", squadronId: "sq-relay", model: "Aether R0", task: "Standby", payload: "Mesh radio", status: "idle", battery: 91, anchor: [-122.402, 37.787], spread: 0.007, legs: 4 },
+    { id: "sk-304", callsign: "SK-304", squadronId: "sq-relay", model: "Aether R0", task: "Standby", payload: "Mesh radio", status: "idle", battery: 91, anchor: [-122.365, 37.735], spread: 0.025, legs: 5 },
 ];
 
 /** Build the initial fleet from the seed spec. */
 export function makeFleet(): Drone[] {
     return SEED.map((s) => {
         const route = loop(s.anchor, s.spread, s.legs);
+        // Idle/charging drones sit on the ground at base; launching flies them out
+        // from there to their patrol route (waypoint 0).
+        const grounded = s.status === "idle" || s.status === "charging";
         return {
             id: s.id,
             callsign: s.callsign,
@@ -166,13 +171,13 @@ export function makeFleet(): Drone[] {
             status: s.status,
             assignment: null,
             battery: s.battery,
-            altitude: 90 + (s.legs % 4) * 12,
+            altitude: grounded ? 0 : 90 + (s.legs % 4) * 12,
             speed: s.status === "active" ? 14 + (s.legs % 3) * 2 : 0,
             signal: 78 + (s.legs % 5) * 4,
             heading: 0,
-            position: route[0],
+            position: grounded ? GROUND_STATION.position : route[0],
             route,
-            waypoint: 1,
+            waypoint: grounded ? 0 : 1,
         };
     });
 }
@@ -217,11 +222,17 @@ export function emptyHistory(): TelemetryHistory {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+/** Format a tick count as MM:SS. */
+export function formatClock(ticks: number): string {
+    const t = Math.max(0, ticks);
+    const mm = Math.floor(t / 60);
+    const ss = t % 60;
+    return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+}
+
 /** Format a tick count as a mission-elapsed clock (T+MM:SS). */
 export function formatMissionClock(tick: number): string {
-    const mm = Math.floor(tick / 60);
-    const ss = tick % 60;
-    return `T+${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+    return `T+${formatClock(tick)}`;
 }
 
 export function squadronById(id: string): Squadron | undefined {
