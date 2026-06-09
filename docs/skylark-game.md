@@ -2,7 +2,9 @@
 
 Skylark (the `mission` demo, `src/demos/mission/`) is being converted **in place** from a passive
 mission-control demo into a playable drone-operations game. This doc is the design of record;
-decisions here were agreed with the author on 2026-06-09.
+decisions here were agreed with the author on 2026-06-09. The session-to-session continuity
+layer — what's left, per stage, with implementation guidance — lives in
+[`skylark-game-handoff.md`](skylark-game-handoff.md).
 
 ## The fantasy
 
