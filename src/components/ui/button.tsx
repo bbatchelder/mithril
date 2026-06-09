@@ -79,13 +79,14 @@ const VARIANT_MAP = { solid: SOLID, outlined: OUTLINED, minimal: MINIMAL } as co
 
 export const buttonVariants = cva(
     [
-        // Tag-agnostic marker (matches Blueprint's own `.bp6-button`). Inert as styling, but
+        // Tag-agnostic marker class (`.mithril-button`, originally mirroring Blueprint's
+        // `.bp6-button`). Inert as styling, but
         // lets a parent ControlGroup target button-styled controls by class instead of element
         // — so an `asChild` Button or an AnchorButton (both render <a>, not <button>) still get
         // the button z-index tiers. Carried by every consumer of buttonVariants.
-        "bp6-button",
-        "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-bp align-middle",
-        "font-normal select-none cursor-pointer transition-colors duration-100 ease-bp",
+        "mithril-button",
+        "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-mithril align-middle",
+        "font-normal select-none cursor-pointer transition-colors duration-100 ease-mithril",
         "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none",
         "[&_svg]:shrink-0 [&_svg]:size-4",

@@ -125,7 +125,7 @@ function IocTab({ alert, onCopy }: { alert: Alert; onCopy: (value: string) => vo
             {alert.iocs.map((ioc, i) => (
                 <div
                     key={i}
-                    className="flex items-center justify-between gap-3 rounded-bp border border-border bg-surface px-3 py-2"
+                    className="flex items-center justify-between gap-3 rounded-mithril border border-border bg-surface px-3 py-2"
                 >
                     <div className="flex min-w-0 items-center gap-2.5">
                         <Tag minimal icon={<Icon icon={IOC_ICON[ioc.type]} size={12} className="!text-current" />}>

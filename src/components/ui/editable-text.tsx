@@ -425,7 +425,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(functi
     // The ::before pseudo ring div:
     // - positioned inset: -2px (Blueprint: position-all(absolute, $pt-spacing * -0.5) = -2px)
     // - border-radius: 4px (= $pt-border-radius)
-    // - transition: background-color 100ms ease-bp, box-shadow 100ms ease-bp
+    // - transition: background-color 100ms ease-mithril, box-shadow 100ms ease-mithril
     //
     // Box-shadow per state/intent (literal values for Tailwind tree-shaking safety):
     //   resting:      no shadow

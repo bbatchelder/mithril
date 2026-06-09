@@ -91,7 +91,7 @@ export function TaskCard({
                     <button
                         type="button"
                         aria-label={`Actions for ${task.id}`}
-                        className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-bp text-foreground-muted hover:bg-[var(--interactive-hover)]"
+                        className="-mr-1 inline-flex h-6 w-6 items-center justify-center rounded-mithril text-foreground-muted hover:bg-[var(--interactive-hover)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Icon icon="more" size={16} className="!text-current" />

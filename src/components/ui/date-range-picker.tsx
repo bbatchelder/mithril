@@ -122,7 +122,7 @@ function NavButton({
             aria-label={direction === "prev" ? "Previous month" : "Next month"}
             className={cn(
                 "inline-flex items-center justify-center",
-                "h-[30px] w-[30px] p-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-mithril",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -445,7 +445,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                     //   display:flex, background:white (light) / dark-gray-3 (dark)
                     //   border-radius:4px, padding:4px, user-select:none
                     "inline-flex flex-col",
-                    "rounded-bp",
+                    "rounded-mithril",
                     "bg-white dark:bg-dark-gray-3",
                     "p-1",
                     "relative select-none",
@@ -489,7 +489,7 @@ export const DateRangePicker = forwardRef<HTMLDivElement, DateRangePickerProps>(
                         week: "",
                         day: "text-center align-middle",
                         day_button: cn(
-                            "w-[30px] h-[30px] min-w-[30px] rounded-bp",
+                            "w-[30px] h-[30px] min-w-[30px] rounded-mithril",
                             "inline-flex items-center justify-center",
                             "text-body font-normal cursor-pointer",
                             "border-2 border-transparent bg-transparent",

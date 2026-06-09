@@ -172,8 +172,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
                 {...indicatorProps}
                 className={cn(
                     "inline-block relative align-middle",
-                    // Border radius: $pt-border-radius = 4px → rounded-bp
-                    "rounded-bp",
+                    // Border radius: $pt-border-radius = 4px → rounded-mithril
+                    "rounded-mithril",
                     // Size: explicit pixel widths/heights.
                     large ? "w-5 h-5" : "w-4 h-4",
                     // font-size = indicatorSize (Blueprint uses em-based sizing; we match the computed value

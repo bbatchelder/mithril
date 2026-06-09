@@ -86,7 +86,7 @@ export const Menu = forwardRef<HTMLUListElement, MenuProps>(function Menu(
                 // background: white (light) / dark-gray3 (dark)
                 "bg-white dark:bg-dark-gray-3",
                 // border-radius: 4px
-                "rounded-bp",
+                "rounded-mithril",
                 // color: $pt-text-color / $pt-dark-text-color
                 "text-foreground",
                 // list-style: none; margin: 0; padding: 4px; text-align: left
@@ -284,7 +284,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         // Blueprint .bp6-menu-item base layout
         "flex flex-row items-start gap-[8px]",
         // border-radius: 4px
-        "rounded-bp",
+        "rounded-mithril",
         // Suppress browser default focus ring — Blueprint's .bp6-menu-item is `outline:none`.
         // The active/hover bg + intent text already provide the focus indication, so the
         // browser ring on top reads as a duplicate "outline + filled bg" treatment.
@@ -302,7 +302,7 @@ export const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(function MenuIt
         // default text color: inherit (from Menu which has text-foreground)
         "text-inherit",
         // transitions
-        "transition-colors duration-100 ease-bp",
+        "transition-colors duration-100 ease-mithril",
         // non-disabled hover/active
         !disabled && !active && intent === "none" && [
             "hover:bg-[rgba(143,153,168,0.15)] hover:cursor-pointer hover:no-underline",
@@ -474,7 +474,7 @@ export const MenuDivider = forwardRef<HTMLLIElement, MenuDividerProps>(function 
                     "text-body",
                     // line-height: 17px (icon size 16px + 1px for descenders).
                     // MUST come AFTER text-body so tailwind-merge keeps it — text-body
-                    // otherwise shadows leading-* with the default --leading-bp (~18px).
+                    // otherwise shadows leading-* with the default --leading-mithril (~18px).
                     // See the matching note on MenuItem above.
                     "leading-[17px]",
                     // margin: 0; padding: 8px 8px 0 8px

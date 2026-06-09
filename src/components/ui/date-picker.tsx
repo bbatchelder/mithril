@@ -136,7 +136,7 @@ function NavButton({
                 // Measured Blueprint nav button = 30×30, so pin width to 30px (px-2 + the 16px
                 // chevron summed to 32px, 2px too wide). The icon centers via justify-center.
                 "inline-flex items-center justify-center",
-                "h-[30px] w-[30px] p-0 rounded-bp",
+                "h-[30px] w-[30px] p-0 rounded-mithril",
                 "bg-transparent border-0",
                 "text-foreground",
                 disabled
@@ -395,7 +395,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                 //   border-radius: 4px ($pt-border-radius)
                 //   display: flex, padding: 4px, position: relative, user-select: none
                 "inline-flex flex-col",
-                "rounded-bp",
+                "rounded-mithril",
                 "bg-white dark:bg-dark-gray-3",
                 "p-1",
                 "relative select-none",
@@ -446,7 +446,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(function D
                         day_button: cn(
                             // Base: 30×30, rounded-4px, transparent bg
                             // Blueprint day button: min-width 30px + 8px px + 2px transparent border
-                            "w-[30px] h-[30px] min-w-[30px] rounded-bp",
+                            "w-[30px] h-[30px] min-w-[30px] rounded-mithril",
                             "inline-flex items-center justify-center",
                             "text-body font-normal cursor-pointer",
                             // 2px transparent border (matches Blueprint .bp6-button computed style)

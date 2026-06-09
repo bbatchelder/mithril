@@ -1,4 +1,7 @@
 allowBuilds:
+  # Transitive native dep of @tailwindcss/cli, used only for watch mode. The library CSS
+  # build is one-shot (`tailwindcss -o …`), served by the JS fallback, so skip its build.
+  '@parcel/watcher': false
   esbuild: true
 onlyBuiltDependencies:
   - esbuild

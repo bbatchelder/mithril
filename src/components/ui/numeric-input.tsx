@@ -13,7 +13,7 @@ import { InputGroup, type InputGroupIntent, type InputGroupSize } from "./input-
  * Composition:
  *   - Outer container: `display:flex; flex-direction:row; align-items:stretch` (ControlGroup-style row).
  *   - Field: `<InputGroup>` (standard text input) with `fill` so it takes remaining space in the row.
- *     The input keeps its full `rounded-bp` (4px all corners) — Blueprint does NOT square input
+ *     The input keeps its full `rounded-mithril` (4px all corners) — Blueprint does NOT square input
  *     corners when adjacent to the stepper. The visual flush appearance comes from the stepper
  *     buttons sitting immediately adjacent with no gap and sharing the same box-shadow line.
  *   - Stepper: a vertical flex column (`self-stretch`) containing two `<button>` elements.
@@ -24,8 +24,8 @@ import { InputGroup, type InputGroupIntent, type InputGroupSize } from "./input-
  *     The two buttons together equal the input height (30px medium / 40px large / 24px small).
  *
  * Stepper button radii (Blueprint vertical ButtonGroup pattern):
- *   - buttonPosition="right": increment button top-right corners round (`rounded-tr-bp`);
- *     decrement button bottom-right corners round (`rounded-br-bp`). Inner (left) edges square.
+ *   - buttonPosition="right": increment button top-right corners round (`rounded-tr-mithril`);
+ *     decrement button bottom-right corners round (`rounded-br-mithril`). Inner (left) edges square.
  *   - buttonPosition="left": increment top-left round; decrement bottom-left round.
  *   - NO `overflow-hidden` on the stepper container — buttons carry their own individual radii.
  *
@@ -240,13 +240,13 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
 
     // ── Stepper button radii ────────────────────────────────────────────────
     // Blueprint's vertical ButtonGroup pattern:
-    //   - Increment (top) button: rounds BOTH top corners → `rounded-t-bp` (= 4px 4px 0px 0px)
-    //   - Decrement (btm) button: rounds BOTH bottom corners → `rounded-b-bp` (= 0px 0px 4px 4px)
+    //   - Increment (top) button: rounds BOTH top corners → `rounded-t-mithril` (= 4px 4px 0px 0px)
+    //   - Decrement (btm) button: rounds BOTH bottom corners → `rounded-b-mithril` (= 0px 0px 4px 4px)
     // Blueprint does NOT square the inner edge (the edge adjacent to the input) on the buttons.
     // The visual flush look comes from box-shadow layering, not from squaring corners.
     // A `margin-bottom: -1px` on the increment button merges its border with the decrement button.
     const [incrRadius, decrRadius] = buttonPosition !== "none"
-        ? ["rounded-t-bp", "rounded-b-bp"]
+        ? ["rounded-t-mithril", "rounded-b-mithril"]
         : ["", ""];
 
     // ── Stepper button common classes ───────────────────────────────────────
@@ -266,7 +266,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(func
         // Shadow: Blueprint's solid button shadow
         "shadow-button",
         // Misc
-        "outline-none cursor-pointer select-none transition-colors duration-100 ease-bp",
+        "outline-none cursor-pointer select-none transition-colors duration-100 ease-mithril",
         // Disabled — match the input's disabled treatment regardless of intent
         // (Blueprint resets intent colors on disabled steppers to the neutral disabled tone).
         "disabled:cursor-not-allowed disabled:shadow-none",

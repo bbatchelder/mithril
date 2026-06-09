@@ -75,7 +75,7 @@ export function BoardColumn({
                 <button
                     type="button"
                     aria-label={`Add task to ${title}`}
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-bp text-foreground-muted hover:bg-[var(--interactive-hover)]"
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-mithril text-foreground-muted hover:bg-[var(--interactive-hover)]"
                     onClick={() => onAdd(id)}
                 >
                     <Icon icon="plus" size={16} className="!text-current" />
@@ -108,7 +108,7 @@ export function BoardColumn({
                     onDrop(id, anchorId);
                 }}
                 className={
-                    "flex min-h-[120px] flex-1 flex-col gap-2.5 rounded-bp border border-dashed p-2 transition-colors " +
+                    "flex min-h-[120px] flex-1 flex-col gap-2.5 rounded-mithril border border-dashed p-2 transition-colors " +
                     (isOver
                         ? "border-blue-3 bg-[var(--interactive-hover)]"
                         : "border-transparent")

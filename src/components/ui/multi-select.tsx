@@ -532,11 +532,11 @@ export function MultiSelect<T>({
                     // Base layout — same as TagInput container
                     "relative flex flex-row items-start flex-wrap",
                     "bg-white dark:bg-black/30",
-                    "rounded-bp",
+                    "rounded-mithril",
                     // min-height 30px (medium TagInput), min-width 150px (Blueprint MultiSelect default)
                     "min-h-7.5 min-w-[150px] pl-1.5 pr-0",
                     // Transition (matches InputGroup)
-                    "transition-shadow duration-100 ease-bp",
+                    "transition-shadow duration-100 ease-mithril",
                     shadowClass,
                     // Fill
                     fill ? "w-full" : "inline-flex",

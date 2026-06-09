@@ -241,7 +241,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                     // No box-shadow (Blueprint: box-shadow: none !important)
                     "shadow-none",
                     // transition: background-color
-                    "transition-colors duration-[100ms] ease-bp",
+                    "transition-colors duration-[100ms] ease-mithril",
                     // Vertical offset: -3px left-aligned, 1px right-aligned
                     !alignRight && "-mt-[3px]",
                     alignRight && "mt-px float-right",
@@ -303,7 +303,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                         // Circle
                         "[border-radius:50%]",
                         // Transition: left
-                        "transition-[left] duration-[100ms] ease-bp",
+                        "transition-[left] duration-[100ms] ease-mithril",
                         // Position: left = 2px unchecked, right end checked
                         // checked: left = calc(2px + 100% - 1em) = calc(2px + 100% - 16px/20px)
                         !effectiveChecked && "left-[2px]",
@@ -341,7 +341,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                         {/* Checked child — block, above-the-knob when checked */}
                         <span
                             className={cn(
-                                "bp6-switch-inner-text block text-center text-[0.7em]",
+                                "mithril-switch-inner-text block text-center text-[0.7em]",
                                 large ? "ml-[10px] mr-[24px]" : "ml-2 mr-[19.2px]",
                                 effectiveChecked
                                     ? large ? "visible leading-5" : "visible leading-4"
@@ -353,7 +353,7 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
                         {/* Unchecked child — block, above-the-knob when unchecked */}
                         <span
                             className={cn(
-                                "bp6-switch-inner-text block text-center text-[0.7em]",
+                                "mithril-switch-inner-text block text-center text-[0.7em]",
                                 large ? "ml-[24px] mr-[10px]" : "ml-[19.2px] mr-2",
                                 !effectiveChecked
                                     ? large ? "visible leading-5" : "visible leading-4"

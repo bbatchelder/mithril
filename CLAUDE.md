@@ -28,9 +28,27 @@ the ongoing goal:
 ## Stack & distribution
 
 - **Stack:** React 19 · TypeScript · Vite · Tailwind v4 (CSS-first `@theme`) · Radix primitives · CVA.
-- **Distribution:** shadcn-style — consumers own the component source, pulled via the served registry
-  (`https://bbatchelder.github.io/mithril/r/`). `registry.json` is generated from source with
-  `pnpm gen:registry`; the published items are built with `pnpm build:registry`.
+- **Distribution — two complementary modes:**
+  1. **shadcn-style** (owned source) — consumers copy the component source, pulled via the served
+     registry (`https://bbatchelder.github.io/mithril/r/`). `registry.json` is generated from source
+     with `pnpm gen:registry`; the published items are built with `pnpm build:registry`. Source keeps
+     `@/…` imports because the registry maps them onto the consumer's alias — **never** rewrite them to
+     relative paths.
+  2. **npm package** (`@bbatchelder/mithril`) — a conventional dependency built by `pnpm build:lib`
+     (`vite.lib.config.ts`) into **`dist-lib/`** (kept separate from the gallery's `dist/`, which the
+     Pages deploy owns). It builds from a generated barrel **`src/index.ts`** (`pnpm gen:barrel`,
+     drift-guarded in CI like the registry), emits ESM with `preserveModules` (one module per component
+     → tree-shakeable subpath exports `@bbatchelder/mithril/<name>`) plus `.d.ts` via `vite-plugin-dts`
+     (which resolves the `@/` alias in declarations, so source is untouched). React/react-dom are peers;
+     every other dep is externalized. Styles ship two ways: a **prebuilt** `dist-lib/mithril.css`
+     (`pnpm build:css`, Tailwind CLI over `src/styles/index.css` — turnkey, no consumer Tailwind needed)
+     and the **raw** `tokens.css` + `base.css` for consumers running their own Tailwind v4. `exports`,
+     peers, and `files` live in `package.json`; publish is `publish.yml` on a `vX.Y.Z` tag. The package
+     is **ESM-only** and validated by `pnpm check:pkg` (publint + are-the-types-wrong, gated in CI) — note
+     `tools/fix-dts-extensions.mjs` runs in `build:lib` to add `.js` extensions to the emitted `.d.ts`
+     imports (vite-plugin-dts emits them extensionless, which breaks `node16`/`nodenext` resolution). The shared
+     non-token CSS (keyframes, `.mithril-*` animation hooks, base layer) lives in `src/styles/base.css`,
+     imported by both `globals.css` (app) and `index.css` (library) so the two stay identical.
 
 ## Key locations
 
@@ -110,7 +128,7 @@ Ordinary engineering — the autonomous loop is over:
 ## Durable gotchas
 
 - **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
-  (`bg-blue-3`, `shadow-elevation-2`, `ease-bp`), **not** runtime `var()` in inline styles — those get
+  (`bg-blue-3`, `shadow-elevation-2`, `ease-mithril`), **not** runtime `var()` in inline styles — those get
   dropped. Tokens declared in plain `:root {}` (e.g. `--elevation-0..4`) are always emitted.
 - **Icons:** keep `ICON_GLYPHS` typed as `Record<IconName, IconGlyph>` (never `as const`) to avoid TS2590.
   Names that camelCase to JS reserved words get an `Icon` suffix (`delete`→`deleteIcon`, also
@@ -145,7 +163,11 @@ pnpm gen:icons       # regenerate the 706-glyph icon map from tools/gen-icons.mj
 pnpm gen:meta        # regenerate per-component showcase badge metadata (tests/RSC/portal/radix)
 pnpm gen:props       # regenerate per-component props/API tables (react-docgen-typescript)
 pnpm gen:registry    # regenerate registry.json from src/components/ui
+pnpm gen:barrel      # regenerate src/index.ts (npm-package entry) from src/components/ui
 pnpm build:registry  # build the published shadcn registry items into dist/r
+pnpm build:lib       # build the npm package (ESM + .d.ts + prebuilt CSS) into dist-lib
+pnpm build:css       # build just the prebuilt library stylesheet → dist-lib/mithril.css
+pnpm check:pkg       # build:lib + validate the package (publint + are-the-types-wrong)
 
 tools/compare.sh button        # screenshot + computed-style diff vs Blueprint (both themes)
 tools/compare.sh button dark   # ...one theme only (light|dark|both)

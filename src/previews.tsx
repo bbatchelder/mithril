@@ -77,7 +77,7 @@ import { TimezoneSelect } from "@/components/ui/timezone-select";
  * preview their *panel surface* inline (built from real sub-parts where they render
  * standalone: DialogBody/DialogFooter, Menu, Toast), styled to match the portaled look.
  */
-const OVERLAY_PANEL = "overflow-hidden rounded-bp bg-surface shadow-overlay-3";
+const OVERLAY_PANEL = "overflow-hidden rounded-mithril bg-surface shadow-overlay-3";
 
 /**
  * Fixed seed dates so the date/time previews render deterministically (and don't
@@ -254,7 +254,7 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
                             />
                         </g>
                     </svg>
-                    <div className="rounded-bp bg-surface p-3.5 shadow-overlay-3">
+                    <div className="rounded-mithril bg-surface p-3.5 shadow-overlay-3">
                         <AIExplainabilityDemoDetails />
                     </div>
                 </div>
@@ -610,7 +610,7 @@ export const PREVIEWS: Record<string, PreviewEntry> = {
 
     tooltip: {
         render: () => (
-            <span className="inline-flex items-center rounded-bp bg-dark-gray-5 px-2.5 py-1.5 text-body-sm text-light-gray-5 shadow-overlay-3 dark:bg-light-gray-3 dark:text-dark-gray-5">
+            <span className="inline-flex items-center rounded-mithril bg-dark-gray-5 px-2.5 py-1.5 text-body-sm text-light-gray-5 shadow-overlay-3 dark:bg-light-gray-3 dark:text-dark-gray-5">
                 Copy to clipboard
             </span>
         ),
@@ -1065,7 +1065,7 @@ export function ComponentPreview({ id }: { id: string }) {
             className={cn(
                 // grid-cols-1 pins the column to the frame width so content wider than the
                 // frame centers (and clips) symmetrically instead of overflowing one side.
-                "relative grid grid-cols-1 overflow-hidden rounded-bp bg-[var(--interactive-hover)]",
+                "relative grid grid-cols-1 overflow-hidden rounded-mithril bg-[var(--interactive-hover)]",
                 entry.frameClassName ?? "h-28 px-3",
                 entry.align === "top" ? "items-start justify-items-center pt-2" : "place-items-center",
             )}

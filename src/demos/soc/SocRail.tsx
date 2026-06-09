@@ -37,7 +37,7 @@ function RailRow({
             // Rows ~32px, 0 17px padding. Hover = subtle white overlay; active = a
             // lighter fill (no colored left-edge stripe — the fill is the selection).
             className={
-                "flex h-8 w-full items-center gap-2.5 rounded-bp px-3 text-left text-body-sm transition-colors " +
+                "flex h-8 w-full items-center gap-2.5 rounded-mithril px-3 text-left text-body-sm transition-colors " +
                 (active
                     ? "bg-white/10 font-medium text-foreground"
                     : "text-foreground-muted hover:bg-white/[0.06] hover:text-foreground")

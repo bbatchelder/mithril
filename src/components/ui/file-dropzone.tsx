@@ -290,8 +290,8 @@ export const FileDropzone = forwardRef<FileDropzoneHandle, FileDropzoneProps>(fu
                     "aria-labelledby": labelId,
                     className: cn(
                         "relative flex flex-col items-center justify-center gap-2 text-center",
-                        "rounded-bp border-2 border-dashed",
-                        "transition-colors duration-100 ease-bp outline-none",
+                        "rounded-mithril border-2 border-dashed",
+                        "transition-colors duration-100 ease-mithril outline-none",
                         // Size → padding
                         size === "small" && "px-4 py-5",
                         size === "medium" && "px-6 py-8",
@@ -378,7 +378,7 @@ function FileRow({ file: f, onRemove }: { file: FileDropzoneFile; onRemove: () =
     return (
         <li
             className={cn(
-                "flex items-center gap-2.5 rounded-bp px-2.5 py-2",
+                "flex items-center gap-2.5 rounded-mithril px-2.5 py-2",
                 "bg-white shadow-input dark:bg-black/30",
                 isError && "shadow-[inset_0_0_0_1px_var(--intent-danger)]",
             )}
@@ -416,8 +416,8 @@ function FileRow({ file: f, onRemove }: { file: FileDropzoneFile; onRemove: () =
                 onClick={onRemove}
                 aria-label={`Remove ${f.file.name}`}
                 className={cn(
-                    "shrink-0 rounded-bp p-1 text-foreground-muted",
-                    "transition-colors duration-100 ease-bp",
+                    "shrink-0 rounded-mithril p-1 text-foreground-muted",
+                    "transition-colors duration-100 ease-mithril",
                     "hover:bg-[var(--interactive-hover)] hover:text-foreground",
                     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-intent-primary/40",
                 )}
@@ -433,7 +433,7 @@ function RejectionRow({ rejection }: { rejection: FileRejection }) {
     return (
         <li
             className={cn(
-                "flex items-center gap-2.5 rounded-bp px-2.5 py-2",
+                "flex items-center gap-2.5 rounded-mithril px-2.5 py-2",
                 "bg-intent-danger/5 shadow-[inset_0_0_0_1px_var(--intent-danger)]",
             )}
         >

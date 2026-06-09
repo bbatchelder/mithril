@@ -185,7 +185,7 @@ export function MultistepDialog({
                         // borders and bottom-left rounding only apply to that rail; strip
                         // separation comes from the panel's top border instead.
                         !horizontal &&
-                            "sm:relative sm:flex-1 sm:dark:rounded-bl-bp sm:dark:border-b sm:dark:border-l",
+                            "sm:relative sm:flex-1 sm:dark:rounded-bl-mithril sm:dark:border-b sm:dark:border-l",
                     )}
                 >
                     {/* Scroll area (also the tablist). Strip: scrolls horizontally. Vertical
@@ -234,7 +234,7 @@ export function MultistepDialog({
                                     disabled={!isViewed}
                                     onClick={(e) => goTo(i, e)}
                                     className={cn(
-                                        "m-1 flex w-auto items-center rounded-bp bg-transparent px-[14px] py-[6px] text-left text-[14px]",
+                                        "m-1 flex w-auto items-center rounded-mithril bg-transparent px-[14px] py-[6px] text-left text-[14px]",
                                         !horizontal && "sm:w-[calc(100%-8px)]",
                                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                                         "enabled:cursor-pointer enabled:hover:bg-[#f6f7f9] dark:enabled:hover:bg-[#2f343c]",
@@ -279,7 +279,7 @@ export function MultistepDialog({
                 <div
                     data-compare="multistep-panel"
                     className={cn(
-                        "flex min-h-0 min-w-0 flex-1 flex-col rounded-br-bp",
+                        "flex min-h-0 min-w-0 flex-1 flex-col rounded-br-mithril",
                         "bg-[#f6f7f9] dark:bg-[#2f343c]",
                         // Divider from the rail: a top border when the strip is stacked
                         // above, a left border beside the vertical rail (tablet+, "left").

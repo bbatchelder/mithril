@@ -1,0 +1,36 @@
+// TypeScript config for the npm-package declaration build (vite-plugin-dts, driven by
+// vite.lib.config.ts). Extends the app config but emits .d.ts only, mirroring src/ into
+// dist-lib/. Scoped to the published surface — the barrel, components, and lib helpers —
+// so demos, the gallery shell, the Theme Builder, and tests don't leak into the package.
+{
+    "extends": "./tsconfig.app.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        // No declaration maps: they reference src/, which the package doesn't ship, so they'd
+        // be dead weight. JS sourcemaps (vite, with inlined sourcesContent) stay — those are
+        // self-contained and useful for consumers debugging into the components.
+        "declarationMap": false,
+        // The package ships real .js files, so declarations must reference siblings without
+        // the bundler-only .ts extension affordance.
+        "allowImportingTsExtensions": false,
+        "outDir": "dist-lib",
+        "rootDir": "src"
+    },
+    // Only the two lib helpers components actually import — not the gallery-only lib files
+    // (app-chrome, dark-context, demo/) which aren't part of the published surface.
+    "include": [
+        "src/vite-env.d.ts",
+        "src/index.ts",
+        "src/components/ui",
+        "src/lib/utils.ts",
+        "src/lib/types.ts"
+    ],
+    "exclude": [
+        "src/components/ui/__tests__",
+        "src/**/*.test.ts",
+        "src/**/*.test.tsx",
+        "src/test"
+    ]
+}

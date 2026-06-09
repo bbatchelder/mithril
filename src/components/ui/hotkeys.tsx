@@ -246,7 +246,7 @@ export function KeyCombo({ combo, minimal = false, className, _firstKeyCompare, 
                             // padding: ($pt-spacing*0.5) $pt-spacing = 2px 4px
                             "py-[2px] px-[4px]",
                             // border-radius: $pt-border-radius = 4px
-                            "rounded-bp",
+                            "rounded-mithril",
                             // Light mode: bg white, color gray-1 (#5f6b7c), shadow = $pt-elevation-shadow-1
                             // Shadow: 0 0 0 1px rgba(17,20,24,0.1), 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)
                             "bg-white text-gray-1",

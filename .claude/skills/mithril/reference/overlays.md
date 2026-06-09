@@ -151,7 +151,7 @@ Fix: make the **animated element itself** (Overlay, Content) the direct portal c
 `dark` class **on the Content** instead of a wrapper. Its descendants then have a `.dark`
 ancestor as usual; the Content's *own* dark-dependent styles use self-matching `[&.dark]:` (the
 descendant `dark:` variant can't target a class on the same element). Animations are driven by
-`data-state` + keyframes in `globals.css` (see `bp-drawer-*`, `bp-popover-*`), and
+`data-state` + keyframes in `base.css` (see `mithril-drawer-*`, `mithril-popover-*`), and
 `prefers-reduced-motion` is already neutralized globally.
 
 > Currently only Drawer and Popover animate. Dialog and Alert still use the wrapper pattern;

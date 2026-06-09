@@ -232,7 +232,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(function Tag(
                 "inline-flex items-center gap-1 max-w-full relative",
                 "border-none box-border",
                 // Shape
-                round ? "rounded-[30px]" : "rounded-bp",
+                round ? "rounded-[30px]" : "rounded-mithril",
                 // Fill
                 fill ? "flex w-full" : "inline-flex",
                 // Size: medium vs large (padding adjusts for round)

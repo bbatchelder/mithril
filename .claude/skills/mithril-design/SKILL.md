@@ -80,8 +80,8 @@ the rest. Style with **literal Tailwind utility classes bound to mithril tokens*
   theme, **CTAs are intent-typed**: **primary** for *submit/confirm/save*, **success (green)** for
   *create/run* (`+ New …`, `Create`), **danger (red)** for *destroy*, **warning (orange)** for
   *warn-acknowledge*. A correct screen has **1–3 small spots of color against an ocean of gray**.
-- **Border radius**: `rounded-bp` (4px) is the canonical token for buttons, inputs, cards, dialogs,
-  popovers. `rounded-bp-sm` (2px) and `rounded-bp-lg` (6px) exist; pills/avatars use `rounded-full`.
+- **Border radius**: `rounded-mithril` (4px) is the canonical token for buttons, inputs, cards, dialogs,
+  popovers. `rounded-mithril-sm` (2px) and `rounded-mithril-lg` (6px) exist; pills/avatars use `rounded-full`.
   Never `rounded-2xl`; nothing over 6px on chrome.
 - **Borders**: 1px, low-contrast — `border-border` (gray-1 @ 12%) between panels in a group,
   `border-border-strong` (@ 25%) to separate distinct sections or table headers. The interface is a
@@ -161,6 +161,6 @@ When the user describes what they're building:
 ## Durable gotcha
 
 **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
-(`bg-blue-3`, `shadow-elevation-2`, `ease-bp`, `rounded-bp`), **not** runtime `var()` in inline styles
+(`bg-blue-3`, `shadow-elevation-2`, `ease-mithril`, `rounded-mithril`), **not** runtime `var()` in inline styles
 — those get dropped. Arbitrary-value classes that reference always-emitted `:root` vars are fine
 (`bg-[var(--interactive-hover)]`). This is the #1 way a "correct" design renders wrong in mithril.

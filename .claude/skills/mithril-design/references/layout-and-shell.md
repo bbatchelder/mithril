@@ -66,7 +66,7 @@ function AppRail(props: RailNavProps) {
 
 // Rail row — white-alpha hover/active on the forced-dark surface, ~32px tall.
 <button className={
-  "flex h-8 w-full items-center gap-2.5 rounded-bp px-3 text-left text-body-sm transition-colors " +
+  "flex h-8 w-full items-center gap-2.5 rounded-mithril px-3 text-left text-body-sm transition-colors " +
   (active ? "bg-white/10 font-medium text-foreground"
           : "text-foreground-muted hover:bg-white/[0.06] hover:text-foreground")
 }>

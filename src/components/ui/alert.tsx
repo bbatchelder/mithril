@@ -223,7 +223,7 @@ export function Alert({
                                 // as Dialog and Card.
                                 "text-foreground",
                                 // Blueprint: border-radius 4px
-                                "rounded-bp",
+                                "rounded-mithril",
                                 // Blueprint: box-shadow = card-3 (Dialog verified this is correct;
                                 // shadow-elevation-N uses pure-black base, shadow-card-N uses
                                 // $black=#111418 base + dark-mode white inset edge-highlights)

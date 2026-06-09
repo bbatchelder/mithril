@@ -90,7 +90,7 @@ describe("DialogFooter", () => {
         // Default minimal=false → border-top divider + bottom rounding.
         const el = screen.getByTestId("footer");
         expect(el).toHaveClass("border-t");
-        expect(el).toHaveClass("rounded-b-bp");
+        expect(el).toHaveClass("rounded-b-mithril");
     });
 
     it("uses the margin-only minimal style when minimal is set", () => {

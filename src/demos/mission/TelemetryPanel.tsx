@@ -159,7 +159,7 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
             )}
 
             {/* Gauges */}
-            <div className="flex justify-around gap-2 rounded-bp border border-divider bg-surface py-3">
+            <div className="flex justify-around gap-2 rounded-mithril border border-divider bg-surface py-3">
                 <div className={tone(drone.battery, 40, 20)}>
                     <Gauge value={drone.battery / 100} display={`${Math.round(drone.battery)}%`} caption="Battery" />
                 </div>

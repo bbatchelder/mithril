@@ -178,16 +178,16 @@
     --text-code: 13px;
     --text-code-lg: 14px;
 
-    --leading-bp: 1.28581; /* Blueprint default line-height (~18px @ 14px) */
-    --leading-bp-large: 1.5;
+    --leading-mithril: 1.28581; /* Blueprint default line-height (~18px @ 14px) */
+    --leading-mithril-large: 1.5;
 
     --font-weight-normal: 400;
     --font-weight-bold: 600;
 
     /* --- Radius ---------------------------------------------------------- */
-    --radius-bp-sm: 2px;
-    --radius-bp: 4px; /* Blueprint's single canonical radius */
-    --radius-bp-lg: 6px;
+    --radius-mithril-sm: 2px;
+    --radius-mithril: 4px; /* Blueprint's single canonical radius */
+    --radius-mithril-lg: 6px;
 
     /* --- Spacing & control sizing ---------------------------------------
      * Tailwind v4's spacing unit is already 4px (0.25rem @ 16px root), which
@@ -205,9 +205,9 @@
     --size-icon-lg: 20px; /* large icon */
 
     /* --- Motion ---------------------------------------------------------- */
-    --ease-bp: cubic-bezier(0.4, 1, 0.75, 0.9);
-    --ease-bp-bounce: cubic-bezier(0.54, 1.12, 0.38, 1.11);
-    --duration-bp: 100ms;
+    --ease-mithril: cubic-bezier(0.4, 1, 0.75, 0.9);
+    --ease-mithril-bounce: cubic-bezier(0.54, 1.12, 0.38, 1.11);
+    --duration-mithril: 100ms;
 
     /* --- Z-index --------------------------------------------------------- */
     /* Tailwind v4 generates z-index utilities (z-overlay, z-content, …) only from

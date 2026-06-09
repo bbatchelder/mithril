@@ -128,7 +128,7 @@ mithril's "every action exposes its shortcut" principle literal. Render as a sin
   consistent across both.
 - Monospace identifiers, tabular numerics, and one-instrument density are already mithril
   non-negotiables; terminal mode turns them up to maximum.
-- **Don't interleave** terminal-mode panels with standard `rounded-bp` card chrome on the same surface —
+- **Don't interleave** terminal-mode panels with standard `rounded-mithril` card chrome on the same surface —
   the two registers fight. Commit a panel or a screen.
 
 ## 8. Minimal recipe

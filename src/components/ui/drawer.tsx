@@ -200,10 +200,10 @@ export function Drawer({
     // Radix toggles data-state on the panel and keeps it mounted on close until the
     // CSS animation finishes, so both enter and exit animate.
     const animationClasses: Record<string, string> = {
-        right: "bp-drawer-panel-right",
-        left: "bp-drawer-panel-left",
-        top: "bp-drawer-panel-top",
-        bottom: "bp-drawer-panel-bottom",
+        right: "mithril-drawer-panel-right",
+        left: "mithril-drawer-panel-left",
+        top: "mithril-drawer-panel-top",
+        bottom: "mithril-drawer-panel-bottom",
     };
 
     return (
@@ -225,7 +225,7 @@ export function Drawer({
                 {/* Backdrop/overlay — fixed, covers viewport.
                     Blueprint: rgba($black, 0.7) = rgba(17, 20, 24, 0.7) */}
                 <RadixDialog.Overlay
-                    className="bp-drawer-overlay fixed inset-0 bg-black/70 z-overlay pointer-events-auto"
+                    className="mithril-drawer-overlay fixed inset-0 bg-black/70 z-overlay pointer-events-auto"
                 />
                 {/* Drawer panel — fixed, anchored to the edge.
                     No centering container needed (unlike Dialog which needs flex-center). */}

@@ -77,7 +77,7 @@ function BigMetric({ label, value, unit, data, min, max, color }: {
     color: string;
 }) {
     return (
-        <div className="rounded-bp border border-divider bg-surface p-3">
+        <div className="rounded-mithril border border-divider bg-surface p-3">
             <div className="flex items-baseline justify-between">
                 <span className="text-body-sm uppercase tracking-wide text-foreground-muted">{label}</span>
                 <span className="text-base font-semibold tabular-nums text-foreground">
@@ -155,7 +155,7 @@ export function DroneDetail({ drone, history, events, open, dark, onClose }: Dro
                                 title="Telemetry"
                                 panel={
                                     <div className="flex flex-col gap-3 pt-3">
-                                        <div className="flex justify-around rounded-bp border border-divider bg-surface py-3">
+                                        <div className="flex justify-around rounded-mithril border border-divider bg-surface py-3">
                                             <div className={tone(d.battery, 40, 20)}>
                                                 <Gauge value={d.battery / 100} display={`${Math.round(d.battery)}%`} caption="Battery" size={96} />
                                             </div>
@@ -268,7 +268,7 @@ export function DroneDetail({ drone, history, events, open, dark, onClose }: Dro
                                 {Math.round(active.health)}% health
                             </Tag>
                         </div>
-                        <div className="flex justify-center rounded-bp border border-divider bg-surface py-4">
+                        <div className="flex justify-center rounded-mithril border border-divider bg-surface py-4">
                             <div className={tone(active.health, 70, 40)}>
                                 <Gauge value={active.health / 100} display={`${Math.round(active.health)}%`} caption="Health" size={120} />
                             </div>

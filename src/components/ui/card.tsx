@@ -19,9 +19,9 @@ const ELEVATION_SHADOW: Record<CardElevation, string> = {
 
 export const cardVariants = cva(
     [
-        "rounded-bp bg-surface text-foreground",
+        "rounded-mithril bg-surface text-foreground",
         // Blueprint animates transform + box-shadow over 2× the base duration.
-        "transition-[box-shadow,transform] duration-200 ease-bp",
+        "transition-[box-shadow,transform] duration-200 ease-mithril",
     ],
     {
         variants: {

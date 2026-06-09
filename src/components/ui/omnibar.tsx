@@ -287,7 +287,7 @@ export function Omnibar<T>({
                     // Set own text color for portaled dark-mode
                     "text-foreground",
                     // Blueprint: border-radius: $pt-border-radius = 4px
-                    "rounded-bp",
+                    "rounded-mithril",
                     // Blueprint: box-shadow: $pt-elevation-shadow-4 (overlay variant —
                     // rgba(20,20,20) light hairline ring; dark = card-4, single drop).
                     "shadow-overlay-4",
@@ -351,7 +351,7 @@ export function Omnibar<T>({
                 {/* Menu — Blueprint: transparent bg, no border-radius, inset top separator */}
                 {/* max-height: calc(60vh - 40px) = viewport 60% minus input height 40px */}
                 {/* NOTE: inline style overrides used for bg/radius because Menu's Tailwind utility
-                    classes (bg-white/rounded-bp) may win over arbitrary class overrides due to
+                    classes (bg-white/rounded-mithril) may win over arbitrary class overrides due to
                     Tailwind v4 CSS order. Inline style always wins over class-based styles. */}
                 <Menu
                     ulRef={menuRef}

@@ -373,14 +373,14 @@ export const TagInput = forwardRef<HTMLDivElement, TagInputProps>(function TagIn
                 // Base input appearance: same border/shadow/bg as InputGroup
                 "relative flex flex-row items-start flex-wrap",
                 "bg-white dark:bg-black/30",
-                "rounded-bp",
+                "rounded-mithril",
                 // Sizing: padding on container (Blueprint: padding-left = 1.5 * spacing)
                 // medium: min-height 30px, large: min-height 40px
                 large ? "min-h-10 pl-2" : "min-h-7.5 pl-1.5",
                 // padding-right: 0 (Blueprint: rightElement handles its own margin)
                 "pr-0",
                 // Transition (matches InputGroup)
-                "transition-shadow duration-100 ease-bp",
+                "transition-shadow duration-100 ease-mithril",
                 // Shadow (resting or focus)
                 shadowClass,
                 // Intent colors on border (resting shadow already encodes intent color)

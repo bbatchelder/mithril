@@ -28,7 +28,7 @@ Read this when you want a Carbon-flavored variant, when you're building **data-h
 
 | Dimension | mithril | Carbon | Note |
 |---|---|---|---|
-| Corner radius | `rounded-bp` 4px on chrome | **0px** (square) | Carbon is more austere; pick one and commit |
+| Corner radius | `rounded-mithril` 4px on chrome | **0px** (square) | Carbon is more austere; pick one and commit |
 | Body font | system sans stack | **IBM Plex Sans** | Don't mix the two families |
 | Monospace | `font-mono` | **IBM Plex Mono** | Both satisfy "mono for identifiers" |
 | Primary accent | `--color-primary` (blue-3 `#2d72d2`, themeable) | **Blue 60 `#0f62fe`** | Carbon's blue is brighter |

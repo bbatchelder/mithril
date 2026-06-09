@@ -68,7 +68,7 @@ export interface HTMLSelectProps
  *
  * Design spec (Blueprint v6.15):
  *   - Default height: 30px (h-7.5); Large height: 40px (h-10)
- *   - Border-radius: 4px (rounded-bp)
+ *   - Border-radius: 4px (rounded-mithril)
  *   - Padding: 0 24px 0 8px (default); large right = 28px
  *   - Background/shadow: identical to solid/none Button (bg-light-gray-5 + shadow-button
  *     in light; bg-dark-gray-3 + dark shadow in dark)
@@ -124,7 +124,7 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                     // Font: inherit from document (Tailwind v4 preflight resets select font)
                     "font-[inherit] text-body",
                     // Box model
-                    "block w-full rounded-bp",
+                    "block w-full rounded-mithril",
                     // Height + line-height: Blueprint uses fixed px heights
                     large ? "h-10" : "h-7.5",
                     // Padding: left=8px always; right enlarged for caret room
@@ -172,7 +172,7 @@ export const HTMLSelect = forwardRef<HTMLSelectElement, HTMLSelectProps>(functio
                     // Focus ring: Blueprint uses box-shadow, we use outline
                     "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                     // Transition
-                    "transition-colors duration-100 ease-bp",
+                    "transition-colors duration-100 ease-mithril",
                     // Select vertical alignment (Blueprint: vertical-align:middle on select)
                     "align-middle",
                 )}
