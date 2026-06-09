@@ -101,9 +101,12 @@ function MissionControlInner() {
         }
     }, [stream.events, toaster]);
 
-    // Detected map targets — owned by the stream engine so tasking a drone to
-    // investigate (and the resulting confidence upgrades) flows through the sim tick.
-    const targets = stream.targets;
+    // Known map contacts — owned by the stream engine so detection, tasking, and
+    // the resulting confidence upgrades all flow through the sim tick. Undetected
+    // targets are fog of war: never rendered, never selectable.
+    const targets = stream.targets.filter((t) => t.track !== "undetected");
+    const activeTracks = targets.filter((t) => t.track === "active").length;
+    const staleTracks = targets.length - activeTracks;
 
     const selected = stream.drones.find((d) => d.id === selectedId) ?? null;
     const selectedTarget = targets.find((t) => t.id === selectedTargetId) ?? null;
@@ -436,8 +439,14 @@ function MissionControlInner() {
                                 <span className="text-body-sm text-foreground-muted">·</span>
                                 <span className="inline-flex items-center gap-1.5 text-body-sm text-foreground-muted">
                                     <Icon icon="target" size={12} className="!text-current" />
-                                    {targets.length} targets
+                                    {activeTracks} contacts
                                 </span>
+                                {staleTracks > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-warning-text">
+                                        <Icon icon="eye-off" size={12} className="!text-current" />
+                                        {staleTracks} stale
+                                    </span>
+                                )}
                                 <span className="text-body-sm text-foreground-muted">·</span>
                                 <span className="inline-flex items-center gap-1.5 text-body-sm text-foreground-muted">
                                     <Icon icon="cell-tower" size={12} className="!text-current" />
@@ -504,8 +513,9 @@ function MissionControlInner() {
                                 <div className="min-h-0 flex-1 overflow-auto">
                                     <TargetDetail
                                         target={selectedTarget}
+                                        drones={stream.drones}
                                         dark={dark}
-                                        onTask={() => stream.investigate(selectedTarget.id)}
+                                        onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
                                     />
                                 </div>
                             </div>
@@ -536,9 +546,10 @@ function MissionControlInner() {
                     {selectedTarget ? (
                         <TargetDetail
                             target={selectedTarget}
+                            drones={stream.drones}
                             dark={dark}
                             onClose={() => setSelectedTargetId(null)}
-                            onTask={() => stream.investigate(selectedTarget.id)}
+                            onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
                         />
                     ) : (
                         <TelemetryPanel

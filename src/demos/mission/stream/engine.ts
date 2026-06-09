@@ -5,8 +5,11 @@
  *   1. moves every airborne drone (patrol loop, investigation orbit, or return leg),
  *   2. random-walks telemetry (battery / signal / altitude / speed) within bounds,
  *   3. applies the game rules — battery warnings, crash-at-0%, pad rotation, scoring,
- *   4. emits discrete events and appends samples to per-drone ring buffers,
- *   5. ends the shift once the clock runs out.
+ *   4. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
+ *      detected when a drone's sensor footprint covers them, and go stale without
+ *      coverage (see `targets.ts` for the track lifecycle),
+ *   5. emits discrete events and appends samples to per-drone ring buffers,
+ *   6. ends the shift once the clock runs out.
  *
  * Skylark is a *game*: there is no autopilot fleet management. Drones do not recall
  * themselves at low battery and do not relaunch when charged — `launch` / `recall`
@@ -18,11 +21,14 @@
 import { Rng } from "../prng";
 import {
     type Drone,
+    type LngLat,
     type StreamEvent,
     type TelemetryHistory,
     GROUND_STATION,
     HISTORY_LEN,
+    SENSOR_META,
     emptyHistory,
+    formatMissionClock,
     makeFleet,
 } from "../data";
 import { type Target, makeTargets, upgradeTarget } from "../targets";
@@ -45,6 +51,17 @@ export const BATTERY_WARN = 25;
 export const BATTERY_CRITICAL = 10;
 /** Idle drones below this battery are pulled onto a pad when one frees up. */
 const PAD_WANT = 95;
+/** Intel points for detecting a brand-new contact. */
+export const DETECT_SCORE = 10;
+/** Ticks an active track survives with no sensor coverage before going stale. */
+export const STALE_TICKS = 45;
+/**
+ * Per-tick chance that a drone whose footprint covers a hidden/stale target
+ * actually picks it up — higher when the sensor matches the target category,
+ * so a sweep has tension but the right platform finds things fast.
+ */
+const DETECT_CHANCE_MATCHED = 0.35;
+const DETECT_CHANCE = 0.15;
 
 export type ShiftPhase = "running" | "ended";
 
@@ -63,6 +80,10 @@ export interface ShiftStats {
     dronesLost: number;
     launches: number;
     recalls: number;
+    /** New contacts detected this shift. */
+    detected: number;
+    /** Tracks still stale (lost and never re-acquired) when the shift ended. */
+    staleLost: number;
 }
 
 // ─── Geo helpers (planar approximation — fine at city scale) ─────────────────
@@ -122,11 +143,11 @@ export function makeSim(): Sim {
         tick: 0,
         phase: "running",
         drones,
-        targets: makeTargets(),
+        targets: makeTargets(SHIFT_TICKS),
         events: [],
         history,
         score: { intel: 0, penalties: 0 },
-        stats: { investigations: 0, factsRaised: 0, dronesLost: 0, launches: 0, recalls: 0 },
+        stats: { investigations: 0, factsRaised: 0, dronesLost: 0, launches: 0, recalls: 0, detected: 0, staleLost: 0 },
         rng: new Rng(SEED),
         eventId: 1,
         anomalyTimer: {},
@@ -330,15 +351,27 @@ export function step(sim: Sim): void {
                 d.altitude = clamp(d.altitude + rng.range(-2, 2), 60, 150);
                 d.assignment.ticksLeft -= 1;
                 if (d.assignment.ticksLeft <= 0) {
-                    const raised = upgradeTarget(tgt, rng);
+                    const matched = d.sensor === tgt.bestSensor;
+                    const raised = upgradeTarget(tgt, rng, d.sensor);
                     const points = raised * SCORE_PER_TIER;
                     sim.score.intel += points;
                     sim.stats.investigations += 1;
                     sim.stats.factsRaised += raised;
                     tgt.investigation.status = "complete";
+                    // A close pass certainly holds the track, whatever the detection pass rolled.
+                    tgt.lastSeenTick = sim.tick;
+                    if (tgt.track !== "active") tgt.track = "active";
                     d.task = d.assignment.prevTask;
                     d.assignment = null;
-                    emit(sim, d, "success", "predictive-analysis", `${d.callsign} finished ${tgt.designation} — confidence raised (+${points} pts)`);
+                    emit(
+                        sim,
+                        d,
+                        matched ? "success" : "warning",
+                        "predictive-analysis",
+                        matched
+                            ? `${d.callsign} finished ${tgt.designation} — confidence raised (+${points} pts)`
+                            : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium (+${points} pts)`,
+                    );
                 }
                 warnBattery(sim, d);
                 if (d.battery <= 0) crash(sim, d);
@@ -424,9 +457,55 @@ export function step(sim: Sim): void {
         pushHistory(sim, d);
     }
 
+    // ── Fog of war: detection, track freshness, staleness ────────────────
+    // Runs after movement so footprints test this tick's positions. For each
+    // spawned target, find a covering airborne drone (preferring one whose
+    // sensor matches the category); coverage keeps an active track fresh,
+    // and rolls the detection chance for hidden or stale ones.
+    const flying = sim.drones.filter(airborne);
+    for (const t of sim.targets) {
+        if (t.track === "undetected" && sim.tick < t.spawnTick) continue;
+
+        let spotter: Drone | null = null;
+        for (const d of flying) {
+            if (dist(d.position, t.position) > SENSOR_META[d.sensor].range) continue;
+            if (d.sensor === t.bestSensor) {
+                spotter = d;
+                break;
+            }
+            spotter ??= d;
+        }
+
+        if (t.track === "active") {
+            if (spotter) {
+                t.lastSeenTick = sim.tick;
+            } else if (sim.tick - t.lastSeenTick >= STALE_TICKS) {
+                t.track = "stale";
+                emitBase(sim, "warning", "eye-off", `Track ${t.designation} stale — no coverage since ${formatMissionClock(t.lastSeenTick)}; re-acquire to keep it`);
+            }
+        } else if (spotter) {
+            const chance = spotter.sensor === t.bestSensor ? DETECT_CHANCE_MATCHED : DETECT_CHANCE;
+            if (rng.chance(chance)) {
+                const isNew = t.track === "undetected";
+                t.track = "active";
+                t.lastSeenTick = sim.tick;
+                if (isNew) {
+                    t.detectedBy = spotter.callsign;
+                    t.detectedAt = formatMissionClock(sim.tick);
+                    sim.score.intel += DETECT_SCORE;
+                    sim.stats.detected += 1;
+                    emit(sim, spotter, "warning", "eye-open", `${spotter.callsign} new contact — ${t.designation} (${t.category.toLowerCase()}) (+${DETECT_SCORE} pts)`);
+                } else {
+                    emit(sim, spotter, "success", "eye-open", `${spotter.callsign} re-acquired ${t.designation} — track active again`);
+                }
+            }
+        }
+    }
+
     // ── Shift clock ──────────────────────────────────────────────────────
     if (sim.tick >= SHIFT_TICKS) {
         sim.phase = "ended";
+        sim.stats.staleLost = sim.targets.filter((t) => t.track === "stale").length;
         emitBase(sim, "info", "time", "Shift complete — stand down. Debrief ready.");
     }
 }
@@ -480,46 +559,47 @@ export function resumePatrol(sim: Sim, droneId: string): void {
 }
 
 /**
- * Task the nearest free drone to investigate a target. Prefers airborne drones;
- * falls back to launching a grounded one (idle/charging). Returning and lost
- * drones are never auto-tasked.
+ * True if this drone can be tasked to investigate right now: not already
+ * assigned, not heading home, not lost. Grounded drones (idle/charging) count —
+ * tasking one launches it. Shared by the engine guard and the UI's picker.
  */
-export function investigate(sim: Sim, targetId: string): void {
+export function canInvestigate(d: Drone): boolean {
+    return !d.assignment && d.status !== "returning" && d.status !== "lost";
+}
+
+/** Enroute flight time (ticks at 1×) from `from` to `to` — the picker's ETA sort key. */
+export function etaTicks(from: LngLat, to: LngLat): number {
+    return Math.ceil(dist(from, to) / RETURN_SPEED);
+}
+
+/**
+ * Task a specific drone to investigate a detected target (the UI's picker chooses
+ * which — sensor match matters, see `upgradeTarget`). The target must be a known
+ * track (active, or stale — flying out re-acquires it) with no investigation done
+ * or underway. A grounded drone (idle/charging) is launched by the tasking;
+ * returning and lost drones can't be tasked.
+ */
+export function investigate(sim: Sim, targetId: string, droneId: string): void {
     if (sim.phase === "ended") return;
     const tgt = sim.targets.find((t) => t.id === targetId);
-    if (!tgt || tgt.investigation.status !== "idle") return;
+    if (!tgt || tgt.track === "undetected" || tgt.investigation.status !== "idle") return;
+    const d = sim.drones.find((x) => x.id === droneId);
+    if (!d || !canInvestigate(d)) return;
 
-    const free = sim.drones.filter(
-        (d) => !d.assignment && d.status !== "returning" && d.status !== "lost",
-    );
-    const actives = free.filter((d) => d.status === "active" || d.status === "anomaly");
-    const pool = actives.length > 0 ? actives : free;
-    if (pool.length === 0) return;
-
-    let best = pool[0];
-    let bestDist = Infinity;
-    for (const d of pool) {
-        const dd = dist(d.position, tgt.position);
-        if (dd < bestDist) {
-            bestDist = dd;
-            best = d;
-        }
-    }
-
-    const offPad = best.status === "charging";
-    if (best.status === "idle" || best.status === "charging") {
-        best.status = "active";
+    const offPad = d.status === "charging";
+    if (d.status === "idle" || d.status === "charging") {
+        d.status = "active";
         sim.stats.launches += 1;
     }
-    if (best.speed < 14) best.speed = 16;
-    if (best.altitude < 60) best.altitude = 80;
+    if (d.speed < 14) d.speed = 16;
+    if (d.altitude < 60) d.altitude = 80;
     // Lock the tangent entry angle now (from where the drone starts), so the whole
     // enroute leg is a straight line onto the orbit.
-    const entryAngle = joinAngle(best.position, tgt.position);
-    best.assignment = { targetId, phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: best.task };
-    best.task = `Investigating ${tgt.designation}`;
-    tgt.investigation = { status: "enroute", droneId: best.id, droneCallsign: best.callsign };
-    emit(sim, best, "info", "locate", `${best.callsign} tasked to investigate ${tgt.designation}`);
+    const entryAngle = joinAngle(d.position, tgt.position);
+    d.assignment = { targetId, phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
+    d.task = `Investigating ${tgt.designation}`;
+    tgt.investigation = { status: "enroute", droneId: d.id, droneCallsign: d.callsign };
+    emit(sim, d, "info", "locate", `${d.callsign} tasked to investigate ${tgt.designation}`);
     if (offPad) assignPads(sim);
 }
 

@@ -57,8 +57,8 @@ export interface StreamState {
     recall: (droneId: string) => void;
     /** Turn a returning drone around — back to its patrol. */
     resumePatrol: (droneId: string) => void;
-    /** Task the nearest free drone to investigate a target; raises its confidence on arrival. */
-    investigate: (targetId: string) => void;
+    /** Task a specific drone to investigate a detected target; raises its confidence on arrival. */
+    investigate: (targetId: string, droneId: string) => void;
     /** Rebuild the sim from the seed and start a fresh shift. */
     restart: () => void;
 }
@@ -107,7 +107,10 @@ export function useStream(): StreamState {
     const launch = useCallback((id: string) => act((sim) => engineLaunch(sim, id)), [act]);
     const recall = useCallback((id: string) => act((sim) => engineRecall(sim, id)), [act]);
     const resumePatrol = useCallback((id: string) => act((sim) => engineResume(sim, id)), [act]);
-    const investigate = useCallback((id: string) => act((sim) => engineInvestigate(sim, id)), [act]);
+    const investigate = useCallback(
+        (targetId: string, droneId: string) => act((sim) => engineInvestigate(sim, targetId, droneId)),
+        [act],
+    );
 
     const restart = useCallback(() => {
         simRef.current = makeSim();

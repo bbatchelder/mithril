@@ -30,7 +30,7 @@ import type { TagIntent } from "@/components/ui/tag";
 import type { Intent } from "@/lib/types";
 
 import { Rng } from "./prng";
-import { type LngLat, MAP_CENTER } from "./data";
+import { type LngLat, type SensorKind, MAP_CENTER } from "./data";
 
 // ─── Priority ────────────────────────────────────────────────────────────────
 
@@ -159,6 +159,17 @@ export function deriveFact(f: RawFact): TargetFact {
     };
 }
 
+// ─── Track lifecycle (fog of war) ────────────────────────────────────────────
+
+/**
+ * A target's detection state. Targets spawn `undetected` (hidden — not rendered,
+ * not selectable) on a seeded schedule across the shift. A drone whose sensor
+ * footprint covers the target detects it → `active`. An active track left with
+ * no sensor coverage for too long goes `stale` (last-known position, ghost
+ * marker) and must be re-acquired by flying a drone back over it.
+ */
+export type TrackState = "undetected" | "active" | "stale";
+
 // ─── Investigation state ─────────────────────────────────────────────────────
 
 export type InvestigationStatus = "idle" | "enroute" | "investigating" | "complete";
@@ -180,10 +191,17 @@ export interface Target {
     classification: string;
     icon: IconName;
     priority: TargetPriority;
+    /** The sensor that fully resolves this category — any other caps facts at Medium. */
+    bestSensor: SensorKind;
     position: LngLat;
-    /** Callsign of the drone that first detected it. */
+    /** Tick the target appears in the world (still undetected until found). */
+    spawnTick: number;
+    track: TrackState;
+    /** Last tick a drone's sensor footprint covered this target. */
+    lastSeenTick: number;
+    /** Callsign of the drone that first detected it ("" until detected). */
     detectedBy: string;
-    /** Pre-formatted mission-elapsed time of first detection, e.g. "T+04:12". */
+    /** Mission-elapsed time of first detection, e.g. "T+04:12" ("" until detected). */
     detectedAt: string;
     summary: string;
     facts: RawFact[];
@@ -237,15 +255,19 @@ export function deriveOverall(target: Target): {
 
 /**
  * Raise every fact's confidence tier — the payload of a completed investigation.
- * Each fact climbs 1–2 tiers (capped), and anything that actually moved is flagged
- * `upgraded` and stamped "just now". Returns the total tiers raised (the game
+ * Each fact climbs 1–2 tiers, and anything that actually moved is flagged
+ * `upgraded` and stamped "just now". The investigating drone's sensor matters:
+ * only the category's {@link Target.bestSensor} can take facts to High — any
+ * other sensor caps the climb at tier 1 (Medium), and never *lowers* a fact
+ * that already sits above the cap. Returns the total tiers raised (the game
  * engine converts this into intel score).
  */
-export function upgradeTarget(target: Target, rng: Rng): number {
+export function upgradeTarget(target: Target, rng: Rng, sensor: SensorKind): number {
+    const cap = sensor === target.bestSensor ? MAX_TIER : 1;
     let raised = 0;
     for (const f of target.facts) {
-        const next = Math.min(MAX_TIER, f.tier + rng.int(1, 2));
-        if (next !== f.tier) {
+        const next = Math.min(cap, f.tier + rng.int(1, 2));
+        if (next > f.tier) {
             raised += next - f.tier;
             f.tier = next;
             f.upgraded = true;
@@ -258,7 +280,6 @@ export function upgradeTarget(target: Target, rng: Rng): number {
 // ─── Generators ──────────────────────────────────────────────────────────────
 
 const DESIGNATIONS = ["ALPHA", "BRAVO", "CHARLIE", "DELTA", "ECHO", "FOXTROT", "GOLF", "HOTEL"];
-const DETECTORS = ["SK-101", "SK-102", "SK-201", "SK-202", "SK-301", "SK-303"];
 
 // Starting tiers — weighted low so investigation has room to raise confidence.
 const TIER_DECK = [0, 0, 1, 1, 2];
@@ -275,6 +296,8 @@ const SENSOR_SOURCES: { title: string; meta: string }[] = [
 interface CategorySpec {
     category: string;
     icon: IconName;
+    /** The sensor that resolves this category to High confidence. */
+    bestSensor: SensorKind;
     classifications: string[];
     facts: (rng: Rng) => { label: string; value: string }[];
 }
@@ -283,6 +306,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "Vehicle convoy",
         icon: "drive-time",
+        bestSensor: "eo-ir",
         classifications: ["3× light utility trucks", "Mixed wheeled column", "2× SUV + cargo truck"],
         facts: (rng) => [
             { label: "Composition", value: `${rng.int(3, 5)} vehicles` },
@@ -295,6 +319,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "Surface vessel",
         icon: "ship",
+        bestSensor: "eo-ir",
         classifications: ["Coastal fishing trawler", "Fast inshore craft", "Mid-size cargo hull"],
         facts: (rng) => [
             { label: "Hull length", value: `${rng.int(12, 64)} m` },
@@ -307,6 +332,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "Fixed structure",
         icon: "office",
+        bestSensor: "lidar",
         classifications: ["Warehouse / depot", "Low-rise compound", "Utility substation"],
         facts: (rng) => [
             { label: "Footprint", value: `${rng.int(200, 1800)} m²` },
@@ -319,6 +345,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "Personnel group",
         icon: "people",
+        bestSensor: "eo-ir",
         classifications: ["Dismounted group", "Gathering / crowd", "Small foot patrol"],
         facts: (rng) => [
             { label: "Group size", value: `${rng.int(4, 30)} people` },
@@ -331,6 +358,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "Heat source",
         icon: "flame",
+        bestSensor: "thermal",
         classifications: ["Open burn / fire", "Vehicle exhaust plume", "Generator signature"],
         facts: (rng) => [
             { label: "Peak temp", value: `${rng.int(60, 540)} °C` },
@@ -343,6 +371,7 @@ const CATEGORIES: CategorySpec[] = [
     {
         category: "RF emitter",
         icon: "globe-network",
+        bestSensor: "sigint",
         classifications: ["Unknown transmitter", "Mesh radio node", "Burst emitter"],
         facts: (rng) => [
             { label: "Band", value: `${rng.range(0.4, 5.8).toFixed(2)} GHz` },
@@ -381,8 +410,15 @@ function buildFact(rng: Rng, base: { label: string; value: string }, idx: number
     };
 }
 
-/** Build the (deterministic, seeded) set of map targets. */
-export function makeTargets(): Target[] {
+/**
+ * Build the (deterministic, seeded) full target roster for a shift of
+ * `shiftTicks` ticks. Every target exists from the start of the sim, but each
+ * carries a `spawnTick` — the moment it appears in the world — spread across the
+ * shift on an escalation curve (spawns come *faster* as the shift wears on). The
+ * first two are live at tick 0 so the opening patrol picture isn't empty. All
+ * spawn undetected; detection is the game (see `stream/engine.ts`).
+ */
+export function makeTargets(shiftTicks: number): Target[] {
     // A dedicated seed, independent of the telemetry stream's.
     const rng = new Rng(0x7a26e7);
     const count = 7;
@@ -393,8 +429,11 @@ export function makeTargets(): Target[] {
         const priority = rng.pick(PRIORITY_DECK);
         const facts = cat.facts(rng).map((f, idx) => buildFact(rng, f, idx, designation));
 
-        const mm = rng.int(0, 12);
-        const ss = rng.int(0, 59);
+        // Escalation curve: the sub-linear exponent shrinks the gap between
+        // consecutive spawns, so contacts arrive denser later in the shift.
+        // Jittered, but capped at 88% of the shift so the last one is findable.
+        const frac = i < 2 ? 0 : 0.85 * Math.pow((i - 1) / (count - 2), 0.7) + rng.range(-0.04, 0.04);
+        const spawnTick = Math.round(shiftTicks * Math.min(0.88, Math.max(0, frac)));
 
         return {
             id: designation.toLowerCase(),
@@ -403,12 +442,16 @@ export function makeTargets(): Target[] {
             classification: rng.pick(cat.classifications),
             icon: cat.icon,
             priority,
+            bestSensor: cat.bestSensor,
             position: [
                 MAP_CENTER[0] + rng.range(-0.075, 0.075),
                 MAP_CENTER[1] + rng.range(-0.05, 0.05),
             ] as LngLat,
-            detectedBy: rng.pick(DETECTORS),
-            detectedAt: `T+${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`,
+            spawnTick,
+            track: "undetected",
+            lastSeenTick: 0,
+            detectedBy: "",
+            detectedAt: "",
             summary: SUMMARY[priority](cat.category),
             facts,
             investigation: { status: "idle" },

@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { type GeoJSONSource, type Map as MlMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, STATUS_META } from "./data";
+import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, SENSOR_META, STATUS_META } from "./data";
 import { type Target, type TargetPriority, PRIORITY_META } from "./targets";
 
 const STYLE = {
@@ -93,9 +93,34 @@ function targetsFC(targets: Target[]): GeoJSON.FeatureCollection {
         type: "FeatureCollection",
         features: targets.map((t) => ({
             type: "Feature",
-            properties: { id: t.id, designation: t.designation, priority: t.priority },
+            properties: { id: t.id, designation: t.designation, priority: t.priority, track: t.track },
             geometry: { type: "Point", coordinates: t.position },
         })),
+    };
+}
+
+/**
+ * Sensor footprints: one circle (in degree space — matching the engine's planar
+ * `dist()`, so the drawn edge IS the detection boundary) per airborne drone.
+ */
+function footprintsFC(drones: Drone[]): GeoJSON.FeatureCollection {
+    const ring = (center: [number, number], r: number): [number, number][] => {
+        const pts: [number, number][] = [];
+        for (let i = 0; i <= 48; i++) {
+            const a = (i / 48) * Math.PI * 2;
+            pts.push([center[0] + Math.cos(a) * r, center[1] + Math.sin(a) * r]);
+        }
+        return pts;
+    };
+    return {
+        type: "FeatureCollection",
+        features: drones
+            .filter((d) => d.status === "active" || d.status === "anomaly" || d.status === "returning")
+            .map((d) => ({
+                type: "Feature",
+                properties: {},
+                geometry: { type: "Polygon", coordinates: [ring(d.position, SENSOR_META[d.sensor].range)] },
+            })),
     };
 }
 
@@ -367,12 +392,16 @@ function installLayers(map: MlMap) {
         const name = `arrow-${s}`;
         if (!map.hasImage(name)) map.addImage(name, makeArrowIcon(STATUS_META[s].color));
     }
-    // Register target reticle icons (per priority).
+    // Register target reticle icons (per priority, plus the gray stale ghost).
     for (const p of PRIORITIES) {
         const name = `target-${p}`;
         if (!map.hasImage(name)) map.addImage(name, makeTargetIcon(PRIORITY_META[p as TargetPriority].color));
     }
+    if (!map.hasImage("target-stale")) map.addImage("target-stale", makeTargetIcon("#8f99a8"));
 
+    if (!map.getSource("footprints")) {
+        map.addSource("footprints", { type: "geojson", data: emptyFC() });
+    }
     if (!map.getSource("trails")) {
         map.addSource("trails", { type: "geojson", data: emptyFC() });
     }
@@ -398,6 +427,23 @@ function installLayers(map: MlMap) {
         map.addSource("tasking", { type: "geojson", data: emptyFC() });
     }
 
+    // Footprints first — they underlay everything else.
+    if (!map.getLayer("footprint-fill")) {
+        map.addLayer({
+            id: "footprint-fill",
+            type: "fill",
+            source: "footprints",
+            paint: { "fill-color": "#2d72d2", "fill-opacity": 0.05 },
+        });
+    }
+    if (!map.getLayer("footprint-line")) {
+        map.addLayer({
+            id: "footprint-line",
+            type: "line",
+            source: "footprints",
+            paint: { "line-color": "#2d72d2", "line-width": 1, "line-opacity": 0.25, "line-dasharray": [2, 3] },
+        });
+    }
     if (!map.getLayer("trail-line")) {
         map.addLayer({
             id: "trail-line",
@@ -544,9 +590,18 @@ function installLayers(map: MlMap) {
             type: "symbol",
             source: "targets",
             layout: {
-                "icon-image": ["concat", "target-", ["get", "priority"]],
+                // Stale tracks render as gray ghosts at their last-known position.
+                "icon-image": [
+                    "case",
+                    ["==", ["get", "track"], "stale"],
+                    "target-stale",
+                    ["concat", "target-", ["get", "priority"]],
+                ],
                 "icon-allow-overlap": true,
                 "icon-size": 0.85,
+            },
+            paint: {
+                "icon-opacity": ["case", ["==", ["get", "track"], "stale"], 0.7, 1],
             },
         });
     }
@@ -568,6 +623,7 @@ function installLayers(map: MlMap) {
                 "text-color": "#404854",
                 "text-halo-color": "rgba(255,255,255,0.9)",
                 "text-halo-width": 1.2,
+                "text-opacity": ["case", ["==", ["get", "track"], "stale"], 0.6, 1],
             },
         });
     }
@@ -575,6 +631,7 @@ function installLayers(map: MlMap) {
 
 function updateData(map: MlMap, drones: Drone[], trails: Record<string, [number, number][]>, targets: Target[]) {
     (map.getSource("drones") as GeoJSONSource | undefined)?.setData(dronesFC(drones));
+    (map.getSource("footprints") as GeoJSONSource | undefined)?.setData(footprintsFC(drones));
     (map.getSource("uplinks") as GeoJSONSource | undefined)?.setData(uplinksFC(drones));
     (map.getSource("trails") as GeoJSONSource | undefined)?.setData(trailsFC(trails, drones));
     (map.getSource("targets") as GeoJSONSource | undefined)?.setData(targetsFC(targets));

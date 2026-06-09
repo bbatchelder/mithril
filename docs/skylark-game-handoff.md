@@ -1,14 +1,15 @@
-# Handoff — Skylark game (stages 2–7)
+# Handoff — Skylark game (stages 3–7)
 
-Status as of 2026‑06‑09 (`feat/skylark-game-stage1` @ PR #69 — stage 1 complete). This document
-hands off the remaining game work so another session can pick it up cold. Read
-[`CLAUDE.md`](../CLAUDE.md) first, then [`docs/skylark-game.md`](skylark-game.md) — that's the
-**design of record** (the locked decisions + system sketches). This is the *what's left + how*
-layer on top of it.
+Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = `feat/skylark-game-stage2`, stacked on
+stage 1 until #69 merges). This document hands off the remaining game work so another session
+can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
+[`docs/skylark-game.md`](skylark-game.md) — that's the **design of record** (the locked
+decisions + system sketches + per-stage "rules (implemented)" sections). This is the *what's
+left + how* layer on top of it.
 
 ---
 
-## What exists now (stage 1, PR #69)
+## What exists now (stages 1–2)
 
 Skylark (`src/demos/mission/`) is a playable game scaffold:
 
@@ -33,8 +34,18 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 7. **HUD** — two stacked overlay panels top-left of the map in `MissionControl.tsx`
    (time-left / score / pads, then airborne / anomaly / targets / base) + "SHIFT OVER" navbar
    state + a "View debrief" reopen button when the dialog is dismissed.
-8. **Engine tests** — `stream/engine.test.ts` (14 cases). Pattern: build `makeSim()`, poke
-   state directly, `step()`, assert. `stepUntil(sim, pred)` helper for multi-tick scenarios.
+8. **Engine tests** — `stream/engine.test.ts`. Pattern: build `makeSim()`, poke state
+   directly, `step()`, assert. Helpers: `stepUntil(sim, pred)` for multi-tick scenarios,
+   `activate(sim, t)` to skip detection, `park(d, pos)` to pin a drone over a point.
+9. **Fog of war (stage 2)** — drones carry `sensor: SensorKind` (+ footprint radius in
+   `SENSOR_META`, data.ts); targets carry `bestSensor` / `spawnTick` / `track` /
+   `lastSeenTick` (targets.ts, roster built by `makeTargets(SHIFT_TICKS)`). The detection /
+   freshness / staleness pass runs at the end of `step()`. `upgradeTarget(tgt, rng, sensor)`
+   caps at tier 1 on a sensor mismatch. `investigate(sim, targetId, droneId)` names the drone
+   (UI: `MenuPopover` picker in `TargetDetail`, ETA-sorted via the exported `etaTicks` /
+   `canInvestigate`). Undetected targets are filtered out in `MissionControl` before anything
+   renders — the map never sees them. Stale paint + footprint circles live in `MissionMap`
+   (`target-stale` icon, `footprints` source).
 
 ### Engine invariants — do not break
 
@@ -68,50 +79,7 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 
 ---
 
-## Stage 2 — fog of war + contact lifecycle (next up)
-
-The biggest stage; it makes detection *the game*. Suggested shape:
-
-1. **Structured sensors.** Payloads are display strings today. Add to `Drone` (seeded in
-   `data.ts`): `sensor: SensorKind` where
-   `type SensorKind = "eo-ir" | "lidar" | "thermal" | "sigint"`, and a footprint radius
-   (degrees, ~0.012–0.02; relay/sigint widest). Map: Falcon → `eo-ir`, Surveyor S3 → `lidar`,
-   Surveyor S2 (thermal array) → `thermal`, Aether → `sigint`.
-2. **Sensor–target matrix.** Target categories already exist in `targets.ts` (vehicle convoy,
-   surface vessel, fixed structure, personnel group, heat source, RF emitter). Add to each
-   `CategorySpec` a `bestSensor: SensorKind` (vehicles/vessels/personnel → `eo-ir`,
-   structures → `lidar`, heat → `thermal`, RF → `sigint`). Rule: investigation by the wrong
-   sensor caps fact tiers at 1 (Medium) — enforce in `upgradeTarget` (pass the
-   investigating drone's sensor; cap `next` accordingly).
-3. **Contact lifecycle.** Replace "all 7 targets visible at tick 0" with a seeded spawn
-   schedule: `makeTargets()` still builds the full roster (deterministic), but each target
-   gains `spawnTick` (spread across the shift, escalation curve = denser later) and
-   `track: "undetected" | "active" | "stale"`. In `step()`: a spawned, undetected target
-   becomes `active` ("detected") when an airborne drone is within its sensor footprint —
-   guaranteed within range, or probabilistic per tick (e.g. `rng.chance(0.3)` scaled by sensor
-   match) if you want sweep tension. An `active` track with no drone in range for N ticks
-   (~45) goes `stale` (still listed, position frozen + grayed, must be re-found). Only
-   `active` targets render full markers; stale ones render ghosts (new paint in
-   `targetsFC`/`MissionMap` — add a `track` feature property).
-4. **Drone picker for investigations.** Replace the auto-nearest in `investigate()` with
-   `investigate(sim, targetId, droneId)`. UI: `TargetDetail`'s task button becomes a
-   `MenuPopover` listing eligible drones sorted by ETA, each row showing callsign, battery,
-   sensor (flag the matching sensor with a tag — "best sensor"). Keep a "nearest" default at
-   the top. The mithril skill's overlay recipes cover menu-in-popover composition gotchas.
-5. **Scoring.** Detection itself can score a little (e.g. +10 per new contact); wrong-sensor
-   caps make the intel ceiling lower, which is penalty enough. New stats: `detected`,
-   `staleLost` (tracks that went stale and never re-found) for the debrief.
-6. **Tests**: spawn determinism (same seed → same schedule), detection within footprint,
-   stale after N unattended ticks, wrong-sensor tier cap, picker validation (can't task a
-   returning/lost drone).
-
-Gotchas: the HUD "7 targets" count should become "contacts: X active / Y stale";
-`TargetDetail` needs an `undetected` guard (shouldn't be selectable — don't render undetected
-targets in the map source at all, or selection-by-stale-id breaks). `detectedBy`/`detectedAt`
-on `Target` are currently fake-seeded strings — set them for real at detection time
-(`formatMissionClock(sim.tick)`).
-
-## Stage 3 — blue forces + intel passing
+## Stage 3 — blue forces + intel passing (next up)
 
 1. **Model**: `interface BlueUnit { id; callsign; kind: "convoy" | "vessel" | "checkpoint";
    position; route: LngLat[]; waypoint; speed; status: "moving" | "holding" | "rerouting" |
