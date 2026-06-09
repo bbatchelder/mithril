@@ -20,7 +20,7 @@ const STYLE = {
     dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 };
 
-const STATUSES = ["active", "returning", "charging", "idle", "anomaly"] as const;
+const STATUSES = ["active", "returning", "charging", "idle", "anomaly", "lost"] as const;
 const PRIORITIES = ["critical", "elevated", "routine"] as const;
 
 interface MissionMapProps {
@@ -33,6 +33,8 @@ interface MissionMapProps {
     autoFollow: boolean;
     /** Rotate the map so the selected drone always faces up (its heading = "up"). */
     matchOrientation: boolean;
+    /** Shift run counter — when it changes (restart) the accumulated trails reset. */
+    epoch?: number;
     dark: boolean;
     className?: string;
 }
@@ -124,6 +126,7 @@ const statusColorExpr: maplibregl.ExpressionSpecification = [
     "charging", STATUS_META.charging.color,
     "idle", STATUS_META.idle.color,
     "anomaly", STATUS_META.anomaly.color,
+    "lost", STATUS_META.lost.color,
     STATUS_META.idle.color,
 ];
 
@@ -196,7 +199,7 @@ function makeTargetIcon(color: string): ImageData {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSelect, onSelectTarget, autoFollow, matchOrientation, dark, className }: MissionMapProps) {
+export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSelect, onSelectTarget, autoFollow, matchOrientation, epoch = 0, dark, className }: MissionMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MlMap | null>(null);
     const readyRef = useRef(false);
@@ -296,6 +299,15 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dark]);
+
+    // ── Restart (epoch change) → drop trails from the previous shift ────────
+    const prevEpoch = useRef(epoch);
+    useEffect(() => {
+        if (prevEpoch.current !== epoch) {
+            prevEpoch.current = epoch;
+            trailsRef.current = {};
+        }
+    }, [epoch]);
 
     // ── Live data → update sources + trails + selection + autofollow ────────
     useEffect(() => {

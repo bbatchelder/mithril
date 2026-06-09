@@ -238,17 +238,21 @@ export function deriveOverall(target: Target): {
 /**
  * Raise every fact's confidence tier — the payload of a completed investigation.
  * Each fact climbs 1–2 tiers (capped), and anything that actually moved is flagged
- * `upgraded` and stamped "just now".
+ * `upgraded` and stamped "just now". Returns the total tiers raised (the game
+ * engine converts this into intel score).
  */
-export function upgradeTarget(target: Target, rng: Rng): void {
+export function upgradeTarget(target: Target, rng: Rng): number {
+    let raised = 0;
     for (const f of target.facts) {
         const next = Math.min(MAX_TIER, f.tier + rng.int(1, 2));
         if (next !== f.tier) {
+            raised += next - f.tier;
             f.tier = next;
             f.upgraded = true;
             f.atMin = 0;
         }
     }
+    return raised;
 }
 
 // ─── Generators ──────────────────────────────────────────────────────────────

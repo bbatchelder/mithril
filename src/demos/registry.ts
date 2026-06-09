@@ -37,7 +37,7 @@ export const DEMOS: DemoEntry[] = [
     {
         id: "mission",
         title: "Skylark",
-        description: "Drone-swarm mission control — a live MapLibre map and streaming telemetry from a seeded mock-data engine.",
+        description: "Drone-ops game — fly one shift of a battery-limited swarm on a live MapLibre map: launch, investigate, recall, and bank score before the clock runs out.",
         icon: "satellite",
         component: MissionControl,
     },
