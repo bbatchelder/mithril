@@ -76,6 +76,8 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
 
                     {/* Operational counters */}
                     <div className="grid grid-cols-2 gap-px overflow-hidden rounded-mithril border border-divider bg-divider sm:grid-cols-3">
+                        <StatCell label="Contacts found" value={stats.detected} />
+                        <StatCell label="Tracks left stale" value={stats.staleLost} />
                         <StatCell label="Investigations" value={stats.investigations} />
                         <StatCell label="Facts raised" value={stats.factsRaised} />
                         <StatCell label="Launches" value={stats.launches} />

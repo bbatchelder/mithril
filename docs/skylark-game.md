@@ -52,9 +52,9 @@ battery-limited fleet through a handful of charging pads.
 ## Build stages (each a working, mergeable PR)
 
 1. **Game state + manual fleet control** — shift countdown, launch/recall, charging pads,
-   crash-at-0%, score scaffold + HUD, basic end-of-shift debrief with restart. *(this PR)*
+   crash-at-0%, score scaffold + HUD, basic end-of-shift debrief with restart. *(PR #69)*
 2. **Fog of war + contact lifecycle** — spawn schedule, sensor footprints, unknown tracks,
-   staleness, sensor-matched investigation with a drone picker.
+   staleness, sensor-matched investigation with a drone picker. *(this PR)*
 3. **Blue forces + intel passing.**
 4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring.
 5. **Relay/link layer + jamming.**
@@ -81,3 +81,28 @@ battery-limited fleet through a handful of charging pads.
   debrief.
 - The sim core was extracted from the `useStream` hook into a pure module
   (`stream/engine.ts`) so game rules are unit-testable (`stream/engine.test.ts`).
+
+## Stage 2 rules (implemented)
+
+- **Fog of war.** The 7-target roster is still built at sim start (deterministic), but each
+  target carries a `spawnTick` on an escalation curve — two are live at tick 0, the rest arrive
+  faster as the shift wears on, none after ~88% of the clock. Undetected targets are not
+  rendered on the map and cannot be selected or tasked.
+- **Sensors & detection.** Every drone carries a sensor — Falcons EO/IR, Surveyor S3s LiDAR,
+  S2s thermal, Aethers SIGINT — with a detection footprint (SIGINT widest), drawn on the map
+  around every airborne drone (the drawn circle *is* the detection boundary). Each tick, a
+  spawned target inside a footprint rolls a detection chance, higher when the sensor matches
+  the target's category. A new contact scores +10, stamps `detectedBy`/`detectedAt` for real,
+  and fires an event.
+- **Staleness.** An active track with no sensor coverage for 45 ticks goes stale: a gray ghost
+  marker at the last-known position, a warning event, and a stale count in the HUD. Flying any
+  drone back over it re-acquires the track (no new detection points).
+- **Sensor–target matrix.** Vehicles, vessels, and personnel resolve under EO/IR; structures
+  under LiDAR; heat sources under thermal; RF emitters under SIGINT. A wrong-sensor
+  investigation caps every fact at Medium confidence — only the category's best sensor verifies
+  facts to High, so fleet composition and *which drone you send* matter.
+- **Drone picker.** `investigate(sim, targetId, droneId)` names the drone. The target panel's
+  task button opens a menu of eligible drones sorted by ETA — battery and sensor on every row,
+  the matching sensor tagged "best sensor", a "send nearest" shortcut on top. Tasking a
+  grounded drone launches it; a stale target's button reads "re-acquire".
+- The debrief adds contacts-found and tracks-left-stale counters.

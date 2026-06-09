@@ -8,27 +8,36 @@
  * unverified, ungrounded guess → warning) and whose popover breaks the provenance
  * out in full via {@link AIExplainabilityDetails}.
  *
- * The "Task drone to investigate" button dispatches the nearest free drone (handled
- * by the stream engine). While it flies out and collects, this panel reflects the
- * investigation status; on completion the facts' tiers rise — so confidence chips
- * recolor and upgraded rows pick up a "revised" marker, live.
+ * The "Task drone to investigate" button opens a picker of eligible drones sorted
+ * by ETA — *which* drone matters now: only the category's best sensor can raise
+ * facts to High confidence (wrong-sensor passes cap at Medium). While the chosen
+ * drone flies out and collects, this panel reflects the investigation status; on
+ * completion the facts' tiers rise — so confidence chips recolor and upgraded rows
+ * pick up a "revised" marker, live. A stale track (coverage lost) keeps the same
+ * flow: tasking a drone to its last-known position re-acquires it.
  */
 import { AIExplainability, AIExplainabilityDetails } from "@/components/ui/ai-explainability";
 import { Button } from "@/components/ui/button";
 import { Callout } from "@/components/ui/callout";
 import { Icon } from "@/components/ui/icon";
+import { Menu, MenuDivider, MenuItem } from "@/components/ui/menu";
+import { MenuPopover } from "@/components/ui/popover";
 import { Section } from "@/components/ui/section";
 import { Tag } from "@/components/ui/tag";
 
+import { type Drone, SENSOR_META, formatClock, formatMissionClock } from "./data";
+import { canInvestigate, etaTicks } from "./stream/engine";
 import { type Target, type TargetFact, PRIORITY_META, deriveFact, deriveOverall } from "./targets";
 
 interface TargetDetailProps {
     target: Target;
+    /** The full fleet — the tasking picker filters it to eligible drones. */
+    drones: Drone[];
     dark: boolean;
     /** Renders a close button in the header (the pinned desktop rail). */
     onClose?: () => void;
-    /** Task the nearest free drone to investigate this target. */
-    onTask?: () => void;
+    /** Task the chosen drone to investigate this target. */
+    onTask?: (droneId: string) => void;
 }
 
 function FactRow({ fact, dark }: { fact: TargetFact; dark: boolean }) {
@@ -78,8 +87,18 @@ function FactRow({ fact, dark }: { fact: TargetFact; dark: boolean }) {
     );
 }
 
-/** Investigation status → the status callout + tasking button. */
-function InvestigationControls({ target, onTask }: { target: Target; onTask?: () => void }) {
+/** Investigation status → the status callout + the drone-picker tasking menu. */
+function InvestigationControls({
+    target,
+    drones,
+    dark,
+    onTask,
+}: {
+    target: Target;
+    drones: Drone[];
+    dark: boolean;
+    onTask?: (droneId: string) => void;
+}) {
     const inv = target.investigation;
     const drone = inv.droneCallsign ?? "A drone";
 
@@ -113,23 +132,72 @@ function InvestigationControls({ target, onTask }: { target: Target; onTask?: ()
         );
     }
 
+    // Eligible fleet, nearest first. Grounded drones count (tasking launches them);
+    // their ETA is measured from base.
+    const eligible = drones
+        .filter(canInvestigate)
+        .map((d) => ({ drone: d, eta: etaTicks(d.position, target.position) }))
+        .sort((a, b) => a.eta - b.eta);
+    const stale = target.track === "stale";
+
+    if (eligible.length === 0) {
+        return (
+            <Button fill disabled icon={<Icon icon="locate" className="!text-current" />}>
+                No drone available to task
+            </Button>
+        );
+    }
+
+    const nearest = eligible[0];
     return (
-        <Button
-            fill
-            intent="primary"
-            icon={<Icon icon="locate" className="!text-current" />}
-            onClick={onTask}
+        <MenuPopover
+            dark={dark}
+            side="top"
+            align="start"
+            content={
+                <Menu size="small">
+                    <MenuItem
+                        icon="send-to-map"
+                        text={`Send nearest — ${nearest.drone.callsign}`}
+                        label={`ETA ${formatClock(nearest.eta)}`}
+                        onClick={() => onTask?.(nearest.drone.id)}
+                    />
+                    <MenuDivider title="All eligible drones" />
+                    {eligible.map(({ drone: d, eta }) => (
+                        <MenuItem
+                            key={d.id}
+                            icon={SENSOR_META[d.sensor].icon}
+                            text={
+                                <span className="inline-flex items-center gap-1.5">
+                                    {d.callsign}
+                                    <span className="text-foreground-muted">{SENSOR_META[d.sensor].label}</span>
+                                    {d.sensor === target.bestSensor && (
+                                        <Tag minimal intent="success">
+                                            best sensor
+                                        </Tag>
+                                    )}
+                                </span>
+                            }
+                            label={`${Math.round(d.battery)}% · ETA ${formatClock(eta)}`}
+                            onClick={() => onTask?.(d.id)}
+                        />
+                    ))}
+                </Menu>
+            }
         >
-            Task drone to investigate
-        </Button>
+            <Button fill intent="primary" icon={<Icon icon="locate" className="!text-current" />} endIcon={<Icon icon="caret-up" className="!text-current" />}>
+                {stale ? "Task drone to re-acquire" : "Task drone to investigate"}
+            </Button>
+        </MenuPopover>
     );
 }
 
-export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProps) {
+export function TargetDetail({ target, drones, dark, onClose, onTask }: TargetDetailProps) {
     const meta = PRIORITY_META[target.priority];
     const facts = target.facts.map(deriveFact);
     const verifiedCount = facts.filter((f) => f.verified).length;
     const overall = deriveOverall(target);
+    const stale = target.track === "stale";
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -159,6 +227,14 @@ export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProp
                     )}
                 </div>
             </div>
+
+            {/* Stale track — coverage lost; position is last known */}
+            {stale && (
+                <Callout intent="warning" icon={<Icon icon="eye-off" />} title="Track stale">
+                    No sensor has covered {target.designation} since {formatMissionClock(target.lastSeenTick)}.
+                    The position shown is last known — task a drone to re-acquire the track.
+                </Callout>
+            )}
 
             {/* Overall AI assessment */}
             <Callout intent={meta.intent} icon={<Icon icon="predictive-analysis" />} title="AI assessment">
@@ -192,6 +268,17 @@ export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProp
                 <MetaCell label="Priority" value={meta.label} />
                 <MetaCell label="Detected by" value={target.detectedBy} />
                 <MetaCell label="First seen" value={target.detectedAt} />
+                <MetaCell label="Best sensor" value={SENSOR_META[target.bestSensor].label} />
+                <MetaCell
+                    label="Track"
+                    value={
+                        stale ? (
+                            <span className="text-intent-warning-text">Stale</span>
+                        ) : (
+                            <span className="text-intent-success-text">Active</span>
+                        )
+                    }
+                />
             </div>
 
             {/* Classified facts */}
@@ -205,10 +292,11 @@ export function TargetDetail({ target, dark, onClose, onTask }: TargetDetailProp
 
             <p className="px-1 text-body-xs text-foreground-muted">
                 Each attribute is labelled with the model's confidence and whether it's been verified.
-                Task a drone for a close pass to confirm low-confidence, ungrounded facts.
+                Task a drone for a close pass to confirm low-confidence facts — only the category's
+                best sensor ({SENSOR_META[target.bestSensor].label}) can take them to High.
             </p>
 
-            <InvestigationControls target={target} onTask={onTask} />
+            <InvestigationControls target={target} drones={drones} dark={dark} onTask={onTask} />
         </div>
     );
 }

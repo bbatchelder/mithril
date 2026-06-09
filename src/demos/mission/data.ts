@@ -26,6 +26,25 @@ export const GROUND_STATION = {
 export const MAP_CENTER: LngLat = [-122.41, 37.77];
 export const MAP_ZOOM = 11.4;
 
+// ─── Sensors ─────────────────────────────────────────────────────────────────
+
+/** The sensor a drone carries — what it can detect and resolve (see targets.ts). */
+export type SensorKind = "eo-ir" | "lidar" | "thermal" | "sigint";
+
+export interface SensorMeta {
+    label: string;
+    icon: IconName;
+    /** Detection footprint radius in degrees (planar, city scale). */
+    range: number;
+}
+
+export const SENSOR_META: Record<SensorKind, SensorMeta> = {
+    "eo-ir": { label: "EO/IR", icon: "camera", range: 0.014 },
+    lidar: { label: "LiDAR", icon: "grid", range: 0.012 },
+    thermal: { label: "Thermal", icon: "flame", range: 0.013 },
+    sigint: { label: "SIGINT", icon: "feed", range: 0.02 },
+};
+
 // ─── Drones ──────────────────────────────────────────────────────────────────
 
 export type DroneStatus =
@@ -78,6 +97,8 @@ export interface Drone {
     model: string;
     task: string;
     payload: string;
+    /** What the payload can detect/resolve; footprint radius via {@link SENSOR_META}. */
+    sensor: SensorKind;
     status: DroneStatus;
     /** Set when the drone is tasked to investigate a target; otherwise null. */
     assignment: DroneAssignment | null;
@@ -129,6 +150,7 @@ interface SeedSpec {
     model: string;
     task: string;
     payload: string;
+    sensor: SensorKind;
     status: DroneStatus;
     battery: number;
     anchor: LngLat;
@@ -137,21 +159,21 @@ interface SeedSpec {
 }
 
 const SEED: SeedSpec[] = [
-    // Recon Wing — north bay sweep
-    { id: "sk-101", callsign: "SK-101", squadronId: "sq-recon", model: "Falcon X2", task: "Coastline recon", payload: "EO/IR gimbal", status: "active", battery: 82, anchor: [-122.47, 37.81], spread: 0.03, legs: 6 },
-    { id: "sk-102", callsign: "SK-102", squadronId: "sq-recon", model: "Falcon X2", task: "Bridge approach watch", payload: "EO/IR gimbal", status: "active", battery: 64, anchor: [-122.45, 37.83], spread: 0.025, legs: 5 },
-    { id: "sk-103", callsign: "SK-103", squadronId: "sq-recon", model: "Falcon X1", task: "Perimeter patrol", payload: "EO/IR gimbal", status: "returning", battery: 19, anchor: [-122.43, 37.8], spread: 0.022, legs: 5 },
-    { id: "sk-104", callsign: "SK-104", squadronId: "sq-recon", model: "Falcon X1", task: "Standby", payload: "EO/IR gimbal", status: "idle", battery: 96, anchor: [-122.41, 37.815], spread: 0.02, legs: 5 },
-    // Survey Grid — city raster
-    { id: "sk-201", callsign: "SK-201", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid A-7 mapping", payload: "LiDAR + RGB", status: "active", battery: 73, anchor: [-122.42, 37.76], spread: 0.02, legs: 8 },
-    { id: "sk-202", callsign: "SK-202", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid B-2 mapping", payload: "LiDAR + RGB", status: "active", battery: 58, anchor: [-122.4, 37.74], spread: 0.018, legs: 8 },
-    { id: "sk-203", callsign: "SK-203", squadronId: "sq-survey", model: "Surveyor S2", task: "Thermal survey", payload: "Thermal array", status: "anomaly", battery: 41, anchor: [-122.44, 37.75], spread: 0.02, legs: 6 },
-    { id: "sk-204", callsign: "SK-204", squadronId: "sq-survey", model: "Surveyor S2", task: "Charging", payload: "LiDAR + RGB", status: "charging", battery: 34, anchor: [-122.43, 37.728], spread: 0.02, legs: 6 },
-    // Relay Net — high-altitude comms mesh
-    { id: "sk-301", callsign: "SK-301", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", status: "active", battery: 88, anchor: [-122.38, 37.79], spread: 0.035, legs: 5 },
-    { id: "sk-302", callsign: "SK-302", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", status: "active", battery: 77, anchor: [-122.36, 37.77], spread: 0.03, legs: 5 },
-    { id: "sk-303", callsign: "SK-303", squadronId: "sq-relay", model: "Aether R1", task: "Backhaul link", payload: "Mesh radio", status: "active", battery: 69, anchor: [-122.39, 37.755], spread: 0.028, legs: 6 },
-    { id: "sk-304", callsign: "SK-304", squadronId: "sq-relay", model: "Aether R0", task: "Standby", payload: "Mesh radio", status: "idle", battery: 91, anchor: [-122.365, 37.735], spread: 0.025, legs: 5 },
+    // Recon Wing — north bay sweep (Falcon → EO/IR)
+    { id: "sk-101", callsign: "SK-101", squadronId: "sq-recon", model: "Falcon X2", task: "Coastline recon", payload: "EO/IR gimbal", sensor: "eo-ir", status: "active", battery: 82, anchor: [-122.47, 37.81], spread: 0.03, legs: 6 },
+    { id: "sk-102", callsign: "SK-102", squadronId: "sq-recon", model: "Falcon X2", task: "Bridge approach watch", payload: "EO/IR gimbal", sensor: "eo-ir", status: "active", battery: 64, anchor: [-122.45, 37.83], spread: 0.025, legs: 5 },
+    { id: "sk-103", callsign: "SK-103", squadronId: "sq-recon", model: "Falcon X1", task: "Perimeter patrol", payload: "EO/IR gimbal", sensor: "eo-ir", status: "returning", battery: 19, anchor: [-122.43, 37.8], spread: 0.022, legs: 5 },
+    { id: "sk-104", callsign: "SK-104", squadronId: "sq-recon", model: "Falcon X1", task: "Standby", payload: "EO/IR gimbal", sensor: "eo-ir", status: "idle", battery: 96, anchor: [-122.41, 37.815], spread: 0.02, legs: 5 },
+    // Survey Grid — city raster (Surveyor S3 → LiDAR, S2 → thermal)
+    { id: "sk-201", callsign: "SK-201", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid A-7 mapping", payload: "LiDAR + RGB", sensor: "lidar", status: "active", battery: 73, anchor: [-122.42, 37.76], spread: 0.02, legs: 8 },
+    { id: "sk-202", callsign: "SK-202", squadronId: "sq-survey", model: "Surveyor S3", task: "Grid B-2 mapping", payload: "LiDAR + RGB", sensor: "lidar", status: "active", battery: 58, anchor: [-122.4, 37.74], spread: 0.018, legs: 8 },
+    { id: "sk-203", callsign: "SK-203", squadronId: "sq-survey", model: "Surveyor S2", task: "Thermal survey", payload: "Thermal array", sensor: "thermal", status: "anomaly", battery: 41, anchor: [-122.44, 37.75], spread: 0.02, legs: 6 },
+    { id: "sk-204", callsign: "SK-204", squadronId: "sq-survey", model: "Surveyor S2", task: "Charging", payload: "Thermal array", sensor: "thermal", status: "charging", battery: 34, anchor: [-122.43, 37.728], spread: 0.02, legs: 6 },
+    // Relay Net — high-altitude comms mesh (Aether → SIGINT, widest footprint)
+    { id: "sk-301", callsign: "SK-301", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", sensor: "sigint", status: "active", battery: 88, anchor: [-122.38, 37.79], spread: 0.035, legs: 5 },
+    { id: "sk-302", callsign: "SK-302", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", sensor: "sigint", status: "active", battery: 77, anchor: [-122.36, 37.77], spread: 0.03, legs: 5 },
+    { id: "sk-303", callsign: "SK-303", squadronId: "sq-relay", model: "Aether R1", task: "Backhaul link", payload: "Mesh radio", sensor: "sigint", status: "active", battery: 69, anchor: [-122.39, 37.755], spread: 0.028, legs: 6 },
+    { id: "sk-304", callsign: "SK-304", squadronId: "sq-relay", model: "Aether R0", task: "Standby", payload: "Mesh radio", sensor: "sigint", status: "idle", battery: 91, anchor: [-122.365, 37.735], spread: 0.025, legs: 5 },
 ];
 
 /** Build the initial fleet from the seed spec. */
@@ -168,6 +190,7 @@ export function makeFleet(): Drone[] {
             model: s.model,
             task: s.task,
             payload: s.payload,
+            sensor: s.sensor,
             status: s.status,
             assignment: null,
             battery: s.battery,
