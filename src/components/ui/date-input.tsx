@@ -232,12 +232,36 @@ export function DateInput({
     const [isError, setIsError] = useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
-    // The Popover renders the input as a Radix Trigger, so closing the popover restores
-    // focus to the input (Radix `onCloseAutoFocus`). After a date selection that close is
-    // final — but the restored focus fires `onFocus`, which would reopen the calendar
-    // (the close→reopen flicker). Set this when closing on selection; `handleFocus`
-    // consumes it once so the restore is a no-op for opening, while a later genuine focus
-    // still opens normally.
+    // Wraps the input (the popover anchor). The popover opens on focus and is anchored (not
+    // triggered), so Radix's dismissable layer treats the focusing pointer/focus on the input
+    // as an "outside" interaction and would dismiss it a frame later. Guarding interactions
+    // that land back inside our own input keeps the focus-driven open alive — and crucially
+    // stops the first calendar click from being swallowed by a dismiss→reopen churn. Same
+    // pattern as DateRangeInput / Suggest / MultiSelect. See popover.tsx.
+    const rootRef = useRef<HTMLDivElement>(null);
+    const handleInteractOutside = useCallback(
+        (e: Event & { detail?: { originalEvent?: Event } }) => {
+            const target = (e.detail?.originalEvent?.target ?? e.target) as Node | null;
+            if (target && rootRef.current?.contains(target)) e.preventDefault();
+        },
+        [],
+    );
+    // True when a blur's focus target is still inside the widget — the input itself or the
+    // portaled calendar popover. Clicking a calendar day blurs the focused input; if the blur
+    // handler then re-parsed + committed, its onChange + state churn would remount the open
+    // calendar (detaching the day button), so the very click that triggered the blur lands on a
+    // dead node and is swallowed (the "first click does nothing, then it works" symptom — which
+    // also defeats closeOnSelection). Skip the blur commit while focus stays within the widget;
+    // the calendar's own onChange owns the value during selection.
+    const isInternalFocusTarget = useCallback((related: EventTarget | null): boolean => {
+        const node = related as HTMLElement | null;
+        if (!node) return false;
+        if (rootRef.current?.contains(node)) return true; // the input / icon button
+        return Boolean(node.closest?.('[role="dialog"]')); // inside the calendar popover
+    }, []);
+    // After a date selection closes the popover, focus restoring to the input would fire
+    // `onFocus` and reopen the calendar. Set this on selection-close; `handleFocus` consumes
+    // it once so the restore is a no-op, while a later genuine focus still opens normally.
     const suppressReopenRef = useRef(false);
 
     // ---- Calendar day selection (from DatePicker) ----
@@ -282,9 +306,27 @@ export function DateInput({
         [currentDate, formatDate, inputProps],
     );
 
+    // ---- Input click: reopen the popover when the field is already focused ----
+    // After a selection closes the popover, Radix restores focus to this input, so a later
+    // click fires NO focus event — handleFocus (the open path) never runs and the calendar
+    // stays shut until you blur and refocus. Opening on click too covers that already-focused
+    // case. (setIsOpen(true), never a toggle, so clicking the field never closes an open panel.)
+    const handleClick = useCallback(
+        (e: React.MouseEvent<HTMLInputElement>) => {
+            if (!disabled) setIsOpen(true);
+            inputProps?.onClick?.(e);
+        },
+        [disabled, inputProps],
+    );
+
     // ---- Input blur: parse typed value ----
     const handleBlur = useCallback(
         (e: React.FocusEvent<HTMLInputElement>) => {
+            // Focus moving into the calendar (clicking a day) or onto the calendar icon is not a
+            // real exit — skip the parse/commit so it doesn't remount the calendar mid-click and
+            // swallow the selection.
+            if (isInternalFocusTarget(e.relatedTarget)) return;
+
             setIsInputFocused(false);
 
             const trimmed = inputText.trim();
@@ -319,7 +361,7 @@ export function DateInput({
 
             inputProps?.onBlur?.(e);
         },
-        [formatDate, inputProps, inputText, isControlled, maxDate, minDate, onChange, parseDate],
+        [formatDate, inputProps, inputText, isControlled, maxDate, minDate, onChange, parseDate, isInternalFocusTarget],
     );
 
     // ---- Input change: live parse while typing ----
@@ -386,9 +428,11 @@ export function DateInput({
     // ---- Popover open change ----
     const handleOpenChange = useCallback((open: boolean) => {
         setIsOpen(open);
-        if (!open) {
-            setIsInputFocused(false);
-        }
+        // NB: do NOT clear isInputFocused here. The popover briefly toggles closed→open while
+        // it settles on focus (Radix restores focus to the anchor input), and coupling the
+        // input's focus flag to that transient close would flip the field into its
+        // "show formatted value" branch — making it read-only (every keystroke gets reset to
+        // the formatted date). Real focus loss is tracked by handleBlur instead.
     }, []);
 
     // ---- Displayed input value ----
@@ -455,25 +499,39 @@ export function DateInput({
                 hasContentPadding={false}
                 dark={dark}
                 disabled={disabled}
+                /* Keep DOM focus on the text field when the calendar opens (focus-driven combobox
+                   pattern). Without this Radix auto-focuses the first control in the calendar (the
+                   month dropdown) the instant the field is focused, so typing a date is impossible —
+                   keystrokes land in the month <select> instead of the input. */
+                autoFocusContent={false}
+                /* Anchor (not trigger): focusing the input opens the popover; a Trigger would
+                   click-toggle the focus-driven open straight back closed, and that close→reopen
+                   churn swallowed the first calendar click. With an anchor there is no toggle. */
+                anchorOnly
+                /* Keep the popover open when the focusing click lands on our own input. */
+                onInteractOutside={handleInteractOutside}
             >
-                <InputGroup
-                    ref={inputRef}
-                    type="text"
-                    autoComplete="off"
-                    placeholder={placeholder}
-                    value={displayValue}
-                    onChange={handleChange}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    onKeyDown={handleKeyDown}
-                    disabled={disabled}
-                    fill={fill}
-                    intent={isError ? "danger" : "none"}
-                    rightElement={calendarIcon}
-                    aria-haspopup="dialog"
-                    aria-expanded={isOpen}
-                    {...inputProps}
-                />
+                <div ref={rootRef} className={cn("inline-block", fill && "w-full block")}>
+                    <InputGroup
+                        ref={inputRef}
+                        type="text"
+                        autoComplete="off"
+                        placeholder={placeholder}
+                        value={displayValue}
+                        onChange={handleChange}
+                        onFocus={handleFocus}
+                        onClick={handleClick}
+                        onBlur={handleBlur}
+                        onKeyDown={handleKeyDown}
+                        disabled={disabled}
+                        fill={fill}
+                        intent={isError ? "danger" : "none"}
+                        rightElement={calendarIcon}
+                        aria-haspopup="dialog"
+                        aria-expanded={isOpen}
+                        {...inputProps}
+                    />
+                </div>
             </Popover>
         </div>
     );

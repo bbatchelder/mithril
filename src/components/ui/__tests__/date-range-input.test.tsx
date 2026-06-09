@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { DateRangeInput, type DateRangeInputValue } from "../date-range-input";
 
@@ -83,6 +83,48 @@ describe("DateRangeInput — value display", () => {
         // Driving the controlled value externally updates the displayed text.
         await user.click(screen.getByRole("button", { name: "set" }));
         expect(getInputs().start.value).toBe("3/3/2026");
+    });
+});
+
+describe("DateRangeInput — calendar range build", () => {
+    // Freeze "today" so the empty-value calendar opens on a known month and the day
+    // labels ("January 8th, 2026") are stable. Only Date is faked so the component's
+    // real timers/microtasks still run.
+    beforeAll(() => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(new Date(2026, 0, 15));
+    });
+    afterAll(() => {
+        vi.useRealTimers();
+    });
+
+    it("builds start→end across two day clicks without losing the start", async () => {
+        // Real pointer events fire the input focus/blur churn that previously raced the
+        // calendar's onChange: clicking the start day blurred the focused input, whose blur
+        // handler re-committed and wiped the in-progress range, so the end click only ever
+        // reset `start`. Regression guard for that whole interaction.
+        const user = userEvent.setup({
+            pointerEventsCheck: 0,
+            advanceTimers: vi.advanceTimersByTime,
+        });
+
+        function Harness() {
+            const [v, setV] = useState<DateRangeInputValue>({ start: null, end: null });
+            return <DateRangeInput value={v} onChange={setV} />;
+        }
+        render(<Harness />);
+
+        const { start, end } = getInputs();
+
+        await user.click(start);
+        await user.click(await screen.findByRole("button", { name: /January 8th, 2026/ }));
+        // First click sets the start and keeps it — it must not be wiped by the input blur.
+        expect(start.value).toBe("1/8/2026");
+
+        await user.click(await screen.findByRole("button", { name: /January 20th, 2026/ }));
+        // Second click completes the range rather than starting a new one from Jan 20.
+        expect(start.value).toBe("1/8/2026");
+        expect(end.value).toBe("1/20/2026");
     });
 });
 

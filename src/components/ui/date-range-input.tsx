@@ -263,6 +263,19 @@ export function DateRangeInput({
         [],
     );
 
+    // True when a blur's focus target is still *inside* the widget — the sibling input or
+    // the portaled calendar popover. Clicking a calendar day blurs the focused input; if the
+    // blur handler then parsed + committed the field, its onChange would race the calendar's
+    // own onChange and wipe the in-progress range (each day click just resets `start`). So the
+    // blur commit must be skipped while focus stays within the widget; the calendar owns the
+    // value during selection.
+    const isInternalFocusTarget = useCallback((related: EventTarget | null): boolean => {
+        const node = related as HTMLElement | null;
+        if (!node) return false;
+        if (rootRef.current?.contains(node)) return true; // the sibling input
+        return Boolean(node.closest?.('[role="dialog"]')); // inside the calendar popover
+    }, []);
+
     // ---- Calendar range selection ----
     const handleRangeChange = useCallback(
         (newRange: DateRangePickerValue) => {
@@ -281,12 +294,12 @@ export function DateRangeInput({
             if (closeOnSelection && isValidDate(newRange.start) && isValidDate(newRange.end)) {
                 setIsOpen(false);
                 setActiveField(null);
-            } else if (isValidDate(newRange.start) && !isValidDate(newRange.end)) {
-                // Start selected, no end — move focus to end input to prompt end selection
-                setTimeout(() => {
-                    endInputRef.current?.focus();
-                }, 0);
             }
+            // NOTE: we deliberately do NOT move DOM focus to the end input after the start
+            // is picked. Calling endInputRef.focus() here remounts the open calendar
+            // mid-interaction (the entering/exiting Presence copy detaches the day buttons),
+            // which swallows the very next click — the end date. The popover stays open on
+            // the calendar, which is prompt enough; the user clicks the end day directly.
         },
         [closeOnSelection, formatDate, isControlled, onChange],
     );
@@ -315,6 +328,10 @@ export function DateRangeInput({
     // ---- Blur handlers: parse typed value ----
     const handleStartBlur = useCallback(
         (e: React.FocusEvent<HTMLInputElement>) => {
+            // Focus moving into the calendar (clicking a day) or to the sibling input is not a
+            // real exit — skip the parse/commit so it doesn't race the calendar's onChange.
+            if (isInternalFocusTarget(e.relatedTarget)) return;
+
             setActiveField((prev) => (prev === "start" ? null : prev));
 
             const trimmed = startText.trim();
@@ -355,11 +372,14 @@ export function DateRangeInput({
             maxDate,
             formatDate,
             startInputProps,
+            isInternalFocusTarget,
         ],
     );
 
     const handleEndBlur = useCallback(
         (e: React.FocusEvent<HTMLInputElement>) => {
+            if (isInternalFocusTarget(e.relatedTarget)) return;
+
             setActiveField((prev) => (prev === "end" ? null : prev));
 
             const trimmed = endText.trim();
@@ -400,6 +420,7 @@ export function DateRangeInput({
             maxDate,
             formatDate,
             endInputProps,
+            isInternalFocusTarget,
         ],
     );
 
@@ -558,6 +579,11 @@ export function DateRangeInput({
             hasContentPadding={false}
             dark={dark}
             disabled={disabled}
+            /* Keep DOM focus on the inputs (the focus-driven anchor pattern); don't let the
+               calendar grab focus when the popover opens. Without this the calendar steals
+               focus on open, and the start→end focus shift then remounts the calendar
+               mid-interaction, dropping the end-date click. */
+            autoFocusContent={false}
             /* The two inputs share one popover and open it on focus; the wrapping
                trigger would otherwise toggle the popover back closed on the trailing
                click (the popover only survived while the mouse was held). Use an
