@@ -68,7 +68,7 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
                     <div className="divide-y divide-divider rounded-mithril border border-divider">
                         <ScoreRow label="Intelligence delivered" value={`+${score.intel}`} accent="good" />
                         <ScoreRow
-                            label="Penalties (airframes lost)"
+                            label="Penalties (losses, bad calls)"
                             value={`−${score.penalties}`}
                             accent={score.penalties > 0 ? "bad" : undefined}
                         />
@@ -80,20 +80,24 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
                         <StatCell label="Tracks left stale" value={stats.staleLost} />
                         <StatCell label="Investigations" value={stats.investigations} />
                         <StatCell label="Facts raised" value={stats.factsRaised} />
+                        <StatCell label="Intel passes" value={stats.intelPasses} />
+                        <StatCell label="Bad intel" value={stats.badIntelPasses} />
+                        <StatCell label="Blues hit" value={stats.bluesHit} />
+                        <StatCell label="ISR fulfilled" value={stats.isrFulfilled} />
                         <StatCell label="Launches" value={stats.launches} />
                         <StatCell label="Recalls" value={stats.recalls} />
                         <StatCell label="Drones lost" value={stats.dronesLost} />
                         <StatCell label="Recovered" value={fleetSize - stats.dronesLost} />
                     </div>
 
-                    {stats.dronesLost === 0 && (
+                    {stats.dronesLost === 0 && stats.bluesHit === 0 && (
                         <Tag
                             minimal
                             intent="success"
                             icon={<Icon icon="endorsed" size={12} className="!text-current" />}
                             className="self-start"
                         >
-                            Clean shift — every airframe came home
+                            Clean shift — every airframe home, every blue unit intact
                         </Tag>
                     )}
                 </div>

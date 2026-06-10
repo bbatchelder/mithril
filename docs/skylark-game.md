@@ -54,8 +54,8 @@ battery-limited fleet through a handful of charging pads.
 1. **Game state + manual fleet control** — shift countdown, launch/recall, charging pads,
    crash-at-0%, score scaffold + HUD, basic end-of-shift debrief with restart. *(PR #69)*
 2. **Fog of war + contact lifecycle** — spawn schedule, sensor footprints, unknown tracks,
-   staleness, sensor-matched investigation with a drone picker. *(this PR)*
-3. **Blue forces + intel passing.**
+   staleness, sensor-matched investigation with a drone picker. *(PR #70)*
+3. **Blue forces + intel passing.** *(this PR)*
 4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring.
 5. **Relay/link layer + jamming.**
 6. **Briefing + full debrief + daily seed.**
@@ -106,3 +106,30 @@ battery-limited fleet through a handful of charging pads.
   the matching sensor tagged "best sensor", a "send nearest" shortcut on top. Tasking a
   grounded drone launches it; a stale target's button reads "re-acquire".
 - The debrief adds contacts-found and tracks-left-stale counters.
+
+## Stage 3 rules (implemented)
+
+- **Blue forces.** Three friendly units (`blue.ts`): a ground convoy and a patrol vessel on
+  fixed route loops (drawn on the map, slower than any drone) plus a static checkpoint. Blue
+  diamonds are selectable like targets → a `BlueDetail` panel (kind, status, the intel warnings
+  it holds, any open ISR request). They're always visible — fog of war applies to red, not blue.
+- **Ground-truth affiliation.** Every contact is secretly hostile or civilian (exactly 3 of 7
+  hostile, drawn deterministically from the roster seed; most contacts stay noise). The
+  operator sees "Unknown" until classification settles it: a completed investigation (any
+  sensor), a blue unit's report-back after pass-intel, or being attacked all reveal it. A
+  revealed hostile trades its reticle for a red unit diamond on the map.
+- **Hostile pressure.** After a ~1-minute post-spawn dormancy window, a hostile drifts toward
+  the nearest blue within its threat radius — whether or not it's been detected. An *unwarned*
+  blue held inside the strike radius for 8 straight ticks is hit: −400, the unit goes inert,
+  and the attack reveals the attacker as a live hostile track. Hostiles move, so a stale
+  track's ghost marker stays at the *last-known* position, not the live one.
+- **Pass intel.** A target panel action, gated on 2 verified facts (so best-sensor
+  investigation is the enabler): the nearest live blue is warned (`warnedAbout`), reroutes or
+  holds, and becomes immune to that specific threat. Scoring resolves against ground truth —
+  +15 × verified facts for a real hostile, −100 for fingering a civilian. One pass per target.
+- **ISR requests.** Three seeded side objectives: timed windows with an amber ring on the map,
+  fulfilled by accumulating 20 ticks of any-drone presence inside the ring. The rings sit on
+  the patrol routes of the birds that start grounded and off the always-airborne loops
+  (verified hands-off: zero requests self-fulfil) — the play is launching the right drone.
+- The HUD adds blue/hit/ISR chips; the debrief adds intel-passes, bad-intel, blues-hit, and
+  ISR-fulfilled counters, and the clean-shift tag now also requires no blue casualties.

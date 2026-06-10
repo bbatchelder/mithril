@@ -33,6 +33,7 @@ import { useToaster } from "@/components/ui/toast";
 import { useDark } from "@/lib/dark-context";
 import { AppChromeControls } from "@/lib/app-chrome";
 
+import { BlueDetail } from "./BlueDetail";
 import { DroneDetail } from "./DroneDetail";
 import { EventFeed } from "./EventFeed";
 import { FleetTree } from "./FleetTree";
@@ -57,6 +58,7 @@ function MissionControlInner() {
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
+    const [selectedBlueId, setSelectedBlueId] = useState<string | null>(null);
     const [autoFollow, setAutoFollow] = useState(false);
     const [matchOrientation, setMatchOrientation] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
@@ -110,15 +112,19 @@ function MissionControlInner() {
 
     const selected = stream.drones.find((d) => d.id === selectedId) ?? null;
     const selectedTarget = targets.find((t) => t.id === selectedTargetId) ?? null;
+    const selectedBlue = stream.blues.find((b) => b.id === selectedBlueId) ?? null;
     const activeCount = stream.drones.filter((d) => d.status === "active" || d.status === "anomaly").length;
     const anomalyCount = stream.drones.filter((d) => d.status === "anomaly").length;
+    const bluesHit = stream.blues.filter((b) => b.status === "hit").length;
+    const isrOpen = stream.isr.filter((r) => r.status === "active").length;
 
-    // Drones and targets share the single right rail / mobile sheet, so selecting
-    // one clears the other.
+    // Drones, targets, and blue units share the single right rail / mobile sheet,
+    // so selecting one clears the others.
     const handleSelect = (id: string | null) => {
         setSelectedId(id);
         if (id) {
             setSelectedTargetId(null);
+            setSelectedBlueId(null);
             // Picking a drone from the hamburger roster dismisses the drawer so the
             // map (and the mobile telemetry sheet) come forward.
             setNavOpen(false);
@@ -128,6 +134,15 @@ function MissionControlInner() {
         setSelectedTargetId(id);
         if (id) {
             setSelectedId(null);
+            setSelectedBlueId(null);
+            setNavOpen(false);
+        }
+    };
+    const handleSelectBlue = (id: string | null) => {
+        setSelectedBlueId(id);
+        if (id) {
+            setSelectedId(null);
+            setSelectedTargetId(null);
             setNavOpen(false);
         }
     };
@@ -184,6 +199,7 @@ function MissionControlInner() {
                 if (!hotkeyState.current.detailOpen) {
                     setSelectedId(null);
                     setSelectedTargetId(null);
+                    setSelectedBlueId(null);
                 }
             },
         }),
@@ -393,10 +409,14 @@ function MissionControlInner() {
                         <MissionMap
                             drones={stream.drones}
                             targets={targets}
+                            blues={stream.blues}
+                            isr={stream.isr}
                             selectedId={selectedId}
                             selectedTargetId={selectedTargetId}
+                            selectedBlueId={selectedBlueId}
                             onSelect={handleSelect}
                             onSelectTarget={handleSelectTarget}
+                            onSelectBlue={handleSelectBlue}
                             autoFollow={autoFollow}
                             matchOrientation={matchOrientation}
                             epoch={stream.epoch}
@@ -445,6 +465,23 @@ function MissionControlInner() {
                                     <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-warning-text">
                                         <Icon icon="eye-off" size={12} className="!text-current" />
                                         {staleTracks} stale
+                                    </span>
+                                )}
+                                <span className="text-body-sm text-foreground-muted">·</span>
+                                <span className="inline-flex items-center gap-1.5 text-body-sm text-foreground-muted">
+                                    <Icon icon="shield" size={12} className="!text-current" />
+                                    {stream.blues.length - bluesHit} blue
+                                </span>
+                                {bluesHit > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-danger-text">
+                                        <Icon icon="cross-circle" size={12} className="!text-current" />
+                                        {bluesHit} hit
+                                    </span>
+                                )}
+                                {isrOpen > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-warning-text">
+                                        <Icon icon="satellite" size={12} className="!text-current" />
+                                        {isrOpen} ISR
                                     </span>
                                 )}
                                 <span className="text-body-sm text-foreground-muted">·</span>
@@ -514,8 +551,35 @@ function MissionControlInner() {
                                     <TargetDetail
                                         target={selectedTarget}
                                         drones={stream.drones}
+                                        blues={stream.blues}
                                         dark={dark}
                                         onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
+                                        onPassIntel={() => stream.passIntel(selectedTarget.id)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Mobile blue-unit sheet — same treatment for a selected blue. */}
+                        {selectedBlue && (
+                            <div className="absolute inset-x-0 bottom-0 z-10 flex max-h-[60%] flex-col rounded-t-mithril border-t border-divider bg-background shadow-overlay-3 lg:hidden">
+                                <div className="relative shrink-0 pt-2">
+                                    <div className="mx-auto h-1 w-9 rounded-full bg-divider" />
+                                    <Button
+                                        variant="minimal"
+                                        size="small"
+                                        aria-label="Close blue unit details"
+                                        className="absolute right-1 top-1"
+                                        icon={<Icon icon="cross" className="!text-current" />}
+                                        onClick={() => setSelectedBlueId(null)}
+                                    />
+                                </div>
+                                <div className="min-h-0 flex-1 overflow-auto">
+                                    <BlueDetail
+                                        blue={selectedBlue}
+                                        targets={targets}
+                                        isr={stream.isr}
+                                        onSelectTarget={handleSelectTarget}
                                     />
                                 </div>
                             </div>
@@ -537,19 +601,29 @@ function MissionControlInner() {
                     </div>
                 </main>
 
-                {/* Right rail — inspector. Present once a drone OR a target is selected
-                    (lg+; below lg the bottom sheets above stand in); close it to deselect
-                    and reclaim the width for the map. A target takes precedence (selecting
-                    one clears any drone). */}
-                {(selected || selectedTarget) && (
+                {/* Right rail — inspector. Present once a drone, a target, OR a blue unit
+                    is selected (lg+; below lg the bottom sheets above stand in); close it
+                    to deselect and reclaim the width for the map. Selections are mutually
+                    exclusive, so at most one panel renders. */}
+                {(selected || selectedTarget || selectedBlue) && (
                 <aside className="hidden w-80 shrink-0 overflow-auto border-l border-divider bg-background lg:block">
                     {selectedTarget ? (
                         <TargetDetail
                             target={selectedTarget}
                             drones={stream.drones}
+                            blues={stream.blues}
                             dark={dark}
                             onClose={() => setSelectedTargetId(null)}
                             onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
+                            onPassIntel={() => stream.passIntel(selectedTarget.id)}
+                        />
+                    ) : selectedBlue ? (
+                        <BlueDetail
+                            blue={selectedBlue}
+                            targets={targets}
+                            isr={stream.isr}
+                            onClose={() => setSelectedBlueId(null)}
+                            onSelectTarget={handleSelectTarget}
                         />
                     ) : (
                         <TelemetryPanel
