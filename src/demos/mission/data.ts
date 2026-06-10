@@ -113,6 +113,22 @@ export interface Drone {
      * platforms. 0 means expended: the drone must rearm on a charging pad.
      */
     munitions: number | null;
+    /**
+     * True while the drone has a comms path home — inside base range, or chained
+     * through linked airborne relay birds (recomputed every tick; see the
+     * engine's `stepLinks`). Grounded drones at base are trivially linked.
+     */
+    linked: boolean;
+    /** What the link runs through: `"base"`, a relay drone's id, or null when severed/grounded. */
+    linkParent: string | null;
+    /** True while inside a live jammer's denial radius — severs the link regardless of chain. */
+    jammed: boolean;
+    /**
+     * Target ids whose investigation completed while off-link. The payload
+     * (fact upgrades, score, affiliation) delivers when the drone relinks —
+     * and goes down with the airframe if it crashes first.
+     */
+    bankedIntel: string[];
     /** 0–100 */
     battery: number;
     /** metres */
@@ -213,6 +229,10 @@ export function makeFleet(): Drone[] {
             status: s.status,
             assignment: null,
             munitions: s.munitions ?? null,
+            linked: true,
+            linkParent: null,
+            jammed: false,
+            bankedIntel: [],
             battery: s.battery,
             altitude: grounded ? 0 : 90 + (s.legs % 4) * 12,
             speed: s.status === "active" ? 14 + (s.legs % 3) * 2 : 0,

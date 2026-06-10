@@ -11,6 +11,7 @@ import { type Drone, GROUND_STATION } from "../data";
 import type { Target } from "../targets";
 import {
     BAD_INTEL_PENALTY,
+    BASE_LINK_RANGE,
     BLAST_RADIUS,
     BLUE_HIT_PENALTY,
     CIVILIAN_STRIKE_PENALTY,
@@ -21,10 +22,12 @@ import {
     HIT_TICKS,
     HOSTILE_DORMANT_TICKS,
     ISR_COVER_TICKS,
+    JAM_RADIUS,
     MUNITIONS_MAX,
     PAD_COUNT,
     PASS_SCORE_PER_VERIFIED,
     REARM_TICKS,
+    RELAY_RANGE,
     SHIFT_TICKS,
     STALE_TICKS,
     STRIKE_SCORE,
@@ -90,6 +93,16 @@ function park(d: Drone, pos: [number, number]) {
     d.position = [pos[0], pos[1]];
     d.route = [[pos[0], pos[1]]];
     d.waypoint = 0;
+}
+
+/** Ground the whole fleet at base (idle) — clears the sky of sensors and relays. */
+function groundFleet(sim: Sim) {
+    for (const d of sim.drones) {
+        d.status = "idle";
+        d.position = [GROUND_STATION.position[0], GROUND_STATION.position[1]];
+        d.speed = 0;
+        d.altitude = 0;
+    }
 }
 
 /** A spot far from every blue route — even an armed hostile parked here never drifts. */
@@ -298,12 +311,7 @@ describe("fog of war — detection and staleness", () => {
         const tgt = sim.targets[0];
         activate(sim, tgt);
         // Ground the whole fleet — no airborne sensor anywhere.
-        for (const d of sim.drones) {
-            d.status = "idle";
-            d.position = [GROUND_STATION.position[0], GROUND_STATION.position[1]];
-            d.speed = 0;
-            d.altitude = 0;
-        }
+        groundFleet(sim);
         for (let i = 0; i <= STALE_TICKS; i++) step(sim);
         expect(tgt.track).toBe("stale");
 
@@ -543,12 +551,7 @@ describe("ISR requests", () => {
         const sim = makeSim();
         pacify(sim);
         // Ground the whole fleet — nothing can cover the ring.
-        for (const d of sim.drones) {
-            d.status = "idle";
-            d.position = [GROUND_STATION.position[0], GROUND_STATION.position[1]];
-            d.speed = 0;
-            d.altitude = 0;
-        }
+        groundFleet(sim);
         const req = sim.isr[0];
         req.tick = 1;
         req.durationTicks = 20;
@@ -778,10 +781,217 @@ describe("struck targets are out of play", () => {
     });
 });
 
+describe("relay link", () => {
+    it("links drones near base directly; far drones with no chain are severed", () => {
+        const sim = makeSim();
+        pacify(sim);
+        groundFleet(sim);
+        const near = find(sim, "sk-101");
+        near.status = "active";
+        park(near, [GROUND_STATION.position[0] + 0.02, GROUND_STATION.position[1]]);
+        const far = find(sim, "sk-102");
+        far.status = "active";
+        park(far, SAFE);
+        step(sim);
+        expect(near.linked).toBe(true);
+        expect(near.linkParent).toBe("base");
+        expect(far.linked).toBe(false);
+        expect(far.linkParent).toBeNull();
+    });
+
+    it("an airborne relay bird chains the link out; a non-relay at the same spot does not", () => {
+        const base = GROUND_STATION.position;
+        // mid sits inside base range; far is beyond base range but within relay range of mid.
+        const mid: [number, number] = [base[0] + BASE_LINK_RANGE - 0.005, base[1]];
+        const farPos: [number, number] = [mid[0] + RELAY_RANGE - 0.005, base[1]];
+
+        const sim = makeSim();
+        pacify(sim);
+        groundFleet(sim);
+        const relay = find(sim, "sk-301"); // SIGINT Aether — a relay
+        relay.status = "active";
+        park(relay, mid);
+        const far = find(sim, "sk-101");
+        far.status = "active";
+        park(far, farPos);
+        step(sim);
+        expect(far.linked).toBe(true);
+        expect(far.linkParent).toBe(relay.id);
+
+        const sim2 = makeSim();
+        pacify(sim2);
+        groundFleet(sim2);
+        const eo = find(sim2, "sk-102"); // EO/IR — receives, never extends
+        eo.status = "active";
+        park(eo, mid);
+        const far2 = find(sim2, "sk-101");
+        far2.status = "active";
+        park(far2, farPos);
+        step(sim2);
+        expect(eo.linked).toBe(true);
+        expect(far2.linked).toBe(false);
+    });
+
+    it("grounded drones are wired in at base; lost drones never link", () => {
+        const sim = makeSim();
+        pacify(sim);
+        groundFleet(sim);
+        const lost = find(sim, "sk-102");
+        lost.status = "active";
+        park(lost, SAFE);
+        lost.battery = 0.01;
+        step(sim);
+        expect(find(sim, "sk-101").linked).toBe(true);
+        expect(lost.status).toBe("lost");
+        expect(lost.linked).toBe(false);
+    });
+});
+
+describe("banked intel (off-link investigations)", () => {
+    /**
+     * Stage a dark investigation: a lone active contact at {@link SAFE} — far
+     * beyond base range with the rest of the fleet grounded (no relay chain) —
+     * with all facts floored, and SK-101 dispatched to it from base.
+     */
+    function stageDarkInvestigation(sim: Sim) {
+        pacify(sim);
+        groundFleet(sim);
+        const tgt = sim.targets[0];
+        isolate(sim, tgt);
+        tgt.position = [SAFE[0], SAFE[1]];
+        tgt.lastKnownPosition = [SAFE[0], SAFE[1]];
+        activate(sim, tgt);
+        tgt.facts.forEach((f) => (f.tier = 0));
+        const d = find(sim, "sk-101");
+        d.battery = 100;
+        investigate(sim, tgt.id, d.id);
+        return { tgt, d };
+    }
+
+    it("an investigation completed off-link banks — no upgrade, no score, no reveal", () => {
+        const sim = makeSim();
+        const { tgt, d } = stageDarkInvestigation(sim);
+        expect(stepUntil(sim, () => tgt.investigation.status === "complete", SHIFT_TICKS - 1)).toBe(true);
+        expect(d.bankedIntel).toEqual([tgt.id]);
+        expect(tgt.facts.every((f) => f.tier === 0)).toBe(true);
+        expect(tgt.affiliationKnown).toBe(false);
+        expect(sim.score.intel).toBe(0);
+        expect(sim.stats.investigations).toBe(1);
+        expect(sim.stats.factsRaised).toBe(0);
+    });
+
+    it("relinking delivers the banked intel — upgrade, score, reveal", () => {
+        const sim = makeSim();
+        const { tgt, d } = stageDarkInvestigation(sim);
+        expect(stepUntil(sim, () => d.bankedIntel.length === 1, SHIFT_TICKS - 1)).toBe(true);
+        recall(sim, d.id);
+        expect(stepUntil(sim, () => d.bankedIntel.length === 0, SHIFT_TICKS - 1)).toBe(true);
+        // Delivered the moment it re-entered link range — still inbound, not landed.
+        expect(d.status).toBe("returning");
+        expect(tgt.facts.some((f) => f.tier > 0)).toBe(true);
+        expect(tgt.affiliationKnown).toBe(true);
+        expect(sim.score.intel).toBeGreaterThan(0);
+        expect(sim.stats.factsRaised).toBeGreaterThan(0);
+    });
+
+    it("a crash loses the banked intel and reopens the target", () => {
+        const sim = makeSim();
+        const { tgt, d } = stageDarkInvestigation(sim);
+        expect(stepUntil(sim, () => d.bankedIntel.length === 1, SHIFT_TICKS - 1)).toBe(true);
+        d.battery = 0.01;
+        step(sim);
+        expect(d.status).toBe("lost");
+        expect(d.bankedIntel).toEqual([]);
+        expect(tgt.investigation.status).toBe("idle");
+        expect(tgt.facts.every((f) => f.tier === 0)).toBe(true);
+        expect(sim.score.intel).toBe(0);
+        // The contact is open again — a fresh bird can re-fly the collection.
+        investigate(sim, tgt.id, "sk-102");
+        expect(find(sim, "sk-102").assignment?.targetId).toBe(tgt.id);
+    });
+
+    it("banked intel on a struck contact is discarded at flush", () => {
+        const sim = makeSim();
+        const { tgt, d } = stageDarkInvestigation(sim);
+        expect(stepUntil(sim, () => d.bankedIntel.length === 1, SHIFT_TICKS - 1)).toBe(true);
+        tgt.struck = true;
+        recall(sim, d.id);
+        expect(stepUntil(sim, () => d.bankedIntel.length === 0, SHIFT_TICKS - 1)).toBe(true);
+        expect(tgt.facts.every((f) => f.tier === 0)).toBe(true);
+        expect(sim.score.intel).toBe(0);
+    });
+});
+
+describe("jamming", () => {
+    /** The roster's RF emitter, made live (spawned) with everything else pushed out. */
+    function stageJammer(sim: Sim): Target {
+        pacify(sim);
+        groundFleet(sim);
+        const jam = sim.targets.find((t) => t.jammer);
+        if (!jam) throw new Error("no jammer in the roster");
+        isolate(sim, jam);
+        jam.spawnTick = 0;
+        return jam;
+    }
+
+    it("the RF emitter is the roster's jammer", () => {
+        const sim = makeSim();
+        const jammers = sim.targets.filter((t) => t.jammer);
+        expect(jammers.length).toBeGreaterThanOrEqual(1);
+        expect(jammers.every((t) => t.category === "RF emitter")).toBe(true);
+    });
+
+    it("a live jammer severs the link inside its radius — even in base range — and chews signal", () => {
+        const sim = makeSim();
+        const jam = stageJammer(sim);
+        const base = GROUND_STATION.position;
+        jam.position = [base[0] + 0.01, base[1]];
+        const d = find(sim, "sk-101");
+        d.status = "active";
+        park(d, [jam.position[0], jam.position[1]]);
+        const signalBefore = d.signal;
+        for (let i = 0; i < 10; i++) step(sim);
+        expect(d.jammed).toBe(true);
+        expect(d.linked).toBe(false);
+        expect(d.signal).toBeLessThan(signalBefore);
+
+        // Striking the jammer clears the interference next tick.
+        jam.struck = true;
+        step(sim);
+        expect(d.jammed).toBe(false);
+        expect(d.linked).toBe(true);
+    });
+
+    it("an unspawned jammer doesn't jam", () => {
+        const sim = makeSim();
+        const jam = stageJammer(sim);
+        jam.spawnTick = SHIFT_TICKS;
+        const d = find(sim, "sk-101");
+        d.status = "active";
+        park(d, [jam.position[0], jam.position[1]]);
+        step(sim);
+        expect(d.jammed).toBe(false);
+    });
+
+    it("a drone just outside the radius keeps its link", () => {
+        const sim = makeSim();
+        const jam = stageJammer(sim);
+        const base = GROUND_STATION.position;
+        jam.position = [base[0], base[1]];
+        const d = find(sim, "sk-101");
+        d.status = "active";
+        park(d, [base[0] + JAM_RADIUS + 0.002, base[1]]);
+        step(sim);
+        expect(d.jammed).toBe(false);
+        expect(d.linked).toBe(true);
+    });
+});
+
 describe("snapshot deep copies", () => {
-    it("commit copies blue, ISR, fires, and last-known-position state", () => {
+    it("commit copies blue, ISR, fires, banked-intel, and last-known-position state", () => {
         const sim = makeSim();
         sim.firesInFlight.push({ id: 1, targetId: "tgt-alpha", position: [-122.4, 37.8], impactTick: 10 });
+        sim.drones[0].bankedIntel.push("tgt-alpha");
         const snap = commit(sim);
         expect(snap.blues[0].position).not.toBe(sim.blues[0].position);
         expect(snap.blues[0].warnedAbout).not.toBe(sim.blues[0].warnedAbout);
@@ -789,6 +999,8 @@ describe("snapshot deep copies", () => {
         expect(snap.targets[0].lastKnownPosition).not.toBe(sim.targets[0].lastKnownPosition);
         expect(snap.fires).toBe(FIRES_PER_SHIFT);
         expect(snap.firesInFlight[0].position).not.toBe(sim.firesInFlight[0].position);
+        expect(snap.drones[0].bankedIntel).not.toBe(sim.drones[0].bankedIntel);
+        expect(snap.drones[0].bankedIntel).toEqual(["tgt-alpha"]);
     });
 });
 

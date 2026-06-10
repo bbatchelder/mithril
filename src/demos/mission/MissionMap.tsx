@@ -14,7 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { type BlueUnit, type IsrRequest, BLUE_STATUS_META } from "./blue";
 import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, SENSOR_META, STATUS_META } from "./data";
-import { type FireMission, BLAST_RADIUS } from "./stream/engine";
+import { type FireMission, BLAST_RADIUS, JAM_RADIUS } from "./stream/engine";
 import { type Target, type TargetPriority, PRIORITY_META } from "./targets";
 
 const STYLE = {
@@ -71,16 +71,55 @@ function dronesFC(drones: Drone[]): GeoJSON.FeatureCollection {
     };
 }
 
-function uplinksFC(drones: Drone[]): GeoJSON.FeatureCollection {
+/**
+ * Real link-state geometry: every linked airborne drone draws a line to its
+ * uplink parent (base, or the relay bird it chains through); a severed drone
+ * draws a small red dashed ring instead — no path home until it flies clear
+ * of the jamming / back into range.
+ */
+function linksFC(drones: Drone[]): GeoJSON.FeatureCollection {
     const base = GROUND_STATION.position;
+    const byId: Record<string, Drone> = {};
+    for (const d of drones) byId[d.id] = d;
     return {
         type: "FeatureCollection",
         features: drones
             .filter((d) => d.status === "active" || d.status === "anomaly" || d.status === "returning")
-            .map((d) => ({
+            .map((d) => {
+                if (!d.linked) {
+                    return {
+                        type: "Feature",
+                        properties: { state: "severed" },
+                        geometry: { type: "LineString", coordinates: ring(d.position, 0.0045) },
+                    } satisfies GeoJSON.Feature;
+                }
+                const parent = d.linkParent && d.linkParent !== "base" ? byId[d.linkParent]?.position ?? base : base;
+                return {
+                    type: "Feature",
+                    properties: { state: "linked" },
+                    geometry: { type: "LineString", coordinates: [d.position, parent] },
+                } satisfies GeoJSON.Feature;
+            }),
+    };
+}
+
+/**
+ * Denial rings around live jammers the operator can see — drawn at the track
+ * position (last-known for a stale track), so a moved jammer can jam from
+ * outside its drawn ring until the track is re-acquired.
+ */
+function jamZonesFC(targets: Target[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: targets
+            .filter((t) => t.jammer && !t.struck)
+            .map((t) => ({
                 type: "Feature",
-                properties: { status: d.status },
-                geometry: { type: "LineString", coordinates: [d.position, base] },
+                properties: { designation: t.designation },
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [ring(t.track === "stale" ? t.lastKnownPosition : t.position, JAM_RADIUS)],
+                },
             })),
     };
 }
@@ -552,6 +591,9 @@ function installLayers(map: MlMap) {
     if (!map.getSource("footprints")) {
         map.addSource("footprints", { type: "geojson", data: emptyFC() });
     }
+    if (!map.getSource("jamzones")) {
+        map.addSource("jamzones", { type: "geojson", data: emptyFC() });
+    }
     if (!map.getSource("isr")) {
         map.addSource("isr", { type: "geojson", data: emptyFC() });
     }
@@ -604,6 +646,40 @@ function installLayers(map: MlMap) {
             type: "line",
             source: "footprints",
             paint: { "line-color": "#2d72d2", "line-width": 1, "line-opacity": 0.25, "line-dasharray": [2, 3] },
+        });
+    }
+    // Jammer denial rings — violet, labelled, around every visible live jammer.
+    if (!map.getLayer("jam-fill")) {
+        map.addLayer({
+            id: "jam-fill",
+            type: "fill",
+            source: "jamzones",
+            paint: { "fill-color": "#7961db", "fill-opacity": 0.07 },
+        });
+    }
+    if (!map.getLayer("jam-line")) {
+        map.addLayer({
+            id: "jam-line",
+            type: "line",
+            source: "jamzones",
+            paint: { "line-color": "#7961db", "line-width": 1.5, "line-opacity": 0.6, "line-dasharray": [3, 2] },
+        });
+    }
+    if (!map.getLayer("jam-label")) {
+        map.addLayer({
+            id: "jam-label",
+            type: "symbol",
+            source: "jamzones",
+            layout: {
+                "text-field": "JAMMING",
+                "text-font": ["Open Sans Semibold"],
+                "text-size": 10,
+            },
+            paint: {
+                "text-color": "#7961db",
+                "text-halo-color": "rgba(255,255,255,0.9)",
+                "text-halo-width": 1.2,
+            },
         });
     }
     // ISR coverage rings — amber, labelled, only while the window is open.
@@ -696,7 +772,19 @@ function installLayers(map: MlMap) {
             id: "uplink-line",
             type: "line",
             source: "uplinks",
+            filter: ["==", ["get", "state"], "linked"],
             paint: { "line-color": "#5f6b7c", "line-width": 1, "line-opacity": 0.4, "line-dasharray": [2, 2] },
+        });
+    }
+    // A severed drone has no path home — a red dashed ring marks it (jammed or
+    // out of range; the telemetry panel's link tag says which).
+    if (!map.getLayer("uplink-severed")) {
+        map.addLayer({
+            id: "uplink-severed",
+            type: "line",
+            source: "uplinks",
+            filter: ["==", ["get", "state"], "severed"],
+            paint: { "line-color": "#cd4246", "line-width": 1.5, "line-opacity": 0.8, "line-dasharray": [2, 1.5] },
         });
     }
     if (!map.getLayer("tasking-line")) {
@@ -940,7 +1028,8 @@ function updateData(
 ) {
     (map.getSource("drones") as GeoJSONSource | undefined)?.setData(dronesFC(drones));
     (map.getSource("footprints") as GeoJSONSource | undefined)?.setData(footprintsFC(drones));
-    (map.getSource("uplinks") as GeoJSONSource | undefined)?.setData(uplinksFC(drones));
+    (map.getSource("uplinks") as GeoJSONSource | undefined)?.setData(linksFC(drones));
+    (map.getSource("jamzones") as GeoJSONSource | undefined)?.setData(jamZonesFC(targets));
     (map.getSource("trails") as GeoJSONSource | undefined)?.setData(trailsFC(trails, drones));
     (map.getSource("targets") as GeoJSONSource | undefined)?.setData(targetsFC(targets));
     (map.getSource("tasking") as GeoJSONSource | undefined)?.setData(taskingFC(drones, targets));
