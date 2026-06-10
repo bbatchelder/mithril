@@ -75,8 +75,8 @@ the rest. Style with **literal Tailwind utility classes bound to mithril tokens*
   (16) / `text-heading` (20); content rarely exceeds 20px. **Never** Inter, Geist, or other "design
   system" sans — the system stack renders crisper at 12–14px on dense UIs.
 - **Intent is typed, and saturated color is rare.** mithril has one default primary
-  (`--color-primary`, blue-3 `#2d72d2`), re-tintable by overriding seeds (the Theme Builder / built-in
-  themes Blueprint·Datex·Anthropic — see [`docs/theming.md`](../../../docs/theming.md)). Regardless of
+  (`--color-primary`, blue-3 `#2d72d2`), re-tintable by overriding seeds (the Theme Builder / the
+  built-in `[data-theme]` themes — see [`docs/theming.md`](../../../docs/theming.md)). Regardless of
   theme, **CTAs are intent-typed**: **primary** for *submit/confirm/save*, **success (green)** for
   *create/run* (`+ New …`, `Create`), **danger (red)** for *destroy*, **warning (orange)** for
   *warn-acknowledge*. A correct screen has **1–3 small spots of color against an ocean of gray**.
@@ -162,5 +162,6 @@ When the user describes what they're building:
 
 **Tailwind v4 tree-shakes unused `@theme` vars.** Reference tokens via *literal* utility classes
 (`bg-blue-3`, `shadow-elevation-2`, `ease-mithril`, `rounded-mithril`), **not** runtime `var()` in inline styles
-— those get dropped. Arbitrary-value classes that reference always-emitted `:root` vars are fine
-(`bg-[var(--interactive-hover)]`). This is the #1 way a "correct" design renders wrong in mithril.
+— those get dropped. This is the #1 way a "correct" design renders wrong in mithril. Full mechanics
+(including the arbitrary-value escape hatch for always-emitted `:root` vars) live in the `mithril`
+skill: [foundations](../mithril/reference/foundations.md).

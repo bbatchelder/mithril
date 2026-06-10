@@ -58,9 +58,9 @@ mithril has **four intents**, each a seed with rest/hover/active/disabled tiers 
 For text/icons in an intent color, use `text-intent-primary-text` (and `-success-/-warning-/-danger-`),
 which resolve to the correct shade per mode automatically — don't hand-pick a palette tier.
 
-The **primary seed is re-tintable**: the Theme Builder / built-in themes (Blueprint·Datex·Anthropic)
-override `--color-primary` (and friends) on `<html>`, re-tinting the whole UI. So never hardcode a
-brand hex — reference the intent.
+The **primary seed is re-tintable**: the Theme Builder / the built-in `[data-theme]` themes in
+`tokens.css` override `--color-primary` (and friends) on `<html>`, re-tinting the whole UI. So never
+hardcode a brand hex — reference the intent.
 
 Semantic rules (apply regardless of theme):
 
@@ -226,10 +226,9 @@ mithril **vendors the full 706-glyph Blueprint icon set** (`src/components/ui/ic
 `tools/gen-icons.mjs`) — there is no third-party icon dependency. Two discrete sizes, single-weight,
 monochrome: `--size-icon` (16px) and `--size-icon-lg` (20px).
 
-- Render by name through the registry: `<Icon icon="cog" />` (the registry is populated once in
-  `App.tsx` via `registerIcons(ICON_GLYPHS)`). For library/standalone code, import the glyph object so
-  it tree-shakes: `import { cog } from ".../icons"; <Icon icon={cog} />`. (Full mechanics: the
-  [`mithril`](../../mithril/SKILL.md) skill, foundations recipe.)
+- Render via mithril's `<Icon>` — by name (`<Icon icon="cog" />`) or as an imported glyph object.
+  The registry/tree-shaking mechanics live in the [`mithril`](../../mithril/SKILL.md) skill's
+  [foundations recipe](../../mithril/reference/foundations.md) — read that, don't guess them here.
 - Icons inherit `currentColor` — they sit at the color of their adjacent label. (`Icon` defaults to
   `text-foreground` even at `intent="none"`; use `!text-current` to inherit a host's color.)
 - Default size **16px** in buttons / nav, **20px** on larger surfaces, **12px** for inline metadata.

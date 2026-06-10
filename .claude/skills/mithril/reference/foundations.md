@@ -28,8 +28,9 @@ with static `@supports` fallbacks. To make a theme:
 - **Override seeds, and only on `<html>`.** Setting a seed on `<html>` re-tints the entire theme
   because the light-mode semantic tokens (declared on `:root`) re-resolve against it. Setting it
   on a descendant leaves the already-computed inherited values unchanged — it won't work.
-- **Don't redeclare semantic tokens** in a theme — just the seeds. The bundled `[data-theme="datex"]`
-  re-seeds the four intents to a brand palette; backgrounds stay identical (it only re-tints intents).
+- **Don't redeclare semantic tokens** in a theme — just the seeds. The bundled `[data-theme]` blocks
+  in `tokens.css` (anthropic, purple, lagoon, …) re-seed intents — and occasionally a few neutral-ramp
+  seeds (Anthropic warms white/black) — never the derived semantic tokens.
 - Every theme automatically has light and dark variants (dark re-derives from the same seeds).
 
 See `src/styles/tokens.css` and `docs/theming.md`.

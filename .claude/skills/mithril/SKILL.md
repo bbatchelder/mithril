@@ -46,7 +46,8 @@ you wire them together.
 
 4. **Theme by overriding *seeds*, on `<html>` only.** Semantic tokens are derived at runtime
    from a small seed set (intent vars + gray ramp). Override a seed on `<html>` to re-tint the
-   whole theme (the bundled `datex` theme does this). Don't redeclare semantic tokens.
+   whole theme (every bundled `[data-theme="…"]` block in `tokens.css` does this). Don't
+   redeclare semantic tokens.
 
 5. **Verify the way the repo verifies.** `pnpm build` (typecheck + vite) and `pnpm test` must
    stay green. For *visual* changes to an existing component, `tools/compare.sh <id>`; for new
