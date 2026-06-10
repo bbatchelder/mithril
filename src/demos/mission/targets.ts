@@ -208,6 +208,14 @@ export interface Target {
     affiliation: Affiliation;
     /** True once classification (or contact) has revealed the affiliation. */
     affiliationKnown: boolean;
+    /**
+     * True once a strike (Talon munition or external fires) has destroyed this
+     * contact. Struck targets are out of play — no detection, no tasking, no
+     * hostile behavior — and render as a struck ghost marker.
+     */
+    struck: boolean;
+    /** Mission-elapsed time of the strike, e.g. "T+09:41" ("" until struck). */
+    struckAt: string;
     /** Callsign of the blue unit this target's intel was passed to ("" if none). */
     passedTo: string;
     position: LngLat;
@@ -500,6 +508,8 @@ export function makeTargets(shiftTicks: number): Target[] {
             bestSensor: cat.bestSensor,
             affiliation,
             affiliationKnown: false,
+            struck: false,
+            struckAt: "",
             passedTo: "",
             position,
             lastKnownPosition: [position[0], position[1]],

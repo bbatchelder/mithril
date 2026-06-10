@@ -31,7 +31,17 @@ import { Tag } from "@/components/ui/tag";
 
 import type { BlueUnit } from "./blue";
 import { type Drone, SENSOR_META, formatClock, formatMissionClock } from "./data";
-import { PASS_MIN_VERIFIED, PASS_SCORE_PER_VERIFIED, canInvestigate, etaTicks } from "./stream/engine";
+import {
+    type FireMission,
+    CIVILIAN_STRIKE_PENALTY,
+    PASS_MIN_VERIFIED,
+    PASS_SCORE_PER_VERIFIED,
+    STRIKE_SCORE,
+    canInvestigate,
+    canStrike,
+    canStrikeTarget,
+    etaTicks,
+} from "./stream/engine";
 import { type Target, type TargetFact, PRIORITY_META, deriveFact, deriveOverall } from "./targets";
 
 interface TargetDetailProps {
@@ -40,6 +50,10 @@ interface TargetDetailProps {
     drones: Drone[];
     /** Blue forces — pass-intel goes to the nearest live unit. */
     blues: BlueUnit[];
+    /** External fire missions remaining this shift. */
+    fires: number;
+    /** Rounds in flight — drives the "fires inbound" state for this target. */
+    firesInFlight: FireMission[];
     dark: boolean;
     /** Renders a close button in the header (the pinned desktop rail). */
     onClose?: () => void;
@@ -47,6 +61,10 @@ interface TargetDetailProps {
     onTask?: (droneId: string) => void;
     /** Pass this target's intel to the nearest blue unit. */
     onPassIntel?: () => void;
+    /** Task the chosen Talon to fly a strike run on this target. */
+    onStrike?: (droneId: string) => void;
+    /** Task the chosen drone to designate this target for external fires. */
+    onDesignate?: (droneId: string) => void;
 }
 
 function FactRow({ fact, dark }: { fact: TargetFact; dark: boolean }) {
@@ -257,7 +275,171 @@ function PassIntelControls({
     );
 }
 
-export function TargetDetail({ target, drones, blues, dark, onClose, onTask, onPassIntel }: TargetDetailProps) {
+/**
+ * The strike actions — the core risk mechanic. Two weapons: a Talon strike run
+ * (one munition, resolves on arrival) and external fires (a drone designates for
+ * a window, then a delayed round lands on the aim point). Both resolve against
+ * ground truth, so striking below a verified-hostile classification is a gamble —
+ * the warning callout says exactly what's at stake. Known civilians never offer a
+ * strike (the engine refuses too); stale tracks must be re-acquired first.
+ */
+function StrikeControls({
+    target,
+    drones,
+    fires,
+    firesInFlight,
+    dark,
+    onStrike,
+    onDesignate,
+}: {
+    target: Target;
+    drones: Drone[];
+    fires: number;
+    firesInFlight: FireMission[];
+    dark: boolean;
+    onStrike?: (droneId: string) => void;
+    onDesignate?: (droneId: string) => void;
+}) {
+    if (!canStrikeTarget(target)) {
+        // Known civilian (no strike offered) — or a stale track (re-acquire first,
+        // which is what the investigation button above already says).
+        return null;
+    }
+
+    const striker = drones.find((d) => d.assignment?.kind === "strike" && d.assignment.targetId === target.id);
+    const designator = drones.find((d) => d.assignment?.kind === "designate" && d.assignment.targetId === target.id);
+    const inbound = firesInFlight.some((f) => f.targetId === target.id);
+    const verified = target.affiliationKnown; // canStrikeTarget ⇒ hostile if known
+
+    if (striker || designator || inbound) {
+        return (
+            <>
+                {striker && (
+                    <Callout intent="danger" icon={<Icon icon="locate" />} title="Strike run in progress">
+                        {striker.callsign} is wings-hot inbound on {target.designation} — recall the drone to abort.
+                    </Callout>
+                )}
+                {designator && (
+                    <Callout intent="warning" icon={<Icon icon="send-to-map" />} title="Designating for external fires">
+                        {designator.callsign} is holding the designation orbit over {target.designation}. The
+                        round launches once the designation window completes.
+                    </Callout>
+                )}
+                {inbound && (
+                    <Callout intent="danger" icon={<Icon icon="error" />} title="Fires inbound">
+                        A round is in the air for {target.designation}. It lands on the marked aim point — a
+                        target that moves off it survives.
+                    </Callout>
+                )}
+            </>
+        );
+    }
+
+    const talons = drones
+        .filter(canStrike)
+        .map((d) => ({ drone: d, eta: etaTicks(d.position, target.position) }))
+        .sort((a, b) => a.eta - b.eta);
+    const designators = drones
+        .filter(canInvestigate)
+        .map((d) => ({ drone: d, eta: etaTicks(d.position, target.position) }))
+        .sort((a, b) => a.eta - b.eta);
+
+    return (
+        <div className="flex flex-col gap-1.5">
+            {verified ? (
+                <Callout intent="danger" icon={<Icon icon="warning-sign" />} title="Weapons release authorized">
+                    {target.designation} is a verified hostile — a strike pays +{STRIKE_SCORE} pts.
+                </Callout>
+            ) : (
+                <Callout intent="warning" icon={<Icon icon="warning-sign" />} title="Below High confidence — striking is a gamble">
+                    Affiliation unverified. The strike resolves against ground truth: a hostile pays +
+                    {STRIKE_SCORE} pts, a civilian costs −{CIVILIAN_STRIKE_PENALTY}. Investigate with the best
+                    sensor to verify first.
+                </Callout>
+            )}
+            {talons.length === 0 ? (
+                <Button fill disabled icon={<Icon icon="airplane" className="!text-current" />}>
+                    No armed Talon available
+                </Button>
+            ) : (
+                <MenuPopover
+                    dark={dark}
+                    side="top"
+                    align="start"
+                    content={
+                        <Menu size="small">
+                            {talons.map(({ drone: d, eta }) => (
+                                <MenuItem
+                                    key={d.id}
+                                    icon="airplane"
+                                    intent="danger"
+                                    text={
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {d.callsign}
+                                            <span className="text-foreground-muted">
+                                                {d.munitions} munition{d.munitions === 1 ? "" : "s"}
+                                            </span>
+                                        </span>
+                                    }
+                                    label={`${Math.round(d.battery)}% · ETA ${formatClock(eta)}`}
+                                    onClick={() => onStrike?.(d.id)}
+                                />
+                            ))}
+                        </Menu>
+                    }
+                >
+                    <Button fill intent="danger" icon={<Icon icon="locate" className="!text-current" />} endIcon={<Icon icon="caret-up" className="!text-current" />}>
+                        Strike with Talon
+                    </Button>
+                </MenuPopover>
+            )}
+            {fires === 0 ? (
+                <Button fill disabled icon={<Icon icon="send-to-map" className="!text-current" />}>
+                    External fires expended
+                </Button>
+            ) : designators.length === 0 ? (
+                <Button fill disabled icon={<Icon icon="send-to-map" className="!text-current" />}>
+                    No drone available to designate
+                </Button>
+            ) : (
+                <MenuPopover
+                    dark={dark}
+                    side="top"
+                    align="start"
+                    content={
+                        <Menu size="small">
+                            <MenuDivider title="Designating drone" />
+                            {designators.map(({ drone: d, eta }) => (
+                                <MenuItem
+                                    key={d.id}
+                                    icon={SENSOR_META[d.sensor].icon}
+                                    text={
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {d.callsign}
+                                            <span className="text-foreground-muted">{SENSOR_META[d.sensor].label}</span>
+                                        </span>
+                                    }
+                                    label={`${Math.round(d.battery)}% · ETA ${formatClock(eta)}`}
+                                    onClick={() => onDesignate?.(d.id)}
+                                />
+                            ))}
+                        </Menu>
+                    }
+                >
+                    <Button fill variant="outlined" intent="danger" icon={<Icon icon="send-to-map" className="!text-current" />} endIcon={<Icon icon="caret-up" className="!text-current" />}>
+                        Call external fires ({fires} left)
+                    </Button>
+                </MenuPopover>
+            )}
+            <span className="px-1 text-body-xs text-foreground-muted">
+                Fires need a drone holding the designation orbit; the round lands after a delay on a fixed
+                aim point, so a moving target can slip it. A Talon chases the live track.
+            </span>
+        </div>
+    );
+}
+
+export function TargetDetail({ target, drones, blues, fires, firesInFlight, dark, onClose, onTask, onPassIntel, onStrike, onDesignate }: TargetDetailProps) {
     const meta = PRIORITY_META[target.priority];
     const facts = target.facts.map(deriveFact);
     const verifiedCount = facts.filter((f) => f.verified).length;
@@ -292,6 +474,19 @@ export function TargetDetail({ target, drones, blues, dark, onClose, onTask, onP
                     )}
                 </div>
             </div>
+
+            {/* Struck — the strike's outcome is the target's epitaph */}
+            {target.struck &&
+                (target.affiliation === "hostile" ? (
+                    <Callout intent="success" icon={<Icon icon="tick-circle" />} title="Target neutralized">
+                        {target.designation} was destroyed at {target.struckAt} — confirmed hostile.
+                    </Callout>
+                ) : (
+                    <Callout intent="danger" icon={<Icon icon="error" />} title="Strike incident">
+                        {target.designation} was struck at {target.struckAt} and assessed civilian after the
+                        fact — casualties reported on the ground.
+                    </Callout>
+                ))}
 
             {/* Stale track — coverage lost; position is last known */}
             {stale && (
@@ -337,7 +532,9 @@ export function TargetDetail({ target, drones, blues, dark, onClose, onTask, onP
                 <MetaCell
                     label="Track"
                     value={
-                        stale ? (
+                        target.struck ? (
+                            <span className="text-foreground-muted">Struck</span>
+                        ) : stale ? (
                             <span className="text-intent-warning-text">Stale</span>
                         ) : (
                             <span className="text-intent-success-text">Active</span>
@@ -376,8 +573,21 @@ export function TargetDetail({ target, drones, blues, dark, onClose, onTask, onP
                 best sensor ({SENSOR_META[target.bestSensor].label}) can take them to High.
             </p>
 
-            <InvestigationControls target={target} drones={drones} dark={dark} onTask={onTask} />
-            <PassIntelControls target={target} blues={blues} verifiedCount={verifiedCount} onPassIntel={onPassIntel} />
+            {!target.struck && (
+                <>
+                    <InvestigationControls target={target} drones={drones} dark={dark} onTask={onTask} />
+                    <PassIntelControls target={target} blues={blues} verifiedCount={verifiedCount} onPassIntel={onPassIntel} />
+                    <StrikeControls
+                        target={target}
+                        drones={drones}
+                        fires={fires}
+                        firesInFlight={firesInFlight}
+                        dark={dark}
+                        onStrike={onStrike}
+                        onDesignate={onDesignate}
+                    />
+                </>
+            )}
         </div>
     );
 }

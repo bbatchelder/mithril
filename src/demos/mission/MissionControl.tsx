@@ -41,7 +41,7 @@ import { MissionMap } from "./MissionMap";
 import { ShiftDebrief } from "./ShiftDebrief";
 import { TargetDetail } from "./TargetDetail";
 import { TelemetryPanel } from "./TelemetryPanel";
-import { PAD_COUNT, SHIFT_TICKS } from "./stream/engine";
+import { FIRES_PER_SHIFT, PAD_COUNT, SHIFT_TICKS } from "./stream/engine";
 import { type StreamSpeed, useStream } from "./stream/useStream";
 import { GROUND_STATION, STATUS_META, formatClock, formatMissionClock } from "./data";
 
@@ -411,6 +411,7 @@ function MissionControlInner() {
                             targets={targets}
                             blues={stream.blues}
                             isr={stream.isr}
+                            fires={stream.firesInFlight}
                             selectedId={selectedId}
                             selectedTargetId={selectedTargetId}
                             selectedBlueId={selectedBlueId}
@@ -443,6 +444,15 @@ function MissionControlInner() {
                                 <span className="inline-flex items-center gap-1.5 text-body-sm tabular-nums text-foreground-muted">
                                     <Icon icon="lightning" size={12} className="!text-current" />
                                     pads {stream.padsUsed}/{PAD_COUNT}
+                                </span>
+                                <span className="text-body-sm text-foreground-muted">·</span>
+                                <span
+                                    className={`inline-flex items-center gap-1.5 text-body-sm tabular-nums ${
+                                        stream.fires === 0 ? "text-intent-warning-text font-medium" : "text-foreground-muted"
+                                    }`}
+                                >
+                                    <Icon icon="rocket" size={12} className="!text-current" />
+                                    fires {stream.fires}/{FIRES_PER_SHIFT}
                                 </span>
                             </div>
                             <div className="pointer-events-auto flex items-center gap-3 rounded-mithril border border-divider bg-surface/95 px-3 py-2 shadow-card-1 backdrop-blur">
@@ -552,9 +562,13 @@ function MissionControlInner() {
                                         target={selectedTarget}
                                         drones={stream.drones}
                                         blues={stream.blues}
+                                        fires={stream.fires}
+                                        firesInFlight={stream.firesInFlight}
                                         dark={dark}
                                         onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
                                         onPassIntel={() => stream.passIntel(selectedTarget.id)}
+                                        onStrike={(droneId) => stream.strike(selectedTarget.id, droneId)}
+                                        onDesignate={(droneId) => stream.designate(selectedTarget.id, droneId)}
                                     />
                                 </div>
                             </div>
@@ -612,10 +626,14 @@ function MissionControlInner() {
                             target={selectedTarget}
                             drones={stream.drones}
                             blues={stream.blues}
+                            fires={stream.fires}
+                            firesInFlight={stream.firesInFlight}
                             dark={dark}
                             onClose={() => setSelectedTargetId(null)}
                             onTask={(droneId) => stream.investigate(selectedTarget.id, droneId)}
                             onPassIntel={() => stream.passIntel(selectedTarget.id)}
+                            onStrike={(droneId) => stream.strike(selectedTarget.id, droneId)}
+                            onDesignate={(droneId) => stream.designate(selectedTarget.id, droneId)}
                         />
                     ) : selectedBlue ? (
                         <BlueDetail

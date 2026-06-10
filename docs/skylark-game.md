@@ -55,8 +55,8 @@ battery-limited fleet through a handful of charging pads.
    crash-at-0%, score scaffold + HUD, basic end-of-shift debrief with restart. *(PR #69)*
 2. **Fog of war + contact lifecycle** — spawn schedule, sensor footprints, unknown tracks,
    staleness, sensor-matched investigation with a drone picker. *(PR #70)*
-3. **Blue forces + intel passing.** *(this PR)*
-4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring.
+3. **Blue forces + intel passing.** *(PR #71)*
+4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring. *(this PR)*
 5. **Relay/link layer + jamming.**
 6. **Briefing + full debrief + daily seed.**
 7. **Balance and polish pass.**
@@ -133,3 +133,29 @@ battery-limited fleet through a handful of charging pads.
   (verified hands-off: zero requests self-fulfil) — the play is launching the right drone.
 - The HUD adds blue/hit/ISR chips; the debrief adds intel-passes, bad-intel, blues-hit, and
   ISR-fulfilled counters, and the clean-shift tag now also requires no blue casualties.
+
+## Stage 4 rules (implemented)
+
+- **Strike Flight.** Two armed "Talon" drones (SK-401/402, EO/IR + 2 munitions each) join the
+  fleet, held on ground alert at base — once launched they patrol and investigate like any drone,
+  and they're the only airframes that can fly strike runs.
+- **Talon strike.** A target-panel action on an active track: the Talon flies straight at the
+  *live* position and releases on arrival — one pass, one munition. ROE resolves against ground
+  truth in one place (`resolveStrike`): a real hostile is neutralized (+200), a civilian is a
+  strike incident (−500). Either way the strike reveals what the contact was, and its marker
+  becomes a gray struck-X ghost. A strike resolved without a verified affiliation counts as a
+  "gamble taken", win or lose — the UI says exactly what's at stake before you commit, and the
+  engine refuses to strike a *known* civilian.
+- **Rearm.** A Talon at 0 munitions reloads during a charging-pad stay (~20 ticks, running
+  alongside the charge; the pad is held until both finish). Leaving the pad abandons rearm
+  progress.
+- **External fires.** Two rounds per shift. Any drone can designate — it holds the investigation
+  orbit for a continuous window, then the round launches at the target's position *at that
+  moment* and lands 15 ticks later on that fixed aim point (a red blast ring on the map). A
+  target that left the blast radius wastes the round — a hostile mid-drift dodges; a parked one
+  doesn't. Breaking off the designation (recall, crash) calls nothing in and costs nothing.
+- **Struck targets are out of play** — no detection or staleness, no tasking, no pass-intel, no
+  hostile stalking; any drone still flying against one breaks off.
+- The HUD adds a fires-remaining chip; the telemetry panel shows munitions and rearm state; the
+  debrief adds neutralized / gambles-taken / strike-incidents / fires-wasted counters, and the
+  clean-shift tag now also requires zero ROE incidents.

@@ -14,6 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { type BlueUnit, type IsrRequest, BLUE_STATUS_META } from "./blue";
 import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, SENSOR_META, STATUS_META } from "./data";
+import { type FireMission, BLAST_RADIUS } from "./stream/engine";
 import { type Target, type TargetPriority, PRIORITY_META } from "./targets";
 
 const STYLE = {
@@ -33,6 +34,8 @@ interface MissionMapProps {
     blues: BlueUnit[];
     /** ISR requests — active ones draw a coverage ring. */
     isr: IsrRequest[];
+    /** External-fire rounds in flight — each draws a blast ring at its aim point. */
+    fires: FireMission[];
     selectedId: string | null;
     selectedTargetId: string | null;
     selectedBlueId: string | null;
@@ -108,6 +111,7 @@ function targetsFC(targets: Target[]): GeoJSON.FeatureCollection {
                 priority: t.priority,
                 track: t.track,
                 hostile: t.affiliationKnown && t.affiliation === "hostile",
+                struck: t.struck,
             },
             // Hostiles drift — a stale ghost renders where the operator last
             // saw it, not at the live (hidden) position.
@@ -181,6 +185,18 @@ function isrFC(isr: IsrRequest[]): GeoJSON.FeatureCollection {
     };
 }
 
+/** Blast rings at the aim points of external-fire rounds in flight. */
+function firesFC(fires: FireMission[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: fires.map((f) => ({
+            type: "Feature",
+            properties: { id: f.id },
+            geometry: { type: "Polygon", coordinates: [ring(f.position, BLAST_RADIUS)] },
+        })),
+    };
+}
+
 /** Lines from each tasked drone to the target it's investigating. */
 function taskingFC(drones: Drone[], targets: Target[]): GeoJSON.FeatureCollection {
     const byId: Record<string, Target> = {};
@@ -191,7 +207,7 @@ function taskingFC(drones: Drone[], targets: Target[]): GeoJSON.FeatureCollectio
             .filter((d) => d.assignment && byId[d.assignment.targetId])
             .map((d) => ({
                 type: "Feature",
-                properties: { phase: d.assignment!.phase },
+                properties: { phase: d.assignment!.phase, kind: d.assignment!.kind },
                 geometry: {
                     type: "LineString",
                     coordinates: [d.position, byId[d.assignment!.targetId].position],
@@ -279,6 +295,32 @@ function makeTargetIcon(color: string): ImageData {
     return ctx.getImageData(0, 0, s, s);
 }
 
+// A struck target: a bold X with a white halo — unmistakably "destroyed", drawn
+// where the contact died. One gray ghost regardless of what the strike found.
+function makeStruckIcon(color: string): ImageData {
+    const s = 26;
+    const c = document.createElement("canvas");
+    c.width = s;
+    c.height = s;
+    const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, s, s);
+    const m = 7;
+    const drawX = (stroke: string, width: number) => {
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = width;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(m, m);
+        ctx.lineTo(s - m, s - m);
+        ctx.moveTo(s - m, m);
+        ctx.lineTo(m, s - m);
+        ctx.stroke();
+    };
+    drawX("rgba(255,255,255,0.9)", 6);
+    drawX(color, 3.5);
+    return ctx.getImageData(0, 0, s, s);
+}
+
 // A filled diamond with a white halo — military unit symbology, distinct from
 // both the drone arrows and the target reticles. Blue for friendlies (per
 // status), red for a revealed hostile.
@@ -307,7 +349,7 @@ function makeDiamondIcon(color: string): ImageData {
 
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTargetId, selectedBlueId, onSelect, onSelectTarget, onSelectBlue, autoFollow, matchOrientation, epoch = 0, dark, className }: MissionMapProps) {
+export function MissionMap({ drones, targets, blues, isr, fires, selectedId, selectedTargetId, selectedBlueId, onSelect, onSelectTarget, onSelectBlue, autoFollow, matchOrientation, epoch = 0, dark, className }: MissionMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MlMap | null>(null);
     const readyRef = useRef(false);
@@ -319,6 +361,8 @@ export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTa
     bluesRef.current = blues;
     const isrRef = useRef(isr);
     isrRef.current = isr;
+    const firesRef = useRef(fires);
+    firesRef.current = fires;
 
     // Latest props for the once-bound interaction handlers.
     const onSelectRef = useRef(onSelect);
@@ -344,7 +388,7 @@ export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTa
         const onLoad = () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current, firesRef.current);
         };
         map.on("load", onLoad);
 
@@ -414,7 +458,7 @@ export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTa
         map.once("styledata", () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current, firesRef.current);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dark]);
@@ -443,7 +487,7 @@ export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTa
 
         const map = mapRef.current;
         if (!map || !readyRef.current) return;
-        updateData(map, drones, trails, targets, blues, isr);
+        updateData(map, drones, trails, targets, blues, isr, fires);
 
         // Selected ring filters.
         if (map.getLayer("drone-selected")) {
@@ -466,7 +510,7 @@ export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTa
             if (matchOrientation) camera.bearing = sel.heading;
             map.easeTo(camera);
         }
-    }, [drones, targets, blues, isr, selectedId, selectedTargetId, selectedBlueId, autoFollow, matchOrientation]);
+    }, [drones, targets, blues, isr, fires, selectedId, selectedTargetId, selectedBlueId, autoFollow, matchOrientation]);
 
     // ── Match-orientation toggled off → straighten the map back to north-up ──
     const prevMatch = useRef(matchOrientation);
@@ -495,6 +539,7 @@ function installLayers(map: MlMap) {
         if (!map.hasImage(name)) map.addImage(name, makeTargetIcon(PRIORITY_META[p as TargetPriority].color));
     }
     if (!map.hasImage("target-stale")) map.addImage("target-stale", makeTargetIcon("#8f99a8"));
+    if (!map.hasImage("target-struck")) map.addImage("target-struck", makeStruckIcon("#5f6b7c"));
     // Unit diamonds: one per blue status, plus the revealed-hostile red. A blue
     // status without a registered image silently renders nothing (same gotcha
     // as the drone arrows) — keep BLUE_STATUSES in sync with `BlueStatus`.
@@ -509,6 +554,9 @@ function installLayers(map: MlMap) {
     }
     if (!map.getSource("isr")) {
         map.addSource("isr", { type: "geojson", data: emptyFC() });
+    }
+    if (!map.getSource("fires")) {
+        map.addSource("fires", { type: "geojson", data: emptyFC() });
     }
     if (!map.getSource("blue-routes")) {
         map.addSource("blue-routes", { type: "geojson", data: emptyFC() });
@@ -592,6 +640,40 @@ function installLayers(map: MlMap) {
             },
         });
     }
+    // Inbound-fires blast rings — red, labelled, while a round is in flight.
+    if (!map.getLayer("fires-fill")) {
+        map.addLayer({
+            id: "fires-fill",
+            type: "fill",
+            source: "fires",
+            paint: { "fill-color": "#cd4246", "fill-opacity": 0.12 },
+        });
+    }
+    if (!map.getLayer("fires-line")) {
+        map.addLayer({
+            id: "fires-line",
+            type: "line",
+            source: "fires",
+            paint: { "line-color": "#cd4246", "line-width": 2, "line-opacity": 0.8, "line-dasharray": [2, 1.5] },
+        });
+    }
+    if (!map.getLayer("fires-label")) {
+        map.addLayer({
+            id: "fires-label",
+            type: "symbol",
+            source: "fires",
+            layout: {
+                "text-field": "FIRES INBOUND",
+                "text-font": ["Open Sans Semibold"],
+                "text-size": 10,
+            },
+            paint: {
+                "text-color": "#cd4246",
+                "text-halo-color": "rgba(255,255,255,0.9)",
+                "text-halo-width": 1.2,
+            },
+        });
+    }
     if (!map.getLayer("blue-route-line")) {
         map.addLayer({
             id: "blue-route-line",
@@ -623,7 +705,15 @@ function installLayers(map: MlMap) {
             type: "line",
             source: "tasking",
             paint: {
-                "line-color": "#2d72d2",
+                // Tasking intent by color: strike runs red, designation amber,
+                // investigation the usual blue.
+                "line-color": [
+                    "match",
+                    ["get", "kind"],
+                    "strike", "#cd4246",
+                    "designate", "#c87619",
+                    "#2d72d2",
+                ],
                 "line-width": 2.5,
                 "line-opacity": 0.9,
                 "line-dasharray": [1.5, 1.2],
@@ -794,10 +884,13 @@ function installLayers(map: MlMap) {
             type: "symbol",
             source: "targets",
             layout: {
-                // Stale tracks render as gray ghosts at their last-known position;
-                // a revealed hostile trades its reticle for the red unit diamond.
+                // Struck targets render as a gray X where they died; stale tracks
+                // as gray ghosts at their last-known position; a revealed hostile
+                // trades its reticle for the red unit diamond.
                 "icon-image": [
                     "case",
+                    ["==", ["get", "struck"], true],
+                    "target-struck",
                     ["==", ["get", "track"], "stale"],
                     "target-stale",
                     ["==", ["get", "hostile"], true],
@@ -843,6 +936,7 @@ function updateData(
     targets: Target[],
     blues: BlueUnit[],
     isr: IsrRequest[],
+    fires: FireMission[],
 ) {
     (map.getSource("drones") as GeoJSONSource | undefined)?.setData(dronesFC(drones));
     (map.getSource("footprints") as GeoJSONSource | undefined)?.setData(footprintsFC(drones));
@@ -853,6 +947,7 @@ function updateData(
     (map.getSource("blues") as GeoJSONSource | undefined)?.setData(bluesFC(blues));
     (map.getSource("blue-routes") as GeoJSONSource | undefined)?.setData(blueRoutesFC(blues));
     (map.getSource("isr") as GeoJSONSource | undefined)?.setData(isrFC(isr));
+    (map.getSource("fires") as GeoJSONSource | undefined)?.setData(firesFC(fires));
 }
 
 function emptyFC(): GeoJSON.FeatureCollection {
