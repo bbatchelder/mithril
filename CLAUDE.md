@@ -172,3 +172,9 @@ pnpm check:pkg       # build:lib + validate the package (publint + are-the-types
 tools/compare.sh button        # screenshot + computed-style diff vs Blueprint (both themes)
 tools/compare.sh button dark   # ...one theme only (light|dark|both)
 ```
+
+The dev server usually already runs under the **`tap` process supervisor** as service `mithril-demo`
+(`tap run mithril-demo -- pnpm run dev`). Before starting `pnpm dev` yourself, check
+`tap status mithril-demo` — if it's running, :5173 is live. Read its output with
+`tap observe mithril-demo` (queryable logs) and bounce it with `tap restart mithril-demo`;
+`tap --skill` prints the full usage guide.
