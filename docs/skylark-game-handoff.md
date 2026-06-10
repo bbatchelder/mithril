@@ -1,15 +1,15 @@
-# Handoff — Skylark game (stages 6–7)
+# Handoff — Skylark game (stage 7)
 
-Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, stage 3 = PR #71, stage 4 =
-PR #72, all merged; stage 5 = `feat/skylark-game-stage5`). This document hands off the remaining game work so
-another session can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
-[`docs/skylark-game.md`](skylark-game.md) — that's the **design of record** (the locked
-decisions + system sketches + per-stage "rules (implemented)" sections). This is the *what's
-left + how* layer on top of it.
+Status as of 2026‑06‑10 (stage 1 = PR #69, stage 2 = PR #70, stage 3 = PR #71, stage 4 =
+PR #72, stage 5 = PR #73, all merged; stage 6 = `feat/skylark-game-stage6`). This document hands
+off the remaining game work so another session can pick it up cold. Read
+[`CLAUDE.md`](../CLAUDE.md) first, then [`docs/skylark-game.md`](skylark-game.md) — that's the
+**design of record** (the locked decisions + system sketches + per-stage "rules (implemented)"
+sections). This is the *what's left + how* layer on top of it.
 
 ---
 
-## What exists now (stages 1–5)
+## What exists now (stages 1–6)
 
 Skylark (`src/demos/mission/`) is a playable game scaffold:
 
@@ -96,13 +96,31 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
     violet jam rings (`jamzones` source) in `MissionMap`, Linked/No link/Jammed header tag +
     banked-intel row in `TelemetryPanel`, jammer callout in `TargetDetail`, no-link/banked
     HUD chips.
+13. **Briefing + full debrief + daily seed (stage 6)** — `ShiftPhase` gains `"briefing"`:
+    `makeSim(seed)` builds frozen (step/actions no-op until the exported `startShift`;
+    `useStream` starts `playing: false` and exposes `start()`). The scenario derives from one
+    seed — `makeTargets`/`makeIsrRequests` now take a shared scenario `Rng` built from
+    `(seed ^ SCENARIO_SALT)`; the salt is chosen so `DEFAULT_SEED` reproduces the stage-5
+    hand-tuned roster exactly. React-layer seed plumbing lives in `seed.ts` (parse
+    `#mission/<hex>`/`?seed=`/`daily`, FNV-1a daily seed, `randomSeed`, URL write-back via
+    `replaceState`) — `App.tsx`'s `parseRoute` routes demo-id subpaths (`mission/<seed>`).
+    Scoring is itemized: every point flows through `award`/`penalize` into `sim.breakdown`
+    (`ScoreBreakdown`), and key emits (`emit(..., true)`) also land on the uncapped
+    chronological `sim.keyEvents`. `letterGrade`/`GRADE_BANDS` map totals to S–F. UI:
+    `ShiftBriefing.tsx` (roster/resources/intel picture/blues/seed + Start), rewritten
+    `ShiftDebrief.tsx` (grade badge, per-category table, key-calls timeline, counters,
+    `SeedChip.tsx` copy affordance, replay-same-seed vs new-shift), BRIEFING navbar tag +
+    "View briefing" HUD button, `restart(seed?)` returning to the briefing.
 
 ### Engine invariants — do not break
 
-- **Deterministic by seed.** All randomness flows through `sim.rng` (`prng.ts`, mulberry32,
-  seed `0x5ca1ab1e`; targets use their own `0x7a26e7` inside `makeTargets`). Never call
-  `Math.random()`/`Date.now()` in the engine. Operator actions currently consume **no** RNG —
-  keep it that way where possible so a replay of (seed + timed actions) stays reproducible.
+- **Deterministic by seed.** All randomness flows through `sim.rng` (telemetry stream, seeded
+  with the shift seed) or the scenario `Rng` handed to `makeTargets`/`makeIsrRequests`
+  (`seed ^ SCENARIO_SALT` — the salt keeps `DEFAULT_SEED` on the stage-5 hand-tuned roster).
+  Never call `Math.random()`/`Date.now()` in the engine — daily/random seeds are minted in the
+  React layer (`seed.ts`). Operator actions currently consume **no** RNG — keep it that way
+  where possible so a replay of (seed + timed actions) stays reproducible (there's a regression
+  test for exactly this).
 - **`commit()` must deep-copy anything React renders that the sim later mutates** (positions,
   facts, assignment, investigation, `bankedIntel`, blue positions + `warnedAbout`, ISR
   positions, `lastKnownPosition`). When you add mutable state, extend `commit()` accordingly
@@ -123,6 +141,15 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   When adding rules that remove a target from play, mirror the `struck` guards (fog pass,
   `stepHostiles`, `investigate`/`canPassIntel`/`canStrikeTarget`, assignment break-off,
   `flushBankedIntel`).
+- **All scoring goes through `award`/`penalize`** — never write `sim.score` directly. The pair
+  keeps the headline score and the itemized `sim.breakdown` ledger in lockstep (the debrief's
+  per-category table sums to the total; a full-shift test asserts it). New score sources need a
+  breakdown bucket (or an existing one) at the same time.
+- **`sim.keyEvents` is the debrief timeline** — uncapped and chronological. Tag an emit as key
+  (`emit(..., true)`) only for operator calls and their outcomes (launch/recall/tasking,
+  strike/pass/ISR resolutions, crashes, blue hits, shift start/end), never ambient chatter, or
+  the timeline stops reading as "the decisions that decided the shift". The phase guard on
+  operator actions is `sim.phase !== "running"` (briefing *and* ended must stay inert).
 - **Investigation payout goes through `deliverIntel` only** (linked completion *or* banked
   flush) — award investigation intel anywhere else and the link/banking mechanic stops
   meaning anything. Engine tests that assert payout at completion must keep the target
@@ -150,26 +177,10 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 
 ---
 
-## Stage 6 — briefing, full debrief, daily seed (next up)
-
-1. **Briefing**: pre-shift Dialog (fleet roster, pad count, munitions/fires, "expected
-   activity" flavor from the spawn schedule) with a Start button — the sim shouldn't tick
-   until started (add `phase: "briefing"`; `useStream` starts paused in it).
-2. **Seed plumbing**: `makeSim(seed)` (thread through `restart(seed?)`); read
-   `?seed=`/`#mission/seed` from the URL; "daily" = seed derived from the date string (don't
-   call `Date` inside the engine — derive the seed in the React layer and pass it in).
-   Show the seed in the debrief with a copy button.
-3. **Full debrief**: letter grade (thresholds over score), decision timeline (filter
-   `sim.events` to operator verbs + crashes + strikes — consider a parallel
-   `sim.keyEvents` log that is *not* capped at 60), per-category score table, restart-with-
-   same-seed vs new-seed buttons.
-4. The stage-1 debrief is intentionally minimal — replace freely; only `onRestart`/`onClose`
-   wiring in `MissionControl.tsx` matters.
-
-## Stage 7 — balance + polish (running list)
+## Stage 7 — balance + polish (running list, next up)
 
 - **Event noise**: drop or de-rate waypoint events (`rng.chance(0.5)` today); add severity
-  filtering to `EventFeed`; keep an uncapped `keyEvents` for the debrief (see stage 6).
+  filtering to `EventFeed` (the debrief timeline already has its own uncapped `keyEvents`).
 - **Battery drain tuning**: current patrol drain ≈ 0.095%/tick → ~17 game-min on a full
   charge; with a 15-min shift the pads only matter because the fleet starts partial. If pads
   feel idle, raise drain (~0.13) or shorten charge.
@@ -179,14 +190,17 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   battery at 5× can stack; consider toasting only crashes/incidents.
 - **HUD on mobile**: the two overlay panels + bottom sheets are untested below `lg` since the
   HUD landed — check the small-screen layout.
-- **A11y**: ShiftDebrief Dialog has no description (Radix warns — pre-existing pattern
-  app-wide); the HUD strip is visual-only, consider `aria-live` for the countdown's last
-  minute.
+- **A11y**: ShiftDebrief/ShiftBriefing Dialogs have no description (Radix warns — pre-existing
+  pattern app-wide); the HUD strip is visual-only, consider `aria-live` for the countdown's
+  last minute.
 - Score values (`SCORE_PER_TIER`, `CRASH_PENALTY`, `BLUE_HIT_PENALTY`, `BAD_INTEL_PENALTY`,
-  pass/ISR rewards) and the hostile-pressure knobs (`HOSTILE_DORMANT_TICKS`, drift speed,
-  `HIT_TICKS`) are placeholders — balance them once a full loop exists (stage 4+), not before.
-  A hands-off shift currently ends around −2400 (7 crashes + 2 blues hit); decide whether
-  that's the right "do nothing" floor.
+  pass/ISR rewards), the hostile-pressure knobs (`HOSTILE_DORMANT_TICKS`, drift speed,
+  `HIT_TICKS`), and the `GRADE_BANDS` letter thresholds are placeholders — balance them
+  together against real playthroughs. A hands-off shift currently ends around −2400 (7 crashes
+  + 2 blues hit); decide whether that's the right "do nothing" floor.
+- **Non-default seeds are unvetted**: a random/daily scenario can deal awkward boards (e.g. a
+  jammer parked on base, all hostiles in the dark west). Decide whether to constrain the deals
+  (min spacing from base/blues) or embrace the variance as roguelike flavor.
 - The pass-intel button names the nearest blue from the render snapshot; the engine re-picks
   at click time — at 5× the label can lag the actual recipient by a tick. Cosmetic.
 - **Jam-edge chatter**: a drone skirting the jam boundary emits paired jammed/clear events

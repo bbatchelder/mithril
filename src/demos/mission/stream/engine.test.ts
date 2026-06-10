@@ -16,9 +16,11 @@ import {
     BLUE_HIT_PENALTY,
     CIVILIAN_STRIKE_PENALTY,
     CRASH_PENALTY,
+    DEFAULT_SEED,
     DETECT_SCORE,
     FIRES_PER_SHIFT,
     FIRE_DELAY_TICKS,
+    GRADE_BANDS,
     HIT_TICKS,
     HOSTILE_DORMANT_TICKS,
     ISR_COVER_TICKS,
@@ -36,13 +38,26 @@ import {
     designate,
     investigate,
     launch,
-    makeSim,
+    letterGrade,
+    makeSim as engineMakeSim,
     passIntel,
     recall,
     resumePatrol,
+    startShift,
     step,
     strike,
 } from "./engine";
+
+/**
+ * A fresh sim holds in the briefing phase (frozen, actions inert) — these
+ * tests exercise the running game, so build started. The briefing itself is
+ * covered in its own describe below.
+ */
+function makeSim(seed?: number) {
+    const sim = engineMakeSim(seed);
+    startShift(sim);
+    return sim;
+}
 
 function find(sim: Sim, id: string) {
     const d = sim.drones.find((x) => x.id === id);
@@ -1001,6 +1016,123 @@ describe("snapshot deep copies", () => {
         expect(snap.firesInFlight[0].position).not.toBe(sim.firesInFlight[0].position);
         expect(snap.drones[0].bankedIntel).not.toBe(sim.drones[0].bankedIntel);
         expect(snap.drones[0].bankedIntel).toEqual(["tgt-alpha"]);
+        expect(snap.breakdown).not.toBe(sim.breakdown);
+        expect(snap.keyEvents).not.toBe(sim.keyEvents);
+    });
+});
+
+describe("briefing phase", () => {
+    it("a fresh sim holds in briefing — no ticks, no actions — until started", () => {
+        const sim = engineMakeSim();
+        expect(sim.phase).toBe("briefing");
+
+        step(sim);
+        expect(sim.tick).toBe(0);
+
+        launch(sim, "sk-104");
+        expect(find(sim, "sk-104").status).toBe("idle");
+        expect(sim.stats.launches).toBe(0);
+
+        startShift(sim);
+        expect(sim.phase).toBe("running");
+        step(sim);
+        expect(sim.tick).toBe(1);
+        launch(sim, "sk-104");
+        expect(sim.stats.launches).toBe(1);
+    });
+
+    it("startShift only fires from the briefing", () => {
+        const sim = makeSim(); // already started
+        const logged = sim.keyEvents.length;
+        startShift(sim);
+        expect(sim.keyEvents.length).toBe(logged);
+
+        sim.phase = "ended";
+        startShift(sim);
+        expect(sim.phase).toBe("ended");
+    });
+});
+
+describe("seeded scenarios", () => {
+    const fingerprint = (sim: Sim) =>
+        sim.targets.map((t) => [t.spawnTick, t.affiliation, t.position[0], t.position[1]].join(":")).join("|");
+
+    it("defaults to the hand-tuned scenario seed", () => {
+        expect(engineMakeSim().seed).toBe(DEFAULT_SEED);
+    });
+
+    it("the same seed rebuilds the same scenario; a different seed varies it", () => {
+        expect(fingerprint(engineMakeSim(123))).toBe(fingerprint(engineMakeSim(123)));
+        expect(fingerprint(engineMakeSim(123))).not.toBe(fingerprint(engineMakeSim(456)));
+        // ISR window timing rides the scenario seed too.
+        expect(engineMakeSim(123).isr.map((r) => r.tick)).not.toEqual(engineMakeSim(456).isr.map((r) => r.tick));
+    });
+
+    it("every seed deals exactly three hostiles and one jammer", () => {
+        for (const seed of [1, 0xbeef, 0x12345678]) {
+            const sim = engineMakeSim(seed);
+            expect(sim.targets.filter((t) => t.affiliation === "hostile").length).toBe(3);
+            expect(sim.targets.filter((t) => t.jammer).length).toBe(1);
+        }
+    });
+
+    it("a replay — same seed, same actions — lands on the identical state", () => {
+        const run = () => {
+            const sim = makeSim(777);
+            launch(sim, "sk-104");
+            for (let i = 0; i < 120; i++) step(sim);
+            recall(sim, "sk-101");
+            for (let i = 0; i < 120; i++) step(sim);
+            return commit(sim);
+        };
+        const a = run();
+        const b = run();
+        expect(a.score).toEqual(b.score);
+        expect(a.stats).toEqual(b.stats);
+        expect(a.drones.map((d) => d.position)).toEqual(b.drones.map((d) => d.position));
+    });
+});
+
+describe("score breakdown", () => {
+    it("itemizes every point — categories sum to the headline score over a full shift", () => {
+        const sim = makeSim();
+        while (sim.phase !== "ended") step(sim);
+        const b = sim.breakdown;
+        expect(b.detection + b.investigation + b.intelPasses + b.strikes + b.isr).toBe(sim.score.intel);
+        expect(b.crashes + b.bluesHit + b.badIntel + b.strikeIncidents).toBe(sim.score.penalties);
+        // Hands-off shifts bleed airframes — the ledger must have caught it.
+        expect(b.crashes).toBeGreaterThan(0);
+    });
+});
+
+describe("debrief timeline (keyEvents)", () => {
+    it("records calls and outcomes, uncapped and chronological, without patrol chatter", () => {
+        const sim = makeSim();
+        launch(sim, "sk-104");
+        while (sim.phase !== "ended") step(sim);
+
+        // The feed is capped; the timeline is not, and keeps the early calls.
+        expect(sim.events.length).toBeLessThanOrEqual(60);
+        expect(sim.keyEvents.some((e) => e.message.includes("Shift started"))).toBe(true);
+        expect(sim.keyEvents.some((e) => e.message.includes("launched"))).toBe(true);
+        expect(sim.keyEvents.some((e) => e.message.includes("down — battery exhausted"))).toBe(true);
+        expect(sim.keyEvents.some((e) => e.message.includes("waypoint"))).toBe(false);
+
+        const ticks = sim.keyEvents.map((e) => e.tick);
+        expect([...ticks].sort((x, y) => x - y)).toEqual(ticks);
+    });
+});
+
+describe("letter grade", () => {
+    it("maps totals onto contiguous bands", () => {
+        expect(letterGrade(-500).grade).toBe("F");
+        expect(letterGrade(0).grade).toBe("D");
+        expect(letterGrade(GRADE_BANDS[0].min + 1000).grade).toBe(GRADE_BANDS[0].grade);
+        // Each band's floor earns exactly that band.
+        for (const band of GRADE_BANDS.filter((b) => Number.isFinite(b.min))) {
+            expect(letterGrade(band.min).grade).toBe(band.grade);
+            expect(letterGrade(band.min - 1).grade).not.toBe(band.grade);
+        }
     });
 });
 

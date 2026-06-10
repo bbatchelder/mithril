@@ -460,15 +460,15 @@ function buildFact(rng: Rng, base: { label: string; value: string }, idx: number
 
 /**
  * Build the (deterministic, seeded) full target roster for a shift of
- * `shiftTicks` ticks. Every target exists from the start of the sim, but each
+ * `shiftTicks` ticks, drawn from the engine's scenario stream (`rng`) — a
+ * different shift seed deals different positions, affiliations, facts, and
+ * spawn times. Every target exists from the start of the sim, but each
  * carries a `spawnTick` — the moment it appears in the world — spread across the
  * shift on an escalation curve (spawns come *faster* as the shift wears on). The
  * first two are live at tick 0 so the opening patrol picture isn't empty. All
  * spawn undetected; detection is the game (see `stream/engine.ts`).
  */
-export function makeTargets(shiftTicks: number): Target[] {
-    // A dedicated seed, independent of the telemetry stream's.
-    const rng = new Rng(0x7a26e7);
+export function makeTargets(shiftTicks: number, rng: Rng): Target[] {
     const count = 7;
 
     // Exactly three hostiles per shift, drawn without replacement so the count

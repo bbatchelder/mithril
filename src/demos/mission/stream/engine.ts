@@ -23,9 +23,11 @@
  * Skylark is a *game*: there is no autopilot fleet management. Drones do not recall
  * themselves at low battery and do not relaunch when charged — `launch` / `recall`
  * are operator actions, and a drone that hits 0% mid-air crashes (`lost`) and costs
- * score. All randomness comes from a seeded PRNG, so a shift is deterministic at 1×.
- * The React side lives in `useStream.ts`; keeping this module pure keeps the game
- * rules unit-testable (see `engine.test.ts`).
+ * score. All randomness comes from a seeded PRNG, so a shift is deterministic by
+ * seed — replaying a seed replays the scenario. A fresh sim holds in a `briefing`
+ * phase (nothing ticks, actions are inert) until `startShift`. The React side lives
+ * in `useStream.ts`; keeping this module pure keeps the game rules unit-testable
+ * (see `engine.test.ts`).
  */
 import { Rng } from "../prng";
 import {
@@ -43,7 +45,16 @@ import {
 import { type BlueUnit, type IsrRequest, makeBlues, makeIsrRequests } from "../blue";
 import { type Target, makeTargets, upgradeTarget, verifiedFactCount } from "../targets";
 
-const SEED = 0x5ca1ab1e;
+/** Default scenario seed — the hand-tuned shift the demo opens on. */
+export const DEFAULT_SEED = 0x5ca1ab1e;
+/**
+ * XORed with the shift seed to derive the scenario stream (targets + ISR
+ * windows), keeping it independent of the telemetry stream. The value is chosen
+ * so the default seed reproduces the stage-5 hand-tuned roster
+ * (DEFAULT_SEED ^ SCENARIO_SALT === 0x7a26e7 — the jammer spawning late-shift
+ * in the relay backbone, the opening pair near the patrol loops, etc.).
+ */
+const SCENARIO_SALT = 0x5cdb8df9;
 const MAX_EVENTS = 60;
 
 // ─── Game rules ──────────────────────────────────────────────────────────────
@@ -138,7 +149,7 @@ export const RELAY_RANGE = 0.075;
  */
 export const JAM_RADIUS = 0.035;
 
-export type ShiftPhase = "running" | "ended";
+export type ShiftPhase = "briefing" | "running" | "ended";
 
 export interface ShiftScore {
     /** Points earned from delivered intelligence. */
@@ -146,6 +157,45 @@ export interface ShiftScore {
     /** Points lost (stored positive; subtracted from the total). */
     penalties: number;
     total: number;
+}
+
+/**
+ * Itemized ledger behind {@link ShiftScore} — every point awarded or penalized
+ * lands in exactly one bucket (via the `award`/`penalize` helpers; never write
+ * `sim.score` directly), so the debrief's per-category table always sums to the
+ * headline score. Earnings and penalties are both stored positive.
+ */
+export interface ScoreBreakdown {
+    detection: number;
+    investigation: number;
+    intelPasses: number;
+    strikes: number;
+    isr: number;
+    crashes: number;
+    bluesHit: number;
+    badIntel: number;
+    strikeIncidents: number;
+}
+
+export interface GradeBand {
+    grade: string;
+    /** Lowest total that earns this grade. */
+    min: number;
+    label: string;
+}
+
+/** Letter-grade bands over the final score (placeholder thresholds — balance in stage 7). */
+export const GRADE_BANDS: GradeBand[] = [
+    { grade: "S", min: 1400, label: "Flawless shift" },
+    { grade: "A", min: 1000, label: "Outstanding work" },
+    { grade: "B", min: 600, label: "Solid shift" },
+    { grade: "C", min: 250, label: "Acceptable performance" },
+    { grade: "D", min: 0, label: "Rough shift" },
+    { grade: "F", min: -Infinity, label: "Stand-down review" },
+];
+
+export function letterGrade(total: number): GradeBand {
+    return GRADE_BANDS.find((b) => total >= b.min) ?? GRADE_BANDS[GRADE_BANDS.length - 1];
 }
 
 /** Counters surfaced in the end-of-shift debrief. */
@@ -223,13 +273,22 @@ function clamp(v: number, lo: number, hi: number): number {
 export interface Sim {
     tick: number;
     phase: ShiftPhase;
+    /** The scenario seed this sim was built from — replaying it replays the shift. */
+    seed: number;
     drones: Drone[];
     targets: Target[];
     blues: BlueUnit[];
     isr: IsrRequest[];
     events: StreamEvent[];
+    /**
+     * The debrief timeline: key calls and outcomes (launches, taskings, strikes,
+     * crashes, blue hits …) in chronological order. Unlike `events` it is never
+     * capped, so waypoint chatter can't evict the decisions that decided the shift.
+     */
+    keyEvents: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     score: { intel: number; penalties: number };
+    breakdown: ScoreBreakdown;
     stats: ShiftStats;
     rng: Rng;
     eventId: number;
@@ -248,20 +307,36 @@ export interface Sim {
     rearmTimer: Record<string, number>;
 }
 
-export function makeSim(): Sim {
+export function makeSim(seed: number = DEFAULT_SEED): Sim {
     const drones = makeFleet();
     const history: Record<string, TelemetryHistory> = {};
     for (const d of drones) history[d.id] = emptyHistory();
+    // One scenario stream feeds the roster *and* the ISR windows, so a seed is a
+    // complete shareable shift. The telemetry stream (sim.rng) is seeded separately.
+    const scenario = new Rng((seed ^ SCENARIO_SALT) >>> 0);
     return {
         tick: 0,
-        phase: "running",
+        phase: "briefing",
+        seed,
         drones,
-        targets: makeTargets(SHIFT_TICKS),
+        targets: makeTargets(SHIFT_TICKS, scenario),
         blues: makeBlues(),
-        isr: makeIsrRequests(SHIFT_TICKS),
+        isr: makeIsrRequests(SHIFT_TICKS, scenario),
         events: [],
+        keyEvents: [],
         history,
         score: { intel: 0, penalties: 0 },
+        breakdown: {
+            detection: 0,
+            investigation: 0,
+            intelPasses: 0,
+            strikes: 0,
+            isr: 0,
+            crashes: 0,
+            bluesHit: 0,
+            badIntel: 0,
+            strikeIncidents: 0,
+        },
         stats: {
             investigations: 0,
             factsRaised: 0,
@@ -280,7 +355,7 @@ export function makeSim(): Sim {
             strikeIncidents: 0,
             firesWasted: 0,
         },
-        rng: new Rng(SEED),
+        rng: new Rng(seed),
         eventId: 1,
         anomalyTimer: {},
         batteryWarned: {},
@@ -323,14 +398,20 @@ function joinAngle(from: [number, number], center: [number, number]): number {
     return beta + Math.acos(ORBIT_RADIUS / d);
 }
 
+/**
+ * Emit a feed event. `key` events additionally land on the uncapped debrief
+ * timeline (`sim.keyEvents`) — reserve it for operator calls and their outcomes,
+ * not ambient chatter, or the timeline stops reading as "the shift's decisions".
+ */
 function emit(
     sim: Sim,
     drone: Pick<Drone, "id" | "callsign">,
     severity: StreamEvent["severity"],
     icon: StreamEvent["icon"],
     message: string,
+    key = false,
 ): void {
-    sim.events.unshift({
+    const event: StreamEvent = {
         id: sim.eventId++,
         tick: sim.tick,
         droneId: drone.id,
@@ -338,13 +419,21 @@ function emit(
         severity,
         icon,
         message,
-    });
+    };
+    sim.events.unshift(event);
     if (sim.events.length > MAX_EVENTS) sim.events.length = MAX_EVENTS;
+    if (key) sim.keyEvents.push(event);
 }
 
 /** Emit an event from the ground station rather than a drone. */
-function emitBase(sim: Sim, severity: StreamEvent["severity"], icon: StreamEvent["icon"], message: string): void {
-    emit(sim, { id: GROUND_STATION.id, callsign: GROUND_STATION.callsign }, severity, icon, message);
+function emitBase(
+    sim: Sim,
+    severity: StreamEvent["severity"],
+    icon: StreamEvent["icon"],
+    message: string,
+    key = false,
+): void {
+    emit(sim, { id: GROUND_STATION.id, callsign: GROUND_STATION.callsign }, severity, icon, message, key);
 }
 
 function pushHistory(sim: Sim, d: Drone): void {
@@ -360,6 +449,18 @@ function pushHistory(sim: Sim, d: Drone): void {
 }
 
 // ─── Game-rule helpers ───────────────────────────────────────────────────────
+
+/** Earn intel points — the single write point for `score.intel`, itemized by category. */
+function award(sim: Sim, category: "detection" | "investigation" | "intelPasses" | "strikes" | "isr", points: number): void {
+    sim.score.intel += points;
+    sim.breakdown[category] += points;
+}
+
+/** Take a penalty (stored positive) — the single write point for `score.penalties`. */
+function penalize(sim: Sim, category: "crashes" | "bluesHit" | "badIntel" | "strikeIncidents", points: number): void {
+    sim.score.penalties += points;
+    sim.breakdown[category] += points;
+}
 
 function airborne(d: Drone): boolean {
     return d.status === "active" || d.status === "anomaly" || d.status === "returning";
@@ -394,9 +495,9 @@ function crash(sim: Sim, d: Drone): void {
     d.battery = 0;
     d.speed = 0;
     d.altitude = 0;
-    sim.score.penalties += CRASH_PENALTY;
+    penalize(sim, "crashes", CRASH_PENALTY);
     sim.stats.dronesLost += 1;
-    emit(sim, d, "danger", "cross-circle", `${d.callsign} down — battery exhausted mid-flight (−${CRASH_PENALTY} pts)`);
+    emit(sim, d, "danger", "cross-circle", `${d.callsign} down — battery exhausted mid-flight (−${CRASH_PENALTY} pts)`, true);
     // Banked intel never made it home — it dies with the airframe, and those
     // contacts reopen for a fresh investigation.
     if (d.bankedIntel.length > 0) {
@@ -406,7 +507,7 @@ function crash(sim: Sim, d: Drone): void {
                 tgt.investigation = { status: "idle" };
             }
         }
-        emit(sim, d, "danger", "inbox", `Banked intel aboard ${d.callsign} lost with the airframe — ${d.bankedIntel.length} collection${d.bankedIntel.length === 1 ? "" : "s"} gone`);
+        emit(sim, d, "danger", "inbox", `Banked intel aboard ${d.callsign} lost with the airframe — ${d.bankedIntel.length} collection${d.bankedIntel.length === 1 ? "" : "s"} gone`, true);
         d.bankedIntel = [];
     }
 }
@@ -455,9 +556,16 @@ function land(sim: Sim, d: Drone): void {
 
 // ─── Tick ────────────────────────────────────────────────────────────────────
 
-/** Advance the simulation by exactly one tick (mutates `sim`). */
+/** Begin the shift — a fresh sim holds in `briefing` (frozen, actions inert) until this. */
+export function startShift(sim: Sim): void {
+    if (sim.phase !== "briefing") return;
+    sim.phase = "running";
+    emitBase(sim, "info", "play", "Shift started — the fleet is yours. Good hunting.", true);
+}
+
+/** Advance the simulation by exactly one tick (mutates `sim`). No-op outside `running`. */
 export function step(sim: Sim): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     sim.tick += 1;
     const rng = sim.rng;
     const base = GROUND_STATION.position;
@@ -708,9 +816,9 @@ export function step(sim: Sim): void {
                 if (isNew) {
                     t.detectedBy = spotter.callsign;
                     t.detectedAt = formatMissionClock(sim.tick);
-                    sim.score.intel += DETECT_SCORE;
+                    award(sim, "detection", DETECT_SCORE);
                     sim.stats.detected += 1;
-                    emit(sim, spotter, "warning", "eye-open", `${spotter.callsign} new contact — ${t.designation} (${t.category.toLowerCase()}) (+${DETECT_SCORE} pts)`);
+                    emit(sim, spotter, "warning", "eye-open", `${spotter.callsign} new contact — ${t.designation} (${t.category.toLowerCase()}) (+${DETECT_SCORE} pts)`, true);
                 } else {
                     emit(sim, spotter, "success", "eye-open", `${spotter.callsign} re-acquired ${t.designation} — track active again`);
                 }
@@ -722,7 +830,7 @@ export function step(sim: Sim): void {
     if (sim.tick >= SHIFT_TICKS) {
         sim.phase = "ended";
         sim.stats.staleLost = sim.targets.filter((t) => t.track === "stale").length;
-        emitBase(sim, "info", "time", "Shift complete — stand down. Debrief ready.");
+        emitBase(sim, "info", "time", "Shift complete — stand down. Debrief ready.", true);
     }
 }
 
@@ -822,7 +930,7 @@ function stepHostiles(sim: Sim): void {
 /** An unwarned blue was caught: penalty, and the attack is its own contact report. */
 function hitBlue(sim: Sim, b: BlueUnit, t: Target): void {
     b.status = "hit";
-    sim.score.penalties += BLUE_HIT_PENALTY;
+    penalize(sim, "bluesHit", BLUE_HIT_PENALTY);
     sim.stats.bluesHit += 1;
     // Being attacked reveals the attacker — an unseen hostile becomes a live,
     // known-hostile track on the spot (no detection points; this is the bad way
@@ -843,6 +951,7 @@ function hitBlue(sim: Sim, b: BlueUnit, t: Target): void {
         "danger",
         "cross-circle",
         `${b.callsign} hit by ${t.designation} — casualties reported (−${BLUE_HIT_PENALTY} pts)`,
+        true,
     );
 }
 
@@ -857,16 +966,16 @@ function stepIsr(sim: Sim, flying: Drone[]): void {
         if (sim.tick >= r.tick + r.durationTicks) {
             r.status = "missed";
             sim.stats.isrExpired += 1;
-            emitBase(sim, "warning", "satellite", `ISR window from ${r.from} closed — request unmet`);
+            emitBase(sim, "warning", "satellite", `ISR window from ${r.from} closed — request unmet`, true);
             continue;
         }
         if (flying.some((d) => dist(d.position, r.position) <= r.radius)) {
             r.coverTicks += 1;
             if (r.coverTicks >= ISR_COVER_TICKS) {
                 r.status = "done";
-                sim.score.intel += r.reward;
+                award(sim, "isr", r.reward);
                 sim.stats.isrFulfilled += 1;
-                emitBase(sim, "success", "satellite", `ISR request from ${r.from} fulfilled (+${r.reward} pts)`);
+                emitBase(sim, "success", "satellite", `ISR request from ${r.from} fulfilled (+${r.reward} pts)`, true);
             }
         }
     }
@@ -958,7 +1067,7 @@ function deliverIntel(sim: Sim, d: Drone, tgt: Target): void {
     const matched = d.sensor === tgt.bestSensor;
     const raised = upgradeTarget(tgt, sim.rng, d.sensor);
     const points = raised * SCORE_PER_TIER;
-    sim.score.intel += points;
+    award(sim, "investigation", points);
     sim.stats.factsRaised += raised;
     // Classification at ≥ Medium settles whose side the contact is on.
     tgt.affiliationKnown = true;
@@ -972,6 +1081,7 @@ function deliverIntel(sim: Sim, d: Drone, tgt: Target): void {
         matched
             ? `${d.callsign} intel on ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
             : `${d.callsign} intel on ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
+        true,
     );
 }
 
@@ -1021,22 +1131,24 @@ function resolveStrike(sim: Sim, tgt: Target, by: string): void {
     }
     if (!verified) sim.stats.gamblesTaken += 1;
     if (tgt.affiliation === "hostile") {
-        sim.score.intel += STRIKE_SCORE;
+        award(sim, "strikes", STRIKE_SCORE);
         sim.stats.neutralized += 1;
         emitBase(
             sim,
             "success",
             "tick-circle",
             `${tgt.designation} neutralized by ${by} — confirmed hostile${verified ? "" : " (unverified strike)"} (+${STRIKE_SCORE} pts)`,
+            true,
         );
     } else {
-        sim.score.penalties += CIVILIAN_STRIKE_PENALTY;
+        penalize(sim, "strikeIncidents", CIVILIAN_STRIKE_PENALTY);
         sim.stats.strikeIncidents += 1;
         emitBase(
             sim,
             "danger",
             "error",
             `STRIKE INCIDENT — ${tgt.designation} assessed civilian after the fact; casualties on the ground (−${CIVILIAN_STRIKE_PENALTY} pts)`,
+            true,
         );
     }
 }
@@ -1065,6 +1177,7 @@ function launchFires(sim: Sim, d: Drone, tgt: Target): void {
         "warning",
         "send-to-map",
         `${d.callsign} designation complete — fires inbound on ${tgt.designation}, impact in ${FIRE_DELAY_TICKS}s (${sim.fires} left)`,
+        true,
     );
 }
 
@@ -1085,6 +1198,7 @@ function stepFires(sim: Sim): void {
                 "warning",
                 "error",
                 `External fires impact — ${tgt ? tgt.designation : "target"} cleared the blast area; round wasted`,
+                true,
             );
         }
     }
@@ -1098,7 +1212,7 @@ function stepFires(sim: Sim): void {
  * endurance risk is the operator's to manage.
  */
 export function launch(sim: Sim, droneId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const d = sim.drones.find((x) => x.id === droneId);
     if (!d || (d.status !== "idle" && d.status !== "charging")) return;
     const offPad = d.status === "charging";
@@ -1110,9 +1224,9 @@ export function launch(sim: Sim, droneId: string): void {
     delete sim.rearmTimer[d.id];
     sim.stats.launches += 1;
     if (d.battery < BATTERY_WARN) {
-        emit(sim, d, "warning", "rocket-slant", `${d.callsign} launched at ${Math.round(d.battery)}% — short endurance`);
+        emit(sim, d, "warning", "rocket-slant", `${d.callsign} launched at ${Math.round(d.battery)}% — short endurance`, true);
     } else {
-        emit(sim, d, "info", "rocket-slant", `${d.callsign} launched — en route to patrol`);
+        emit(sim, d, "info", "rocket-slant", `${d.callsign} launched — en route to patrol`, true);
     }
     if (offPad) assignPads(sim);
 }
@@ -1122,22 +1236,22 @@ export function launch(sim: Sim, droneId: string): void {
  * target becomes re-taskable).
  */
 export function recall(sim: Sim, droneId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const d = sim.drones.find((x) => x.id === droneId);
     if (!d || !airborne(d) || d.status === "returning") return;
     clearAssignment(sim, d);
     d.status = "returning";
     sim.stats.recalls += 1;
-    emit(sim, d, "info", "undo", `${d.callsign} recalled to base`);
+    emit(sim, d, "info", "undo", `${d.callsign} recalled to base`, true);
 }
 
 /** Turn a returning drone around — back to its patrol. */
 export function resumePatrol(sim: Sim, droneId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const d = sim.drones.find((x) => x.id === droneId);
     if (!d || d.status !== "returning") return;
     d.status = "active";
-    emit(sim, d, "info", "play", `${d.callsign} recall cancelled — resuming patrol`);
+    emit(sim, d, "info", "play", `${d.callsign} recall cancelled — resuming patrol`, true);
 }
 
 /**
@@ -1178,7 +1292,7 @@ function dispatchDrone(sim: Sim, d: Drone): void {
  * returning and lost drones can't be tasked.
  */
 export function investigate(sim: Sim, targetId: string, droneId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const tgt = sim.targets.find((t) => t.id === targetId);
     if (!tgt || tgt.track === "undetected" || tgt.struck || tgt.investigation.status !== "idle") return;
     const d = sim.drones.find((x) => x.id === droneId);
@@ -1191,7 +1305,7 @@ export function investigate(sim: Sim, targetId: string, droneId: string): void {
     d.assignment = { targetId, kind: "investigate", phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
     d.task = `Investigating ${tgt.designation}`;
     tgt.investigation = { status: "enroute", droneId: d.id, droneCallsign: d.callsign };
-    emit(sim, d, "info", "locate", `${d.callsign} tasked to investigate ${tgt.designation}`);
+    emit(sim, d, "info", "locate", `${d.callsign} tasked to investigate ${tgt.designation}`, true);
 }
 
 /**
@@ -1220,7 +1334,7 @@ export function canStrikeTarget(t: Target): boolean {
  * outcome). One strike run per target at a time.
  */
 export function strike(sim: Sim, targetId: string, droneId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const tgt = sim.targets.find((t) => t.id === targetId);
     if (!tgt || !canStrikeTarget(tgt)) return;
     if (sim.drones.some((d) => d.assignment?.kind === "strike" && d.assignment.targetId === targetId)) return;
@@ -1230,7 +1344,7 @@ export function strike(sim: Sim, targetId: string, droneId: string): void {
     dispatchDrone(sim, d);
     d.assignment = { targetId, kind: "strike", phase: "enroute", ticksLeft: 0, orbitAngle: 0, prevTask: d.task };
     d.task = `Strike run on ${tgt.designation}`;
-    emit(sim, d, "warning", "locate", `${d.callsign} wings hot — strike run on ${tgt.designation}`);
+    emit(sim, d, "warning", "locate", `${d.callsign} wings hot — strike run on ${tgt.designation}`, true);
 }
 
 /**
@@ -1241,7 +1355,7 @@ export function strike(sim: Sim, targetId: string, droneId: string): void {
  * One designation per target at a time; needs a round remaining.
  */
 export function designate(sim: Sim, targetId: string, droneId: string): void {
-    if (sim.phase === "ended" || sim.fires <= 0) return;
+    if (sim.phase !== "running" || sim.fires <= 0) return;
     const tgt = sim.targets.find((t) => t.id === targetId);
     if (!tgt || !canStrikeTarget(tgt)) return;
     if (sim.drones.some((d) => d.assignment?.kind === "designate" && d.assignment.targetId === targetId)) return;
@@ -1252,7 +1366,7 @@ export function designate(sim: Sim, targetId: string, droneId: string): void {
     const entryAngle = joinAngle(d.position, tgt.position);
     d.assignment = { targetId, kind: "designate", phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
     d.task = `Designating ${tgt.designation}`;
-    emit(sim, d, "info", "send-to-map", `${d.callsign} tasked to designate ${tgt.designation} for external fires`);
+    emit(sim, d, "info", "send-to-map", `${d.callsign} tasked to designate ${tgt.designation} for external fires`, true);
 }
 
 /**
@@ -1272,7 +1386,7 @@ export function canPassIntel(t: Target): boolean {
  * civilian costs the bad-intel penalty. One pass per target.
  */
 export function passIntel(sim: Sim, targetId: string): void {
-    if (sim.phase === "ended") return;
+    if (sim.phase !== "running") return;
     const tgt = sim.targets.find((t) => t.id === targetId);
     if (!tgt || !canPassIntel(tgt)) return;
 
@@ -1295,12 +1409,12 @@ export function passIntel(sim: Sim, targetId: string): void {
     sim.stats.intelPasses += 1;
     if (tgt.affiliation === "hostile") {
         const points = verifiedFactCount(tgt) * PASS_SCORE_PER_VERIFIED;
-        sim.score.intel += points;
-        emitBase(sim, "success", "send-message", `Intel on ${tgt.designation} passed to ${blue.callsign} — unit warned and breaking off (+${points} pts)`);
+        award(sim, "intelPasses", points);
+        emitBase(sim, "success", "send-message", `Intel on ${tgt.designation} passed to ${blue.callsign} — unit warned and breaking off (+${points} pts)`, true);
     } else {
-        sim.score.penalties += BAD_INTEL_PENALTY;
+        penalize(sim, "badIntel", BAD_INTEL_PENALTY);
         sim.stats.badIntelPasses += 1;
-        emitBase(sim, "warning", "send-message", `${blue.callsign} assesses ${tgt.designation} as civilian traffic — bad intel pass (−${BAD_INTEL_PENALTY} pts)`);
+        emitBase(sim, "warning", "send-message", `${blue.callsign} assesses ${tgt.designation} as civilian traffic — bad intel pass (−${BAD_INTEL_PENALTY} pts)`, true);
     }
 }
 
@@ -1309,13 +1423,18 @@ export function passIntel(sim: Sim, targetId: string): void {
 export interface Snapshot {
     tick: number;
     phase: ShiftPhase;
+    /** The scenario seed — surfaced in the briefing/debrief for sharing. */
+    seed: number;
     drones: Drone[];
     targets: Target[];
     blues: BlueUnit[];
     isr: IsrRequest[];
     events: StreamEvent[];
+    /** Uncapped chronological log of key calls and outcomes — the debrief timeline. */
+    keyEvents: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     score: ShiftScore;
+    breakdown: ScoreBreakdown;
     stats: ShiftStats;
     /** Charging pads currently occupied (of {@link PAD_COUNT}). */
     padsUsed: number;
@@ -1340,6 +1459,7 @@ export function commit(sim: Sim): Snapshot {
     return {
         tick: sim.tick,
         phase: sim.phase,
+        seed: sim.seed,
         drones: sim.drones.map((d) => ({
             ...d,
             position: [d.position[0], d.position[1]] as [number, number],
@@ -1360,12 +1480,14 @@ export function commit(sim: Sim): Snapshot {
         })),
         isr: sim.isr.map((r) => ({ ...r, position: [r.position[0], r.position[1]] as [number, number] })),
         events: sim.events.slice(),
+        keyEvents: sim.keyEvents.slice(),
         history,
         score: {
             intel: sim.score.intel,
             penalties: sim.score.penalties,
             total: sim.score.intel - sim.score.penalties,
         },
+        breakdown: { ...sim.breakdown },
         stats: { ...sim.stats },
         padsUsed: chargingCount(sim),
         fires: sim.fires,

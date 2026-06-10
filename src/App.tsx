@@ -5540,7 +5540,9 @@ function useHash(): string {
  *   ""                                    → landing app gallery
  *   "showcase" / "showcase/<componentId>" → Component Showcase (tiled overview + top app bar)
  *   "soc" | "board" | "mission"           → the demo apps (their own navbars)
- * A bare legacy component id ("#button") resolves into the showcase.
+ * A demo id may carry a subpath the demo itself interprets (e.g. "mission/<seed>"
+ * — a shareable Skylark scenario seed). A bare legacy component id ("#button")
+ * resolves into the showcase.
  */
 type ChromeAppId = "landing" | "showcase" | "soc" | "board" | "mission";
 
@@ -5558,7 +5560,8 @@ function parseRoute(hash: string): Route {
         const id = hash.startsWith("showcase/") ? hash.slice("showcase/".length) : "";
         return { appId: "showcase", componentId: id };
     }
-    if (DEMO_IDS.has(hash)) return { appId: hash as ChromeAppId, componentId: "" };
+    const demoId = hash.split("/")[0];
+    if (DEMO_IDS.has(demoId)) return { appId: demoId as ChromeAppId, componentId: "" };
     // Legacy bare component id (e.g. a shared "#button" link) → showcase.
     if (COMPONENTS.some((c) => c.id === hash)) return { appId: "showcase", componentId: hash };
     return { appId: "landing", componentId: "" };
