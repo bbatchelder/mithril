@@ -1,15 +1,15 @@
-# Handoff — Skylark game (stages 3–7)
+# Handoff — Skylark game (stages 4–7)
 
-Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = `feat/skylark-game-stage2`, stacked on
-stage 1 until #69 merges). This document hands off the remaining game work so another session
-can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
+Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, both merged; stage 3 =
+`feat/skylark-game-stage3`). This document hands off the remaining game work so another
+session can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
 [`docs/skylark-game.md`](skylark-game.md) — that's the **design of record** (the locked
 decisions + system sketches + per-stage "rules (implemented)" sections). This is the *what's
 left + how* layer on top of it.
 
 ---
 
-## What exists now (stages 1–2)
+## What exists now (stages 1–3)
 
 Skylark (`src/demos/mission/`) is a playable game scaffold:
 
@@ -46,6 +46,23 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
    `canInvestigate`). Undetected targets are filtered out in `MissionControl` before anything
    renders — the map never sees them. Stale paint + footprint circles live in `MissionMap`
    (`target-stale` icon, `footprints` source).
+10. **Blue forces + intel passing (stage 3)** — `blue.ts` holds `BlueUnit` (convoy / vessel /
+    checkpoint; status moving / holding / rerouting / hit) + `makeBlues()` and the seeded
+    `IsrRequest` schedule (`makeIsrRequests`). Targets carry ground-truth `affiliation`
+    (exactly 3 of 7 hostile, drawn from the roster seed) + `affiliationKnown` / `passedTo` /
+    `lastKnownPosition`. In `step()`: `stepBlues` (route legs + warned-threat evasion) →
+    `stepHostiles` (armed hostiles drift toward the nearest blue; unwarned blue inside
+    `STRIKE_RADIUS` for `HIT_TICKS` → hit, −400, attack reveals the track) → `stepIsr`
+    (open / progress / expire windows; fulfil = `ISR_COVER_TICKS` cumulative drone-presence
+    ticks). `HOSTILE_DORMANT_TICKS` (60) is the post-spawn grace that makes warn-in-time
+    winnable. `passIntel(sim, targetId)` warns the nearest live blue; scoring resolves against
+    ground truth (`PASS_SCORE_PER_VERIFIED` × verified facts vs `BAD_INTEL_PENALTY`), gated by
+    `canPassIntel` (≥ `PASS_MIN_VERIFIED` verified facts). UI: blue diamonds / routes / ISR
+    rings + `target-hostile` red diamond in `MissionMap`, `BlueDetail` panel, pass-intel
+    button + affiliation cells in `TargetDetail`, blue/hit/ISR HUD chips, four new debrief
+    counters. ISR ring positions are tuned so a hands-off shift fulfils none (they sit on the
+    *grounded* birds' loops — SK-204 / SK-304 / SK-104); re-verify that property if routes,
+    anchors, or radii change.
 
 ### Engine invariants — do not break
 
@@ -54,12 +71,20 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   `Math.random()`/`Date.now()` in the engine. Operator actions currently consume **no** RNG —
   keep it that way where possible so a replay of (seed + timed actions) stays reproducible.
 - **`commit()` must deep-copy anything React renders that the sim later mutates** (positions,
-  facts, assignment, investigation). When you add mutable state (contacts, blue units,
-  munitions), extend `commit()` accordingly or you'll get stale-render bugs.
+  facts, assignment, investigation, blue positions + `warnedAbout`, ISR positions,
+  `lastKnownPosition`). When you add mutable state (munitions, banked intel), extend
+  `commit()` accordingly or you'll get stale-render bugs.
 - **Adding a `DroneStatus`** touches four places, TS only catches three:
   `STATUS_META` (data.ts), `FleetSummary`'s reduce-init + `order` (TelemetryPanel.tsx) — both
   type-enforced — and `STATUSES` + `statusColorExpr` in `MissionMap.tsx` (NOT enforced; the map
-  silently renders nothing for a status without a registered `arrow-<status>` image).
+  silently renders nothing for a status without a registered `arrow-<status>` image). The same
+  silent-render gotcha applies to `BlueStatus` and `BLUE_STATUSES` / `blue-<status>` images.
+- **Hostiles move; civilians don't.** Engine tests that park a drone over a target or assert
+  exact scores call `pacify(sim)` (all-civilian) first, then `arm(t)` per scenario (hostile +
+  past dormancy). New long-running tests should do the same or seeded hostiles will drift
+  targets and hit blues mid-test.
+- Stale tracks render at `lastKnownPosition` (kept fresh by the coverage pass) — keep that in
+  mind for any new layer that draws targets.
 - **Events**: `emit(sim, drone, …)` / `emitBase(sim, …)` (ground-station events use
   `BASE-01`; clicking them in the feed is a harmless no-op selection). Ring buffer caps at
   `MAX_EVENTS` (60) — at 5× speed, waypoint chatter evicts operator events within a couple of
@@ -79,29 +104,7 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 
 ---
 
-## Stage 3 — blue forces + intel passing (next up)
-
-1. **Model**: `interface BlueUnit { id; callsign; kind: "convoy" | "vessel" | "checkpoint";
-   position; route: LngLat[]; waypoint; speed; status: "moving" | "holding" | "rerouting" |
-   "hit"; warnedAbout: Set<targetId> }` in a new `blue.ts`; 2–3 seeded units. Move them in
-   `step()` with the existing `moveToward` (slower than drones; checkpoints don't move).
-2. **Threat behavior**: red-affiliated contacts (stage 2's classification reveals affiliation
-   at tier ≥ 1) inside a threat radius of a blue unit vector toward it instead of staying
-   static — give hostile targets a slow `position` drift. An unwarned blue within a strike
-   radius of a hostile for M ticks → `hit` (big penalty, e.g. −400; not shift-fail per the
-   RTS-with-pause tone).
-3. **Pass intel** action on `TargetDetail` (eligible when ≥ Medium confidence): the nearest
-   blue reroutes/holds (`warnedAbout.add(targetId)`), score scales with the target's current
-   confidence (e.g. +15 × verified facts). Passing on a target that classification later
-   reveals as civilian costs score (the bad-intel penalty).
-4. **ISR requests** (side objectives): seeded schedule of `{ tick, position, radius,
-   durationTicks, reward }`; fulfilled if any drone loiters/passes within radius during the
-   window. Surface as a `warning` event + map ring; debrief counter.
-5. **Map**: blue diamonds + routes (`uplinksFC`-style source), threat vectors optional.
-   Blues are selectable like targets → a small `BlueDetail` panel (status, route, warnings,
-   "request coverage" flavor).
-
-## Stage 4 — strikes (both kinds)
+## Stage 4 — strikes (both kinds) (next up)
 
 1. **Talon class**: extend the seed with 2 strike drones (new squadron "Strike Flight",
    `sensor: "eo-ir"`, `munitions: 2`). They patrol/investigate like any drone.
@@ -166,8 +169,13 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 - **A11y**: ShiftDebrief Dialog has no description (Radix warns — pre-existing pattern
   app-wide); the HUD strip is visual-only, consider `aria-live` for the countdown's last
   minute.
-- Score values (`SCORE_PER_TIER`, `CRASH_PENALTY`, stage 3/4 numbers) are placeholders —
-  balance them once a full loop exists (stage 4+), not before.
+- Score values (`SCORE_PER_TIER`, `CRASH_PENALTY`, `BLUE_HIT_PENALTY`, `BAD_INTEL_PENALTY`,
+  pass/ISR rewards) and the hostile-pressure knobs (`HOSTILE_DORMANT_TICKS`, drift speed,
+  `HIT_TICKS`) are placeholders — balance them once a full loop exists (stage 4+), not before.
+  A hands-off shift currently ends around −2400 (7 crashes + 2 blues hit); decide whether
+  that's the right "do nothing" floor.
+- The pass-intel button names the nearest blue from the render snapshot; the engine re-picks
+  at click time — at 5× the label can lag the actual recipient by a tick. Cosmetic.
 
 ---
 

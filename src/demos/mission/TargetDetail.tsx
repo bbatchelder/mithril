@@ -15,6 +15,10 @@
  * completion the facts' tiers rise — so confidence chips recolor and upgraded rows
  * pick up a "revised" marker, live. A stale track (coverage lost) keeps the same
  * flow: tasking a drone to its last-known position re-acquires it.
+ *
+ * Below the investigation controls sits "Pass intel": once enough facts are
+ * verified, the assessment can be handed to the nearest blue unit — worth points
+ * if the contact really is hostile, a penalty if it turns out to be civilian.
  */
 import { AIExplainability, AIExplainabilityDetails } from "@/components/ui/ai-explainability";
 import { Button } from "@/components/ui/button";
@@ -25,19 +29,24 @@ import { MenuPopover } from "@/components/ui/popover";
 import { Section } from "@/components/ui/section";
 import { Tag } from "@/components/ui/tag";
 
+import type { BlueUnit } from "./blue";
 import { type Drone, SENSOR_META, formatClock, formatMissionClock } from "./data";
-import { canInvestigate, etaTicks } from "./stream/engine";
+import { PASS_MIN_VERIFIED, PASS_SCORE_PER_VERIFIED, canInvestigate, etaTicks } from "./stream/engine";
 import { type Target, type TargetFact, PRIORITY_META, deriveFact, deriveOverall } from "./targets";
 
 interface TargetDetailProps {
     target: Target;
     /** The full fleet — the tasking picker filters it to eligible drones. */
     drones: Drone[];
+    /** Blue forces — pass-intel goes to the nearest live unit. */
+    blues: BlueUnit[];
     dark: boolean;
     /** Renders a close button in the header (the pinned desktop rail). */
     onClose?: () => void;
     /** Task the chosen drone to investigate this target. */
     onTask?: (droneId: string) => void;
+    /** Pass this target's intel to the nearest blue unit. */
+    onPassIntel?: () => void;
 }
 
 function FactRow({ fact, dark }: { fact: TargetFact; dark: boolean }) {
@@ -192,7 +201,63 @@ function InvestigationControls({
     );
 }
 
-export function TargetDetail({ target, drones, dark, onClose, onTask }: TargetDetailProps) {
+/**
+ * The pass-intel action. Gated on {@link PASS_MIN_VERIFIED} verified facts (the
+ * engine enforces the same rule); one pass per target. The button names the
+ * nearest live blue so the operator knows who'll act on it.
+ */
+function PassIntelControls({
+    target,
+    blues,
+    verifiedCount,
+    onPassIntel,
+}: {
+    target: Target;
+    blues: BlueUnit[];
+    verifiedCount: number;
+    onPassIntel?: () => void;
+}) {
+    if (target.passedTo) {
+        return (
+            <Button fill variant="minimal" disabled icon={<Icon icon="tick-circle" className="!text-current" />}>
+                Intel passed to {target.passedTo}
+            </Button>
+        );
+    }
+
+    const alive = blues.filter((b) => b.status !== "hit");
+    if (alive.length === 0) {
+        return (
+            <Button fill disabled icon={<Icon icon="send-message" className="!text-current" />}>
+                No blue unit able to receive
+            </Button>
+        );
+    }
+
+    const nearest = alive.reduce((a, b) =>
+        etaTicks(b.position, target.position) < etaTicks(a.position, target.position) ? b : a,
+    );
+    const ready = verifiedCount >= PASS_MIN_VERIFIED;
+    return (
+        <div className="flex flex-col gap-1.5">
+            <Button
+                fill
+                disabled={!ready}
+                icon={<Icon icon="send-message" className="!text-current" />}
+                onClick={onPassIntel}
+            >
+                Pass intel to {nearest.callsign}
+            </Button>
+            <span className="px-1 text-body-xs text-foreground-muted">
+                {ready
+                    ? `Worth +${verifiedCount * PASS_SCORE_PER_VERIFIED} pts if hostile — a civilian call costs score.`
+                    : `Needs ${PASS_MIN_VERIFIED} verified facts (${verifiedCount}/${PASS_MIN_VERIFIED}) — investigate with the best sensor first.`}
+            </span>
+        </div>
+    );
+}
+
+export function TargetDetail({ target, drones, blues, dark, onClose, onTask, onPassIntel }: TargetDetailProps) {
     const meta = PRIORITY_META[target.priority];
     const facts = target.facts.map(deriveFact);
     const verifiedCount = facts.filter((f) => f.verified).length;
@@ -279,6 +344,21 @@ export function TargetDetail({ target, drones, dark, onClose, onTask }: TargetDe
                         )
                     }
                 />
+                <MetaCell
+                    label="Affiliation"
+                    value={
+                        target.affiliationKnown ? (
+                            target.affiliation === "hostile" ? (
+                                <span className="text-intent-danger-text">Hostile</span>
+                            ) : (
+                                <span className="text-intent-success-text">Civilian</span>
+                            )
+                        ) : (
+                            "Unknown"
+                        )
+                    }
+                />
+                <MetaCell label="Intel" value={target.passedTo ? `Passed to ${target.passedTo}` : "Not passed"} />
             </div>
 
             {/* Classified facts */}
@@ -297,11 +377,13 @@ export function TargetDetail({ target, drones, dark, onClose, onTask }: TargetDe
             </p>
 
             <InvestigationControls target={target} drones={drones} dark={dark} onTask={onTask} />
+            <PassIntelControls target={target} blues={blues} verifiedCount={verifiedCount} onPassIntel={onPassIntel} />
         </div>
     );
 }
 
-function MetaCell({ label, value }: { label: string; value: React.ReactNode }) {
+/** Label-over-value cell for the detail panels' meta grids (also used by BlueDetail). */
+export function MetaCell({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="flex flex-col gap-0.5 bg-background px-3 py-2">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-foreground-muted">{label}</span>

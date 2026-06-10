@@ -20,11 +20,13 @@ import {
     commit,
     investigate as engineInvestigate,
     launch as engineLaunch,
+    passIntel as enginePassIntel,
     recall as engineRecall,
     resumePatrol as engineResume,
     makeSim,
     step,
 } from "./engine";
+import type { BlueUnit, IsrRequest } from "../blue";
 import type { Drone, DroneStatus, StreamEvent, TelemetryHistory } from "../data";
 import type { Target } from "../targets";
 
@@ -38,6 +40,8 @@ export interface StreamState {
     phase: "running" | "ended";
     drones: Drone[];
     targets: Target[];
+    blues: BlueUnit[];
+    isr: IsrRequest[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     score: ShiftScore;
@@ -59,6 +63,8 @@ export interface StreamState {
     resumePatrol: (droneId: string) => void;
     /** Task a specific drone to investigate a detected target; raises its confidence on arrival. */
     investigate: (targetId: string, droneId: string) => void;
+    /** Pass a target's intel to the nearest blue unit (scores against ground truth). */
+    passIntel: (targetId: string) => void;
     /** Rebuild the sim from the seed and start a fresh shift. */
     restart: () => void;
 }
@@ -111,6 +117,7 @@ export function useStream(): StreamState {
         (targetId: string, droneId: string) => act((sim) => engineInvestigate(sim, targetId, droneId)),
         [act],
     );
+    const passIntel = useCallback((targetId: string) => act((sim) => enginePassIntel(sim, targetId)), [act]);
 
     const restart = useCallback(() => {
         simRef.current = makeSim();
@@ -132,6 +139,7 @@ export function useStream(): StreamState {
         recall,
         resumePatrol,
         investigate,
+        passIntel,
         restart,
     };
 }

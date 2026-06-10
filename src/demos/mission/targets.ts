@@ -159,6 +159,17 @@ export function deriveFact(f: RawFact): TargetFact {
     };
 }
 
+// ─── Affiliation (ground truth) ──────────────────────────────────────────────
+
+/**
+ * Whose side a contact is really on. Ground truth, fixed at build time and
+ * hidden from the operator: the engine uses it to drive hostile behavior
+ * (stalking blue forces) and to resolve pass-intel scoring, while the UI only
+ * shows it once `affiliationKnown` flips (a completed investigation, a blue
+ * unit's report-back, or being attacked by it).
+ */
+export type Affiliation = "hostile" | "civilian";
+
 // ─── Track lifecycle (fog of war) ────────────────────────────────────────────
 
 /**
@@ -193,7 +204,18 @@ export interface Target {
     priority: TargetPriority;
     /** The sensor that fully resolves this category — any other caps facts at Medium. */
     bestSensor: SensorKind;
+    /** Ground truth — hidden until {@link Target.affiliationKnown}. */
+    affiliation: Affiliation;
+    /** True once classification (or contact) has revealed the affiliation. */
+    affiliationKnown: boolean;
+    /** Callsign of the blue unit this target's intel was passed to ("" if none). */
+    passedTo: string;
     position: LngLat;
+    /**
+     * Where the operator last *saw* it. Hostiles drift (see `stream/engine.ts`),
+     * so a stale track's ghost marker renders here, not at the live position.
+     */
+    lastKnownPosition: LngLat;
     /** Tick the target appears in the world (still undetected until found). */
     spawnTick: number;
     track: TrackState;
@@ -251,6 +273,15 @@ export function deriveOverall(target: Target): {
         grounding: grounding.length > 0 ? grounding.slice(0, 3) : [],
         model: { model: MODEL, at: target.detectedAt, retrieval: groundedCount > 0 },
     };
+}
+
+/**
+ * Facts currently at the verified (High) tier. Pass-intel value scales with
+ * this, and the engine gates passing on a minimum count — so investigation
+ * with the right sensor is what makes intel worth delivering.
+ */
+export function verifiedFactCount(target: Target): number {
+    return target.facts.filter((f) => TIERS[f.tier].verified).length;
 }
 
 /**
@@ -423,17 +454,41 @@ export function makeTargets(shiftTicks: number): Target[] {
     const rng = new Rng(0x7a26e7);
     const count = 7;
 
+    // Exactly three hostiles per shift, drawn without replacement so the count
+    // never varies — "most contacts are civilian noise" stays true by construction.
+    const affiliationDeck: Affiliation[] = [
+        "hostile", "hostile", "hostile",
+        "civilian", "civilian", "civilian", "civilian",
+    ];
+
     return Array.from({ length: count }, (_, i) => {
         const designation = `TGT-${DESIGNATIONS[i]}`;
         const cat = CATEGORIES[i % CATEGORIES.length];
         const priority = rng.pick(PRIORITY_DECK);
+        const affiliation = affiliationDeck.splice(rng.int(0, affiliationDeck.length - 1), 1)[0];
         const facts = cat.facts(rng).map((f, idx) => buildFact(rng, f, idx, designation));
+
+        // Keep the convoy's "Affiliation" flavor fact directionally honest —
+        // a verified "Civilian pattern" on a real hostile would contradict the
+        // engine's ground truth.
+        const affFact = facts.find((f) => f.label === "Affiliation");
+        if (affFact) {
+            affFact.value =
+                affiliation === "hostile"
+                    ? rng.pick(["Non-cooperative", "Unknown"])
+                    : rng.pick(["Civilian pattern", "Unknown"]);
+        }
 
         // Escalation curve: the sub-linear exponent shrinks the gap between
         // consecutive spawns, so contacts arrive denser later in the shift.
         // Jittered, but capped at 88% of the shift so the last one is findable.
         const frac = i < 2 ? 0 : 0.85 * Math.pow((i - 1) / (count - 2), 0.7) + rng.range(-0.04, 0.04);
         const spawnTick = Math.round(shiftTicks * Math.min(0.88, Math.max(0, frac)));
+
+        const position: LngLat = [
+            MAP_CENTER[0] + rng.range(-0.075, 0.075),
+            MAP_CENTER[1] + rng.range(-0.05, 0.05),
+        ];
 
         return {
             id: designation.toLowerCase(),
@@ -443,10 +498,11 @@ export function makeTargets(shiftTicks: number): Target[] {
             icon: cat.icon,
             priority,
             bestSensor: cat.bestSensor,
-            position: [
-                MAP_CENTER[0] + rng.range(-0.075, 0.075),
-                MAP_CENTER[1] + rng.range(-0.05, 0.05),
-            ] as LngLat,
+            affiliation,
+            affiliationKnown: false,
+            passedTo: "",
+            position,
+            lastKnownPosition: [position[0], position[1]],
             spawnTick,
             track: "undetected",
             lastSeenTick: 0,

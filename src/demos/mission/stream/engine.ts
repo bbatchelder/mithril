@@ -5,11 +5,13 @@
  *   1. moves every airborne drone (patrol loop, investigation orbit, or return leg),
  *   2. random-walks telemetry (battery / signal / altitude / speed) within bounds,
  *   3. applies the game rules — battery warnings, crash-at-0%, pad rotation, scoring,
- *   4. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
+ *   4. moves the blue forces and the hostiles stalking them (`blue.ts`), resolves
+ *      unwarned-blue hits, and progresses the ISR request windows,
+ *   5. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
  *      detected when a drone's sensor footprint covers them, and go stale without
  *      coverage (see `targets.ts` for the track lifecycle),
- *   5. emits discrete events and appends samples to per-drone ring buffers,
- *   6. ends the shift once the clock runs out.
+ *   6. emits discrete events and appends samples to per-drone ring buffers,
+ *   7. ends the shift once the clock runs out.
  *
  * Skylark is a *game*: there is no autopilot fleet management. Drones do not recall
  * themselves at low battery and do not relaunch when charged — `launch` / `recall`
@@ -31,7 +33,8 @@ import {
     formatMissionClock,
     makeFleet,
 } from "../data";
-import { type Target, makeTargets, upgradeTarget } from "../targets";
+import { type BlueUnit, type IsrRequest, makeBlues, makeIsrRequests } from "../blue";
+import { type Target, makeTargets, upgradeTarget, verifiedFactCount } from "../targets";
 
 const SEED = 0x5ca1ab1e;
 const MAX_EVENTS = 60;
@@ -62,6 +65,35 @@ export const STALE_TICKS = 45;
  */
 const DETECT_CHANCE_MATCHED = 0.35;
 const DETECT_CHANCE = 0.15;
+/** A spawned hostile within this range of a blue unit starts stalking it. */
+export const THREAT_RADIUS = 0.05;
+/**
+ * Ticks after spawning before a hostile goes aggressive (drifts, strikes).
+ * The grace window is what makes "detect → classify → warn" winnable when a
+ * contact spawns right on top of a blue route.
+ */
+export const HOSTILE_DORMANT_TICKS = 60;
+/** An unwarned blue kept inside this range of a hostile for HIT_TICKS is hit. */
+export const STRIKE_RADIUS = 0.008;
+/** Consecutive in-range ticks before an unwarned blue takes the hit. */
+export const HIT_TICKS = 8;
+/** Score penalty when a blue unit is hit. */
+export const BLUE_HIT_PENALTY = 400;
+/** Hostile drift speed (degrees/tick) — slower than any drone, faster than nothing. */
+const HOSTILE_DRIFT = 0.001;
+/** Intel points per verified fact when passing intel on a (real) hostile. */
+export const PASS_SCORE_PER_VERIFIED = 15;
+/** Score penalty for passing intel on a contact that is actually civilian. */
+export const BAD_INTEL_PENALTY = 100;
+/** Verified facts required before intel is strong enough to pass to a blue. */
+export const PASS_MIN_VERIFIED = 2;
+/**
+ * Cumulative ticks of drone presence inside the ring that fulfil an ISR
+ * request. High enough that a patrol edge grazing the ring doesn't do it —
+ * fulfilling one means putting a drone whose loop covers the ring on station
+ * (the rings sit on the standby birds' routes; see `makeIsrRequests`).
+ */
+export const ISR_COVER_TICKS = 20;
 
 export type ShiftPhase = "running" | "ended";
 
@@ -84,6 +116,15 @@ export interface ShiftStats {
     detected: number;
     /** Tracks still stale (lost and never re-acquired) when the shift ended. */
     staleLost: number;
+    /** Intel passes delivered to blue units (good and bad). */
+    intelPasses: number;
+    /** Passes that turned out to be on civilian contacts. */
+    badIntelPasses: number;
+    /** Blue units hit by hostiles this shift. */
+    bluesHit: number;
+    /** ISR requests fulfilled / expired unmet. */
+    isrFulfilled: number;
+    isrExpired: number;
 }
 
 // ─── Geo helpers (planar approximation — fine at city scale) ─────────────────
@@ -123,6 +164,8 @@ export interface Sim {
     phase: ShiftPhase;
     drones: Drone[];
     targets: Target[];
+    blues: BlueUnit[];
+    isr: IsrRequest[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     score: { intel: number; penalties: number };
@@ -133,6 +176,8 @@ export interface Sim {
     anomalyTimer: Record<string, number>;
     /** One-shot battery warning level already emitted, per drone. */
     batteryWarned: Record<string, "low" | "critical" | undefined>;
+    /** Consecutive ticks each hostile has held an unwarned blue in strike range, keyed `targetId:blueId`. */
+    threatTimer: Record<string, number>;
 }
 
 export function makeSim(): Sim {
@@ -144,14 +189,30 @@ export function makeSim(): Sim {
         phase: "running",
         drones,
         targets: makeTargets(SHIFT_TICKS),
+        blues: makeBlues(),
+        isr: makeIsrRequests(SHIFT_TICKS),
         events: [],
         history,
         score: { intel: 0, penalties: 0 },
-        stats: { investigations: 0, factsRaised: 0, dronesLost: 0, launches: 0, recalls: 0, detected: 0, staleLost: 0 },
+        stats: {
+            investigations: 0,
+            factsRaised: 0,
+            dronesLost: 0,
+            launches: 0,
+            recalls: 0,
+            detected: 0,
+            staleLost: 0,
+            intelPasses: 0,
+            badIntelPasses: 0,
+            bluesHit: 0,
+            isrFulfilled: 0,
+            isrExpired: 0,
+        },
         rng: new Rng(SEED),
         eventId: 1,
         anomalyTimer: {},
         batteryWarned: {},
+        threatTimer: {},
     };
 }
 
@@ -360,17 +421,22 @@ export function step(sim: Sim): void {
                     tgt.investigation.status = "complete";
                     // A close pass certainly holds the track, whatever the detection pass rolled.
                     tgt.lastSeenTick = sim.tick;
+                    tgt.lastKnownPosition = [tgt.position[0], tgt.position[1]];
                     if (tgt.track !== "active") tgt.track = "active";
+                    // Classification at ≥ Medium settles whose side the contact is on.
+                    tgt.affiliationKnown = true;
+                    const hostile = tgt.affiliation === "hostile";
+                    const verdict = hostile ? "assessed HOSTILE" : "assessed civilian";
                     d.task = d.assignment.prevTask;
                     d.assignment = null;
                     emit(
                         sim,
                         d,
-                        matched ? "success" : "warning",
+                        hostile ? "danger" : matched ? "success" : "warning",
                         "predictive-analysis",
                         matched
-                            ? `${d.callsign} finished ${tgt.designation} — confidence raised (+${points} pts)`
-                            : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium (+${points} pts)`,
+                            ? `${d.callsign} finished ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
+                            : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
                     );
                 }
                 warnBattery(sim, d);
@@ -457,12 +523,17 @@ export function step(sim: Sim): void {
         pushHistory(sim, d);
     }
 
-    // ── Fog of war: detection, track freshness, staleness ────────────────
-    // Runs after movement so footprints test this tick's positions. For each
-    // spawned target, find a covering airborne drone (preferring one whose
-    // sensor matches the category); coverage keeps an active track fresh,
-    // and rolls the detection chance for hidden or stale ones.
+    // ── Blue forces, hostile pressure, ISR windows ───────────────────────
+    stepBlues(sim);
+    stepHostiles(sim);
     const flying = sim.drones.filter(airborne);
+    stepIsr(sim, flying);
+
+    // ── Fog of war: detection, track freshness, staleness ────────────────
+    // Runs after movement so footprints test this tick's positions (including
+    // hostile drift). For each spawned target, find a covering airborne drone
+    // (preferring one whose sensor matches the category); coverage keeps an
+    // active track fresh, and rolls the detection chance for hidden or stale ones.
     for (const t of sim.targets) {
         if (t.track === "undetected" && sim.tick < t.spawnTick) continue;
 
@@ -479,6 +550,7 @@ export function step(sim: Sim): void {
         if (t.track === "active") {
             if (spotter) {
                 t.lastSeenTick = sim.tick;
+                t.lastKnownPosition = [t.position[0], t.position[1]];
             } else if (sim.tick - t.lastSeenTick >= STALE_TICKS) {
                 t.track = "stale";
                 emitBase(sim, "warning", "eye-off", `Track ${t.designation} stale — no coverage since ${formatMissionClock(t.lastSeenTick)}; re-acquire to keep it`);
@@ -489,6 +561,7 @@ export function step(sim: Sim): void {
                 const isNew = t.track === "undetected";
                 t.track = "active";
                 t.lastSeenTick = sim.tick;
+                t.lastKnownPosition = [t.position[0], t.position[1]];
                 if (isNew) {
                     t.detectedBy = spotter.callsign;
                     t.detectedAt = formatMissionClock(sim.tick);
@@ -507,6 +580,152 @@ export function step(sim: Sim): void {
         sim.phase = "ended";
         sim.stats.staleLost = sim.targets.filter((t) => t.track === "stale").length;
         emitBase(sim, "info", "time", "Shift complete — stand down. Debrief ready.");
+    }
+}
+
+// ─── Blue forces + hostile pressure + ISR ────────────────────────────────────
+
+/** True once a hostile is spawned *and* past its dormancy window — it now stalks. */
+function hostileArmed(sim: Sim, t: Target): boolean {
+    return t.affiliation === "hostile" && sim.tick >= t.spawnTick + HOSTILE_DORMANT_TICKS;
+}
+
+/** The nearest warned-about armed hostile within threat range of this blue, if any. */
+function nearestWarnedThreat(sim: Sim, b: BlueUnit): Target | null {
+    let best: Target | null = null;
+    let bestD = THREAT_RADIUS;
+    for (const t of sim.targets) {
+        if (!hostileArmed(sim, t) || !b.warnedAbout.has(t.id)) continue;
+        const d = dist(t.position, b.position);
+        if (d <= bestD) {
+            bestD = d;
+            best = t;
+        }
+    }
+    return best;
+}
+
+/**
+ * Move the blue units: convoys and vessels run their route loops; checkpoints
+ * hold. A unit warned about a nearby hostile (pass-intel) breaks off and opens
+ * the range instead — the warning is also what makes it immune to that threat
+ * (see {@link stepHostiles}).
+ */
+function stepBlues(sim: Sim): void {
+    for (const b of sim.blues) {
+        if (b.status === "hit") continue;
+        if (b.kind === "checkpoint") {
+            b.status = "holding";
+            continue;
+        }
+        const threat = nearestWarnedThreat(sim, b);
+        if (threat) {
+            b.status = "rerouting";
+            const dx = b.position[0] - threat.position[0];
+            const dy = b.position[1] - threat.position[1];
+            const d = Math.hypot(dx, dy);
+            if (d > 0) {
+                b.position = [b.position[0] + (dx / d) * b.speed, b.position[1] + (dy / d) * b.speed];
+            }
+            continue;
+        }
+        b.status = "moving";
+        const [pos, reached] = moveToward(b.position, b.route[b.waypoint], b.speed);
+        b.position = pos;
+        if (reached) b.waypoint = (b.waypoint + 1) % b.route.length;
+    }
+}
+
+/**
+ * Hostile contacts stalk blue forces: an armed hostile (spawned + past its
+ * dormancy window) drifts toward the nearest live blue within
+ * {@link THREAT_RADIUS}, and an *unwarned* blue kept inside
+ * {@link STRIKE_RADIUS} for {@link HIT_TICKS} consecutive ticks takes the hit.
+ * This runs whether or not the operator has detected the hostile — fog of war
+ * cuts both ways.
+ */
+function stepHostiles(sim: Sim): void {
+    for (const t of sim.targets) {
+        if (!hostileArmed(sim, t)) continue;
+        const blues = sim.blues.filter((b) => b.status !== "hit");
+
+        let prey: BlueUnit | null = null;
+        let preyD = THREAT_RADIUS;
+        for (const b of blues) {
+            const d = dist(t.position, b.position);
+            if (d <= preyD) {
+                preyD = d;
+                prey = b;
+            }
+        }
+        if (prey) {
+            const [pos] = moveToward(t.position, prey.position, HOSTILE_DRIFT);
+            t.position = pos;
+        }
+
+        for (const b of blues) {
+            const key = `${t.id}:${b.id}`;
+            if (b.warnedAbout.has(t.id) || dist(t.position, b.position) > STRIKE_RADIUS) {
+                sim.threatTimer[key] = 0;
+                continue;
+            }
+            const held = (sim.threatTimer[key] ?? 0) + 1;
+            sim.threatTimer[key] = held;
+            if (held >= HIT_TICKS) hitBlue(sim, b, t);
+        }
+    }
+}
+
+/** An unwarned blue was caught: penalty, and the attack is its own contact report. */
+function hitBlue(sim: Sim, b: BlueUnit, t: Target): void {
+    b.status = "hit";
+    sim.score.penalties += BLUE_HIT_PENALTY;
+    sim.stats.bluesHit += 1;
+    // Being attacked reveals the attacker — an unseen hostile becomes a live,
+    // known-hostile track on the spot (no detection points; this is the bad way
+    // to find a contact).
+    if (t.track !== "active") {
+        t.track = "active";
+        if (!t.detectedBy) {
+            t.detectedBy = b.callsign;
+            t.detectedAt = formatMissionClock(sim.tick);
+        }
+    }
+    t.lastSeenTick = sim.tick;
+    t.lastKnownPosition = [t.position[0], t.position[1]];
+    t.affiliationKnown = true;
+    emit(
+        sim,
+        { id: b.id, callsign: b.callsign },
+        "danger",
+        "cross-circle",
+        `${b.callsign} hit by ${t.designation} — casualties reported (−${BLUE_HIT_PENALTY} pts)`,
+    );
+}
+
+/** Open, progress, and expire the shift's seeded ISR requests. */
+function stepIsr(sim: Sim, flying: Drone[]): void {
+    for (const r of sim.isr) {
+        if (r.status === "pending" && sim.tick >= r.tick) {
+            r.status = "active";
+            emitBase(sim, "warning", "satellite", `ISR request from ${r.from} — keep a drone over the marked ring (+${r.reward} pts)`);
+        }
+        if (r.status !== "active") continue;
+        if (sim.tick >= r.tick + r.durationTicks) {
+            r.status = "missed";
+            sim.stats.isrExpired += 1;
+            emitBase(sim, "warning", "satellite", `ISR window from ${r.from} closed — request unmet`);
+            continue;
+        }
+        if (flying.some((d) => dist(d.position, r.position) <= r.radius)) {
+            r.coverTicks += 1;
+            if (r.coverTicks >= ISR_COVER_TICKS) {
+                r.status = "done";
+                sim.score.intel += r.reward;
+                sim.stats.isrFulfilled += 1;
+                emitBase(sim, "success", "satellite", `ISR request from ${r.from} fulfilled (+${r.reward} pts)`);
+            }
+        }
     }
 }
 
@@ -603,6 +822,55 @@ export function investigate(sim: Sim, targetId: string, droneId: string): void {
     if (offPad) assignPads(sim);
 }
 
+/**
+ * True if this target's intel is strong enough to pass to a blue unit and
+ * hasn't been passed yet ({@link PASS_MIN_VERIFIED} verified facts — i.e. an
+ * investigation with the right sensor, or lucky starting facts). Shared by the
+ * engine guard and the UI's button state.
+ */
+export function canPassIntel(t: Target): boolean {
+    return t.track !== "undetected" && !t.passedTo && verifiedFactCount(t) >= PASS_MIN_VERIFIED;
+}
+
+/**
+ * Pass the current intel on a target to the nearest live blue unit. The blue
+ * is warned (it reroutes/holds and becomes immune to that target); scoring
+ * resolves against ground truth — a real hostile pays per verified fact, a
+ * civilian costs the bad-intel penalty. One pass per target.
+ */
+export function passIntel(sim: Sim, targetId: string): void {
+    if (sim.phase === "ended") return;
+    const tgt = sim.targets.find((t) => t.id === targetId);
+    if (!tgt || !canPassIntel(tgt)) return;
+
+    let blue: BlueUnit | null = null;
+    let bestD = Infinity;
+    for (const b of sim.blues) {
+        if (b.status === "hit") continue;
+        const d = dist(b.position, tgt.position);
+        if (d < bestD) {
+            bestD = d;
+            blue = b;
+        }
+    }
+    if (!blue) return;
+
+    blue.warnedAbout.add(tgt.id);
+    tgt.passedTo = blue.callsign;
+    // The blue's report-back settles the affiliation either way.
+    tgt.affiliationKnown = true;
+    sim.stats.intelPasses += 1;
+    if (tgt.affiliation === "hostile") {
+        const points = verifiedFactCount(tgt) * PASS_SCORE_PER_VERIFIED;
+        sim.score.intel += points;
+        emitBase(sim, "success", "send-message", `Intel on ${tgt.designation} passed to ${blue.callsign} — unit warned and breaking off (+${points} pts)`);
+    } else {
+        sim.score.penalties += BAD_INTEL_PENALTY;
+        sim.stats.badIntelPasses += 1;
+        emitBase(sim, "warning", "send-message", `${blue.callsign} assesses ${tgt.designation} as civilian traffic — bad intel pass (−${BAD_INTEL_PENALTY} pts)`);
+    }
+}
+
 // ─── Render snapshot ─────────────────────────────────────────────────────────
 
 export interface Snapshot {
@@ -610,6 +878,8 @@ export interface Snapshot {
     phase: ShiftPhase;
     drones: Drone[];
     targets: Target[];
+    blues: BlueUnit[];
+    isr: IsrRequest[];
     events: StreamEvent[];
     history: Record<string, TelemetryHistory>;
     score: ShiftScore;
@@ -641,9 +911,16 @@ export function commit(sim: Sim): Snapshot {
         targets: sim.targets.map((t) => ({
             ...t,
             position: [t.position[0], t.position[1]] as [number, number],
+            lastKnownPosition: [t.lastKnownPosition[0], t.lastKnownPosition[1]] as [number, number],
             investigation: { ...t.investigation },
             facts: t.facts.map((f) => ({ ...f, sources: f.sources.slice() })),
         })),
+        blues: sim.blues.map((b) => ({
+            ...b,
+            position: [b.position[0], b.position[1]] as [number, number],
+            warnedAbout: new Set(b.warnedAbout),
+        })),
+        isr: sim.isr.map((r) => ({ ...r, position: [r.position[0], r.position[1]] as [number, number] })),
         events: sim.events.slice(),
         history,
         score: {

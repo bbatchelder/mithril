@@ -12,6 +12,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { type GeoJSONSource, type Map as MlMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { type BlueUnit, type IsrRequest, BLUE_STATUS_META } from "./blue";
 import { type Drone, GROUND_STATION, MAP_CENTER, MAP_ZOOM, SENSOR_META, STATUS_META } from "./data";
 import { type Target, type TargetPriority, PRIORITY_META } from "./targets";
 
@@ -22,14 +23,22 @@ const STYLE = {
 
 const STATUSES = ["active", "returning", "charging", "idle", "anomaly", "lost"] as const;
 const PRIORITIES = ["critical", "elevated", "routine"] as const;
+const BLUE_STATUSES = ["moving", "holding", "rerouting", "hit"] as const;
+/** Revealed-hostile marker color (red diamond — unit symbology, vs the blue diamonds). */
+const HOSTILE_COLOR = "#cd4246";
 
 interface MissionMapProps {
     drones: Drone[];
     targets: Target[];
+    blues: BlueUnit[];
+    /** ISR requests — active ones draw a coverage ring. */
+    isr: IsrRequest[];
     selectedId: string | null;
     selectedTargetId: string | null;
+    selectedBlueId: string | null;
     onSelect: (id: string | null) => void;
     onSelectTarget: (id: string | null) => void;
+    onSelectBlue: (id: string | null) => void;
     autoFollow: boolean;
     /** Rotate the map so the selected drone always faces up (its heading = "up"). */
     matchOrientation: boolean;
@@ -93,25 +102,35 @@ function targetsFC(targets: Target[]): GeoJSON.FeatureCollection {
         type: "FeatureCollection",
         features: targets.map((t) => ({
             type: "Feature",
-            properties: { id: t.id, designation: t.designation, priority: t.priority, track: t.track },
-            geometry: { type: "Point", coordinates: t.position },
+            properties: {
+                id: t.id,
+                designation: t.designation,
+                priority: t.priority,
+                track: t.track,
+                hostile: t.affiliationKnown && t.affiliation === "hostile",
+            },
+            // Hostiles drift — a stale ghost renders where the operator last
+            // saw it, not at the live (hidden) position.
+            geometry: { type: "Point", coordinates: t.track === "stale" ? t.lastKnownPosition : t.position },
         })),
     };
 }
 
+/** Circle in degree space — matching the engine's planar `dist()`. */
+function ring(center: [number, number], r: number): [number, number][] {
+    const pts: [number, number][] = [];
+    for (let i = 0; i <= 48; i++) {
+        const a = (i / 48) * Math.PI * 2;
+        pts.push([center[0] + Math.cos(a) * r, center[1] + Math.sin(a) * r]);
+    }
+    return pts;
+}
+
 /**
- * Sensor footprints: one circle (in degree space — matching the engine's planar
- * `dist()`, so the drawn edge IS the detection boundary) per airborne drone.
+ * Sensor footprints: one circle per airborne drone — the drawn edge IS the
+ * detection boundary.
  */
 function footprintsFC(drones: Drone[]): GeoJSON.FeatureCollection {
-    const ring = (center: [number, number], r: number): [number, number][] => {
-        const pts: [number, number][] = [];
-        for (let i = 0; i <= 48; i++) {
-            const a = (i / 48) * Math.PI * 2;
-            pts.push([center[0] + Math.cos(a) * r, center[1] + Math.sin(a) * r]);
-        }
-        return pts;
-    };
     return {
         type: "FeatureCollection",
         features: drones
@@ -120,6 +139,44 @@ function footprintsFC(drones: Drone[]): GeoJSON.FeatureCollection {
                 type: "Feature",
                 properties: {},
                 geometry: { type: "Polygon", coordinates: [ring(d.position, SENSOR_META[d.sensor].range)] },
+            })),
+    };
+}
+
+function bluesFC(blues: BlueUnit[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: blues.map((b) => ({
+            type: "Feature",
+            properties: { id: b.id, callsign: b.callsign, status: b.status },
+            geometry: { type: "Point", coordinates: b.position },
+        })),
+    };
+}
+
+function blueRoutesFC(blues: BlueUnit[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: blues
+            .filter((b) => b.route.length > 1)
+            .map((b) => ({
+                type: "Feature",
+                properties: { id: b.id },
+                geometry: { type: "LineString", coordinates: [...b.route, b.route[0]] },
+            })),
+    };
+}
+
+/** Coverage rings for the ISR requests whose window is currently open. */
+function isrFC(isr: IsrRequest[]): GeoJSON.FeatureCollection {
+    return {
+        type: "FeatureCollection",
+        features: isr
+            .filter((r) => r.status === "active")
+            .map((r) => ({
+                type: "Feature",
+                properties: { from: r.from },
+                geometry: { type: "Polygon", coordinates: [ring(r.position, r.radius)] },
             })),
     };
 }
@@ -222,22 +279,54 @@ function makeTargetIcon(color: string): ImageData {
     return ctx.getImageData(0, 0, s, s);
 }
 
+// A filled diamond with a white halo — military unit symbology, distinct from
+// both the drone arrows and the target reticles. Blue for friendlies (per
+// status), red for a revealed hostile.
+function makeDiamondIcon(color: string): ImageData {
+    const s = 26;
+    const c = document.createElement("canvas");
+    c.width = s;
+    c.height = s;
+    const ctx = c.getContext("2d")!;
+    ctx.clearRect(0, 0, s, s);
+    const half = 8;
+    ctx.beginPath();
+    ctx.moveTo(s / 2, s / 2 - half);
+    ctx.lineTo(s / 2 + half, s / 2);
+    ctx.lineTo(s / 2, s / 2 + half);
+    ctx.lineTo(s / 2 - half, s / 2);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.stroke();
+    return ctx.getImageData(0, 0, s, s);
+}
+
 // ─── Component ─────────────────────────────────────────────────────────────
 
-export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSelect, onSelectTarget, autoFollow, matchOrientation, epoch = 0, dark, className }: MissionMapProps) {
+export function MissionMap({ drones, targets, blues, isr, selectedId, selectedTargetId, selectedBlueId, onSelect, onSelectTarget, onSelectBlue, autoFollow, matchOrientation, epoch = 0, dark, className }: MissionMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<MlMap | null>(null);
     const readyRef = useRef(false);
     const trailsRef = useRef<Record<string, [number, number][]>>({});
-    // Targets are static; keep the latest in a ref so the load handler can seed them.
+    // Keep the latest world state in refs so the load/styledata handlers can seed it.
     const targetsRef = useRef(targets);
     targetsRef.current = targets;
+    const bluesRef = useRef(blues);
+    bluesRef.current = blues;
+    const isrRef = useRef(isr);
+    isrRef.current = isr;
 
     // Latest props for the once-bound interaction handlers.
     const onSelectRef = useRef(onSelect);
     onSelectRef.current = onSelect;
     const onSelectTargetRef = useRef(onSelectTarget);
     onSelectTargetRef.current = onSelectTarget;
+    const onSelectBlueRef = useRef(onSelectBlue);
+    onSelectBlueRef.current = onSelectBlue;
 
     // ── Mount / unmount ───────────────────────────────────────────────────
     useEffect(() => {
@@ -255,7 +344,7 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
         const onLoad = () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current, targetsRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current);
         };
         map.on("load", onLoad);
 
@@ -268,6 +357,10 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
             const f = e.features?.[0];
             if (f) onSelectTargetRef.current(String(f.properties?.id));
         });
+        map.on("click", "blue-marker", (e) => {
+            const f = e.features?.[0];
+            if (f) onSelectBlueRef.current(String(f.properties?.id));
+        });
         map.on("click", "clusters", (e) => {
             const f = e.features?.[0];
             const clusterId = f?.properties?.cluster_id;
@@ -279,14 +372,15 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
         });
         map.on("click", (e) => {
             const hits = map.queryRenderedFeatures(e.point, {
-                layers: ["drone-arrow", "clusters", "target-marker"],
+                layers: ["drone-arrow", "clusters", "target-marker", "blue-marker"],
             });
             if (hits.length === 0) {
                 onSelectRef.current(null);
                 onSelectTargetRef.current(null);
+                onSelectBlueRef.current(null);
             }
         });
-        for (const layer of ["drone-arrow", "clusters", "target-marker"]) {
+        for (const layer of ["drone-arrow", "clusters", "target-marker", "blue-marker"]) {
             map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
             map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
         }
@@ -320,7 +414,7 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
         map.once("styledata", () => {
             installLayers(map);
             readyRef.current = true;
-            updateData(map, drones, trailsRef.current, targetsRef.current);
+            updateData(map, drones, trailsRef.current, targetsRef.current, bluesRef.current, isrRef.current);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dark]);
@@ -349,7 +443,7 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
 
         const map = mapRef.current;
         if (!map || !readyRef.current) return;
-        updateData(map, drones, trails, targets);
+        updateData(map, drones, trails, targets, blues, isr);
 
         // Selected ring filters.
         if (map.getLayer("drone-selected")) {
@@ -357,6 +451,9 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
         }
         if (map.getLayer("target-selected")) {
             map.setFilter("target-selected", ["==", ["get", "id"], selectedTargetId ?? "__none__"]);
+        }
+        if (map.getLayer("blue-selected")) {
+            map.setFilter("blue-selected", ["==", ["get", "id"], selectedBlueId ?? "__none__"]);
         }
 
         // Auto-follow and/or rotate the map to the selected drone. Both target the
@@ -369,7 +466,7 @@ export function MissionMap({ drones, targets, selectedId, selectedTargetId, onSe
             if (matchOrientation) camera.bearing = sel.heading;
             map.easeTo(camera);
         }
-    }, [drones, targets, selectedId, selectedTargetId, autoFollow, matchOrientation]);
+    }, [drones, targets, blues, isr, selectedId, selectedTargetId, selectedBlueId, autoFollow, matchOrientation]);
 
     // ── Match-orientation toggled off → straighten the map back to north-up ──
     const prevMatch = useRef(matchOrientation);
@@ -398,9 +495,26 @@ function installLayers(map: MlMap) {
         if (!map.hasImage(name)) map.addImage(name, makeTargetIcon(PRIORITY_META[p as TargetPriority].color));
     }
     if (!map.hasImage("target-stale")) map.addImage("target-stale", makeTargetIcon("#8f99a8"));
+    // Unit diamonds: one per blue status, plus the revealed-hostile red. A blue
+    // status without a registered image silently renders nothing (same gotcha
+    // as the drone arrows) — keep BLUE_STATUSES in sync with `BlueStatus`.
+    for (const s of BLUE_STATUSES) {
+        const name = `blue-${s}`;
+        if (!map.hasImage(name)) map.addImage(name, makeDiamondIcon(BLUE_STATUS_META[s].color));
+    }
+    if (!map.hasImage("target-hostile")) map.addImage("target-hostile", makeDiamondIcon(HOSTILE_COLOR));
 
     if (!map.getSource("footprints")) {
         map.addSource("footprints", { type: "geojson", data: emptyFC() });
+    }
+    if (!map.getSource("isr")) {
+        map.addSource("isr", { type: "geojson", data: emptyFC() });
+    }
+    if (!map.getSource("blue-routes")) {
+        map.addSource("blue-routes", { type: "geojson", data: emptyFC() });
+    }
+    if (!map.getSource("blues")) {
+        map.addSource("blues", { type: "geojson", data: emptyFC() });
     }
     if (!map.getSource("trails")) {
         map.addSource("trails", { type: "geojson", data: emptyFC() });
@@ -444,6 +558,48 @@ function installLayers(map: MlMap) {
             paint: { "line-color": "#2d72d2", "line-width": 1, "line-opacity": 0.25, "line-dasharray": [2, 3] },
         });
     }
+    // ISR coverage rings — amber, labelled, only while the window is open.
+    if (!map.getLayer("isr-fill")) {
+        map.addLayer({
+            id: "isr-fill",
+            type: "fill",
+            source: "isr",
+            paint: { "fill-color": "#c87619", "fill-opacity": 0.07 },
+        });
+    }
+    if (!map.getLayer("isr-line")) {
+        map.addLayer({
+            id: "isr-line",
+            type: "line",
+            source: "isr",
+            paint: { "line-color": "#c87619", "line-width": 1.5, "line-opacity": 0.6, "line-dasharray": [3, 2] },
+        });
+    }
+    if (!map.getLayer("isr-label")) {
+        map.addLayer({
+            id: "isr-label",
+            type: "symbol",
+            source: "isr",
+            layout: {
+                "text-field": ["concat", "ISR · ", ["get", "from"]],
+                "text-font": ["Open Sans Semibold"],
+                "text-size": 10,
+            },
+            paint: {
+                "text-color": "#c87619",
+                "text-halo-color": "rgba(255,255,255,0.9)",
+                "text-halo-width": 1.2,
+            },
+        });
+    }
+    if (!map.getLayer("blue-route-line")) {
+        map.addLayer({
+            id: "blue-route-line",
+            type: "line",
+            source: "blue-routes",
+            paint: { "line-color": "#2d72d2", "line-width": 1.5, "line-opacity": 0.25, "line-dasharray": [3, 2] },
+        });
+    }
     if (!map.getLayer("trail-line")) {
         map.addLayer({
             id: "trail-line",
@@ -485,6 +641,54 @@ function installLayers(map: MlMap) {
                 "circle-color": "#404854",
                 "circle-stroke-color": "#ffffff",
                 "circle-stroke-width": 2,
+            },
+        });
+    }
+    // ── Blue units (diamonds) — ground/surface layer, under the drones ──
+    if (!map.getLayer("blue-selected")) {
+        map.addLayer({
+            id: "blue-selected",
+            type: "circle",
+            source: "blues",
+            filter: ["==", ["get", "id"], "__none__"],
+            paint: {
+                "circle-radius": 15,
+                "circle-color": "rgba(45,114,210,0.18)",
+                "circle-stroke-color": "#2d72d2",
+                "circle-stroke-width": 2,
+            },
+        });
+    }
+    if (!map.getLayer("blue-marker")) {
+        map.addLayer({
+            id: "blue-marker",
+            type: "symbol",
+            source: "blues",
+            layout: {
+                "icon-image": ["concat", "blue-", ["get", "status"]],
+                "icon-allow-overlap": true,
+                "icon-size": 0.85,
+            },
+        });
+    }
+    if (!map.getLayer("blue-label")) {
+        map.addLayer({
+            id: "blue-label",
+            type: "symbol",
+            source: "blues",
+            minzoom: 11.5,
+            layout: {
+                "text-field": ["get", "callsign"],
+                "text-font": ["Open Sans Semibold"],
+                "text-size": 10,
+                "text-offset": [0, 1.4],
+                "text-anchor": "top",
+                "text-allow-overlap": false,
+            },
+            paint: {
+                "text-color": "#2d72d2",
+                "text-halo-color": "rgba(255,255,255,0.9)",
+                "text-halo-width": 1.2,
             },
         });
     }
@@ -590,11 +794,14 @@ function installLayers(map: MlMap) {
             type: "symbol",
             source: "targets",
             layout: {
-                // Stale tracks render as gray ghosts at their last-known position.
+                // Stale tracks render as gray ghosts at their last-known position;
+                // a revealed hostile trades its reticle for the red unit diamond.
                 "icon-image": [
                     "case",
                     ["==", ["get", "track"], "stale"],
                     "target-stale",
+                    ["==", ["get", "hostile"], true],
+                    "target-hostile",
                     ["concat", "target-", ["get", "priority"]],
                 ],
                 "icon-allow-overlap": true,
@@ -629,13 +836,23 @@ function installLayers(map: MlMap) {
     }
 }
 
-function updateData(map: MlMap, drones: Drone[], trails: Record<string, [number, number][]>, targets: Target[]) {
+function updateData(
+    map: MlMap,
+    drones: Drone[],
+    trails: Record<string, [number, number][]>,
+    targets: Target[],
+    blues: BlueUnit[],
+    isr: IsrRequest[],
+) {
     (map.getSource("drones") as GeoJSONSource | undefined)?.setData(dronesFC(drones));
     (map.getSource("footprints") as GeoJSONSource | undefined)?.setData(footprintsFC(drones));
     (map.getSource("uplinks") as GeoJSONSource | undefined)?.setData(uplinksFC(drones));
     (map.getSource("trails") as GeoJSONSource | undefined)?.setData(trailsFC(trails, drones));
     (map.getSource("targets") as GeoJSONSource | undefined)?.setData(targetsFC(targets));
     (map.getSource("tasking") as GeoJSONSource | undefined)?.setData(taskingFC(drones, targets));
+    (map.getSource("blues") as GeoJSONSource | undefined)?.setData(bluesFC(blues));
+    (map.getSource("blue-routes") as GeoJSONSource | undefined)?.setData(blueRoutesFC(blues));
+    (map.getSource("isr") as GeoJSONSource | undefined)?.setData(isrFC(isr));
 }
 
 function emptyFC(): GeoJSON.FeatureCollection {

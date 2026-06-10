@@ -6,12 +6,19 @@
  */
 import { describe, expect, it } from "vitest";
 
+import type { BlueKind } from "../blue";
 import { type Drone, GROUND_STATION } from "../data";
 import type { Target } from "../targets";
 import {
+    BAD_INTEL_PENALTY,
+    BLUE_HIT_PENALTY,
     CRASH_PENALTY,
     DETECT_SCORE,
+    HIT_TICKS,
+    HOSTILE_DORMANT_TICKS,
+    ISR_COVER_TICKS,
     PAD_COUNT,
+    PASS_SCORE_PER_VERIFIED,
     SHIFT_TICKS,
     STALE_TICKS,
     type Sim,
@@ -19,6 +26,7 @@ import {
     investigate,
     launch,
     makeSim,
+    passIntel,
     recall,
     resumePatrol,
     step,
@@ -28,6 +36,30 @@ function find(sim: Sim, id: string) {
     const d = sim.drones.find((x) => x.id === id);
     if (!d) throw new Error(`no drone ${id}`);
     return d;
+}
+
+function findBlue(sim: Sim, kind: BlueKind) {
+    const b = sim.blues.find((x) => x.kind === kind);
+    if (!b) throw new Error(`no blue ${kind}`);
+    return b;
+}
+
+/**
+ * Strip ground-truth hostility from the seeded roster so no target drifts and
+ * no blue gets hit mid-test — scenarios then opt back in per target.
+ */
+function pacify(sim: Sim) {
+    for (const t of sim.targets) t.affiliation = "civilian";
+}
+
+/** Make a target an *armed* hostile (spawned and past its dormancy window). */
+function arm(t: Target) {
+    t.affiliation = "hostile";
+    t.spawnTick = -HOSTILE_DORMANT_TICKS;
+}
+
+function hyp(a: [number, number], b: [number, number]): number {
+    return Math.hypot(a[0] - b[0], a[1] - b[1]);
 }
 
 function stepUntil(sim: Sim, pred: () => boolean, max = 1000): boolean {
@@ -221,6 +253,7 @@ describe("fog of war — spawn schedule", () => {
 describe("fog of war — detection and staleness", () => {
     it("an airborne drone detects a spawned contact inside its footprint (+pts)", () => {
         const sim = makeSim();
+        pacify(sim); // keep the contact static under the parked drone
         const tgt = sim.targets[0]; // spawnTick 0
         park(find(sim, "sk-101"), tgt.position);
         expect(stepUntil(sim, () => tgt.track === "active", 80)).toBe(true);
@@ -232,6 +265,7 @@ describe("fog of war — detection and staleness", () => {
 
     it("an active track with no coverage goes stale, and re-acquiring scores nothing new", () => {
         const sim = makeSim();
+        pacify(sim); // keep the contact static while the fleet is grounded
         const tgt = sim.targets[0];
         activate(sim, tgt);
         // Ground the whole fleet — no airborne sensor anywhere.
@@ -313,6 +347,201 @@ describe("investigation tasking guards", () => {
     });
 });
 
+describe("blue forces", () => {
+    it("seeds deterministic blues; convoys run their routes, checkpoints hold", () => {
+        const sim = makeSim();
+        pacify(sim);
+        expect(sim.blues.length).toBeGreaterThanOrEqual(2);
+        const convoy = findBlue(sim, "convoy");
+        const checkpoint = findBlue(sim, "checkpoint");
+        const convoyStart = [...convoy.position];
+        const checkpointStart = [...checkpoint.position];
+        step(sim);
+        expect(convoy.position).not.toEqual(convoyStart);
+        expect(convoy.status).toBe("moving");
+        expect(checkpoint.position).toEqual(checkpointStart);
+        expect(checkpoint.status).toBe("holding");
+    });
+
+    it("seeds exactly three hostile contacts", () => {
+        const sim = makeSim();
+        expect(sim.targets.filter((t) => t.affiliation === "hostile").length).toBe(3);
+    });
+
+    it("a hostile drifts toward a blue in threat range; civilians stay put", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const checkpoint = findBlue(sim, "checkpoint");
+        const hostile = sim.targets[0];
+        arm(hostile);
+        hostile.position = [checkpoint.position[0] - 0.03, checkpoint.position[1]];
+        const civ = sim.targets[1]; // spawnTick 0
+        civ.position = [checkpoint.position[0] + 0.03, checkpoint.position[1]];
+        const civStart = [...civ.position];
+
+        const before = hyp(hostile.position, checkpoint.position);
+        for (let i = 0; i < 20; i++) step(sim);
+        expect(hyp(hostile.position, checkpoint.position)).toBeLessThan(before);
+        expect(civ.position).toEqual(civStart);
+    });
+
+    it("a freshly spawned hostile is dormant — no drift, no strikes — until the window passes", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const checkpoint = findBlue(sim, "checkpoint");
+        const hostile = sim.targets[0]; // spawnTick 0
+        hostile.affiliation = "hostile";
+        hostile.position = [checkpoint.position[0] + 0.002, checkpoint.position[1]];
+        const start = [...hostile.position];
+
+        for (let i = 0; i < HOSTILE_DORMANT_TICKS - 1; i++) step(sim);
+        expect(hostile.position).toEqual(start);
+        expect(checkpoint.status).toBe("holding");
+
+        for (let i = 0; i < HIT_TICKS + 1; i++) step(sim);
+        expect(checkpoint.status).toBe("hit");
+    });
+
+    it("an unwarned blue held in strike range is hit — penalty, and the attack reveals the track", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const checkpoint = findBlue(sim, "checkpoint");
+        const hostile = sim.targets[0];
+        arm(hostile);
+        hostile.position = [checkpoint.position[0] + 0.002, checkpoint.position[1]];
+
+        for (let i = 0; i < HIT_TICKS; i++) step(sim);
+        expect(checkpoint.status).toBe("hit");
+        expect(sim.score.penalties).toBe(BLUE_HIT_PENALTY);
+        expect(sim.stats.bluesHit).toBe(1);
+        // Being attacked is its own (bad) contact report.
+        expect(hostile.track).toBe("active");
+        expect(hostile.affiliationKnown).toBe(true);
+
+        // Hit blues are inert and can't be hit again.
+        for (let i = 0; i < HIT_TICKS * 2; i++) step(sim);
+        expect(sim.score.penalties).toBe(BLUE_HIT_PENALTY);
+    });
+
+    it("a warned blue evades and cannot be hit by that target", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const convoy = findBlue(sim, "convoy");
+        const hostile = sim.targets[0];
+        arm(hostile);
+        hostile.position = [convoy.position[0] + 0.002, convoy.position[1]];
+        convoy.warnedAbout.add(hostile.id);
+
+        step(sim);
+        expect(convoy.status).toBe("rerouting");
+        for (let i = 0; i < 100; i++) step(sim);
+        expect(convoy.status).not.toBe("hit");
+        expect(sim.stats.bluesHit).toBe(0);
+    });
+});
+
+describe("pass intel", () => {
+    it("rejects undetected targets, weak intel, and double passes", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const tgt = sim.targets[0];
+        tgt.facts.forEach((f) => (f.tier = 2));
+        passIntel(sim, tgt.id); // still undetected
+        expect(tgt.passedTo).toBe("");
+
+        activate(sim, tgt);
+        tgt.facts.forEach((f) => (f.tier = 0));
+        passIntel(sim, tgt.id); // nothing verified
+        expect(tgt.passedTo).toBe("");
+        expect(sim.stats.intelPasses).toBe(0);
+    });
+
+    it("passing on a real hostile warns the nearest blue and scores per verified fact", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const checkpoint = findBlue(sim, "checkpoint");
+        const tgt = sim.targets[0];
+        tgt.affiliation = "hostile";
+        tgt.position = [checkpoint.position[0] + 0.01, checkpoint.position[1]];
+        activate(sim, tgt);
+        tgt.facts.forEach((f) => (f.tier = 2));
+
+        passIntel(sim, tgt.id);
+        const expected = tgt.facts.length * PASS_SCORE_PER_VERIFIED;
+        expect(sim.score.intel).toBe(expected);
+        expect(tgt.passedTo).toBe(checkpoint.callsign);
+        expect(tgt.affiliationKnown).toBe(true);
+        expect(checkpoint.warnedAbout.has(tgt.id)).toBe(true);
+        expect(sim.stats.intelPasses).toBe(1);
+        expect(sim.stats.badIntelPasses).toBe(0);
+
+        // One pass per target.
+        passIntel(sim, tgt.id);
+        expect(sim.score.intel).toBe(expected);
+        expect(sim.stats.intelPasses).toBe(1);
+    });
+
+    it("passing on a civilian costs the bad-intel penalty", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const tgt = sim.targets[0]; // civilian via pacify
+        activate(sim, tgt);
+        tgt.facts.forEach((f) => (f.tier = 2));
+
+        passIntel(sim, tgt.id);
+        expect(sim.score.intel).toBe(0);
+        expect(sim.score.penalties).toBe(BAD_INTEL_PENALTY);
+        expect(sim.stats.badIntelPasses).toBe(1);
+        expect(tgt.affiliationKnown).toBe(true);
+    });
+});
+
+describe("ISR requests", () => {
+    it("a drone loitering inside the ring during the window fulfils the request", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const req = sim.isr[0];
+        req.tick = 1; // open immediately
+        park(find(sim, "sk-101"), req.position);
+
+        for (let i = 0; i < ISR_COVER_TICKS + 2; i++) step(sim);
+        expect(req.status).toBe("done");
+        expect(sim.stats.isrFulfilled).toBe(1);
+        expect(sim.score.intel).toBeGreaterThanOrEqual(req.reward);
+    });
+
+    it("an uncovered request expires when the window closes", () => {
+        const sim = makeSim();
+        pacify(sim);
+        // Ground the whole fleet — nothing can cover the ring.
+        for (const d of sim.drones) {
+            d.status = "idle";
+            d.position = [GROUND_STATION.position[0], GROUND_STATION.position[1]];
+            d.speed = 0;
+            d.altitude = 0;
+        }
+        const req = sim.isr[0];
+        req.tick = 1;
+        req.durationTicks = 20;
+
+        for (let i = 0; i < 25; i++) step(sim);
+        expect(req.status).toBe("missed");
+        expect(sim.stats.isrExpired).toBe(1);
+        expect(sim.score.intel).toBe(0);
+    });
+});
+
+describe("snapshot deep copies", () => {
+    it("commit copies blue, ISR, and last-known-position state", () => {
+        const sim = makeSim();
+        const snap = commit(sim);
+        expect(snap.blues[0].position).not.toBe(sim.blues[0].position);
+        expect(snap.blues[0].warnedAbout).not.toBe(sim.blues[0].warnedAbout);
+        expect(snap.isr[0].position).not.toBe(sim.isr[0].position);
+        expect(snap.targets[0].lastKnownPosition).not.toBe(sim.targets[0].lastKnownPosition);
+    });
+});
+
 describe("shift clock", () => {
     it("ends the shift at SHIFT_TICKS and freezes the sim", () => {
         const sim = makeSim();
@@ -327,6 +556,12 @@ describe("shift clock", () => {
         // Operator actions are inert after the shift.
         launch(sim, "sk-104");
         expect(find(sim, "sk-104").status).toBe("idle");
+
+        const tgt = sim.targets[0];
+        tgt.track = "active";
+        tgt.facts.forEach((f) => (f.tier = 2));
+        passIntel(sim, tgt.id);
+        expect(tgt.passedTo).toBe("");
     });
 
     it("commit reports the score total as intel minus penalties", () => {
