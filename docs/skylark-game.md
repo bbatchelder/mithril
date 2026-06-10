@@ -57,8 +57,8 @@ battery-limited fleet through a handful of charging pads.
    staleness, sensor-matched investigation with a drone picker. *(PR #70)*
 3. **Blue forces + intel passing.** *(PR #71)*
 4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring. *(PR #72)*
-5. **Relay/link layer + jamming.** *(this PR)*
-6. **Briefing + full debrief + daily seed.**
+5. **Relay/link layer + jamming.** *(PR #73)*
+6. **Briefing + full debrief + daily seed.** *(this PR)*
 7. **Balance and polish pass.**
 
 ## Stage 1 rules (implemented)
@@ -183,3 +183,27 @@ battery-limited fleet through a handful of charging pads.
   dashed ring, and a visible live jammer draws a violet "JAMMING" denial ring at its track
   position. The telemetry panel header gets a Linked / No link / Jammed tag plus a banked-intel
   row, the target panel calls out an active jammer, and the HUD adds no-link and banked chips.
+
+## Stage 6 rules (implemented)
+
+- **Briefing.** A fresh sim holds in a `briefing` phase — nothing ticks, operator actions are
+  inert — until the shift is started from the pre-shift dialog: fleet roster by squadron
+  (sensors, airborne/at-base posture), base resources (shift length, pads, munitions, external
+  fires), an "intelligence picture" derived from the spawn schedule (expected contacts, the
+  standing three-hostile assessment, ISR request count), the blue forces to protect, and the
+  scenario seed. Dismissable to scout the frozen board; a HUD button reopens it, and the navbar
+  wears a BRIEFING tag with the play control disabled until launch.
+- **Seeds.** The whole scenario — target positions, affiliations, facts, spawn curve, ISR window
+  timing — derives from one shareable seed (`makeSim(seed)`); the telemetry stream is seeded
+  separately so the default seed still reproduces the stage-5 hand-tuned roster. Seeds ride the
+  URL (`#mission/<hex>` or `?seed=`, plus the keyword `daily` for a date-derived shared
+  scenario), display as 8-digit hex with copy buttons in the briefing and debrief, and custom
+  seeds write themselves back to the hash for sharing. The engine never reads the clock or
+  `Math.random` — daily/random seeds are minted in the React layer (`seed.ts`).
+- **Full debrief.** A letter grade (S–F bands over the final score; placeholder thresholds for
+  the stage-7 balance pass) heads the dialog, over a per-category score table fed by the
+  engine's itemized `ScoreBreakdown` ledger (every award/penalty lands in exactly one bucket,
+  so the table always sums to the headline score), the operational counters, and a "key calls"
+  decision timeline — a new uncapped `keyEvents` log (operator calls and their outcomes only)
+  that waypoint chatter can never evict, unlike the 60-event feed. Footer offers "Replay this
+  seed" (same scenario, back to the briefing) and "New shift" (fresh random seed).

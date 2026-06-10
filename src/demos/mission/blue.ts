@@ -10,12 +10,13 @@
  *
  * ISR requests are the blues' side objectives: timed windows during which any
  * drone loitering (or passing slowly enough) inside the marked ring earns the
- * reward. The schedule is hand-authored and deterministic — stage 6's seed
- * plumbing is the point where it would start varying per shift.
+ * reward. The ring positions are hand-authored; the window timing varies per
+ * shift seed (see {@link makeIsrRequests}).
  */
 import type { IconName } from "@/components/ui/icon";
 import type { TagIntent } from "@/components/ui/tag";
 
+import type { Rng } from "./prng";
 import type { LngLat } from "./data";
 
 // ─── Blue units ──────────────────────────────────────────────────────────────
@@ -153,11 +154,14 @@ export interface IsrRequest {
  * loops — verified empirically, a full hands-off shift accumulates less cover
  * than `ISR_COVER_TICKS` on every ring, while launching the matching standby
  * bird when the window opens fulfils it. The play is "launch the right drone",
- * not free-riding on ambient coverage.
+ * not free-riding on ambient coverage. Only the window *timing* is drawn from
+ * the scenario stream (`rng`) — jittering the positions would forfeit that
+ * hand-tuned property.
  */
-export function makeIsrRequests(shiftTicks: number): IsrRequest[] {
+export function makeIsrRequests(shiftTicks: number, rng: Rng): IsrRequest[] {
     const window = Math.round(shiftTicks * 0.16);
-    const at = (frac: number) => Math.round(shiftTicks * frac);
+    const at = (frac: number) =>
+        Math.round(shiftTicks * Math.min(0.8, Math.max(0.05, frac + rng.range(-0.06, 0.06))));
     return [
         { id: "isr-1", from: "CONVOY-2", position: [-122.441, 37.713], radius: 0.015, tick: at(0.15), durationTicks: window, reward: 75, status: "pending", coverTicks: 0 },
         { id: "isr-2", from: "PELICAN-7", position: [-122.37, 37.7198], radius: 0.015, tick: at(0.45), durationTicks: window, reward: 75, status: "pending", coverTicks: 0 },

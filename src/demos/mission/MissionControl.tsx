@@ -38,11 +38,13 @@ import { DroneDetail } from "./DroneDetail";
 import { EventFeed } from "./EventFeed";
 import { FleetTree } from "./FleetTree";
 import { MissionMap } from "./MissionMap";
+import { ShiftBriefing } from "./ShiftBriefing";
 import { ShiftDebrief } from "./ShiftDebrief";
 import { TargetDetail } from "./TargetDetail";
 import { TelemetryPanel } from "./TelemetryPanel";
-import { FIRES_PER_SHIFT, PAD_COUNT, SHIFT_TICKS } from "./stream/engine";
+import { DEFAULT_SEED, FIRES_PER_SHIFT, PAD_COUNT, SHIFT_TICKS } from "./stream/engine";
 import { type StreamSpeed, useStream } from "./stream/useStream";
+import { randomSeed, seedFromUrl, writeSeedToUrl } from "./seed";
 import { GROUND_STATION, STATUS_META, formatClock, formatMissionClock } from "./data";
 
 const SPEED_OPTIONS = [
@@ -54,7 +56,15 @@ const SPEED_OPTIONS = [
 function MissionControlInner() {
     const dark = useDark();
     const toaster = useToaster();
-    const stream = useStream();
+    // A shared scenario seed can ride in on the URL (#mission/<seed> or ?seed=,
+    // incl. "daily") — read once; restarts thereafter go through the stream.
+    const [urlSeed] = useState(() => seedFromUrl() ?? undefined);
+    const stream = useStream(urlSeed);
+
+    // Keep the hash shareable: custom seeds show up as #mission/<seed>.
+    useEffect(() => {
+        if (stream.seed !== DEFAULT_SEED) writeSeedToUrl(stream.seed);
+    }, [stream.seed]);
 
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
@@ -70,12 +80,25 @@ function MissionControlInner() {
     const [navOpen, setNavOpen] = useState(false);
     const [feedOpen, setFeedOpen] = useState(false);
     const [debriefOpen, setDebriefOpen] = useState(false);
+    const [briefingOpen, setBriefingOpen] = useState(true);
 
     // The shift clock ran out → surface the debrief (dismissable; reopenable from the HUD).
     const ended = stream.phase === "ended";
     useEffect(() => {
         if (ended) setDebriefOpen(true);
     }, [ended]);
+
+    // A fresh sim (first load or restart) holds in the briefing — surface it
+    // (dismissable to scout the frozen board; reopenable from the HUD).
+    const briefing = stream.phase === "briefing";
+    useEffect(() => {
+        if (briefing) setBriefingOpen(true);
+    }, [briefing, stream.epoch]);
+
+    const handleStart = () => {
+        setBriefingOpen(false);
+        stream.start();
+    };
 
     // One menu button drives both: collapse the inline rail on desktop, or summon the
     // overlay drawer on small screens. Resolved at click time so no resize listener.
@@ -93,6 +116,10 @@ function MissionControlInner() {
 
     // Surface new danger events as toasts (live-data → Toaster).
     const lastToastId = useRef(0);
+    // Event ids restart from 1 on a new shift — reset the high-water mark with them.
+    useEffect(() => {
+        lastToastId.current = 0;
+    }, [stream.epoch]);
     useEffect(() => {
         const top = stream.events[0];
         if (top && top.id > lastToastId.current) {
@@ -259,17 +286,17 @@ function MissionControlInner() {
                     </Tag>
                     <Tag
                         minimal
-                        intent={ended ? "warning" : stream.playing ? "success" : "none"}
+                        intent={briefing ? "primary" : ended ? "warning" : stream.playing ? "success" : "none"}
                         className="shrink-0"
                         icon={
                             <Icon
-                                icon={ended ? "time" : stream.playing ? "pulse" : "pause"}
+                                icon={briefing ? "manual" : ended ? "time" : stream.playing ? "pulse" : "pause"}
                                 size={12}
                                 className="!text-current"
                             />
                         }
                     >
-                        {ended ? "SHIFT OVER" : stream.playing ? "LIVE" : "PAUSED"}
+                        {briefing ? "BRIEFING" : ended ? "SHIFT OVER" : stream.playing ? "LIVE" : "PAUSED"}
                     </Tag>
                     <NavbarDivider className="hidden lg:block" />
                     <div className="hidden w-40 lg:block xl:w-56">
@@ -288,11 +315,22 @@ function MissionControlInner() {
                     <span className="mr-1 hidden font-mono text-body-sm tabular-nums text-foreground-muted sm:inline-block">
                         {formatMissionClock(stream.tick)}
                     </span>
-                    <Tooltip content={ended ? "Shift over" : stream.playing ? "Pause stream" : "Resume stream"} dark={dark}>
+                    <Tooltip
+                        content={
+                            briefing
+                                ? "Start from the briefing"
+                                : ended
+                                  ? "Shift over"
+                                  : stream.playing
+                                    ? "Pause stream"
+                                    : "Resume stream"
+                        }
+                        dark={dark}
+                    >
                         <Button
                             variant="minimal"
                             aria-label={stream.playing ? "Pause" : "Play"}
-                            disabled={ended}
+                            disabled={ended || briefing}
                             icon={<Icon icon={stream.playing ? "pause" : "play"} className="!text-current" />}
                             onClick={stream.toggle}
                         />
@@ -530,6 +568,16 @@ function MissionControlInner() {
                                     View debrief
                                 </Button>
                             )}
+                            {briefing && !briefingOpen && (
+                                <Button
+                                    className="pointer-events-auto"
+                                    intent="primary"
+                                    icon={<Icon icon="manual" className="!text-current" />}
+                                    onClick={() => setBriefingOpen(true)}
+                                >
+                                    View briefing
+                                </Button>
+                            )}
                         </div>
 
                         {/* Mobile telemetry — a non-modal bottom sheet over the map (lg+
@@ -716,17 +764,38 @@ function MissionControlInner() {
                 onClose={() => setDetailOpen(false)}
             />
 
+            {/* ── Pre-shift briefing ──────────────────────────────────────── */}
+            <ShiftBriefing
+                open={briefingOpen && briefing}
+                drones={stream.drones}
+                blues={stream.blues}
+                contactsTotal={stream.targets.length}
+                contactsAtStart={stream.targets.filter((t) => t.spawnTick === 0).length}
+                isrCount={stream.isr.length}
+                seed={stream.seed}
+                dark={dark}
+                onClose={() => setBriefingOpen(false)}
+                onStart={handleStart}
+            />
+
             {/* ── End-of-shift debrief ────────────────────────────────────── */}
             <ShiftDebrief
                 open={debriefOpen}
                 score={stream.score}
+                breakdown={stream.breakdown}
                 stats={stream.stats}
+                keyEvents={stream.keyEvents}
+                seed={stream.seed}
                 fleetSize={stream.drones.length}
                 dark={dark}
                 onClose={() => setDebriefOpen(false)}
-                onRestart={() => {
+                onReplay={() => {
                     setDebriefOpen(false);
                     stream.restart();
+                }}
+                onNewShift={() => {
+                    setDebriefOpen(false);
+                    stream.restart(randomSeed());
                 }}
             />
         </div>
