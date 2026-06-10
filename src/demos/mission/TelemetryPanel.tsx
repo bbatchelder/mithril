@@ -168,6 +168,29 @@ function FleetActions({
     return null;
 }
 
+/** Comms tag for an airborne drone: jammed beats severed beats linked. */
+function LinkTag({ drone }: { drone: Drone }) {
+    if (drone.jammed) {
+        return (
+            <Tag intent="danger" icon={<Icon icon="feed" size={12} className="!text-current" />}>
+                Jammed
+            </Tag>
+        );
+    }
+    if (!drone.linked) {
+        return (
+            <Tag intent="warning" icon={<Icon icon="offline" size={12} className="!text-current" />}>
+                No link
+            </Tag>
+        );
+    }
+    return (
+        <Tag minimal icon={<Icon icon="link" size={12} className="!text-current" />}>
+            Linked
+        </Tag>
+    );
+}
+
 export function TelemetryPanel({ drone, history, drones, connecting, onClose, onOpenDetail, onLaunch, onRecall, onResume }: TelemetryPanelProps) {
     if (connecting) return <SkeletonBody />;
     if (!drone) return <FleetSummary drones={drones} />;
@@ -175,6 +198,7 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
     const meta = STATUS_META[drone.status];
     const h = history ?? { battery: [], signal: [], altitude: [], speed: [] };
     const missionProgress = drone.route.length > 1 ? drone.waypoint / drone.route.length : 0;
+    const airborne = drone.status === "active" || drone.status === "anomaly" || drone.status === "returning";
 
     return (
         <div className="flex flex-col gap-4 p-4">
@@ -187,6 +211,7 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
                     </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
+                    {airborne && <LinkTag drone={drone} />}
                     <Tag intent={meta.intent} icon={<Icon icon={meta.icon} size={12} className="!text-current" />}>
                         {meta.label}
                     </Tag>
@@ -244,6 +269,23 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
                                         rearm at base
                                     </Tag>
                                 ))}
+                        </span>
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Banked intel — collected off-link, delivers when the drone relinks. */}
+            {drone.bankedIntel.length > 0 && (
+                <SectionCard padded>
+                    <div className="flex items-center justify-between text-body-sm">
+                        <span className="text-foreground-muted">Banked intel</span>
+                        <span className="inline-flex items-center gap-1.5">
+                            <span className="tabular-nums font-semibold text-foreground">
+                                {drone.bankedIntel.length} collection{drone.bankedIntel.length === 1 ? "" : "s"}
+                            </span>
+                            <Tag minimal intent="warning">
+                                delivers on relink
+                            </Tag>
                         </span>
                     </div>
                 </SectionCard>

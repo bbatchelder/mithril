@@ -209,6 +209,12 @@ export interface Target {
     /** True once classification (or contact) has revealed the affiliation. */
     affiliationKnown: boolean;
     /**
+     * True for RF-emitter contacts: while live (spawned and unstruck) it severs
+     * the link of any drone inside the engine's `JAM_RADIUS`, detected or not.
+     * Striking it clears the interference.
+     */
+    jammer: boolean;
+    /**
      * True once a strike (Talon munition or external fires) has destroyed this
      * contact. Struck targets are out of play — no detection, no tasking, no
      * hostile behavior — and render as a struck ghost marker.
@@ -337,6 +343,8 @@ interface CategorySpec {
     icon: IconName;
     /** The sensor that resolves this category to High confidence. */
     bestSensor: SensorKind;
+    /** Contacts of this category actively deny drone comms (see {@link Target.jammer}). */
+    jammer?: boolean;
     classifications: string[];
     facts: (rng: Rng) => { label: string; value: string }[];
 }
@@ -411,6 +419,7 @@ const CATEGORIES: CategorySpec[] = [
         category: "RF emitter",
         icon: "globe-network",
         bestSensor: "sigint",
+        jammer: true,
         classifications: ["Unknown transmitter", "Mesh radio node", "Burst emitter"],
         facts: (rng) => [
             { label: "Band", value: `${rng.range(0.4, 5.8).toFixed(2)} GHz` },
@@ -508,6 +517,7 @@ export function makeTargets(shiftTicks: number): Target[] {
             bestSensor: cat.bestSensor,
             affiliation,
             affiliationKnown: false,
+            jammer: cat.jammer ?? false,
             struck: false,
             struckAt: "",
             passedTo: "",

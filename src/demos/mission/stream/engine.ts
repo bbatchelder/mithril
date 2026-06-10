@@ -11,11 +11,14 @@
  *      unwarned-blue hits, and progresses the ISR request windows,
  *   5. lands any external-fire missions whose flight delay has elapsed — a hit
  *      only if the target is still inside the blast radius of the aim point,
- *   6. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
+ *   6. recomputes the comms picture (`stepLinks`) — jammers sever links, a BFS
+ *      from base over airborne relay birds marks every drone linked/severed,
+ *      and relinked drones deliver the intel they banked while dark,
+ *   7. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
  *      detected when a drone's sensor footprint covers them, and go stale without
  *      coverage (see `targets.ts` for the track lifecycle),
- *   7. emits discrete events and appends samples to per-drone ring buffers,
- *   8. ends the shift once the clock runs out.
+ *   8. emits discrete events and appends samples to per-drone ring buffers,
+ *   9. ends the shift once the clock runs out.
  *
  * Skylark is a *game*: there is no autopilot fleet management. Drones do not recall
  * themselves at low battery and do not relaunch when charged — `launch` / `recall`
@@ -118,6 +121,22 @@ export const FIRE_DELAY_TICKS = 15;
  * so a target in transit escapes; one parked (or settled on its prey) does not.
  */
 export const BLAST_RADIUS = 0.008;
+/** A drone within this range of base has a direct uplink home. */
+export const BASE_LINK_RANGE = 0.05;
+/**
+ * Reach of a relay bird's backhaul radio (the SIGINT Aethers): a relay roots
+ * to base from this far out — wider than {@link BASE_LINK_RANGE}, that's the
+ * whole point of the airframe — and a *linked, airborne* relay extends the
+ * link this far to everyone else, chaining relay-to-relay across sectors.
+ * Tuned so the seeded backbone (SK-301/302/303 loops) only drops when jammed,
+ * while the west recon loops genuinely run dark on their far legs.
+ */
+export const RELAY_RANGE = 0.075;
+/**
+ * Denial radius of a live jammer (RF-emitter contact). A drone inside it loses
+ * link regardless of any relay chain — striking the jammer clears it.
+ */
+export const JAM_RADIUS = 0.035;
 
 export type ShiftPhase = "running" | "ended";
 
@@ -378,6 +397,18 @@ function crash(sim: Sim, d: Drone): void {
     sim.score.penalties += CRASH_PENALTY;
     sim.stats.dronesLost += 1;
     emit(sim, d, "danger", "cross-circle", `${d.callsign} down — battery exhausted mid-flight (−${CRASH_PENALTY} pts)`);
+    // Banked intel never made it home — it dies with the airframe, and those
+    // contacts reopen for a fresh investigation.
+    if (d.bankedIntel.length > 0) {
+        for (const id of d.bankedIntel) {
+            const tgt = sim.targets.find((t) => t.id === id);
+            if (tgt && !tgt.struck && tgt.investigation.status === "complete") {
+                tgt.investigation = { status: "idle" };
+            }
+        }
+        emit(sim, d, "danger", "inbox", `Banked intel aboard ${d.callsign} lost with the airframe — ${d.bankedIntel.length} collection${d.bankedIntel.length === 1 ? "" : "s"} gone`);
+        d.bankedIntel = [];
+    }
 }
 
 /**
@@ -519,32 +550,22 @@ export function step(sim: Sim): void {
                         d.assignment = null;
                         launchFires(sim, d, tgt);
                     } else {
-                        const matched = d.sensor === tgt.bestSensor;
-                        const raised = upgradeTarget(tgt, rng, d.sensor);
-                        const points = raised * SCORE_PER_TIER;
-                        sim.score.intel += points;
                         sim.stats.investigations += 1;
-                        sim.stats.factsRaised += raised;
                         tgt.investigation.status = "complete";
                         // A close pass certainly holds the track, whatever the detection pass rolled.
                         tgt.lastSeenTick = sim.tick;
                         tgt.lastKnownPosition = [tgt.position[0], tgt.position[1]];
                         if (tgt.track !== "active") tgt.track = "active";
-                        // Classification at ≥ Medium settles whose side the contact is on.
-                        tgt.affiliationKnown = true;
-                        const hostile = tgt.affiliation === "hostile";
-                        const verdict = hostile ? "assessed HOSTILE" : "assessed civilian";
                         d.task = a.prevTask;
                         d.assignment = null;
-                        emit(
-                            sim,
-                            d,
-                            hostile ? "danger" : matched ? "success" : "warning",
-                            "predictive-analysis",
-                            matched
-                                ? `${d.callsign} finished ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
-                                : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
-                        );
+                        if (d.linked) {
+                            deliverIntel(sim, d, tgt);
+                        } else {
+                            // No comms path home: the collection stays aboard and
+                            // pays out on relink — or dies with the airframe (crash).
+                            d.bankedIntel.push(tgt.id);
+                            emit(sim, d, "warning", "inbox", `${d.callsign} finished ${tgt.designation} off-link — intel banked aboard, delivers on relink`);
+                        }
                     }
                 }
                 warnBattery(sim, d);
@@ -641,10 +662,11 @@ export function step(sim: Sim): void {
         pushHistory(sim, d);
     }
 
-    // ── Blue forces, hostile pressure, fires, ISR windows ────────────────
+    // ── Blue forces, hostile pressure, fires, comms, ISR windows ─────────
     stepBlues(sim);
     stepHostiles(sim);
     stepFires(sim);
+    stepLinks(sim);
     const flying = sim.drones.filter(airborne);
     stepIsr(sim, flying);
 
@@ -848,6 +870,124 @@ function stepIsr(sim: Sim, flying: Drone[]): void {
             }
         }
     }
+}
+
+// ─── Relay link + jamming ────────────────────────────────────────────────────
+
+/** Relay birds (the SIGINT Aethers) extend the link chain; everything else only receives. */
+function isRelay(d: Drone): boolean {
+    return d.sensor === "sigint";
+}
+
+/**
+ * Recompute every drone's comms state for the tick:
+ * 1. jam pass — a drone inside a live jammer's {@link JAM_RADIUS} is `jammed`
+ *    (link severed regardless of chain, signal chewed down) until the jammer
+ *    is struck or the drone flies clear;
+ * 2. link BFS — drones within {@link BASE_LINK_RANGE} of base (relays within
+ *    their longer {@link RELAY_RANGE}) seed the set, and every linked airborne
+ *    relay extends it {@link RELAY_RANGE} further;
+ * 3. flush — a relinked drone delivers the intel it banked while dark.
+ * Grounded drones at base are trivially linked; lost ones never are.
+ */
+function stepLinks(sim: Sim): void {
+    const rng = sim.rng;
+    const jammers = sim.targets.filter((t) => t.jammer && !t.struck && sim.tick >= t.spawnTick);
+    const flying = sim.drones.filter(airborne);
+
+    for (const d of flying) {
+        const inJam = jammers.some((t) => dist(d.position, t.position) <= JAM_RADIUS);
+        if (inJam && !d.jammed) {
+            emit(sim, d, "danger", "feed", `${d.callsign} uplink jammed — hostile interference, link severed`);
+        } else if (!inJam && d.jammed) {
+            emit(sim, d, "success", "feed", `${d.callsign} clear of the jamming — uplink recovering`);
+        }
+        d.jammed = inJam;
+        if (inJam) d.signal = clamp(d.signal - rng.range(2, 5), 15, 100);
+    }
+
+    // BFS out from base: direct base links seed the frontier (relays root from
+    // their longer backhaul reach); linked relays then extend the chain.
+    const parent = new Map<string, string>();
+    const frontier: Drone[] = [];
+    for (const d of flying) {
+        const reach = isRelay(d) ? RELAY_RANGE : BASE_LINK_RANGE;
+        if (!d.jammed && dist(d.position, GROUND_STATION.position) <= reach) {
+            parent.set(d.id, "base");
+            if (isRelay(d)) frontier.push(d);
+        }
+    }
+    while (frontier.length > 0) {
+        const relay = frontier.shift()!;
+        for (const d of flying) {
+            if (d.jammed || parent.has(d.id)) continue;
+            if (dist(d.position, relay.position) <= RELAY_RANGE) {
+                parent.set(d.id, relay.id);
+                if (isRelay(d)) frontier.push(d);
+            }
+        }
+    }
+
+    for (const d of sim.drones) {
+        if (d.status === "lost") {
+            d.linked = false;
+            d.linkParent = null;
+            d.jammed = false;
+            continue;
+        }
+        if (!airborne(d)) {
+            // On the ground at base — wired in.
+            d.linked = true;
+            d.linkParent = null;
+            d.jammed = false;
+            continue;
+        }
+        d.linked = parent.has(d.id);
+        d.linkParent = parent.get(d.id) ?? null;
+        if (d.linked && d.bankedIntel.length > 0) flushBankedIntel(sim, d);
+    }
+}
+
+/**
+ * Land a completed investigation's payload at base: raise the target's fact
+ * tiers (only the best sensor reaches High — see `upgradeTarget`), award the
+ * intel points, and settle the affiliation. Runs at completion for a linked
+ * drone, or from {@link flushBankedIntel} once a dark drone relinks.
+ */
+function deliverIntel(sim: Sim, d: Drone, tgt: Target): void {
+    const matched = d.sensor === tgt.bestSensor;
+    const raised = upgradeTarget(tgt, sim.rng, d.sensor);
+    const points = raised * SCORE_PER_TIER;
+    sim.score.intel += points;
+    sim.stats.factsRaised += raised;
+    // Classification at ≥ Medium settles whose side the contact is on.
+    tgt.affiliationKnown = true;
+    const hostile = tgt.affiliation === "hostile";
+    const verdict = hostile ? "assessed HOSTILE" : "assessed civilian";
+    emit(
+        sim,
+        d,
+        hostile ? "danger" : matched ? "success" : "warning",
+        "predictive-analysis",
+        matched
+            ? `${d.callsign} intel on ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
+            : `${d.callsign} intel on ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
+    );
+}
+
+/** A relinked drone delivers everything it collected while dark. */
+function flushBankedIntel(sim: Sim, d: Drone): void {
+    for (const id of d.bankedIntel) {
+        const tgt = sim.targets.find((t) => t.id === id);
+        if (!tgt) continue;
+        if (tgt.struck) {
+            // Mirror the struck guards: the contact is out of play, the data is moot.
+            emit(sim, d, "info", "inbox", `${d.callsign} banked intel on ${tgt.designation} discarded — contact already destroyed`);
+            continue;
+        }
+        deliverIntel(sim, d, tgt);
+    }
+    d.bankedIntel = [];
 }
 
 // ─── Strikes (ROE scoring) ───────────────────────────────────────────────────
@@ -1204,6 +1344,7 @@ export function commit(sim: Sim): Snapshot {
             ...d,
             position: [d.position[0], d.position[1]] as [number, number],
             assignment: d.assignment ? { ...d.assignment } : null,
+            bankedIntel: d.bankedIntel.slice(),
         })),
         targets: sim.targets.map((t) => ({
             ...t,

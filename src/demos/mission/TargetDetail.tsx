@@ -496,6 +496,15 @@ export function TargetDetail({ target, drones, blues, fires, firesInFlight, dark
                 </Callout>
             )}
 
+            {/* Live jammer — this contact is actively denying drone comms around it */}
+            {target.jammer && !target.struck && (
+                <Callout intent="warning" icon={<Icon icon="feed" />} title="Active jammer">
+                    {target.designation} is jamming drone uplinks inside the marked ring — a drone in
+                    it loses its link home and banks intel aboard. Striking the emitter clears the
+                    interference.
+                </Callout>
+            )}
+
             {/* Overall AI assessment */}
             <Callout intent={meta.intent} icon={<Icon icon="predictive-analysis" />} title="AI assessment">
                 <div className="flex flex-col gap-2.5">

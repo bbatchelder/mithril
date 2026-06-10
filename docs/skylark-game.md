@@ -56,8 +56,8 @@ battery-limited fleet through a handful of charging pads.
 2. **Fog of war + contact lifecycle** — spawn schedule, sensor footprints, unknown tracks,
    staleness, sensor-matched investigation with a drone picker. *(PR #70)*
 3. **Blue forces + intel passing.** *(PR #71)*
-4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring. *(this PR)*
-5. **Relay/link layer + jamming.**
+4. **Strikes** — armed "Talon" class, munitions/rearm, external fires, ROE scoring. *(PR #72)*
+5. **Relay/link layer + jamming.** *(this PR)*
 6. **Briefing + full debrief + daily seed.**
 7. **Balance and polish pass.**
 
@@ -159,3 +159,27 @@ battery-limited fleet through a handful of charging pads.
 - The HUD adds a fires-remaining chip; the telemetry panel shows munitions and rearm state; the
   debrief adds neutralized / gambles-taken / strike-incidents / fires-wasted counters, and the
   clean-shift tag now also requires zero ROE incidents.
+
+## Stage 5 rules (implemented)
+
+- **Link model.** Every tick the engine recomputes each drone's comms path home: a drone is
+  *linked* within base range, or through a chain of linked airborne relay birds (the SIGINT
+  Aethers — Relay Net's actual job). Relays carry the backhaul radio: they root to base from
+  half again farther out than anyone else and extend the chain that same reach, hopping
+  relay-to-relay. Grounded drones at base are wired in; lost ones never link. The ranges are
+  tuned so the seeded relay backbone only drops when jammed, while the west recon loops
+  genuinely run dark on their far legs — the west is bank-and-deliver country.
+- **Banked intel.** An investigation that completes off-link doesn't pay out: the collection
+  stays aboard (no fact upgrades, no points, no affiliation reveal) and delivers automatically
+  the moment the drone relinks — fly home, or just let the patrol swing back into coverage. A
+  drone that crashes with intel aboard loses it, and those contacts reopen for a fresh
+  investigation. Banked intel on a contact that gets struck in the meantime is discarded.
+- **Jamming.** The RF-emitter contact is a *jammer*: once spawned (detected or not) it severs
+  the link of any drone inside its denial radius — chain or no chain — and chews its signal
+  down while inside. Striking it clears the interference; the seeded one spawns late-shift in
+  the middle of the relay backbone, so the strike decision is also a comms decision.
+- **Map & HUD.** The decorative uplink arcs are gone: linked drones draw a real line to their
+  uplink parent (base or the relay they chain through), a severed drone wears a small red
+  dashed ring, and a visible live jammer draws a violet "JAMMING" denial ring at its track
+  position. The telemetry panel header gets a Linked / No link / Jammed tag plus a banked-intel
+  row, the target panel calls out an active jammer, and the HUD adds no-link and banked chips.

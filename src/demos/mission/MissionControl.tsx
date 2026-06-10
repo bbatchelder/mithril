@@ -117,6 +117,10 @@ function MissionControlInner() {
     const anomalyCount = stream.drones.filter((d) => d.status === "anomaly").length;
     const bluesHit = stream.blues.filter((b) => b.status === "hit").length;
     const isrOpen = stream.isr.filter((r) => r.status === "active").length;
+    const airborneStatuses = ["active", "anomaly", "returning"];
+    const noLinkCount = stream.drones.filter((d) => airborneStatuses.includes(d.status) && !d.linked).length;
+    const jammedCount = stream.drones.filter((d) => d.jammed).length;
+    const bankedCount = stream.drones.reduce((n, d) => n + d.bankedIntel.length, 0);
 
     // Drones, targets, and blue units share the single right rail / mobile sheet,
     // so selecting one clears the others.
@@ -464,6 +468,22 @@ function MissionControlInner() {
                                     <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-danger-text">
                                         <Icon icon="warning-sign" size={12} className="!text-current" />
                                         {anomalyCount} anomaly
+                                    </span>
+                                )}
+                                {noLinkCount > 0 && (
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 text-body-sm font-medium ${
+                                            jammedCount > 0 ? "text-intent-danger-text" : "text-intent-warning-text"
+                                        }`}
+                                    >
+                                        <Icon icon="offline" size={12} className="!text-current" />
+                                        {noLinkCount} no link
+                                    </span>
+                                )}
+                                {bankedCount > 0 && (
+                                    <span className="inline-flex items-center gap-1.5 text-body-sm font-medium text-intent-warning-text">
+                                        <Icon icon="inbox" size={12} className="!text-current" />
+                                        {bankedCount} banked
                                     </span>
                                 )}
                                 <span className="text-body-sm text-foreground-muted">·</span>

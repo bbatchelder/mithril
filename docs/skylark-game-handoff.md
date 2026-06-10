@@ -1,7 +1,7 @@
-# Handoff — Skylark game (stages 5–7)
+# Handoff — Skylark game (stages 6–7)
 
-Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, stage 3 = PR #71, all merged;
-stage 4 = `feat/skylark-game-stage4`). This document hands off the remaining game work so
+Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, stage 3 = PR #71, stage 4 =
+PR #72, all merged; stage 5 = `feat/skylark-game-stage5`). This document hands off the remaining game work so
 another session can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
 [`docs/skylark-game.md`](skylark-game.md) — that's the **design of record** (the locked
 decisions + system sketches + per-stage "rules (implemented)" sections). This is the *what's
@@ -9,7 +9,7 @@ left + how* layer on top of it.
 
 ---
 
-## What exists now (stages 1–4)
+## What exists now (stages 1–5)
 
 Skylark (`src/demos/mission/`) is a playable game scaffold:
 
@@ -80,6 +80,22 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
     gamble-warning callout in `TargetDetail`, munitions row in `TelemetryPanel`, fires HUD
     chip, struck-X map icon + red blast rings (`fires` source) + kind-colored tasking lines in
     `MissionMap`, four ROE debrief counters.
+12. **Relay/link + jamming (stage 5)** — `stepLinks` (end of `step()`, after `stepFires`)
+    recomputes `Drone.linked` / `linkParent` / `jammed` per tick: a jam pass (live jammers =
+    `Target.jammer` RF emitters, spawned + unstruck, `JAM_RADIUS`; jammed drones lose link
+    regardless of chain and bleed signal), then a BFS from base — non-relays root within
+    `BASE_LINK_RANGE`, relays (`sensor === "sigint"`) root *and* hop within the longer
+    `RELAY_RANGE` (asymmetry tuned so the seeded relay backbone only drops when jammed; the
+    west recon loops run dark on far legs by design — ~20% of hands-off airborne ticks, mostly
+    SK-101/102). An investigation completing off-link pushes the target id onto
+    `Drone.bankedIntel` instead of paying out; **all payout goes through `deliverIntel`**
+    (upgrade + score + affiliation reveal + event), called at completion when linked or from
+    `flushBankedIntel` on relink. Crash loses banked intel and reopens those targets
+    (investigation back to `idle`); banked intel on a struck target is discarded at flush.
+    UI: real link lines drone→parent + red severed rings (`uplinks` source, two layers) +
+    violet jam rings (`jamzones` source) in `MissionMap`, Linked/No link/Jammed header tag +
+    banked-intel row in `TelemetryPanel`, jammer callout in `TargetDetail`, no-link/banked
+    HUD chips.
 
 ### Engine invariants — do not break
 
@@ -88,9 +104,9 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   `Math.random()`/`Date.now()` in the engine. Operator actions currently consume **no** RNG —
   keep it that way where possible so a replay of (seed + timed actions) stays reproducible.
 - **`commit()` must deep-copy anything React renders that the sim later mutates** (positions,
-  facts, assignment, investigation, blue positions + `warnedAbout`, ISR positions,
-  `lastKnownPosition`). When you add mutable state (munitions, banked intel), extend
-  `commit()` accordingly or you'll get stale-render bugs.
+  facts, assignment, investigation, `bankedIntel`, blue positions + `warnedAbout`, ISR
+  positions, `lastKnownPosition`). When you add mutable state, extend `commit()` accordingly
+  or you'll get stale-render bugs.
 - **Adding a `DroneStatus`** touches four places, TS only catches three:
   `STATUS_META` (data.ts), `FleetSummary`'s reduce-init + `order` (TelemetryPanel.tsx) — both
   type-enforced — and `STATUSES` + `statusColorExpr` in `MissionMap.tsx` (NOT enforced; the map
@@ -105,7 +121,13 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 - **Strike scoring goes through `resolveStrike` only** — never award/penalize a strike anywhere
   else, or the debrief itemization (neutralized / gambles / incidents) drifts from the score.
   When adding rules that remove a target from play, mirror the `struck` guards (fog pass,
-  `stepHostiles`, `investigate`/`canPassIntel`/`canStrikeTarget`, assignment break-off).
+  `stepHostiles`, `investigate`/`canPassIntel`/`canStrikeTarget`, assignment break-off,
+  `flushBankedIntel`).
+- **Investigation payout goes through `deliverIntel` only** (linked completion *or* banked
+  flush) — award investigation intel anywhere else and the link/banking mechanic stops
+  meaning anything. Engine tests that assert payout at completion must keep the target
+  inside link coverage (or stage a relay); the banking tests stage targets at `SAFE`
+  precisely because it's beyond every link.
 - The external-fires aim point is **frozen at designation completion** — `stepFires` compares the
   target's *live* position against it at impact. Don't "helpfully" retarget the round; dodging is
   the mechanic.
@@ -128,21 +150,7 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 
 ---
 
-## Stage 5 — relay/link + jamming (next up)
-
-1. **Link model**: a drone is *linked* if within base range (~0.05°) or within relay range of
-   a linked `sigint`/relay drone (chain; compute per tick via BFS from base over airborne
-   drones — 12 drones, trivial cost). Unlinked drones **bank** intel: investigation completion
-   defers `upgradeTarget`/scoring until the drone is linked again (store
-   `bankedIntel: { targetId, raised }[]` on the drone; flush on relink with a success event).
-2. **Jamming**: stage-2 RF emitters get `jammer: true` — drones inside their radius lose link
-   regardless of chain, and take the existing anomaly-style signal hit. Striking the jammer
-   (stage 4) clears it. This finally gives the Relay Net squadron its job: park relays to
-   bridge far sectors.
-3. **Map**: link lines drone→drone/base (replace today's decorative `uplinks` arcs with real
-   link-state lines, dashed red when jammed). `TelemetryPanel` gets a LINKED/BANKING tag.
-
-## Stage 6 — briefing, full debrief, daily seed
+## Stage 6 — briefing, full debrief, daily seed (next up)
 
 1. **Briefing**: pre-shift Dialog (fleet roster, pad count, munitions/fires, "expected
    activity" flavor from the spawn schedule) with a Start button — the sim shouldn't tick
@@ -181,6 +189,10 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   that's the right "do nothing" floor.
 - The pass-intel button names the nearest blue from the render snapshot; the engine re-picks
   at click time — at 5× the label can lag the actual recipient by a tick. Cosmetic.
+- **Jam-edge chatter**: a drone skirting the jam boundary emits paired jammed/clear events
+  (no hysteresis). Rare with the seeded geometry; add a debounce if it gets noisy. Likewise
+  the west recon loops wear severed rings most of their far legs — by design (dark sector),
+  but consider a one-line legend if playtests read it as a bug.
 
 ---
 
