@@ -11,18 +11,26 @@ import { type Drone, GROUND_STATION } from "../data";
 import type { Target } from "../targets";
 import {
     BAD_INTEL_PENALTY,
+    BLAST_RADIUS,
     BLUE_HIT_PENALTY,
+    CIVILIAN_STRIKE_PENALTY,
     CRASH_PENALTY,
     DETECT_SCORE,
+    FIRES_PER_SHIFT,
+    FIRE_DELAY_TICKS,
     HIT_TICKS,
     HOSTILE_DORMANT_TICKS,
     ISR_COVER_TICKS,
+    MUNITIONS_MAX,
     PAD_COUNT,
     PASS_SCORE_PER_VERIFIED,
+    REARM_TICKS,
     SHIFT_TICKS,
     STALE_TICKS,
+    STRIKE_SCORE,
     type Sim,
     commit,
+    designate,
     investigate,
     launch,
     makeSim,
@@ -30,6 +38,7 @@ import {
     recall,
     resumePatrol,
     step,
+    strike,
 } from "./engine";
 
 function find(sim: Sim, id: string) {
@@ -81,6 +90,26 @@ function park(d: Drone, pos: [number, number]) {
     d.position = [pos[0], pos[1]];
     d.route = [[pos[0], pos[1]]];
     d.waypoint = 0;
+}
+
+/** A spot far from every blue route — even an armed hostile parked here never drifts. */
+const SAFE: [number, number] = [-122.28, 37.85];
+
+/** Push every other contact's spawn past the shift so nothing else scores or moves. */
+function isolate(sim: Sim, keep: Target) {
+    for (const t of sim.targets) if (t !== keep) t.spawnTick = SHIFT_TICKS * 2;
+}
+
+/** Stage a lone strikeable contact at {@link SAFE}: active track, isolated roster. */
+function stageStrikeTarget(sim: Sim, affiliation: "hostile" | "civilian"): Target {
+    pacify(sim);
+    const tgt = sim.targets[0]; // spawnTick 0
+    tgt.affiliation = affiliation;
+    tgt.position = [SAFE[0], SAFE[1]];
+    tgt.lastKnownPosition = [SAFE[0], SAFE[1]];
+    isolate(sim, tgt);
+    activate(sim, tgt);
+    return tgt;
 }
 
 describe("fleet is manual — no autopilot", () => {
@@ -531,14 +560,235 @@ describe("ISR requests", () => {
     });
 });
 
-describe("snapshot deep copies", () => {
-    it("commit copies blue, ISR, and last-known-position state", () => {
+describe("strike drones (Talon)", () => {
+    it("seeds two armed Talons; the rest of the fleet is unarmed", () => {
         const sim = makeSim();
+        const talons = sim.drones.filter((d) => d.munitions !== null);
+        expect(talons.map((d) => d.id)).toEqual(["sk-401", "sk-402"]);
+        expect(talons.every((d) => d.munitions === MUNITIONS_MAX)).toBe(true);
+        // Strike birds start grounded — they never fly (or take a pad) hands-off.
+        expect(talons.every((d) => d.status === "idle" && d.battery >= 95)).toBe(true);
+    });
+
+    it("an unverified strike on a real hostile neutralizes it — and counts the gamble", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        strike(sim, tgt.id, "sk-401");
+        const talon = find(sim, "sk-401");
+        expect(talon.assignment?.kind).toBe("strike");
+        expect(talon.status).toBe("active"); // tasking launched it
+        expect(sim.stats.launches).toBe(1);
+
+        expect(stepUntil(sim, () => tgt.struck, 100)).toBe(true);
+        expect(sim.score.intel).toBe(STRIKE_SCORE);
+        expect(sim.stats.neutralized).toBe(1);
+        expect(sim.stats.gamblesTaken).toBe(1);
+        expect(sim.stats.strikeIncidents).toBe(0);
+        expect(tgt.affiliationKnown).toBe(true);
+        expect(tgt.struckAt).not.toBe("");
+        expect(talon.munitions).toBe(MUNITIONS_MAX - 1);
+        expect(talon.assignment).toBeNull();
+        expect(talon.task).toBe("Strike alert");
+    });
+
+    it("a verified-hostile strike is no gamble", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        tgt.affiliationKnown = true;
+        strike(sim, tgt.id, "sk-401");
+        expect(stepUntil(sim, () => tgt.struck, 100)).toBe(true);
+        expect(sim.stats.neutralized).toBe(1);
+        expect(sim.stats.gamblesTaken).toBe(0);
+    });
+
+    it("a gamble that hits a civilian is a strike incident", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "civilian");
+        strike(sim, tgt.id, "sk-401");
+        expect(stepUntil(sim, () => tgt.struck, 100)).toBe(true);
+        expect(sim.score.intel).toBe(0);
+        expect(sim.score.penalties).toBe(CIVILIAN_STRIKE_PENALTY);
+        expect(sim.stats.strikeIncidents).toBe(1);
+        expect(sim.stats.gamblesTaken).toBe(1);
+        expect(sim.stats.neutralized).toBe(0);
+        expect(tgt.affiliationKnown).toBe(true);
+    });
+
+    it("rejects known civilians, stale/undetected tracks, unarmed drones, and dry Talons", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "civilian");
+        tgt.affiliationKnown = true; // engine won't knowingly violate ROE
+        strike(sim, tgt.id, "sk-401");
+        expect(find(sim, "sk-401").assignment).toBeNull();
+
+        tgt.affiliationKnown = false;
+        tgt.track = "stale";
+        strike(sim, tgt.id, "sk-401");
+        expect(find(sim, "sk-401").assignment).toBeNull();
+        tgt.track = "active";
+
+        strike(sim, tgt.id, "sk-101"); // unarmed recon bird
+        expect(find(sim, "sk-101").assignment).toBeNull();
+
+        find(sim, "sk-401").munitions = 0;
+        strike(sim, tgt.id, "sk-401");
+        expect(find(sim, "sk-401").assignment).toBeNull();
+    });
+
+    it("recalling a strike run keeps the munition and leaves the target standing", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        strike(sim, tgt.id, "sk-401");
+        for (let i = 0; i < 5; i++) step(sim);
+        recall(sim, "sk-401");
+        const talon = find(sim, "sk-401");
+        expect(talon.assignment).toBeNull();
+        expect(talon.status).toBe("returning");
+        expect(talon.munitions).toBe(MUNITIONS_MAX);
+        for (let i = 0; i < 30; i++) step(sim);
+        expect(tgt.struck).toBe(false);
+    });
+
+    it("a dry Talon rearms during a pad stay — holding the pad past full charge", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const talon = find(sim, "sk-401");
+        talon.munitions = 0;
+        talon.battery = 99;
+        talon.status = "charging";
+        for (let i = 0; i < 5; i++) step(sim);
+        expect(talon.battery).toBe(100);
+        expect(talon.status).toBe("charging"); // still reloading
+        expect(talon.munitions).toBe(0);
+        for (let i = 5; i < REARM_TICKS; i++) step(sim);
+        expect(talon.munitions).toBe(MUNITIONS_MAX);
+        expect(talon.status).toBe("idle");
+    });
+
+    it("a strike breaks off another drone's investigation of the same target", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        investigate(sim, tgt.id, "sk-102");
+        strike(sim, tgt.id, "sk-401");
+        expect(stepUntil(sim, () => tgt.struck, 100)).toBe(true);
+        expect(find(sim, "sk-102").assignment).toBeNull();
+        expect(tgt.investigation.status).toBe("idle");
+    });
+});
+
+describe("external fires", () => {
+    it("a held designation launches a round that destroys a stationary target", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        park(find(sim, "sk-101"), tgt.position);
+        designate(sim, tgt.id, "sk-101");
+        expect(find(sim, "sk-101").assignment?.kind).toBe("designate");
+
+        expect(stepUntil(sim, () => sim.firesInFlight.length === 1, 60)).toBe(true);
+        expect(sim.fires).toBe(FIRES_PER_SHIFT - 1);
+        expect(find(sim, "sk-101").assignment).toBeNull(); // designator released at launch
+        expect(tgt.struck).toBe(false); // round still in flight
+
+        expect(stepUntil(sim, () => tgt.struck, FIRE_DELAY_TICKS + 2)).toBe(true);
+        expect(sim.score.intel).toBe(STRIKE_SCORE);
+        expect(sim.stats.neutralized).toBe(1);
+        expect(sim.stats.firesWasted).toBe(0);
+    });
+
+    it("a target that leaves the blast radius wastes the round", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        park(find(sim, "sk-101"), tgt.position);
+        designate(sim, tgt.id, "sk-101");
+        expect(stepUntil(sim, () => sim.firesInFlight.length === 1, 60)).toBe(true);
+
+        // The aim point is frozen at launch — slide the target out from under it.
+        tgt.position = [tgt.position[0] + BLAST_RADIUS * 2, tgt.position[1]];
+        expect(stepUntil(sim, () => sim.firesInFlight.length === 0, FIRE_DELAY_TICKS + 2)).toBe(true);
+        expect(tgt.struck).toBe(false);
+        expect(sim.stats.firesWasted).toBe(1);
+        expect(sim.score.intel).toBe(0);
+    });
+
+    it("an interrupted designation calls nothing in and costs nothing", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        park(find(sim, "sk-101"), tgt.position);
+        designate(sim, tgt.id, "sk-101");
+        for (let i = 0; i < 5; i++) step(sim);
+        recall(sim, "sk-101");
+        expect(find(sim, "sk-101").assignment).toBeNull();
+        for (let i = 0; i < FIRE_DELAY_TICKS * 2; i++) step(sim);
+        expect(sim.fires).toBe(FIRES_PER_SHIFT);
+        expect(sim.firesInFlight.length).toBe(0);
+        expect(tgt.struck).toBe(false);
+    });
+
+    it("requires rounds remaining and one designator per target", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        designate(sim, tgt.id, "sk-101");
+        designate(sim, tgt.id, "sk-102"); // second designator on the same target
+        expect(find(sim, "sk-102").assignment).toBeNull();
+
+        const sim2 = makeSim();
+        const tgt2 = stageStrikeTarget(sim2, "hostile");
+        sim2.fires = 0;
+        designate(sim2, tgt2.id, "sk-101");
+        expect(sim2.drones.find((d) => d.id === "sk-101")?.assignment).toBeNull();
+    });
+});
+
+describe("struck targets are out of play", () => {
+    it("cannot be tasked, passed, or re-struck — and never goes stale", () => {
+        const sim = makeSim();
+        const tgt = stageStrikeTarget(sim, "hostile");
+        strike(sim, tgt.id, "sk-401");
+        expect(stepUntil(sim, () => tgt.struck, 100)).toBe(true);
+
+        investigate(sim, tgt.id, "sk-102");
+        expect(find(sim, "sk-102").assignment).toBeNull();
+        tgt.facts.forEach((f) => (f.tier = 2));
+        passIntel(sim, tgt.id);
+        expect(tgt.passedTo).toBe("");
+        strike(sim, tgt.id, "sk-402");
+        expect(find(sim, "sk-402").assignment).toBeNull();
+
+        // No coverage for longer than the stale window — the wreck stays put.
+        for (const d of sim.drones) {
+            d.status = "idle";
+            d.position = [GROUND_STATION.position[0], GROUND_STATION.position[1]];
+        }
+        for (let i = 0; i <= STALE_TICKS + 5; i++) step(sim);
+        expect(tgt.track).toBe("active");
+    });
+
+    it("a struck hostile stops stalking blues", () => {
+        const sim = makeSim();
+        pacify(sim);
+        const checkpoint = findBlue(sim, "checkpoint");
+        const hostile = sim.targets[0];
+        arm(hostile);
+        hostile.struck = true;
+        hostile.position = [checkpoint.position[0] + 0.002, checkpoint.position[1]];
+        const start = [...hostile.position];
+        for (let i = 0; i < HIT_TICKS * 2; i++) step(sim);
+        expect(hostile.position).toEqual(start);
+        expect(checkpoint.status).not.toBe("hit");
+    });
+});
+
+describe("snapshot deep copies", () => {
+    it("commit copies blue, ISR, fires, and last-known-position state", () => {
+        const sim = makeSim();
+        sim.firesInFlight.push({ id: 1, targetId: "tgt-alpha", position: [-122.4, 37.8], impactTick: 10 });
         const snap = commit(sim);
         expect(snap.blues[0].position).not.toBe(sim.blues[0].position);
         expect(snap.blues[0].warnedAbout).not.toBe(sim.blues[0].warnedAbout);
         expect(snap.isr[0].position).not.toBe(sim.isr[0].position);
         expect(snap.targets[0].lastKnownPosition).not.toBe(sim.targets[0].lastKnownPosition);
+        expect(snap.fires).toBe(FIRES_PER_SHIFT);
+        expect(snap.firesInFlight[0].position).not.toBe(sim.firesInFlight[0].position);
     });
 });
 
@@ -562,6 +812,13 @@ describe("shift clock", () => {
         tgt.facts.forEach((f) => (f.tier = 2));
         passIntel(sim, tgt.id);
         expect(tgt.passedTo).toBe("");
+
+        tgt.affiliation = "hostile";
+        strike(sim, tgt.id, "sk-401");
+        expect(find(sim, "sk-401").assignment).toBeNull();
+        designate(sim, tgt.id, "sk-101");
+        expect(find(sim, "sk-101").assignment).toBeNull();
+        expect(sim.fires).toBe(FIRES_PER_SHIFT);
     });
 
     it("commit reports the score total as intel minus penalties", () => {

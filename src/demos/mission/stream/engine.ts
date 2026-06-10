@@ -2,16 +2,20 @@
  * engine — the pure, seeded simulation core behind Skylark (no React).
  *
  * A single `step()` advances the shift one tick. Each tick the engine:
- *   1. moves every airborne drone (patrol loop, investigation orbit, or return leg),
+ *   1. moves every airborne drone (patrol loop, investigation/designation orbit,
+ *      strike run, or return leg),
  *   2. random-walks telemetry (battery / signal / altitude / speed) within bounds,
- *   3. applies the game rules — battery warnings, crash-at-0%, pad rotation, scoring,
+ *   3. applies the game rules — battery warnings, crash-at-0%, pad rotation
+ *      (charging doubles as rearming for strike airframes), scoring,
  *   4. moves the blue forces and the hostiles stalking them (`blue.ts`), resolves
  *      unwarned-blue hits, and progresses the ISR request windows,
- *   5. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
+ *   5. lands any external-fire missions whose flight delay has elapsed — a hit
+ *      only if the target is still inside the blast radius of the aim point,
+ *   6. runs the fog-of-war pass — contacts spawn hidden on a seeded schedule, are
  *      detected when a drone's sensor footprint covers them, and go stale without
  *      coverage (see `targets.ts` for the track lifecycle),
- *   6. emits discrete events and appends samples to per-drone ring buffers,
- *   7. ends the shift once the clock runs out.
+ *   7. emits discrete events and appends samples to per-drone ring buffers,
+ *   8. ends the shift once the clock runs out.
  *
  * Skylark is a *game*: there is no autopilot fleet management. Drones do not recall
  * themselves at low battery and do not relaunch when charged — `launch` / `recall`
@@ -94,6 +98,26 @@ export const PASS_MIN_VERIFIED = 2;
  * (the rings sit on the standby birds' routes; see `makeIsrRequests`).
  */
 export const ISR_COVER_TICKS = 20;
+/** Munitions a strike airframe carries when fully armed. */
+export const MUNITIONS_MAX = 2;
+/** Pad ticks to reload a strike airframe to {@link MUNITIONS_MAX} (runs alongside charging). */
+export const REARM_TICKS = 20;
+/** Points for neutralizing a (real) hostile with either strike kind. */
+export const STRIKE_SCORE = 200;
+/** Score penalty for striking a contact that turns out to be civilian. */
+export const CIVILIAN_STRIKE_PENALTY = 500;
+/** External fire missions available per shift. */
+export const FIRES_PER_SHIFT = 2;
+/** Continuous on-orbit ticks a designating drone must hold before fires launch. */
+export const DESIGNATE_TICKS = 12;
+/** Ticks between fires launch and impact — the dodge window for a moving target. */
+export const FIRE_DELAY_TICKS = 15;
+/**
+ * Hit radius around the aim point (fixed at launch). A hostile drifting at full
+ * speed covers ~{@link FIRE_DELAY_TICKS} × 0.001° in flight — more than this —
+ * so a target in transit escapes; one parked (or settled on its prey) does not.
+ */
+export const BLAST_RADIUS = 0.008;
 
 export type ShiftPhase = "running" | "ended";
 
@@ -125,6 +149,24 @@ export interface ShiftStats {
     /** ISR requests fulfilled / expired unmet. */
     isrFulfilled: number;
     isrExpired: number;
+    /** Hostiles destroyed by strikes (either kind). */
+    neutralized: number;
+    /** Strikes resolved without a verified affiliation — gambles, win or lose. */
+    gamblesTaken: number;
+    /** Strikes that hit a contact that was actually civilian. */
+    strikeIncidents: number;
+    /** External fires that landed after the target left the blast radius. */
+    firesWasted: number;
+}
+
+/** An external-fire round in flight: launched at designation, lands after the delay. */
+export interface FireMission {
+    id: number;
+    targetId: string;
+    /** Aim point — the target's position when the round launched (it does not track). */
+    position: LngLat;
+    /** Tick the round lands on the aim point. */
+    impactTick: number;
 }
 
 // ─── Geo helpers (planar approximation — fine at city scale) ─────────────────
@@ -178,6 +220,13 @@ export interface Sim {
     batteryWarned: Record<string, "low" | "critical" | undefined>;
     /** Consecutive ticks each hostile has held an unwarned blue in strike range, keyed `targetId:blueId`. */
     threatTimer: Record<string, number>;
+    /** External fire missions remaining this shift. */
+    fires: number;
+    /** Rounds launched and not yet landed. */
+    firesInFlight: FireMission[];
+    fireId: number;
+    /** Pad ticks remaining until a rearming strike airframe is reloaded, per drone. */
+    rearmTimer: Record<string, number>;
 }
 
 export function makeSim(): Sim {
@@ -207,12 +256,20 @@ export function makeSim(): Sim {
             bluesHit: 0,
             isrFulfilled: 0,
             isrExpired: 0,
+            neutralized: 0,
+            gamblesTaken: 0,
+            strikeIncidents: 0,
+            firesWasted: 0,
         },
         rng: new Rng(SEED),
         eventId: 1,
         anomalyTimer: {},
         batteryWarned: {},
         threatTimer: {},
+        fires: FIRES_PER_SHIFT,
+        firesInFlight: [],
+        fireId: 1,
+        rearmTimer: {},
     };
 }
 
@@ -293,15 +350,22 @@ function chargingCount(sim: Sim): number {
     return sim.drones.filter((d) => d.status === "charging").length;
 }
 
-/** Abort a drone's investigation, freeing the target to be re-tasked. */
+/** Abort a drone's assignment, freeing the target to be re-tasked. */
 function clearAssignment(sim: Sim, d: Drone): void {
     if (!d.assignment) return;
-    const tgt = sim.targets.find((t) => t.id === d.assignment!.targetId);
-    if (tgt && tgt.investigation.status !== "complete") {
-        tgt.investigation = { status: "idle" };
+    if (d.assignment.kind === "investigate") {
+        const tgt = sim.targets.find((t) => t.id === d.assignment!.targetId);
+        if (tgt && tgt.investigation.status !== "complete") {
+            tgt.investigation = { status: "idle" };
+        }
     }
     d.task = d.assignment.prevTask;
     d.assignment = null;
+}
+
+/** True for a strike airframe that is below a full load (a pad stay reloads it). */
+function needsRearm(d: Drone): boolean {
+    return d.munitions !== null && d.munitions < MUNITIONS_MAX;
 }
 
 /** Battery hit 0 mid-air: the airframe is gone for the shift. */
@@ -335,7 +399,7 @@ function warnBattery(sim: Sim, d: Drone): void {
 function assignPads(sim: Sim): void {
     while (chargingCount(sim) < PAD_COUNT) {
         const waiting = sim.drones
-            .filter((d) => d.status === "idle" && d.battery < PAD_WANT)
+            .filter((d) => d.status === "idle" && (d.battery < PAD_WANT || needsRearm(d)))
             .sort((a, b) => a.battery - b.battery);
         const next = waiting[0];
         if (!next) return;
@@ -371,17 +435,48 @@ export function step(sim: Sim): void {
         // Crashed airframes are inert (history flatlines at their last samples).
         if (d.status === "lost") continue;
 
-        // ── Tasked investigation overrides the patrol entirely ──────────
+        // ── Tasked assignment overrides the patrol entirely ─────────────
         if (d.assignment) {
-            const tgt = sim.targets.find((t) => t.id === d.assignment!.targetId);
-            if (!tgt) {
-                d.assignment = null;
-            } else if (d.assignment.phase === "enroute") {
+            const a = d.assignment;
+            const tgt = sim.targets.find((t) => t.id === a.targetId);
+            if (!tgt || tgt.struck) {
+                // Target gone (struck by someone else mid-flight): break off.
+                clearAssignment(sim, d);
+            } else if (a.kind === "strike") {
+                // Strike run: fly straight at the live position — one pass, no loiter.
+                const from = d.position;
+                const [pos, reached] = moveToward(from, tgt.position, RETURN_SPEED);
+                d.heading = bearing(from, tgt.position);
+                d.position = pos;
+                d.battery = clamp(d.battery - rng.range(0.04, 0.1), 0, 100);
+                d.signal = clamp(d.signal + rng.range(-2, 2), 40, 100);
+                d.speed = clamp(d.speed + rng.range(-1, 1), 14, 26);
+                d.altitude = clamp(d.altitude + rng.range(-3, 3), 60, 150);
+                if (reached) {
+                    d.munitions = (d.munitions ?? 1) - 1;
+                    d.task = a.prevTask;
+                    d.assignment = null;
+                    emit(
+                        sim,
+                        d,
+                        "warning",
+                        "locate",
+                        `${d.callsign} weapon released on ${tgt.designation}${
+                            d.munitions === 0 ? " — munitions expended, rearm at base" : ""
+                        }`,
+                    );
+                    resolveStrike(sim, tgt, d.callsign);
+                }
+                warnBattery(sim, d);
+                if (d.battery <= 0) crash(sim, d);
+                pushHistory(sim, d);
+                continue;
+            } else if (a.phase === "enroute") {
                 // Fly straight to the tangent entry point on the orbit (orbitAngle was
                 // fixed at dispatch). A straight run to it arrives tangent to the ring,
                 // so the drone rolls into the loiter without crossing the target.
                 const from = d.position;
-                const entry = ringPoint(tgt.position, d.assignment.orbitAngle);
+                const entry = ringPoint(tgt.position, a.orbitAngle);
                 const [pos, reached] = moveToward(from, entry, RETURN_SPEED);
                 d.heading = bearing(from, entry);
                 d.position = pos;
@@ -390,10 +485,16 @@ export function step(sim: Sim): void {
                 d.speed = clamp(d.speed + rng.range(-1, 1), 14, 26);
                 d.altitude = clamp(d.altitude + rng.range(-3, 3), 60, 150);
                 if (reached) {
-                    d.assignment.phase = "investigating";
-                    d.assignment.ticksLeft = rng.int(12, 18);
-                    tgt.investigation.status = "investigating";
-                    emit(sim, d, "info", "geosearch", `${d.callsign} on station over ${tgt.designation} — collecting`);
+                    if (a.kind === "designate") {
+                        a.phase = "designating";
+                        a.ticksLeft = DESIGNATE_TICKS;
+                        emit(sim, d, "info", "locate", `${d.callsign} on station over ${tgt.designation} — designating for external fires`);
+                    } else {
+                        a.phase = "investigating";
+                        a.ticksLeft = rng.int(12, 18);
+                        tgt.investigation.status = "investigating";
+                        emit(sim, d, "info", "geosearch", `${d.callsign} on station over ${tgt.designation} — collecting`);
+                    }
                 }
                 warnBattery(sim, d);
                 if (d.battery <= 0) crash(sim, d);
@@ -401,43 +502,50 @@ export function step(sim: Sim): void {
                 continue;
             } else {
                 // Loiter: continue CCW around the orbit from the tangent entry point.
-                d.assignment.orbitAngle += ORBIT_STEP;
+                a.orbitAngle += ORBIT_STEP;
                 const prev = d.position;
-                const next = ringPoint(tgt.position, d.assignment.orbitAngle);
+                const next = ringPoint(tgt.position, a.orbitAngle);
                 d.heading = bearing(prev, next);
                 d.position = next;
                 d.speed = clamp(d.speed + rng.range(-1, 1), 11, 18);
                 d.signal = clamp(d.signal + rng.range(-1, 2), 60, 100);
                 d.battery = clamp(d.battery - rng.range(0.03, 0.07), 0, 100);
                 d.altitude = clamp(d.altitude + rng.range(-2, 2), 60, 150);
-                d.assignment.ticksLeft -= 1;
-                if (d.assignment.ticksLeft <= 0) {
-                    const matched = d.sensor === tgt.bestSensor;
-                    const raised = upgradeTarget(tgt, rng, d.sensor);
-                    const points = raised * SCORE_PER_TIER;
-                    sim.score.intel += points;
-                    sim.stats.investigations += 1;
-                    sim.stats.factsRaised += raised;
-                    tgt.investigation.status = "complete";
-                    // A close pass certainly holds the track, whatever the detection pass rolled.
-                    tgt.lastSeenTick = sim.tick;
-                    tgt.lastKnownPosition = [tgt.position[0], tgt.position[1]];
-                    if (tgt.track !== "active") tgt.track = "active";
-                    // Classification at ≥ Medium settles whose side the contact is on.
-                    tgt.affiliationKnown = true;
-                    const hostile = tgt.affiliation === "hostile";
-                    const verdict = hostile ? "assessed HOSTILE" : "assessed civilian";
-                    d.task = d.assignment.prevTask;
-                    d.assignment = null;
-                    emit(
-                        sim,
-                        d,
-                        hostile ? "danger" : matched ? "success" : "warning",
-                        "predictive-analysis",
-                        matched
-                            ? `${d.callsign} finished ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
-                            : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
-                    );
+                a.ticksLeft -= 1;
+                if (a.ticksLeft <= 0) {
+                    if (a.kind === "designate") {
+                        // Designation held for the full window: call the fires in.
+                        d.task = a.prevTask;
+                        d.assignment = null;
+                        launchFires(sim, d, tgt);
+                    } else {
+                        const matched = d.sensor === tgt.bestSensor;
+                        const raised = upgradeTarget(tgt, rng, d.sensor);
+                        const points = raised * SCORE_PER_TIER;
+                        sim.score.intel += points;
+                        sim.stats.investigations += 1;
+                        sim.stats.factsRaised += raised;
+                        tgt.investigation.status = "complete";
+                        // A close pass certainly holds the track, whatever the detection pass rolled.
+                        tgt.lastSeenTick = sim.tick;
+                        tgt.lastKnownPosition = [tgt.position[0], tgt.position[1]];
+                        if (tgt.track !== "active") tgt.track = "active";
+                        // Classification at ≥ Medium settles whose side the contact is on.
+                        tgt.affiliationKnown = true;
+                        const hostile = tgt.affiliation === "hostile";
+                        const verdict = hostile ? "assessed HOSTILE" : "assessed civilian";
+                        d.task = a.prevTask;
+                        d.assignment = null;
+                        emit(
+                            sim,
+                            d,
+                            hostile ? "danger" : matched ? "success" : "warning",
+                            "predictive-analysis",
+                            matched
+                                ? `${d.callsign} finished ${tgt.designation} — ${verdict}, confidence raised (+${points} pts)`
+                                : `${d.callsign} finished ${tgt.designation} — wrong sensor for ${tgt.category.toLowerCase()}, capped at Medium; ${verdict} (+${points} pts)`,
+                        );
+                    }
                 }
                 warnBattery(sim, d);
                 if (d.battery <= 0) crash(sim, d);
@@ -505,9 +613,19 @@ export function step(sim: Sim): void {
             d.battery = clamp(d.battery + rng.range(0.6, 1.1), 0, 100);
             d.signal = clamp(d.signal + rng.range(-1, 2), 70, 100);
             d.speed = 0;
-            if (d.battery >= 100) {
-                // Fully charged: release the pad and stand ready. Relaunching is the
-                // operator's call — there is no autopilot here.
+            // A pad stay doubles as rearming for a strike airframe below full load.
+            if (needsRearm(d)) {
+                const left = (sim.rearmTimer[d.id] ?? REARM_TICKS) - 1;
+                sim.rearmTimer[d.id] = left;
+                if (left <= 0) {
+                    d.munitions = MUNITIONS_MAX;
+                    delete sim.rearmTimer[d.id];
+                    emit(sim, d, "success", "tick-circle", `${d.callsign} rearmed — ${MUNITIONS_MAX} munitions aboard`);
+                }
+            }
+            if (d.battery >= 100 && !needsRearm(d)) {
+                // Fully charged (and reloaded): release the pad and stand ready.
+                // Relaunching is the operator's call — there is no autopilot here.
                 d.battery = 100;
                 d.status = "idle";
                 sim.batteryWarned[d.id] = undefined;
@@ -523,9 +641,10 @@ export function step(sim: Sim): void {
         pushHistory(sim, d);
     }
 
-    // ── Blue forces, hostile pressure, ISR windows ───────────────────────
+    // ── Blue forces, hostile pressure, fires, ISR windows ────────────────
     stepBlues(sim);
     stepHostiles(sim);
+    stepFires(sim);
     const flying = sim.drones.filter(airborne);
     stepIsr(sim, flying);
 
@@ -534,7 +653,9 @@ export function step(sim: Sim): void {
     // hostile drift). For each spawned target, find a covering airborne drone
     // (preferring one whose sensor matches the category); coverage keeps an
     // active track fresh, and rolls the detection chance for hidden or stale ones.
+    // Struck targets are out of play — frozen where they died, never stale.
     for (const t of sim.targets) {
+        if (t.struck) continue;
         if (t.track === "undetected" && sim.tick < t.spawnTick) continue;
 
         let spotter: Drone | null = null;
@@ -587,7 +708,7 @@ export function step(sim: Sim): void {
 
 /** True once a hostile is spawned *and* past its dormancy window — it now stalks. */
 function hostileArmed(sim: Sim, t: Target): boolean {
-    return t.affiliation === "hostile" && sim.tick >= t.spawnTick + HOSTILE_DORMANT_TICKS;
+    return !t.struck && t.affiliation === "hostile" && sim.tick >= t.spawnTick + HOSTILE_DORMANT_TICKS;
 }
 
 /** The nearest warned-about armed hostile within threat range of this blue, if any. */
@@ -729,6 +850,106 @@ function stepIsr(sim: Sim, flying: Drone[]): void {
     }
 }
 
+// ─── Strikes (ROE scoring) ───────────────────────────────────────────────────
+
+/**
+ * Resolve a strike on a target — the single ROE scoring point for both weapon
+ * kinds (Talon munition and external fires), so the debrief can itemize
+ * neutralized / gambles taken / incidents. The outcome is ground truth:
+ * a real hostile is neutralized (+{@link STRIKE_SCORE}), a civilian is an
+ * incident (−{@link CIVILIAN_STRIKE_PENALTY}) — confidence doesn't change
+ * physics, it only decides whether the operator *knew*. A strike resolved
+ * without a verified affiliation counts as a gamble either way.
+ */
+function resolveStrike(sim: Sim, tgt: Target, by: string): void {
+    const verified = tgt.affiliationKnown;
+    tgt.struck = true;
+    tgt.struckAt = formatMissionClock(sim.tick);
+    // The strike is its own (terminal) contact report: the wreckage is visible
+    // and tells you what it was.
+    tgt.track = "active";
+    tgt.lastSeenTick = sim.tick;
+    tgt.lastKnownPosition = [tgt.position[0], tgt.position[1]];
+    tgt.affiliationKnown = true;
+    // Anyone still flying against this target breaks off (investigation or
+    // designation in progress — there's nothing left to task).
+    for (const d of sim.drones) {
+        if (d.assignment?.targetId === tgt.id) {
+            clearAssignment(sim, d);
+            emit(sim, d, "info", "undo", `${d.callsign} breaking off — ${tgt.designation} destroyed`);
+        }
+    }
+    if (!verified) sim.stats.gamblesTaken += 1;
+    if (tgt.affiliation === "hostile") {
+        sim.score.intel += STRIKE_SCORE;
+        sim.stats.neutralized += 1;
+        emitBase(
+            sim,
+            "success",
+            "tick-circle",
+            `${tgt.designation} neutralized by ${by} — confirmed hostile${verified ? "" : " (unverified strike)"} (+${STRIKE_SCORE} pts)`,
+        );
+    } else {
+        sim.score.penalties += CIVILIAN_STRIKE_PENALTY;
+        sim.stats.strikeIncidents += 1;
+        emitBase(
+            sim,
+            "danger",
+            "error",
+            `STRIKE INCIDENT — ${tgt.designation} assessed civilian after the fact; casualties on the ground (−${CIVILIAN_STRIKE_PENALTY} pts)`,
+        );
+    }
+}
+
+/**
+ * Designation held for the full window: expend a fire mission. The aim point is
+ * frozen at the target's *current* position — the round lands there
+ * {@link FIRE_DELAY_TICKS} later whether or not the target stayed.
+ */
+function launchFires(sim: Sim, d: Drone, tgt: Target): void {
+    if (sim.fires <= 0) {
+        // Another designation beat this one to the last round.
+        emitBase(sim, "warning", "disable", `Fire mission on ${tgt.designation} denied — no rounds remaining`);
+        return;
+    }
+    sim.fires -= 1;
+    sim.firesInFlight.push({
+        id: sim.fireId++,
+        targetId: tgt.id,
+        position: [tgt.position[0], tgt.position[1]],
+        impactTick: sim.tick + FIRE_DELAY_TICKS,
+    });
+    emit(
+        sim,
+        d,
+        "warning",
+        "send-to-map",
+        `${d.callsign} designation complete — fires inbound on ${tgt.designation}, impact in ${FIRE_DELAY_TICKS}s (${sim.fires} left)`,
+    );
+}
+
+/** Land any fire missions whose flight delay has elapsed. */
+function stepFires(sim: Sim): void {
+    if (sim.firesInFlight.length === 0) return;
+    const landing = sim.firesInFlight.filter((f) => sim.tick >= f.impactTick);
+    if (landing.length === 0) return;
+    sim.firesInFlight = sim.firesInFlight.filter((f) => sim.tick < f.impactTick);
+    for (const f of landing) {
+        const tgt = sim.targets.find((t) => t.id === f.targetId);
+        if (tgt && !tgt.struck && dist(tgt.position, f.position) <= BLAST_RADIUS) {
+            resolveStrike(sim, tgt, "external fires");
+        } else {
+            sim.stats.firesWasted += 1;
+            emitBase(
+                sim,
+                "warning",
+                "error",
+                `External fires impact — ${tgt ? tgt.designation : "target"} cleared the blast area; round wasted`,
+            );
+        }
+    }
+}
+
 // ─── Operator actions ────────────────────────────────────────────────────────
 
 /**
@@ -745,6 +966,8 @@ export function launch(sim: Sim, droneId: string): void {
     d.speed = 16;
     d.altitude = 80;
     d.waypoint = 0;
+    // Leaving the pad abandons any rearm progress — the count restarts next stay.
+    delete sim.rearmTimer[d.id];
     sim.stats.launches += 1;
     if (d.battery < BATTERY_WARN) {
         emit(sim, d, "warning", "rocket-slant", `${d.callsign} launched at ${Math.round(d.battery)}% — short endurance`);
@@ -792,6 +1015,22 @@ export function etaTicks(from: LngLat, to: LngLat): number {
 }
 
 /**
+ * Shared dispatch prep for tasking: a grounded drone (idle/charging) is launched
+ * by the tasking; launching off a pad frees it for the next waiting drone.
+ */
+function dispatchDrone(sim: Sim, d: Drone): void {
+    const offPad = d.status === "charging";
+    if (d.status === "idle" || d.status === "charging") {
+        d.status = "active";
+        delete sim.rearmTimer[d.id];
+        sim.stats.launches += 1;
+    }
+    if (d.speed < 14) d.speed = 16;
+    if (d.altitude < 60) d.altitude = 80;
+    if (offPad) assignPads(sim);
+}
+
+/**
  * Task a specific drone to investigate a detected target (the UI's picker chooses
  * which — sensor match matters, see `upgradeTarget`). The target must be a known
  * track (active, or stale — flying out re-acquires it) with no investigation done
@@ -801,25 +1040,79 @@ export function etaTicks(from: LngLat, to: LngLat): number {
 export function investigate(sim: Sim, targetId: string, droneId: string): void {
     if (sim.phase === "ended") return;
     const tgt = sim.targets.find((t) => t.id === targetId);
-    if (!tgt || tgt.track === "undetected" || tgt.investigation.status !== "idle") return;
+    if (!tgt || tgt.track === "undetected" || tgt.struck || tgt.investigation.status !== "idle") return;
     const d = sim.drones.find((x) => x.id === droneId);
     if (!d || !canInvestigate(d)) return;
 
-    const offPad = d.status === "charging";
-    if (d.status === "idle" || d.status === "charging") {
-        d.status = "active";
-        sim.stats.launches += 1;
-    }
-    if (d.speed < 14) d.speed = 16;
-    if (d.altitude < 60) d.altitude = 80;
+    dispatchDrone(sim, d);
     // Lock the tangent entry angle now (from where the drone starts), so the whole
     // enroute leg is a straight line onto the orbit.
     const entryAngle = joinAngle(d.position, tgt.position);
-    d.assignment = { targetId, phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
+    d.assignment = { targetId, kind: "investigate", phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
     d.task = `Investigating ${tgt.designation}`;
     tgt.investigation = { status: "enroute", droneId: d.id, droneCallsign: d.callsign };
     emit(sim, d, "info", "locate", `${d.callsign} tasked to investigate ${tgt.designation}`);
-    if (offPad) assignPads(sim);
+}
+
+/**
+ * True if this drone can fly a strike run right now: a strike airframe with a
+ * munition aboard, not already assigned, not heading home, not lost. Grounded
+ * Talons count — tasking one launches it. Shared by the engine guard and the
+ * UI's picker.
+ */
+export function canStrike(d: Drone): boolean {
+    return d.munitions !== null && d.munitions > 0 && canInvestigate(d);
+}
+
+/**
+ * True if this target can be put under fire: a live, active track that hasn't
+ * been struck and isn't a *known* civilian (the engine won't knowingly violate
+ * ROE — unknown affiliations are the gamble). Shared by the engine guards and
+ * the UI's strike/fires sections.
+ */
+export function canStrikeTarget(t: Target): boolean {
+    return !t.struck && t.track === "active" && !(t.affiliationKnown && t.affiliation === "civilian");
+}
+
+/**
+ * Task a Talon to strike a target: it flies straight at the live position and
+ * releases on arrival (one pass, one munition — see `resolveStrike` for the ROE
+ * outcome). One strike run per target at a time.
+ */
+export function strike(sim: Sim, targetId: string, droneId: string): void {
+    if (sim.phase === "ended") return;
+    const tgt = sim.targets.find((t) => t.id === targetId);
+    if (!tgt || !canStrikeTarget(tgt)) return;
+    if (sim.drones.some((d) => d.assignment?.kind === "strike" && d.assignment.targetId === targetId)) return;
+    const d = sim.drones.find((x) => x.id === droneId);
+    if (!d || !canStrike(d)) return;
+
+    dispatchDrone(sim, d);
+    d.assignment = { targetId, kind: "strike", phase: "enroute", ticksLeft: 0, orbitAngle: 0, prevTask: d.task };
+    d.task = `Strike run on ${tgt.designation}`;
+    emit(sim, d, "warning", "locate", `${d.callsign} wings hot — strike run on ${tgt.designation}`);
+}
+
+/**
+ * Task a drone (any sensor) to designate a target for external fires: it holds
+ * the loiter orbit for {@link DESIGNATE_TICKS}, then a round launches at the
+ * target's position at that moment and lands {@link FIRE_DELAY_TICKS} later.
+ * Breaking the designation (recall, crash) calls nothing in and costs nothing.
+ * One designation per target at a time; needs a round remaining.
+ */
+export function designate(sim: Sim, targetId: string, droneId: string): void {
+    if (sim.phase === "ended" || sim.fires <= 0) return;
+    const tgt = sim.targets.find((t) => t.id === targetId);
+    if (!tgt || !canStrikeTarget(tgt)) return;
+    if (sim.drones.some((d) => d.assignment?.kind === "designate" && d.assignment.targetId === targetId)) return;
+    const d = sim.drones.find((x) => x.id === droneId);
+    if (!d || !canInvestigate(d)) return;
+
+    dispatchDrone(sim, d);
+    const entryAngle = joinAngle(d.position, tgt.position);
+    d.assignment = { targetId, kind: "designate", phase: "enroute", ticksLeft: 0, orbitAngle: entryAngle, prevTask: d.task };
+    d.task = `Designating ${tgt.designation}`;
+    emit(sim, d, "info", "send-to-map", `${d.callsign} tasked to designate ${tgt.designation} for external fires`);
 }
 
 /**
@@ -829,7 +1122,7 @@ export function investigate(sim: Sim, targetId: string, droneId: string): void {
  * engine guard and the UI's button state.
  */
 export function canPassIntel(t: Target): boolean {
-    return t.track !== "undetected" && !t.passedTo && verifiedFactCount(t) >= PASS_MIN_VERIFIED;
+    return t.track !== "undetected" && !t.struck && !t.passedTo && verifiedFactCount(t) >= PASS_MIN_VERIFIED;
 }
 
 /**
@@ -886,6 +1179,10 @@ export interface Snapshot {
     stats: ShiftStats;
     /** Charging pads currently occupied (of {@link PAD_COUNT}). */
     padsUsed: number;
+    /** External fire missions remaining (of {@link FIRES_PER_SHIFT}). */
+    fires: number;
+    /** Rounds launched and not yet landed (the map draws their aim points). */
+    firesInFlight: FireMission[];
 }
 
 /** Build an immutable render snapshot from the mutable sim (new references). */
@@ -930,5 +1227,7 @@ export function commit(sim: Sim): Snapshot {
         },
         stats: { ...sim.stats },
         padsUsed: chargingCount(sim),
+        fires: sim.fires,
+        firesInFlight: sim.firesInFlight.map((f) => ({ ...f, position: [f.position[0], f.position[1]] as [number, number] })),
     };
 }

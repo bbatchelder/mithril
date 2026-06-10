@@ -22,6 +22,7 @@ import {
     type TelemetryHistory,
     STATUS_META,
 } from "./data";
+import { MUNITIONS_MAX } from "./stream/engine";
 
 interface TelemetryPanelProps {
     drone: Drone | null;
@@ -223,6 +224,30 @@ export function TelemetryPanel({ drone, history, drones, connecting, onClose, on
                     <Gauge value={drone.signal / 100} display={`${Math.round(drone.signal)}`} caption="Signal" />
                 </div>
             </div>
+
+            {/* Munitions — strike airframes only. A pad stay reloads an empty rack. */}
+            {drone.munitions !== null && (
+                <SectionCard padded>
+                    <div className="flex items-center justify-between text-body-sm">
+                        <span className="text-foreground-muted">Munitions</span>
+                        <span className="inline-flex items-center gap-1.5">
+                            <span className="tabular-nums font-semibold text-foreground">
+                                {drone.munitions}/{MUNITIONS_MAX}
+                            </span>
+                            {drone.munitions === 0 &&
+                                (drone.status === "charging" ? (
+                                    <Tag minimal intent="primary">
+                                        rearming
+                                    </Tag>
+                                ) : (
+                                    <Tag minimal intent="warning">
+                                        rearm at base
+                                    </Tag>
+                                ))}
+                        </span>
+                    </div>
+                </SectionCard>
+            )}
 
             {/* Mission progress */}
             <SectionCard padded>

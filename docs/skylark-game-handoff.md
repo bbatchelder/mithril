@@ -1,15 +1,15 @@
-# Handoff — Skylark game (stages 4–7)
+# Handoff — Skylark game (stages 5–7)
 
-Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, both merged; stage 3 =
-`feat/skylark-game-stage3`). This document hands off the remaining game work so another
-session can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
+Status as of 2026‑06‑09 (stage 1 = PR #69, stage 2 = PR #70, stage 3 = PR #71, all merged;
+stage 4 = `feat/skylark-game-stage4`). This document hands off the remaining game work so
+another session can pick it up cold. Read [`CLAUDE.md`](../CLAUDE.md) first, then
 [`docs/skylark-game.md`](skylark-game.md) — that's the **design of record** (the locked
 decisions + system sketches + per-stage "rules (implemented)" sections). This is the *what's
 left + how* layer on top of it.
 
 ---
 
-## What exists now (stages 1–3)
+## What exists now (stages 1–4)
 
 Skylark (`src/demos/mission/`) is a playable game scaffold:
 
@@ -63,6 +63,23 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
     counters. ISR ring positions are tuned so a hands-off shift fulfils none (they sit on the
     *grounded* birds' loops — SK-204 / SK-304 / SK-104); re-verify that property if routes,
     anchors, or radii change.
+11. **Strikes, both kinds (stage 4)** — `DroneAssignment` carries a `kind`
+    (`investigate | strike | designate`); `strike(sim, targetId, droneId)` flies a Talon
+    (SK-401/402, `munitions: number | null` on `Drone` — null = unarmed platform) straight at
+    the live position and resolves on arrival; `designate(sim, targetId, droneId)` reuses the
+    investigation orbit for `DESIGNATE_TICKS`, then pushes a `FireMission` (aim point frozen at
+    launch) onto `sim.firesInFlight`, landed by `stepFires` after `FIRE_DELAY_TICKS` — hit only
+    if the target is still within `BLAST_RADIUS` of the aim point. **All ROE scoring lives in
+    `resolveStrike(sim, tgt, by)`**: hostile → +`STRIKE_SCORE` & `neutralized`; civilian →
+    −`CIVILIAN_STRIKE_PENALTY` & `strikeIncidents`; unverified-at-resolution → `gamblesTaken`
+    either way. Struck targets (`Target.struck` + `struckAt`) are skipped by detection /
+    staleness / hostile passes and refuse all tasking; `resolveStrike` breaks off any other
+    drone assigned to the target. Rearm piggybacks on pads: `sim.rearmTimer` counts a
+    `REARM_TICKS` pad stay (pad held until charge *and* reload finish; leaving the pad clears
+    the timer — `launch` and `dispatchDrone` both delete it). UI: strike/fires pickers +
+    gamble-warning callout in `TargetDetail`, munitions row in `TelemetryPanel`, fires HUD
+    chip, struck-X map icon + red blast rings (`fires` source) + kind-colored tasking lines in
+    `MissionMap`, four ROE debrief counters.
 
 ### Engine invariants — do not break
 
@@ -85,6 +102,13 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
   targets and hit blues mid-test.
 - Stale tracks render at `lastKnownPosition` (kept fresh by the coverage pass) — keep that in
   mind for any new layer that draws targets.
+- **Strike scoring goes through `resolveStrike` only** — never award/penalize a strike anywhere
+  else, or the debrief itemization (neutralized / gambles / incidents) drifts from the score.
+  When adding rules that remove a target from play, mirror the `struck` guards (fog pass,
+  `stepHostiles`, `investigate`/`canPassIntel`/`canStrikeTarget`, assignment break-off).
+- The external-fires aim point is **frozen at designation completion** — `stepFires` compares the
+  target's *live* position against it at impact. Don't "helpfully" retarget the round; dodging is
+  the mechanic.
 - **Events**: `emit(sim, drone, …)` / `emitBase(sim, …)` (ground-station events use
   `BASE-01`; clicking them in the feed is a harmless no-op selection). Ring buffer caps at
   `MAX_EVENTS` (60) — at 5× speed, waypoint chatter evicts operator events within a couple of
@@ -104,26 +128,7 @@ Skylark (`src/demos/mission/`) is a playable game scaffold:
 
 ---
 
-## Stage 4 — strikes (both kinds) (next up)
-
-1. **Talon class**: extend the seed with 2 strike drones (new squadron "Strike Flight",
-   `sensor: "eo-ir"`, `munitions: 2`). They patrol/investigate like any drone.
-2. **Strike action** (`TargetDetail`, hostile + tier-gated UI warning): like `investigate`
-   but the assignment's phase chain is `enroute → strike` (one pass, no loiter); on arrival the
-   target resolves: verified hostile → neutralized (+200, marker → struck ghost), civilian →
-   incident (−500 + a danger event); below High confidence it's an RNG-weighted gamble based
-   on actual affiliation. Munition decrements; `munitions === 0` → must rearm (rearm = a
-   charging-pad stay; piggyback on the pad system, e.g. rearming occupies a pad for ~20 ticks).
-3. **External fires**: `sim.fires = 2` per shift. Requires a *designating* drone (any sensor)
-   in-footprint continuously for K ticks (reuse the investigation orbit), then a delay
-   (~15 ticks) before impact at the target's *current* position — a moving hostile that left
-   the blast radius wastes the fire. HUD shows fires remaining.
-4. **ROE scoring** lives in one function (`resolveStrike(sim, target, weapon)`) so the debrief
-   can itemize: neutralized / gambles taken / incidents.
-5. **Tests**: munition decrement + rearm gating, designation interrupted by recall, fire
-   wasted on moved target, civilian incident penalty, no strikes after shift end.
-
-## Stage 5 — relay/link + jamming
+## Stage 5 — relay/link + jamming (next up)
 
 1. **Link model**: a drone is *linked* if within base range (~0.05°) or within relay range of
    a linked `sigint`/relay drone (chain; compute per tick via BFS from base over airborne

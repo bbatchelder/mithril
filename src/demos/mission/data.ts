@@ -74,19 +74,25 @@ export const STATUS_META: Record<DroneStatus, StatusMeta> = {
 };
 
 /**
- * A drone tasked to investigate a {@link Target}. While set, the stream engine
- * overrides the drone's patrol: it flies to the target (`enroute`), loiters and
- * collects (`investigating`), then upgrades the target's intelligence and clears
- * the assignment — restoring `prevTask`.
+ * A drone tasked against a {@link Target}. While set, the stream engine overrides
+ * the drone's patrol. The `kind` picks the phase chain:
+ * - `investigate` — fly out (`enroute`), loiter and collect (`investigating`),
+ *   then upgrade the target's intelligence;
+ * - `strike` — fly straight at the target (`enroute` only, no loiter) and
+ *   resolve the strike on arrival (one pass, one munition);
+ * - `designate` — fly out and hold the loiter orbit (`designating`) for the
+ *   designation window, then call in external fires.
+ * Clearing the assignment restores `prevTask`.
  */
 export interface DroneAssignment {
     targetId: string;
-    phase: "enroute" | "investigating";
-    /** Ticks remaining in the `investigating` phase. */
+    kind: "investigate" | "strike" | "designate";
+    phase: "enroute" | "investigating" | "designating";
+    /** Ticks remaining in the loiter phase (`investigating` / `designating`). */
     ticksLeft: number;
     /** Current angle (radians) along the loiter orbit, advanced each tick. */
     orbitAngle: number;
-    /** The task to restore once the investigation completes. */
+    /** The task to restore once the assignment completes. */
     prevTask: string;
 }
 
@@ -100,8 +106,13 @@ export interface Drone {
     /** What the payload can detect/resolve; footprint radius via {@link SENSOR_META}. */
     sensor: SensorKind;
     status: DroneStatus;
-    /** Set when the drone is tasked to investigate a target; otherwise null. */
+    /** Set when the drone is tasked against a target; otherwise null. */
     assignment: DroneAssignment | null;
+    /**
+     * Munitions aboard, for strike-capable airframes (Talons) — null on unarmed
+     * platforms. 0 means expended: the drone must rearm on a charging pad.
+     */
+    munitions: number | null;
     /** 0–100 */
     battery: number;
     /** metres */
@@ -129,6 +140,7 @@ export const SQUADRONS: Squadron[] = [
     { id: "sq-recon", name: "Recon Wing", icon: "eye-open" },
     { id: "sq-survey", name: "Survey Grid", icon: "grid-view" },
     { id: "sq-relay", name: "Relay Net", icon: "globe-network" },
+    { id: "sq-strike", name: "Strike Flight", icon: "target" },
 ];
 
 /** Build a small closed patrol loop around an anchor point. */
@@ -156,6 +168,8 @@ interface SeedSpec {
     anchor: LngLat;
     spread: number;
     legs: number;
+    /** Munitions aboard at shift start — set only on strike-capable airframes. */
+    munitions?: number;
 }
 
 const SEED: SeedSpec[] = [
@@ -174,6 +188,11 @@ const SEED: SeedSpec[] = [
     { id: "sk-302", callsign: "SK-302", squadronId: "sq-relay", model: "Aether R1", task: "Comms relay node", payload: "Mesh radio", sensor: "sigint", status: "active", battery: 77, anchor: [-122.36, 37.77], spread: 0.03, legs: 5 },
     { id: "sk-303", callsign: "SK-303", squadronId: "sq-relay", model: "Aether R1", task: "Backhaul link", payload: "Mesh radio", sensor: "sigint", status: "active", battery: 69, anchor: [-122.39, 37.755], spread: 0.028, legs: 6 },
     { id: "sk-304", callsign: "SK-304", squadronId: "sq-relay", model: "Aether R0", task: "Standby", payload: "Mesh radio", sensor: "sigint", status: "idle", battery: 91, anchor: [-122.365, 37.735], spread: 0.025, legs: 5 },
+    // Strike Flight — armed Talons held on ground alert at base (Talon → EO/IR +
+    // munitions). Both start grounded ≥ 95% so they neither fly nor take a pad
+    // hands-off — launching one is always the operator's call.
+    { id: "sk-401", callsign: "SK-401", squadronId: "sq-strike", model: "Talon T1", task: "Strike alert", payload: "EO/IR + munitions", sensor: "eo-ir", status: "idle", battery: 100, anchor: [-122.455, 37.787], spread: 0.024, legs: 5, munitions: 2 },
+    { id: "sk-402", callsign: "SK-402", squadronId: "sq-strike", model: "Talon T1", task: "Strike alert", payload: "EO/IR + munitions", sensor: "eo-ir", status: "idle", battery: 97, anchor: [-122.385, 37.748], spread: 0.022, legs: 6, munitions: 2 },
 ];
 
 /** Build the initial fleet from the seed spec. */
@@ -193,6 +212,7 @@ export function makeFleet(): Drone[] {
             sensor: s.sensor,
             status: s.status,
             assignment: null,
+            munitions: s.munitions ?? null,
             battery: s.battery,
             altitude: grounded ? 0 : 90 + (s.legs % 4) * 12,
             speed: s.status === "active" ? 14 + (s.legs % 3) * 2 : 0,

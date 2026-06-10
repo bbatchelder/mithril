@@ -14,15 +14,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+    type FireMission,
     type ShiftScore,
     type ShiftStats,
     type Sim,
     commit,
+    designate as engineDesignate,
     investigate as engineInvestigate,
     launch as engineLaunch,
     passIntel as enginePassIntel,
     recall as engineRecall,
     resumePatrol as engineResume,
+    strike as engineStrike,
     makeSim,
     step,
 } from "./engine";
@@ -47,6 +50,10 @@ export interface StreamState {
     score: ShiftScore;
     stats: ShiftStats;
     padsUsed: number;
+    /** External fire missions remaining this shift. */
+    fires: number;
+    /** Fire rounds launched and not yet landed. */
+    firesInFlight: FireMission[];
     /** Increments on restart — consumers reset accumulated state (map trails) on change. */
     epoch: number;
     playing: boolean;
@@ -65,6 +72,10 @@ export interface StreamState {
     investigate: (targetId: string, droneId: string) => void;
     /** Pass a target's intel to the nearest blue unit (scores against ground truth). */
     passIntel: (targetId: string) => void;
+    /** Task a Talon to strike a target — one pass, one munition, ROE resolves on arrival. */
+    strike: (targetId: string, droneId: string) => void;
+    /** Task a drone to designate a target for external fires (delayed off-map round). */
+    designate: (targetId: string, droneId: string) => void;
     /** Rebuild the sim from the seed and start a fresh shift. */
     restart: () => void;
 }
@@ -118,6 +129,14 @@ export function useStream(): StreamState {
         [act],
     );
     const passIntel = useCallback((targetId: string) => act((sim) => enginePassIntel(sim, targetId)), [act]);
+    const strike = useCallback(
+        (targetId: string, droneId: string) => act((sim) => engineStrike(sim, targetId, droneId)),
+        [act],
+    );
+    const designate = useCallback(
+        (targetId: string, droneId: string) => act((sim) => engineDesignate(sim, targetId, droneId)),
+        [act],
+    );
 
     const restart = useCallback(() => {
         simRef.current = makeSim();
@@ -140,6 +159,8 @@ export function useStream(): StreamState {
         resumePatrol,
         investigate,
         passIntel,
+        strike,
+        designate,
         restart,
     };
 }

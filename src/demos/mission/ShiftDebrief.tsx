@@ -66,7 +66,7 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
 
                     {/* Breakdown */}
                     <div className="divide-y divide-divider rounded-mithril border border-divider">
-                        <ScoreRow label="Intelligence delivered" value={`+${score.intel}`} accent="good" />
+                        <ScoreRow label="Points earned (intel, strikes, ISR)" value={`+${score.intel}`} accent="good" />
                         <ScoreRow
                             label="Penalties (losses, bad calls)"
                             value={`−${score.penalties}`}
@@ -75,13 +75,17 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
                     </div>
 
                     {/* Operational counters */}
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-mithril border border-divider bg-divider sm:grid-cols-3">
+                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-mithril border border-divider bg-divider sm:grid-cols-4">
                         <StatCell label="Contacts found" value={stats.detected} />
                         <StatCell label="Tracks left stale" value={stats.staleLost} />
                         <StatCell label="Investigations" value={stats.investigations} />
                         <StatCell label="Facts raised" value={stats.factsRaised} />
                         <StatCell label="Intel passes" value={stats.intelPasses} />
                         <StatCell label="Bad intel" value={stats.badIntelPasses} />
+                        <StatCell label="Neutralized" value={stats.neutralized} />
+                        <StatCell label="Gambles taken" value={stats.gamblesTaken} />
+                        <StatCell label="Strike incidents" value={stats.strikeIncidents} />
+                        <StatCell label="Fires wasted" value={stats.firesWasted} />
                         <StatCell label="Blues hit" value={stats.bluesHit} />
                         <StatCell label="ISR fulfilled" value={stats.isrFulfilled} />
                         <StatCell label="Launches" value={stats.launches} />
@@ -90,14 +94,14 @@ export function ShiftDebrief({ open, score, stats, fleetSize, dark, onClose, onR
                         <StatCell label="Recovered" value={fleetSize - stats.dronesLost} />
                     </div>
 
-                    {stats.dronesLost === 0 && stats.bluesHit === 0 && (
+                    {stats.dronesLost === 0 && stats.bluesHit === 0 && stats.strikeIncidents === 0 && (
                         <Tag
                             minimal
                             intent="success"
                             icon={<Icon icon="endorsed" size={12} className="!text-current" />}
                             className="self-start"
                         >
-                            Clean shift — every airframe home, every blue unit intact
+                            Clean shift — every airframe home, every blue unit intact, no ROE incidents
                         </Tag>
                     )}
                 </div>
