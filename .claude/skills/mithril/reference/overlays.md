@@ -90,6 +90,41 @@ Composed on Popover. `content` + `dark`. Keep it short; don't put interactive co
 tooltip (use a Popover for that). Icon-only triggers still need their own `aria-label` — the
 tooltip text is not an accessible name.
 
+### Don't stack two overlay wrappers on one trigger
+
+A tooltip on the *same* element that triggers a Popover/Menu **silently swallows the click** —
+the popover never opens:
+
+```tsx
+// ✗ BROKEN — click is eaten, popover never opens
+<Popover content={menu}>
+  <Tooltip content="Refresh">
+    <Button icon={refresh} aria-label="Refresh" />
+  </Tooltip>
+</Popover>
+```
+
+Why: both `Tooltip` and `Popover` hand their child to Radix via `asChild`, but they're
+**fixed-API wrappers** — they do *not* re-spread injected Slot props/ref onto their own child. So
+the outer `Popover.Trigger`'s `onClick`/`aria-*`/`ref` land on the `<Tooltip>` wrapper and never
+reach the button. (Same failure in either nesting order.) Give the outer overlay a **real DOM
+element** as its trigger instead — a node *does* forward Slot props — and nest the tooltip+control
+inside it:
+
+```tsx
+// ✓ WORKS — span is the Popover trigger (forwards the click); tooltip owns hover on the button
+<Popover content={menu}>
+  <span className="inline-flex">
+    <Tooltip content="Refresh">
+      <Button icon={refresh} aria-label="Refresh" />
+    </Tooltip>
+  </span>
+</Popover>
+```
+
+The click bubbles from the button to the `span` (which carries Radix's toggle handler) while the
+tooltip independently drives hover/focus on the button. Verified against `Popover` + `Tooltip`.
+
 ## ContextMenu
 
 Right-click menu. It owns keyboard nav/typeahead via Radix and injects a *slot* so `MenuItem`s
