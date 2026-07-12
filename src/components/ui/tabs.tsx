@@ -39,7 +39,11 @@ import { Icon, type IconName } from "./icon";
  *
  * Tab indicator (`.bp6-tab-indicator`): 3px high bar, background --link, absolute bottom,
  * positioned over the selected tab. We measure the active trigger's offset/width and
- * position it (no slide animation — the harness checks height + color at capture only).
+ * position it, then slide it between tabs. Blueprint animates the indicator wrapper's
+ * `height, transform, width` over `$pt-transition-duration * 2` (200ms) with
+ * `$pt-transition-ease` (== our `--ease-mithril`); we transition `left, width` for the same
+ * effect. The very first placement doesn't animate (the bar mounts `display:none`, so there's
+ * no prior position to slide from), and the reduced-motion reset in `base.css` neutralizes it.
  *
  * Vertical (`.bp6-tabs.bp6-vertical`): list left / panel right; tabs get border-radius 4px,
  * padding 0 8px, width 100%; selected → background rgba(primary, 0.2), no underline.
@@ -144,7 +148,8 @@ export function Tabs({
 
     // ---------------------------------------------------------------------------
     // Indicator (horizontal only): measure the active trigger's offset/width within
-    // the tab list and position the 3px bar over it. Driven by Radix's data-state.
+    // the tab list and position the 3px bar over it. Driven by Radix's data-state; the
+    // bar slides between tabs via the CSS transition on its className (see the div below).
     // ---------------------------------------------------------------------------
     const tablistRef = useRef<HTMLDivElement>(null);
     const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({ display: "none" });
@@ -191,7 +196,7 @@ export function Tabs({
                     <div
                         aria-hidden="true"
                         data-compare="tab-indicator"
-                        className="bg-link dark:bg-link pointer-events-none"
+                        className="bg-link dark:bg-link pointer-events-none transition-[left,width] duration-200 ease-mithril"
                         style={indicatorStyle}
                     />
                 )}
