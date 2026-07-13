@@ -168,7 +168,16 @@ export function MultistepDialog({
                 left rail (flex 1) + right content panel (flex 3) on tablet+. */}
             <div
                 data-compare="multistep-panels"
-                className={cn("flex min-h-0 flex-1 flex-col", !horizontal && "sm:flex-row")}
+                className={cn(
+                    "flex min-h-0 flex-1 flex-col",
+                    // Header→body divider. The base Dialog header draws its divider as a
+                    // `0 1px 0` box-shadow, but the rail/panel backgrounds below paint over
+                    // that 1px line — and on desktop neither carries a top border. So the
+                    // panels row carries the divider itself: a full-width line under the
+                    // header in both orientations.
+                    "border-t border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
+                    !horizontal && "sm:flex-row",
+                )}
             >
                 {/* ── Step rail ─────────────────────────────────────────────── */}
                 <div
@@ -280,7 +289,13 @@ export function MultistepDialog({
                     data-compare="multistep-panel"
                     className={cn(
                         "flex min-h-0 min-w-0 flex-1 flex-col rounded-br-mithril",
-                        "bg-[#f6f7f9] dark:bg-[#2f343c]",
+                        // Content/form area: white (dark: dark-gray4). A deliberate divergence
+                        // from Blueprint v6.15, whose right panel is light-gray5 (#f6f7f9) —
+                        // the same tone as its rail, so the rail/content split disappears. We
+                        // want a distinct gray rail beside a white content panel. White also
+                        // matches the fixed footer below and the active rail step, so the
+                        // content area, footer, and active step read as one white surface.
+                        "bg-white dark:bg-dark-gray-4",
                         // Divider from the rail: a top border when the strip is stacked
                         // above, a left border beside the vertical rail (tablet+, "left").
                         "border-t border-[rgba(17,20,24,0.15)] dark:border-[rgba(255,255,255,0.2)]",
