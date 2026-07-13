@@ -108,6 +108,12 @@ the ongoing goal:
   and `reference/` recipes (overlays, foundations, forms, data, dates). Teaches how to *compose* these
   components correctly (the gotchas the types don't reveal). When you discover a new composition gotcha,
   add it here — overlays is the worked exemplar; the others are seeded and meant to grow.
+- `tools/design-sync/` — generator for the **Claude Design kit**: captures every gallery showcase
+  (light+dark) as rendered DOM from the isolated harness, assembles a static card bundle into
+  `dist-design/bundle/` (gitignored), render-checks it, and syncs it to the "Mithril Design System"
+  project on claude.ai/design so Claude Design can mock up mithril-based UI. Workflow + gotchas in
+  [`tools/design-sync/README.md`](tools/design-sync/README.md); re-run after visual changes so the
+  kit tracks the components.
 
 ## Working model
 
