@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import { ObjectExplorer } from "./ObjectExplorer";
+import { ProjectsAndFiles } from "./ProjectsAndFiles";
 
 /**
  * Full-page design examples — complete surfaces composed from mithril components,
@@ -29,5 +30,12 @@ export const EXAMPLES: ExampleEntry[] = [
         description: "Ontology-browser home — dark rail, search hero, shortcut cards, object-type catalog table, empty object-set catalog.",
         width: 1440,
         component: ObjectExplorer,
+    },
+    {
+        id: "projects-and-files",
+        title: "Projects & Files",
+        description: "Workspace file-catalog home — dark rail, workspace tab strip, quick-filter cards, faceted filter rail, file table with typed icons, paths, and skeleton loading rows.",
+        width: 1440,
+        component: ProjectsAndFiles,
     },
 ];
