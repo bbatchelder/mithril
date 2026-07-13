@@ -5,7 +5,7 @@
     "description": "A modern, pixel-faithful reimplementation of Palantir Blueprint's design language — built on React 19, Radix primitives, Tailwind v4, and CVA. Distributed both as a conventional npm package and shadcn-style as owned source.",
     "type": "module",
     "license": "Apache-2.0",
-    "packageManager": "pnpm@11.4.0",
+    "packageManager": "pnpm@11.7.0",
     "homepage": "https://github.com/bbatchelder/mithril",
     "repository": {
         "type": "git",
