@@ -8,6 +8,12 @@ app UI. The kit is a static bundle under `dist-design/bundle/ui_kits/mithril/`:
   **light and dark**. These are not hand-written: each frame is the **real rendered DOM**
   captured from the dev server's isolated harness (`?component=<id>&theme=…`), so fidelity is
   inherited from the actual implementation (open dialogs, drawers, popovers, portals included).
+- `examples/<id>.html` — **full-page design examples** (group "Examples"): complete surfaces
+  composed from mithril components (app shells, catalog tables, search heroes) that a mockup
+  can start from. Same captured-DOM pipeline, but rendered full-bleed via `?example=<id>&theme=…`
+  at the entry's own width (typically 1440px vs the 900px component cards). Source pages live in
+  `src/examples/` and register in `src/examples/registry.ts` (gen-meta parses that file textually
+  — keep entry fields literal, in `id, title, description, width` order).
 - `foundations/*.html` — token cards (palette, intents/semantic tokens, typography,
   elevation/radius/motion, built-in themes) generated from literals mirrored out of
   `src/styles/tokens.css`.

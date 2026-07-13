@@ -89,14 +89,23 @@ const PROBE = `(() => {
 
 await ab("set", "viewport", "940", "1200");
 
-const files = [
-    ...readdirSync(join(KIT, "foundations")).filter((f) => f.endsWith(".html")).map((f) => `foundations/${f}`),
-    ...readdirSync(join(KIT, "components")).filter((f) => f.endsWith(".html")).map((f) => `components/${f}`),
-];
+const listDir = (dir) => {
+    try {
+        return readdirSync(join(KIT, dir)).filter((f) => f.endsWith(".html")).map((f) => `${dir}/${f}`);
+    } catch {
+        return [];
+    }
+};
+const files = [...listDir("foundations"), ...listDir("components"), ...listDir("examples")];
+
+// Example cards are wider than the 940px default — probe them at their own width
+// (from the @dsCard marker) so nothing is squeezed or clipped by the viewport.
+const cardWidth = (rel) => Number(/width="(\d+)"/.exec(readFileSync(join(KIT, rel), "utf8"))?.[1] ?? 900);
 
 const report = { total: files.length, bad: [], thin: [], variantsIdentical: [], clipped: [], perFile: {} };
 
 for (const rel of files) {
+    if (rel.startsWith("examples/")) await ab("set", "viewport", String(cardWidth(rel) + 40), "1200");
     await ab("open", `http://localhost:${PORT}/ui_kits/mithril/${rel}`);
     try { await ab("wait", "--load", "networkidle"); } catch {}
     await ab("wait", "500");
@@ -108,7 +117,9 @@ for (const rel of files) {
     const name = rel.replace("/", "_").replace(".html", "");
     try { await ab("screenshot", "--full", join(SHOTS, `${name}.png`)); } catch {}
 
-    const isComponent = rel.startsWith("components/");
+    // Capture-based cards (components + examples) get the strict frame checks and
+    // exact build-time heights; foundations are hand-generated (height patched below).
+    const isComponent = rel.startsWith("components/") || rel.startsWith("examples/");
     let bad = false, thin = false, identical = false;
     if (!probe || probe.elts < 25) bad = true;
     if (probe && probe.bodyFontSize !== "14px" && isComponent) bad = true; // base layer CSS didn't load
