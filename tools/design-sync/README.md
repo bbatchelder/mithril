@@ -69,3 +69,9 @@ claude.ai afterwards.
   `CATEGORIES` in `src/App.tsx` — fix them there if it grates; the kit mirrors the gallery.
 - The claude.ai pane warns "Missing brand font: Oxygen" — cosmetic; Oxygen is just the Linux
   fallback in the *system* font stack, there is no font file to upload.
+- **Adding a NEW card file doesn't update the pane index**: the Design System pane reads
+  `_ds_manifest.json` (project root), compiled from the `@dsCard` markers by the app's own
+  self-check — which does not re-run on a DesignSync write. After pushing a brand-new card,
+  `get_file` the manifest, append a `{path, group, name, subtitle}` entry to its `cards`
+  array, and `write_files` it back (root path, so it needs its own finalize_plan). Edits to
+  an *existing* card need no manifest touch.
