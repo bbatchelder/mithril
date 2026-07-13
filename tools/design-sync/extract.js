@@ -8,8 +8,13 @@
     // portal/fixed overlay content (dialogs, toasts, popovers). Portal wrappers are
     // zero-height statics, so scan their descendants; ignore full-viewport backdrops
     // (they stretch to whatever frame height we pick) and clamp to the viewport.
-    const col = document.querySelector("#root .mx-auto");
-    let maxBottom = col ? col.getBoundingClientRect().bottom + 40 : document.documentElement.scrollHeight;
+    // Example pages (?example=<id>) mark their full-bleed wrapper with
+    // data-capture-root — measure it directly, no p-10 padding allowance.
+    const exampleRoot = document.querySelector("#root [data-capture-root]");
+    const col = exampleRoot ?? document.querySelector("#root .mx-auto");
+    let maxBottom = col
+        ? col.getBoundingClientRect().bottom + (exampleRoot ? 0 : 40)
+        : document.documentElement.scrollHeight;
     const vw = innerWidth, vh = innerHeight;
     for (const el of document.body.children) {
         if (el.id === "root") continue; // its min-h-screen wrapper always spans the viewport

@@ -25,6 +25,7 @@ const meta = JSON.parse(readFileSync(metaPath, "utf8"));
 
 mkdirSync(join(OUT, "components"), { recursive: true });
 mkdirSync(join(OUT, "foundations"), { recursive: true });
+mkdirSync(join(OUT, "examples"), { recursive: true });
 mkdirSync(join(OUT, "assets"), { recursive: true });
 
 /* ── Stylesheet: compile the app CSS, then append the palette addendum ───── */
@@ -410,14 +411,16 @@ const FRAME_MIN = { toast: 380, omnibar: 580, hotkeys: 580 };
 // content below it would sit on page-white — paint the theme bg on the frame itself.
 const FRAME_BG = { light: "#f6f7f9", dark: "#1c2127" };
 
-function componentPage(c) {
+// Shared light+dark capture card. `captureKey` names the captures/<key>.<theme>.json
+// pair; `width` is both the frame width and the @dsCard width.
+function capturePage({ captureKey, group, name, subtitle, width }) {
     const load = (theme) => {
-        const p = join(DIST, "captures", `${c.id}.${theme}.json`);
+        const p = join(DIST, "captures", `${captureKey}.${theme}.json`);
         if (!existsSync(p)) return null;
         const j = JSON.parse(readFileSync(p, "utf8"));
         const r = j.data?.result ?? j.result ?? j;
         if (!r?.html || !r.html.includes('id="root"')) return null;
-        const height = Math.max(Math.min(r.height, FRAME_MAX), FRAME_MIN[c.id] ?? 0);
+        const height = Math.max(Math.min(r.height, FRAME_MAX), FRAME_MIN[captureKey] ?? 0);
         return { html: r.html.replaceAll("min-h-screen", "min-h-full"), height };
     };
     const light = load("light");
@@ -428,27 +431,33 @@ function componentPage(c) {
     const total = 2 * CAP_H + light.height + dark.height;
     const style = `
 html, body { margin: 0; padding: 0; }
-body { width: 900px; }
+body { width: ${width}px; }
 .ds-cap { box-sizing: border-box; height: ${CAP_H}px; display: flex; align-items: center; padding: 0 14px;
   font: 600 10px/1 ${SYS_FONT}; letter-spacing: .08em; text-transform: uppercase;
   color: #5f6b7c; background: #edeff2; border-bottom: 1px solid rgba(17,20,24,.12); }
-.ds-frame { position: relative; overflow: hidden; transform: translateZ(0); width: 900px; }
+.ds-frame { position: relative; overflow: hidden; transform: translateZ(0); width: ${width}px; }
 `;
     return page({
-        group: c.group,
-        name: c.title,
-        width: 900,
+        group,
+        name,
+        subtitle,
+        width,
         height: total,
-        title: `mithril — ${c.title}`,
+        title: `mithril — ${name}`,
         links: ["../assets/mithril.css"],
         style,
         body: `
-<div class="ds-cap">${c.title} · light</div>
+<div class="ds-cap">${name} · light</div>
 <div class="ds-frame" style="height:${light.height}px;background:${FRAME_BG.light}">${light.html}</div>
-<div class="ds-cap">${c.title} · dark</div>
+<div class="ds-cap">${name} · dark</div>
 <div class="ds-frame" style="height:${dark.height}px;background:${FRAME_BG.dark}">${dark.html}</div>`,
     });
 }
+
+const componentPage = (c) => capturePage({ captureKey: c.id, group: c.group, name: c.title, width: 900 });
+
+const examplePage = (e) =>
+    capturePage({ captureKey: `example-${e.id}`, group: "Examples", name: e.title, subtitle: e.description, width: e.width });
 
 /* ── README (the guide the mockup agent reads) ───────────────────────────── */
 
@@ -500,6 +509,19 @@ When unsure, mirror how the component previews compose these.
 | Category | Components |
 |---|---|
 ${inventory}
+${
+    (meta.examples ?? []).length
+        ? `
+## Examples (full-page compositions)
+
+Complete surfaces under \`examples/\` — real rendered pages composed from the components above,
+in both themes. Start a mockup from one of these when the layout matches (copy the shell — rail,
+top bar, section scaffolding — then swap the content):
+
+${meta.examples.map((e) => `- \`examples/${e.id}.html\` — **${e.title}**: ${e.description}`).join("\n")}
+`
+        : ""
+}
 
 ## Foundations
 
@@ -566,6 +588,19 @@ for (const c of meta.components) {
     ok++;
 }
 console.log(`components written: ${ok}/${meta.components.length}`);
+
+let exOk = 0;
+for (const e of meta.examples ?? []) {
+    const html = examplePage(e);
+    if (!html) {
+        missing.push(`example-${e.id}`);
+        continue;
+    }
+    writeFileSync(join(OUT, "examples", `${e.id}.html`), html);
+    exOk++;
+}
+console.log(`examples written: ${exOk}/${(meta.examples ?? []).length}`);
+
 if (missing.length) {
     console.error("MISSING captures:", missing.join(", "));
     process.exitCode = 1;

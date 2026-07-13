@@ -64,6 +64,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRangeInput } from "@/components/ui/date-range-input";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { DEMOS } from "@/demos/registry";
+import { EXAMPLES } from "@/examples/registry";
 import { COMPONENT_META, type ComponentMeta } from "@/components/ui/component-meta.generated";
 import { COMPONENT_PROPS } from "@/components/ui/component-props.generated";
 import { Playground, PLAYGROUNDS } from "@/playground";
@@ -5372,6 +5373,8 @@ const COMPONENTS: { id: string; title: string; render: () => React.ReactNode }[]
 const params = new URLSearchParams(window.location.search);
 /** `?component=<id>` renders that showcase alone with no chrome — for clean harness screenshots. */
 const ONLY = params.get("component");
+/** `?example=<id>` renders a full-page design example (src/examples/) full-bleed — for design-sync captures. */
+const EXAMPLE_ONLY = params.get("example");
 /** `?theme=dark` sets the initial theme; the toggle still works for interactive use. */
 const INITIAL_DARK = params.get("theme") === "dark";
 /** `?palette=<name>` applies a named alternate theme up front (e.g. `?palette=purple`). */
@@ -6247,6 +6250,23 @@ export default function App() {
                                 {c.render()}
                             </div>
                         </div>
+                    </div>
+                </div>
+            </DarkContext.Provider>
+        );
+    }
+
+    // Isolated full-page example view (design-sync harness): full-bleed, no showcase
+    // column or min-h-screen wrapper — the page owns its own size, so the capture's
+    // scrollHeight fallback measures the content, not the viewport. Same early-return
+    // stability argument as the `?component=` branch above.
+    if (EXAMPLE_ONLY != null && EXAMPLES.some((e) => e.id === EXAMPLE_ONLY)) {
+        const Example = EXAMPLES.find((e) => e.id === EXAMPLE_ONLY)!.component;
+        return (
+            <DarkContext.Provider value={INITIAL_DARK}>
+                <div className={INITIAL_DARK ? "dark" : ""}>
+                    <div data-capture-root className="bg-background text-foreground">
+                        <Example />
                     </div>
                 </div>
             </DarkContext.Provider>

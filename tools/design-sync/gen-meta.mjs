@@ -26,9 +26,21 @@ for (const m of catBlock[1].matchAll(/\{ label: "([^"]+)", ids: \[([^\]]*)\]/g))
 const groupOf = {};
 for (const c of categories) for (const id of c.ids) groupOf[id] = c.label;
 
+// ── Full-page examples: src/examples/registry.ts (fields kept literal + ordered
+//    by contract — see that file's doc comment) ───────────────────────────────
+const exSrc = readFileSync(join(REPO, "src/examples/registry.ts"), "utf8");
+const examples = [];
+for (const m of exSrc.matchAll(/\{\s*id: "([^"]+)",\s*title: "([^"]+)",\s*description:\s*"([^"]*)",\s*width: (\d+)/g)) {
+    examples.push({ id: m[1], title: m[2], description: m[3], width: Number(m[4]) });
+}
+
 mkdirSync(OUT, { recursive: true });
 writeFileSync(
     join(OUT, "meta.json"),
-    JSON.stringify({ components: components.map((c) => ({ ...c, group: groupOf[c.id] ?? "Other" })), categories }, null, 2),
+    JSON.stringify(
+        { components: components.map((c) => ({ ...c, group: groupOf[c.id] ?? "Other" })), categories, examples },
+        null,
+        2,
+    ),
 );
-console.log(`meta.json: ${components.length} components, ${categories.length} categories`);
+console.log(`meta.json: ${components.length} components, ${categories.length} categories, ${examples.length} examples`);
