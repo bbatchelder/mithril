@@ -29,6 +29,10 @@ marker — the Claude Design app builds its Design System pane index from these.
 
 ## Workflow
 
+> Recreating a real app page as a new kit example end-to-end (browser study → `src/examples/`
+> page → capture → push) is captured as the repo skill
+> [`.claude/skills/mithril-example-page/`](../../.claude/skills/mithril-example-page/SKILL.md).
+
 Prereqs: dev server running (`tap run mithril-demo -- pnpm run dev`), the `agent-browser` CLI
 on PATH. Both capture and check drive `agent-browser`; its daemon can wedge on a cold-start
 race — if a run fails immediately with "daemon may be busy or unresponsive", run
