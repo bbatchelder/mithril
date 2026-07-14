@@ -1,8 +1,17 @@
 # design-sync — the Claude Design kit generator
 
-Builds the **"Mithril Design System"** project on [claude.ai/design](https://claude.ai/design)
-(projectId `00e2117f-9bf2-4e92-be5e-ec9d44825f1f`), so Claude Design can mock up mithril-based
-app UI. The kit is a static bundle under `dist-design/bundle/ui_kits/mithril/`:
+Builds the **"Mithril Design System"** project on [claude.ai/design](https://claude.ai/design),
+so Claude Design can mock up mithril-based app UI. **This one repo feeds a "Mithril Design System"
+project on more than one claude.ai account** — the projectId differs per account, so resolve it by
+name with `DesignSync(list_projects)` for whichever login is active rather than assuming a fixed id.
+Known targets:
+
+| Account | projectId |
+|---|---|
+| `bbatchelder@datexcorp.com` (work — original) | `00e2117f-9bf2-4e92-be5e-ec9d44825f1f` |
+| `bbatchelder@gmail.com` (personal) | `3ef90b20-dc71-4794-ac5a-90c116bd2edb` |
+
+The kit is a static bundle under `dist-design/bundle/ui_kits/mithril/`:
 
 - `components/<id>.html` — one preview card per gallery showcase, showing the component in
   **light and dark**. These are not hand-written: each frame is the **real rendered DOM**
@@ -50,11 +59,21 @@ backgrounds non-transparent), light ≠ dark, non-trivial content, and nothing p
 frame's clipped bottom edge. It screenshots every card into `dist-design/.render-check/` for
 eyeballing and exits non-zero on any finding.
 
-**4. Push** — done by Claude via the `DesignSync` tool (there is no local upload script):
-`finalize_plan` with `localDir: dist-design/bundle`, `writes: ["ui_kits/mithril/**"]` against the
-projectId above, then `write_files` with one `localPath` entry per file. Prefer updating changed
-components only (the tool is built for incremental sync); re-check the Design System pane on
-claude.ai afterwards.
+**4. Push** — done by Claude via the `DesignSync` tool (there is no local upload script). Resolve
+the target projectId for the **currently-logged-in account** with `DesignSync(list_projects)` (the
+id differs per account — see the table up top), then `finalize_plan` with `localDir:
+dist-design/bundle`, `writes: ["ui_kits/mithril/**"]`, `deletes: []` (the field is required even
+when empty), then `write_files` with one `localPath` entry per file (74 files ≈ 2.7 MB — chunk into
+~25/call). Prefer updating changed components only (the tool is built for incremental sync);
+re-check the Design System pane on claude.ai afterwards.
+
+**Fresh project (first sync to a new account):** the Design System pane index (`_ds_manifest.json`,
+project root) is compiled by the app's own self-check from the cards' `@dsCard` markers, not written
+by us. After uploading `ui_kits/mithril/**`, `write_files` a root **`_ds_needs_recompile`** sentinel
+(any content, e.g. `"1"`) — that forces the app to compile the manifest + `_ds_bundle.js`
+server-side (confirm by `list_files`: `_ds_manifest.json` appears with every card grouped). Without
+it the pane stays empty until someone opens the project. This is the same sentinel the stale-manifest
+gotcha below relies on for new cards in an already-indexed project.
 
 ## Gotchas learned building this
 
